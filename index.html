@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181a17">
+  <title>Eredità — Prototype jouable</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/decks.css">
+</head>
+<body>
+  <audio id="menu-music" src="assets/audio/menu/menu.mp3" preload="auto" autoplay loop playsinline></audio>
+  <audio id="game-music" src="assets/audio/game/combat.mp3" preload="auto" loop playsinline></audio>
+  <div class="app-shell connection-pending">
+    <header class="masthead">
+      <div class="masthead-status"><p id="session-status" class="session-status" hidden></p></div>
+    </header>
+
+    <main>
+      <section id="setup-screen" class="screen" aria-labelledby="setup-title">
+        <div class="intro-panel">
+          <p class="step-label">Étape 1 · Territoire</p>
+          <h2 id="setup-title">Choisissez votre deck et vos terres</h2>
+          <p>Choisissez l’un de vos trois decks, puis conservez votre tirage ou remplacez jusqu’à deux biomes.</p>
+        </div>
+        <div id="setup-players" class="setup-players"></div>
+        <div class="setup-footer">
+          <p id="setup-hint" class="hint">Les deux joueurs doivent confirmer leur territoire.</p>
+          <button id="start-game" class="button button-primary" type="button" disabled>Lancer la partie</button>
+        </div>
+      </section>
+
+      <section id="game-screen" class="screen" hidden aria-label="Partie en cours">
+        <div class="game-layout">
+          <section class="board-panel" aria-label="Plateau de jeu">
+            <div class="board-legend" aria-hidden="true">
+              <span>Villages rouges</span>
+              <span>Frontière</span>
+              <span>Villages bleus</span>
+            </div>
+            <div id="battlefield" class="battlefield">
+              <div class="board-clock" role="timer" aria-label="Temps restant"><span id="phase-label">Temps normal</span><strong id="game-clock">12:30</strong></div>
+              <div class="view-controls"><button id="pause-game" class="button button-quiet" type="button">Pause</button><button id="toggle-board-view" class="button button-quiet" type="button" aria-pressed="false">Chargement 3D…</button></div>
+              <div id="board-columns" class="board-columns"></div>
+              <div id="battlefield-3d" class="battlefield-3d" hidden></div>
+              <div id="units-layer" class="units-layer" aria-label="Unités sur le terrain"></div>
+              <aside id="map-village-popups" class="map-village-popups" aria-label="État et ressources des villages"></aside>
+            </div>
+          </section>
+
+          <aside class="side-panel">
+            <section id="village-inspector" class="panel-card" aria-label="Informations et achats du village"></section>
+            <button id="open-shop-modal" class="button button-primary shop-open-button" type="button">Ouvrir la boutique</button>
+            <nav id="village-selector" class="village-selector" aria-label="Sélection rapide des villages"></nav>
+            <section id="village-shop" class="panel-card shop-card" aria-label="Magasin du village sélectionné"></section>
+          </aside>
+          <section id="residents-panel" class="panel-card residents-panel" aria-label="Gestion des habitants"></section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="shop-modal" class="shop-modal" hidden>
+    <section class="shop-modal-panel" role="dialog" aria-modal="true" aria-labelledby="shop-modal-title">
+      <div class="shop-modal-head"><h2 id="shop-modal-title">Boutique</h2><button id="close-shop-modal" class="button button-red shop-return-button" type="button">← Retour</button></div>
+      <nav id="shop-village-nav" class="shop-village-nav" aria-label="Choisir un village"></nav>
+      <div id="shop-modal-content"></div>
+    </section>
+  </div>
+
+  <div id="main-menu" class="main-menu">
+    <div class="menu-atmosphere" aria-hidden="true"></div>
+    <section class="menu-panel" aria-labelledby="menu-title">
+      <p class="menu-kicker">Stratégie · mémoire · héritage</p>
+      <h1 id="menu-title">EREDITÀ</h1>
+      <p class="menu-subtitle">La terre se transmet. La victoire se mérite.</p>
+      <nav class="main-menu-actions" aria-label="Menu principal">
+        <button class="menu-button menu-button-primary" data-menu-screen="play" type="button">JOUER</button>
+        <button class="menu-button" data-menu-screen="decks" type="button">DECKS</button>
+        <button class="menu-button" data-menu-screen="tutorial" type="button">TUTORIEL</button>
+      </nav>
+    </section>
+  </div>
+
+  <div id="menu-subscreen" class="menu-subscreen" hidden>
+    <section class="menu-subpanel" aria-live="polite">
+      <button id="menu-back" class="menu-back" type="button">← Menu principal</button>
+      <p class="menu-kicker">Eredità</p>
+      <h2 id="menu-subtitle"></h2>
+      <div id="menu-subcontent"></div>
+    </section>
+  </div>
+
+  <div id="connection-screen" class="connection-screen" hidden>
+    <section class="connection-card" aria-labelledby="connection-title">
+      <p class="step-label">Mode de jeu</p>
+      <h2 id="connection-title">Comment voulez-vous jouer ?</h2>
+      <p>Pour jouer sur deux ordinateurs, créez un salon puis transmettez son code au second joueur.</p>
+      <div class="connection-actions">
+        <button id="play-solo" class="button button-red" type="button">Jouer contre l’IA</button>
+        <button id="play-local" class="button" type="button">Jouer à deux en local</button>
+        <button id="create-online" class="button button-red" type="button">Créer un salon</button>
+      </div>
+      <div class="join-room">
+        <label for="room-code">Code du salon</label>
+        <input id="room-code" type="text" inputmode="text" maxlength="5" autocomplete="off" placeholder="ABCDE">
+        <button id="join-online" class="button button-blue" type="button">Rejoindre</button>
+      </div>
+      <div id="created-room" class="created-room" hidden>
+        <p>Donne ce code à l’autre joueur :</p>
+        <strong id="created-room-code"></strong>
+        <button id="continue-online" class="button button-red" type="button">Continuer vers la partie</button>
+      </div>
+      <p id="online-status" class="online-status" aria-live="polite">Le créateur joue Rouge, le second joueur joue Bleu.</p>
+      <button id="connection-back" class="menu-back connection-back" type="button">← Retour</button>
+    </section>
+  </div>
+
+  <div id="redirect-dialog" class="dialog-backdrop" hidden>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="redirect-title">
+      <p class="step-label">Route militaire</p>
+      <h2 id="redirect-title">Choisir une redirection</h2>
+      <p id="redirect-copy"></p>
+      <div id="redirect-actions" class="dialog-actions"></div>
+    </section>
+  </div>
+
+  <div id="result-dialog" class="dialog-backdrop" hidden>
+    <section class="dialog result-dialog" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <p class="step-label">Fin de partie</p>
+      <h2 id="result-title"></h2>
+      <p id="result-copy"></p>
+      <button id="restart-game" class="button button-primary" type="button">Nouvelle partie</button>
+    </section>
+  </div>
+
+  <div id="tutorial-dialog" class="tutorial-dialog" hidden role="dialog" aria-live="polite">
+    <div class="tutorial-dialog-copy"><p id="tutorial-dialog-text"></p><span id="tutorial-dialog-continue" hidden>Cliquer pour continuer</span></div>
+    <div class="tutorial-narrator" aria-label="Portrait temporaire du narrateur"><span>Portrait temporaire</span></div>
+  </div>
+
+  <div id="tutorial-end" class="dialog-backdrop" hidden>
+    <section class="dialog result-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-end-title">
+      <p class="step-label">Tutoriel terminé</p>
+      <h2 id="tutorial-end-title">La relève est assurée</h2>
+      <p>Tu connais maintenant les fondations d’Eredità.</p>
+      <button id="tutorial-return-menu" class="button button-primary" type="button">Retour au menu</button>
+    </section>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/biomes.js"></script>
+  <script src="js/crops.js"></script>
+  <script src="js/livestock.js"></script>
+  <script src="js/units.js"></script>
+  <script src="js/buildings.js"></script>
+  <script src="js/transport.js"></script>
+  <script src="js/equipment.js"></script>
+  <script src="js/animals.js"></script>
+  <script src="js/economy.js"></script>
+  <script src="js/board.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/cards.js"></script>
+  <script src="js/decks.js"></script>
+  <script src="js/tutorial.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/board3d.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
