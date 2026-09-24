@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const E = window.Eredita;
-  function create({ THREE, world, terrainGroup, panels }) {
+  function create({ THREE, world, terrainGroup, panels, dashboard }) {
     const overlay = new THREE.Group();
     overlay.name = "xr-village-targets";
     world.add(overlay);
@@ -37,8 +37,11 @@
       hit(record, allowVillages) {
         raycaster.set(record.position, record.direction);
         const objects = panels.group.visible ? panels.targets.slice() : [];
-        if (allowVillages && world.parent.visible) objects.push(...targets);
-        return raycaster.intersectObjects(objects, false)[0] || null;
+        const modal = dashboard?.group.visible && dashboard.targets.some((item) => item.parent?.position.z > 0.05);
+        if (dashboard?.group.visible) objects.push(...(modal ? dashboard.targets.filter((item) => item.parent?.position.z > 0.05) : dashboard.targets));
+        const interfaceHit = raycaster.intersectObjects(objects, false)[0];
+        if (interfaceHit) return interfaceHit;
+        return allowVillages && !modal && world.parent.visible ? raycaster.intersectObjects(targets, false)[0] || null : null;
       },
       highlight(objects, selected) {
         targets.forEach((target) => {
@@ -48,6 +51,7 @@
           target.userData.ring.material.color.setHex(chosen ? 0xffdf72 : 0x6cffba);
         });
         panels.highlight(objects);
+        dashboard?.highlight(objects);
       },
       dispose() { clear(); world.remove(overlay); }
     };

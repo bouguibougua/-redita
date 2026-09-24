@@ -1,6 +1,6 @@
 # Eredità sur Meta Quest 3
 
-Le mode réalité mixte est intégré au jeu existant. Il permet de placer le plateau sur une table, de le manipuler et de consulter ses villages. Il utilise le module **Three.js r186 déjà présent**, sans CDN, framework ou seconde simulation.
+Le mode réalité mixte est intégré au jeu existant. Il permet de placer le plateau sur une table et de piloter la préparation, la gestion et le combat avec les contrôleurs. Il utilise le module **Three.js r186 déjà présent**, sans CDN, framework ou seconde simulation.
 
 ## Lancer sur le casque
 
@@ -26,28 +26,32 @@ Ouvrir dans Quest Browser l'adresse **HTTPS** d'un déploiement du projet comple
 
 ### Aperçu ou partie en cours
 
-- **Depuis le menu** : le mode AR expose le tirage courant du moteur, avant confirmation des biomes. Il ne lance pas une seconde partie et ne valide aucun choix automatiquement.
+- **Depuis le menu** : le casque propose entraînement ou local, puis la préparation des decks et biomes. Aucun choix n'est validé automatiquement.
 - **Pour suivre une partie** : préparer et lancer normalement l'entraînement, le local ou le salon, puis cliquer sur **Réalité mixte** au-dessus du plateau. Les mêmes unités, bâtiments et productions sont affichés. La simulation continue pendant le placement et les réglages ; mettre en pause avant l'entrée si souhaité et si le mode l'autorise.
 - **En réseau** : créer/rejoindre le salon comme d'habitude. Rouge reste l'hôte autoritaire, Bleu reste l'invité. Chacun peut choisir sa représentation. Le placement physique reste local au casque ; il n'est pas envoyé à l'autre joueur.
 - **Tutoriel** : le parcours guidé nécessite encore les contrôles HTML ; l'entrée AR y est désactivée. Revenir au menu à sa fin pour utiliser l'AR.
-- **Gestion économique et cartes** : cette étape AR permet la consultation. Revenir au desktop pour construire, attribuer des métiers, etc. Le jeu de cartes en AR n'est pas implémenté.
+- **Gestion économique** : les panneaux du casque permettent de construire, attribuer des métiers et missions, planter, élever, vendre et acheter en appelant le même moteur que le desktop. Les cartes actives n'existent pas encore dans le prototype desktop et Y l'indique dans le casque.
 
 ## Placement et commandes
 
-Le panneau 3D apparaît devant le joueur, légèrement sur sa gauche. Il reste dans le monde et ne suit pas chaque mouvement de tête. Les boutons se visent au rayon et s'activent à la gâchette ; leur surface est une vraie géométrie 3D.
+Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement, un tableau de bord répartit scores et horloge en haut, métiers et informations sur les côtés, tâches et bâtiments en bas, puis habitants sous le plateau. Il suit les grands déplacements du joueur avec un mouvement amorti. Les boutons se visent au rayon et s'activent à la gâchette ; leur surface est une vraie géométrie 3D.
 
 1. Viser la table. Un repère vert et un plateau transparent apparaissent sur une surface horizontale admissible. **Vérifier soi-même qu'il s'agit bien de sa table** : le code ne déduit aucune catégorie de mobilier.
 2. Appuyer sur la gâchette du contrôleur qui porte le repère pour confirmer. Si l'autre contrôleur était prioritaire, une première pression transfère la priorité à celui utilisé ; viser et confirmer une seconde fois.
 3. Si rien n'est détecté, choisir **Placement manuel**. Un plan virtuel remplace la surface détectée ; **Plus haut / Plus bas** règlent sa hauteur. Viser vers le bas et confirmer uniquement lorsque l'aperçu correspond à la vraie table. Le repère manuel est jaune.
-4. Après placement, pointer un village : son cercle devient vert. La gâchette ouvre sa fiche ; le village sélectionné est indiqué en jaune. Les PV, habitants, stocks et bâtiments proviennent du moteur.
-5. Utiliser **Manipuler** pour régler le plateau. **Terminer** rétablit la sélection des villages. **Recentrer** recommence le placement face à la position actuelle ; B/Annuler restaure la pose précédente tant que le repère spatial n'a pas changé.
-6. **Quitter AR** ferme la session et restaure la vue 2D/3D et l'interface de départ.
+4. Après placement, pointer un village : son cercle devient vert. La gâchette le sélectionne et met à jour les panneaux ; A peut ouvrir sa fiche détaillée. Les PV, habitants, stocks et bâtiments proviennent du moteur.
+5. Utiliser **⚙ Réglages** pour déplacer, pivoter ou redimensionner le plateau. **Terminer** rétablit les commandes de jeu. **Recentrer** recommence le placement face à la position actuelle ; B/Annuler restaure la pose précédente tant que le repère spatial n'a pas changé.
+6. **Quitter la réalité mixte** ferme la session et restaure l'interface classique. **Retour au salon** demande une confirmation, ferme la session puis revient au menu.
 
 | Commande | Effet |
 | --- | --- |
 | Gâchette gauche ou droite | Confirmer un placement, un bouton ou un village |
-| A, contrôleur droit Touch reconnu | Même confirmation que la gâchette |
-| B, contrôleur droit Touch reconnu | Fermer la fiche, terminer la manipulation ou annuler un repositionnement |
+| A, contrôleur droit Touch reconnu | Confirmer ; sur un village, ouvrir sa fiche détaillée |
+| B, contrôleur droit Touch reconnu | Revenir/fermer un menu, terminer la manipulation ou annuler un repositionnement |
+| X, contrôleur gauche Touch reconnu | Masquer ou afficher les panneaux de gestion |
+| Y, contrôleur gauche Touch reconnu | Afficher l'état des cartes actives |
+| Joystick droit, jeu | Parcourir les habitants du village sélectionné |
+| Joystick gauche, jeu | Parcourir les commandes du tableau de bord |
 | Joystick gauche, mode manipulation | Déplacer sur le plan horizontal relatif au regard |
 | Joystick droit, mode manipulation | Pivoter |
 | Une préhension, mode manipulation | Déplacer avec la main, hauteur comprise |
@@ -69,6 +73,7 @@ Réglages provisoires dans `js/config.js`, section `xr` : largeur initiale **0,8
 | `js/xr-input.js` (créé) | Deux contrôleurs, `handedness`, rayons, profils, boutons et préhensions |
 | `js/xr-interactions.js` (créé) | Raycaster, zones de sélection des villages et surbrillance |
 | `js/xr-panels.js` (créé) | Panneau flottant et boutons 3D, textes sur CanvasTexture |
+| `js/xr-dashboard.js`, `js/xr-ui.js` | Tableau de bord spatial, menus et adaptation des commandes métier existantes |
 | `js/board3d.js` (modifié) | Renderer existant transparent/XR, socle dans `world`, tags des villages/slots, aperçu et boucle commune |
 | `js/game.js` (modifié) | Adaptateur de vue et unique pas de simulation appelé par `setAnimationLoop` ; RAF de repli si Three.js échoue |
 | `js/config.js` (modifié) | Paramètres temporaires de présentation et de confort |
@@ -91,7 +96,7 @@ Vérification documentaire effectuée le 24 septembre 2026, sans accès physique
 - La case **Placement manuel simplifié** démarre une session ne demandant aucune de ces extensions. Elle peut servir après un refus ou une incompatibilité. Il faut refaire un clic explicite ; aucun essai de session n'est lancé automatiquement après un refus.
 - Une ancre est créée avec `XRFrame.createAnchor` seulement lorsque disponible. Les promesses tardives sont nettoyées à la fermeture et après manipulation. Si l'ancre perd son suivi, le plateau est masqué jusqu'au retour du suivi ou au recentrage. Aucun identifiant persistant n'est stocké.
 - Le repli sans ancre conserve la pose dans l'espace `local` de la session. Un événement `reset` de cet espace impose un nouveau placement pour éviter de prétendre à une stabilité spatiale que l'application ne peut garantir.
-- A/B utilisent les index 4/5 **uniquement** à droite pour les profils Touch connus, notamment [le profil officiel Touch Plus](https://raw.githubusercontent.com/immersive-web/webxr-input-profiles/main/packages/registry/profiles/meta/meta-quest-touch-plus.json). Les axes 2/3 sont définis par [WebXR Gamepads, mapping xr-standard](https://www.w3.org/TR/webxr-gamepads-module-1/). Aucun index n'est considéré comme universel.
+- A/B utilisent les index 4/5 à droite et X/Y les mêmes index à gauche **uniquement** pour les profils Touch connus, notamment [le profil officiel Touch Plus](https://raw.githubusercontent.com/immersive-web/webxr-input-profiles/main/packages/registry/profiles/meta/meta-quest-touch-plus.json). Les axes 2/3 sont définis par [WebXR Gamepads, mapping xr-standard](https://www.w3.org/TR/webxr-gamepads-module-1/). Aucun index n'est considéré comme universel.
 - Les modèles sont les géométries provisoires existantes. Les ombres et le brouillard desktop sont désactivés en AR, les mises à jour HTML sont espacées. Les performances sur Quest, notamment avec une partie chargée en unités, restent à mesurer. Il n'y a pas d'occlusion par le mobilier réel, de suivi des mains nues ou de partage d'ancres entre casques.
 
 Dans le débogueur du navigateur, `Eredita.XR.diagnostics` donne les fonctionnalités accordées, les profils/mains, le suivi, la taille, la sélection et l'état de l'ancre. Le diagnostic ne modifie aucune donnée de jeu. Le code ne peut pas vérifier la version réellement installée de Quest Browser avant que vous ouvriez le prototype sur ce casque.
@@ -105,7 +110,7 @@ node tests/network-server.test.js
 npm test
 ```
 
-Les deux suites XR et le test serveur passent. La suite XR utilise le vrai module Three.js pour vérifier géométrie, Raycaster, orientation Rouge/Bleu, limites, préhensions, profils, déconnexions, sources tardives et perte d'ancre. La suite navigateur utilise Edge sans fenêtre, le vrai rendu WebGL et un **périphérique XR simulé**. Elle vérifie le menu, le refus d'autorisation, l'activation au clic, les boutons 3D, les deux contrôleurs, le placement, les réglages, plusieurs entrées/sorties, le retour 2D/3D, ainsi qu'un salon avec hôte et invité AR recevant la construction faite sur le PC. Elle ne teste pas la couche WebXR native du casque. Les API simulées sont uniquement dans `tests/`.
+Les deux suites XR et le test serveur passent. La suite XR utilise le vrai module Three.js pour vérifier géométrie, Raycaster, orientation Rouge/Bleu, limites, préhensions, profils, déconnexions, sources tardives et perte d'ancre. La suite navigateur utilise Edge sans fenêtre, le vrai rendu WebGL et un **périphérique XR simulé**. Elle vérifie le menu, le refus d'autorisation, l'activation au clic, les boutons 3D, les deux contrôleurs, le placement, les réglages, plusieurs entrées/sorties, le retour 2D/3D, une préparation solo lancée en XR, ainsi qu'un salon où l'invité construit en XR et l'hôte reçoit cette action. Elle ne teste pas la couche WebXR native du casque. Les API simulées sont uniquement dans `tests/`.
 
 Le test navigateur nécessite Node.js **22+** (WebSocket natif) et Edge sous Windows. `EREDITA_BROWSER` peut indiquer le chemin d'un Chromium différent. Il lance ses propres processus sur les ports 8787 et 9447 et les ferme après le test.
 

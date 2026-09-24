@@ -74,14 +74,18 @@
       scene.background = null; scene.fog = null; renderer.setClearColor(0x000000, 0); renderer.shadowMap.enabled = false;
       camera.position.set(0, 0, 0); camera.quaternion.identity();
       camera.near = E.Config.xr.cameraNear; camera.far = E.Config.xr.cameraFar; camera.updateProjectionMatrix();
-      current = { ...context, session, root, saved, selected: null, manipulation: null, message: "Visez votre table, puis confirmez le repère à la gâchette.", lastPanel: -Infinity, lastTime: null, viewer: null, positioned: false };
+      current = { ...context, session, root, saved, selected: null, manipulation: null, message: "Visez votre table, puis confirmez le repère à la gâchette.", lastPanel: -Infinity, lastTime: null, viewer: null, positioned: false, lastStick: 0, leaveAfterEnd: false };
       const runtime = current;
       const status = (message) => { runtime.message = message; };
       session.addEventListener("end", cleanup, { once: true });
       current.panels = E.XRPanels.create(context);
+      current.dashboard = E.XRDashboard.create(context);
+      current.dashboard.group.visible = false;
+      current.ui = E.XRUI.create(current.dashboard, status);
       current.input = E.XRInput.create({ ...context, session });
       current.placement = E.XRPlacement.create({ ...context, session, root, manualOnly, playerId: E.GameView.getPlayerId(), status });
-      current.interactions = E.XRInteractions.create({ ...context, panels: current.panels });
+      if (E.Network.mode === "guest") current.placement.setWidth(E.GameView.getState().xrBoardWidth || E.Config.xr.initialWidth);
+      current.interactions = E.XRInteractions.create({ ...context, panels: current.panels, dashboard: current.dashboard });
       current.visibilityChanged = () => {
         runtime.input.reset(); runtime.lastTime = null;
         if (session.visibilityState !== "visible") runtime.message = "Session en attente du retour du suivi.";
@@ -111,7 +115,7 @@
     const { scene, renderer, camera, world, saved, root, session } = runtime;
     session.removeEventListener("visibilitychange", runtime.visibilityChanged);
     runtime.space?.removeEventListener("reset", runtime.onReset);
-    runtime.input?.dispose(); runtime.placement?.dispose(); runtime.interactions?.dispose(); runtime.panels?.dispose();
+    runtime.input?.dispose(); runtime.placement?.dispose(); runtime.interactions?.dispose(); runtime.panels?.dispose(); runtime.dashboard?.dispose();
     E.Board3D.setXRPreview(false);
     scene.add(world); scene.remove(root);
     world.position.copy(saved.worldPosition); world.quaternion.copy(saved.worldQuaternion); world.scale.copy(saved.worldScale); world.visible = saved.worldVisible;
@@ -122,6 +126,7 @@
     requestAnimationFrame(() => E.Board3D.resize());
     supportMessage = "Session terminée. Le plateau devra être replacé à la prochaine ouverture.";
     refreshAvailability(); entryButton?.focus();
+    if (runtime.leaveAfterEnd) E.GameView.returnToLobby();
   }
   function end() {
     const runtime = current;
@@ -129,10 +134,11 @@
   }
   function cancel() {
     const r = current;
+    if (r.ui?.modal && r.placement.placed && !r.manipulation) { r.ui.close(); return; }
     if (r.selected) { r.selected = null; return; }
     if (r.manipulation) { r.manipulation = null; r.placement.endManipulation(); r.message = "Manipulation terminée."; return; }
     if (!r.placement.placed && r.placement.cancelPlacement()) { r.message = "Repositionnement annulé."; return; }
-    r.message = "Utilisez Quitter AR pour revenir à l’interface classique.";
+    r.message = "Ouvrez les réglages avec ⚙ pour quitter ou manipuler le plateau.";
   }
   function action(name) {
     const r = current;
@@ -151,16 +157,27 @@
     }
     if (["move", "rotate", "size"].includes(name)) {
       r.selected = null; r.manipulation = name; r.placement.beginManipulation();
+      r.panels.position(r.viewer);
       r.message = "Préhension : déplacer ; deux mains : taille et rotation.";
       return;
     }
-    if (name === "done") { r.manipulation = null; r.placement.endManipulation(); r.message = "Manipulation terminée. Sélectionnez un village."; return; }
+    if (name === "done") { r.manipulation = null; r.placement.endManipulation(); E.GameView.setXRBoardWidth(r.placement.width); r.message = "Manipulation terminée. Sélectionnez un village."; return; }
     r.placement.adjust(name, r.viewer);
     r.message = `Largeur ${(r.placement.width * 100).toFixed(0)} cm · limites ${cfg.minWidth * 100}–${cfg.maxWidth * 100} cm`;
   }
   function confirm(record, hit) {
     const r = current;
     const target = hit?.object.userData.xrTarget;
+    if (target?.kind === "dashboard-button") {
+      const result = r.ui.activate(target);
+      r.input.flash(record, Boolean(result));
+      if (result?.type === "manipulate") { r.ui.close(); action(result.mode); }
+      if (result?.type === "recenter") { r.ui.close(); action("recenter"); }
+      if (result?.type === "exit") end();
+      if (result?.type === "leave") { r.leaveAfterEnd = true; end(); }
+      return;
+    }
+    if (target?.kind === "dashboard-panel") { r.input.flash(record, false); return; }
     if (target?.kind === "button") { r.input.flash(record, true); return action(target.action); }
     if (target?.kind === "panel") { r.input.flash(record, false); return; }
     if (!r.placement.placed) { r.input.flash(record, r.placement.confirm(record)); return; }
@@ -168,11 +185,13 @@
     if (target?.kind === "village" && E.GameView.selectVillage(target.playerId, target.lane)) {
       r.selected = { playerId: target.playerId, lane: target.lane };
       r.input.flash(record, true);
-      r.message = "Village sélectionné. B ou Fermer pour revenir aux commandes.";
+      r.ui.render();
+      r.message = "Village sélectionné.";
     } else { r.message = "Pointez un village ou un bouton du panneau."; r.input.flash(record, false); }
   }
   function panelContent() {
     const r = current;
+    if (r.placement.placed && !r.manipulation) { r.panels.group.visible = false; return; }
     const state = E.GameView.getState();
     const phase = state.phase === "setup" ? "Aperçu du tirage actuel · préparation dans le menu" : state.phase === "ended" ? "Partie terminée" : state.paused ? "Partie en pause" : `Partie en cours · ${Math.floor(state.elapsed)} s`;
     const controllers = r.input.records.filter((record) => record.tracked).map((record) => record.source.handedness === "left" ? "gauche" : record.source.handedness === "right" ? "droite" : "sans main définie");
@@ -230,10 +249,15 @@
     if (!pose) { r.root.visible = false; r.input.reset(); return; }
     r.viewer = { position: new r.THREE.Vector3().copy(pose.transform.position), quaternion: new r.THREE.Quaternion().copy(pose.transform.orientation) };
     if (!r.positioned) { r.panels.position(r.viewer); r.positioned = true; }
+    r.dashboard.position(r.viewer, true, dt);
     r.input.update(frame, r.space);
     r.placement.update(frame, r.space, r.input.records, r.viewer, timestamp);
+    if (E.Network.mode === "guest" && E.GameView.getState().xrBoardWidth) r.placement.setWidth(E.GameView.getState().xrBoardWidth);
+    if (r.placement.placed && !r.widthShared && E.Network.mode !== "guest") { E.GameView.setXRBoardWidth(r.placement.width); r.widthShared = true; }
     if (r.manipulation && r.placement.placed) r.placement.manipulate(r.input.records, r.viewer, dt);
     E.Board3D.setXRPreview(!r.placement.placed);
+    r.dashboard.group.visible = r.placement.placed && !r.manipulation;
+    if (r.dashboard.group.visible && timestamp - r.lastPanel >= E.Config.xr.dashboardRefreshMs) r.ui.render();
     r.interactions.sync();
     r.scene.updateMatrixWorld(true);
     const hovered = new Set();
@@ -241,17 +265,36 @@
     for (const record of r.input.records.filter((item) => item.tracked)) {
       const hit = r.interactions.hit(record, r.placement.placed && !r.manipulation);
       hits.set(record, hit);
-      if (hit?.object.userData.xrTarget.kind !== "panel" && hit) hovered.add(hit.object);
+      if (hit && !["panel", "dashboard-panel"].includes(hit.object.userData.xrTarget.kind)) hovered.add(hit.object);
       const candidate = r.placement.candidate;
       const canPlace = !r.placement.placed && candidate?.record === record;
       r.input.feedback(record, hit?.distance || (canPlace ? record.position.distanceTo(candidate.position) : null), hovered.has(hit?.object) || canPlace);
     }
     for (const event of r.input.drain()) {
-      if (event.type === "cancel") cancel(); else confirm(event.record, hits.get(event.record));
+      if (event.type === "cancel") cancel();
+      else if (event.type === "panels" && r.placement.placed) r.ui.toggle();
+      else if (event.type === "cards" && r.placement.placed) r.ui.cards();
+      else if (event.type === "confirm" && event.button === 4 && r.placement.placed && hits.get(event.record)?.object.userData.xrTarget.kind === "village") {
+        confirm(event.record, hits.get(event.record)); r.ui.info();
+      } else if (event.type === "confirm" && event.button === 4 && r.placement.placed && !hits.get(event.record) && r.ui.focusedTarget) {
+        const result = r.ui.activate(r.ui.focusedTarget.userData.xrTarget);
+        if (result?.type === "manipulate") { r.ui.close(); action(result.mode); }
+        if (result?.type === "recenter") { r.ui.close(); action("recenter"); }
+        if (result?.type === "exit") end();
+        if (result?.type === "leave") { r.leaveAfterEnd = true; end(); }
+      }
+      else confirm(event.record, hits.get(event.record));
       if (current !== r) return;
       r.lastPanel = -Infinity;
     }
+    if (r.dashboard.group.visible && r.ui.focusedTarget) hovered.add(r.ui.focusedTarget);
     r.interactions.highlight(hovered, r.selected);
+    if (r.dashboard.group.visible && !r.manipulation && timestamp - r.lastStick > E.Config.xr.dashboardStickRepeatMs) {
+      for (const record of r.input.records) {
+        if (!record.tracked || Math.abs(record.axes[1]) < E.Config.xr.dashboardStickThreshold) continue;
+        r.ui.stick(record.source.handedness, Math.sign(record.axes[1])); r.lastStick = timestamp; break;
+      }
+    }
     if (timestamp - r.lastPanel >= E.Config.xr.panelUpdateMs) { panelContent(); r.lastPanel = timestamp; }
   }
   E.XR = { init, update, refreshAvailability, get active() { return Boolean(current); },

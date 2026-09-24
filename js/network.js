@@ -30,6 +30,14 @@
     E.Audio?.play("menu");
   }
 
+  function startMode(nextMode) {
+    if (mode !== "pending" || !["solo", "local"].includes(nextMode)) return false;
+    mode = nextMode; playerId = nextMode === "solo" ? "red" : null; roomCode = null;
+    showGame();
+    handlers.onReady?.({ mode, playerId, roomCode });
+    return true;
+  }
+
   function connect(type, code) {
     if (socket && socket.readyState <= WebSocket.OPEN) socket.close();
     if (location.protocol !== "http:" && location.protocol !== "https:") {
@@ -98,7 +106,7 @@
         subTitle.textContent = "Choisissez votre voie";
         subContent.innerHTML = '<div class="menu-choice-grid"><button id="open-multiplayer" class="button button-red" type="button">MULTIJOUEUR</button><button id="training-button" class="button" type="button">ENTRAÎNEMENT</button></div><p class="menu-muted">Le mode entraînement réutilise la partie contre l’IA déjà présente dans le prototype.</p>';
         document.querySelector("#open-multiplayer").addEventListener("click", () => { sub.hidden = true; document.querySelector("#connection-screen").hidden = false; bindConnectionControls(); });
-        document.querySelector("#training-button").addEventListener("click", () => { mode = "solo"; playerId = "red"; showGame(); setStatus("Mode entraînement · vous jouez Rouge contre l’IA"); handlers.onReady?.({ mode, playerId, roomCode: null }); });
+        document.querySelector("#training-button").addEventListener("click", () => { startMode("solo"); setStatus("Mode entraînement · vous jouez Rouge contre l’IA"); });
       } else if (screen === "decks") {
         subTitle.textContent = "Construire vos decks";
         E.Decks.mount(subContent);
@@ -113,7 +121,7 @@
       E.Audio?.play("menu");
     }
     function bindConnectionControls() {
-      document.querySelector("#play-local")?.addEventListener("click", () => { mode = "local"; playerId = null; showGame(); handlers.onReady?.({ mode, playerId, roomCode: null }); });
+      document.querySelector("#play-local")?.addEventListener("click", () => startMode("local"));
       document.querySelector("#create-online")?.addEventListener("click", () => connect("create"));
       document.querySelector("#join-online")?.addEventListener("click", () => { const code = document.querySelector("#room-code").value.trim().toUpperCase(); if (code.length !== 5) return setStatus("Entre un code de salon à 5 caractères.", true); connect("join", code); });
       document.querySelector("#room-code")?.addEventListener("input", (event) => { event.target.value = event.target.value.toUpperCase().replace(/[^A-Z2-9]/g, "").slice(0, 5); });
@@ -141,5 +149,20 @@
     if (mode === "guest" && socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "command", method, args, view }));
   }
 
-  E.Network = { init, sendState, sendCommand, get mode() { return mode; }, get playerId() { return playerId; }, get roomCode() { return roomCode; } };
+  function leaveRoom() {
+    const previous = socket;
+    socket = null;
+    if (previous && previous.readyState < WebSocket.CLOSING) previous.close();
+    mode = "pending"; playerId = null; roomCode = null;
+    document.querySelector("#created-room").hidden = true;
+    document.querySelector(".connection-actions").hidden = false;
+    document.querySelector(".join-room").hidden = false;
+    document.querySelector("#connection-screen").hidden = true;
+    document.querySelector("#menu-subscreen").hidden = true;
+    document.querySelector("#main-menu").hidden = false;
+    document.querySelector(".app-shell").classList.add("connection-pending");
+    setStatus("Choisissez un mode de jeu.");
+  }
+
+  E.Network = { init, sendState, sendCommand, startMode, leaveRoom, get mode() { return mode; }, get playerId() { return playerId; }, get roomCode() { return roomCode; } };
 }());

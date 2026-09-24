@@ -46,6 +46,42 @@
     init({ getState, controller }) { readState = getState; commands = controller; },
     getState: () => readState(),
     getPlayerId: () => E.Network.playerId || "red",
+    canControl(playerId) {
+      const mode = E.Network.mode;
+      return mode === "local" ? ["red", "blue"].includes(playerId)
+        : mode === "solo" || mode === "host" ? playerId === "red"
+          : mode === "guest" ? playerId === "blue" : false;
+    },
+    command(method, ...args) {
+      const allowed = new Set([
+        "selectDeck", "toggleBiome", "confirmBiomes", "start", "togglePause",
+        "selectResident", "placeCrop", "placeLivestock", "slaughter", "build", "upgrade", "changeJob",
+        "setProfession", "assignProfessionToAll", "setNextResidentProfession",
+        "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "setNextResidentMission",
+        "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal",
+        "orderAnimal", "slaughterSpecialAnimal", "deploy", "chooseRedirect"
+      ]);
+      if (!allowed.has(method) || typeof commands[method] !== "function") return false;
+      if (["selectDeck", "toggleBiome", "confirmBiomes"].includes(method)) {
+        if (!this.canControl(args[0])) return false;
+      } else if (method === "start" || method === "togglePause") {
+        if (E.Network.mode === "guest") return false;
+      } else if (method === "chooseRedirect") {
+        if (E.Network.mode !== "local" && !String(args[0]).startsWith(`${this.getPlayerId()}-`)) return false;
+      } else if (method !== "selectResident" && !this.canControl(readState().selectedVillage.playerId)) return false;
+      commands[method](...args);
+      return true;
+    },
+    returnToLobby() {
+      E.Network.leaveRoom();
+      commands.restart();
+    },
+    setXRBoardWidth(width) {
+      if (E.Network.mode === "guest" || !Number.isFinite(width)) return false;
+      readState().xrBoardWidth = Math.max(E.Config.xr.minWidth, Math.min(E.Config.xr.maxWidth, width));
+      E.Network.sendState(readState());
+      return true;
+    },
     villageInfo,
     selectVillage(playerId, lane) {
       if (!readState().players[playerId]?.villages[lane]) return false;

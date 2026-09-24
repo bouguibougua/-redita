@@ -7,6 +7,7 @@
   };
   let current = null;
   let desiredTrack = "menu";
+  let muted = false;
   function play(kind) {
     desiredTrack = kind;
     const audio = tracks[kind];
@@ -17,12 +18,15 @@
     }
     if (current) { current.pause(); current.currentTime = 0; }
     audio.loop = true;
-    audio.volume = .38;
+    audio.volume = muted ? 0 : .38;
     current = audio;
     audio.play().catch(() => {});
     audio.addEventListener("error", () => { if (current === audio) current = null; }, { once: true });
   }
-  E.Audio = { play, stop() { current?.pause(); current = null; }, playMenuOnInteraction() {
+  E.Audio = { play,
+    get muted() { return muted; },
+    setMuted(value) { muted = Boolean(value); if (current) current.volume = muted ? 0 : .38; },
+    stop() { current?.pause(); current = null; }, playMenuOnInteraction() {
     const events = ["pointerdown", "touchstart", "keydown", "click"];
     const start = () => {
       const audio = tracks[desiredTrack];

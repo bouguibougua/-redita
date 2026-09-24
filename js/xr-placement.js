@@ -203,6 +203,7 @@
       get placed() { return placed; }, get manual() { return manual; },
       get manualOnly() { return manualOnly; },
       get candidate() { return candidate; }, get width() { return root.scale.x * cfg.boardWidth; },
+      setWidth(width) { if (Number.isFinite(width)) root.scale.setScalar(THREE.MathUtils.clamp(width, cfg.minWidth, cfg.maxWidth) / cfg.boardWidth); },
       get anchorTracked() { return Boolean(anchor && root.visible); },
       setManual(value) { manual = value; candidate = null; requestedAt = null; status(value ? "Plan manuel : ajustez sa hauteur à votre table puis confirmez." : "Visez votre table. Confirmez uniquement le repère souhaité."); },
       height(direction) { manualHeight = THREE.MathUtils.clamp(manualHeight + direction * cfg.heightStep, latestViewer.position.y - cfg.maxBelowEyes, latestViewer.position.y - cfg.minBelowEyes); },

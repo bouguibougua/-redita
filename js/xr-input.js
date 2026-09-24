@@ -9,7 +9,9 @@
     return {
       axes: [2, 3],
       confirm: source.handedness === "right" && source.profiles?.some((id) => touchProfiles.has(id)) ? 4 : null,
-      cancel: source.handedness === "right" && source.profiles?.some((id) => touchProfiles.has(id)) ? 5 : null
+      cancel: source.handedness === "right" && source.profiles?.some((id) => touchProfiles.has(id)) ? 5 : null,
+      panels: source.handedness === "left" && source.profiles?.some((id) => touchProfiles.has(id)) ? 4 : null,
+      cards: source.handedness === "left" && source.profiles?.some((id) => touchProfiles.has(id)) ? 5 : null
     };
   }
 
@@ -57,10 +59,10 @@
           const value = source.gamepad.axes[i] || 0;
           return Math.abs(value) < cfg.stickDeadzone ? 0 : value;
         });
-        ["confirm", "cancel"].forEach((type) => {
+        ["confirm", "cancel", "panels", "cards"].forEach((type) => {
           const index = layout[type];
           const pressed = index !== null && Boolean(source.gamepad.buttons[index]?.pressed);
-          if (pressed && record.buttons[type] === false) queue.push({ type, record, source });
+          if (pressed && record.buttons[type] === false) queue.push({ type, record, source, button: index });
           record.buttons[type] = pressed;
         });
       });

@@ -81,6 +81,7 @@
       paused: false,
       elapsed: 0,
       overtimeAccumulator: 0,
+      xrBoardWidth: null,
       players: {
         red: createPlayer("red", "Joueur Rouge"),
         blue: createPlayer("blue", "Joueur Bleu")

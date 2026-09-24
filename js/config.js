@@ -24,6 +24,13 @@
       panelSideOffset: 0.52, panelBelowEyes: 0.1,
       panelUpdateMs: 250, desktopUpdateMs: 150,
       feedbackMs: 450,
+      // TEMP_BALANCE_VALUE — disposition et cadence de l'interface dans le casque.
+      dashboardDistance: 1.55, dashboardMoveThreshold: 0.55,
+      dashboardTurnThreshold: 0.65, dashboardSmoothness: 3,
+      dashboardRefreshMs: 200, dashboardRowHeight: 0.061,
+      dashboardFontSize: 40, dashboardTitleSize: 48,
+      dashboardStickThreshold: 0.65, dashboardStickRepeatMs: 260,
+      dashboardRowsPerPage: 6, residentPageSize: 5,
       cameraNear: 0.02, cameraFar: 30
     },
     biomes: ["montagne", "plaine", "littoral"],

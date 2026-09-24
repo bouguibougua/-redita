@@ -38,6 +38,8 @@ async function run() {
   assert.equal(E.XRInput.mapping(source("right")).confirm, 4);
   assert.equal(E.XRInput.mapping(source("right")).cancel, 5);
   assert.equal(E.XRInput.mapping(source("left")).confirm, null);
+  assert.equal(E.XRInput.mapping(source("left")).panels, 4);
+  assert.equal(E.XRInput.mapping(source("left")).cards, 5);
   assert.equal(E.XRInput.mapping(source("right", ["unknown"])).confirm, null);
   assert.equal(E.XRInput.mapping(source("right", [], "standard")), null);
 
@@ -59,6 +61,12 @@ async function run() {
   assert.equal(input.drain()[0].record.source.handedness, "right");
   input.update(trackingFrame, {});
   assert.equal(input.drain().length, 0, "A maintenu ne répète pas la commande");
+  left.gamepad.buttons[4].pressed = true;
+  input.update(trackingFrame, {});
+  assert.equal(input.drain()[0].type, "panels");
+  left.gamepad.buttons[5].pressed = true;
+  input.update(trackingFrame, {});
+  assert.equal(input.drain()[0].type, "cards");
   left.gamepad.buttons[7].pressed = true;
   input.update(trackingFrame, {});
   assert.equal(input.drain().length, 0, "Le bouton système n'est jamais lié");
