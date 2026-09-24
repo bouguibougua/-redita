@@ -39,7 +39,7 @@ Technologies prévues pour le prototype :
 
 Pas de PHP ni de base de données nécessaires pour la première version.
 
-Une version plus avancée, éventuellement sous Unity ou en VR, pourra être envisagée plus tard.
+Un premier mode réalité mixte WebXR pour Meta Quest 3 complète désormais ce prototype web (voir section 94), sans remplacer le desktop ni sa simulation.
 
 ---
 
@@ -2684,3 +2684,19 @@ Le tutoriel impose le deck Plaine et le territoire initial Plaine, Littoral, Mon
 Le village Rouge de la première région commence avec cinq habitants. La génération automatique des habitants rouges est suspendue jusqu'à la destruction du premier village adverse. Le tutoriel n'a ni limite de temps ni Overtime. Après le premier village adverse détruit, toutes les restrictions sont levées, la génération normale reprend et une IA volontairement facile poursuit son économie ; elle attend environ 60 secondes entre ses attaques et ne lance pas plus de trois offensives supplémentaires.
 
 La première sélection ultérieure d'une Montagne ou d'un Littoral déclenche une unique explication en pause avec mise en évidence des deux biomes. À la fin de ces dialogues, le bouton de vue 3D est mis en évidence et la partie reprend lorsque le joueur l'utilise pour repasser en 3D. La destruction des quatre villages adverses termine proprement le tutoriel et propose un retour au menu. Ces restrictions ne doivent jamais s'appliquer aux autres modes de jeu.
+
+---
+
+# 94. RÉALITÉ MIXTE — PREMIÈRE ÉTAPE QUEST 3
+
+La réalité mixte est une représentation supplémentaire de l'état existant, avec Three.js et une session WebXR **immersive-ar** sur fond transparent. Elle conserve les huit régions, les huit villages, les biomes, les emplacements et les littoraux orientés vers l'adversaire. Le menu HTML et les modes entraînement, local et salons sont conservés. Cette étape porte sur le placement du plateau et la consultation des villages ; la gestion complète reste dans l'interface classique.
+
+Le joueur confirme lui-même le placement sur sa table avec la gâchette d'un contrôleur. Une surface détectée n'est pas automatiquement identifiée comme une table. Un aperçu transparent et un repère précèdent le placement ; si le hit-test n'est pas disponible, un plan manuel à hauteur réglable permet le même placement. La largeur initiale est d'environ **80 cm**, configurable. Le côté du joueur Rouge ou Bleu est orienté vers sa position initiale. Le socle et tous les éléments suivent un seul groupe de transformation.
+
+Un mode manipulation explicite permet déplacement, rotation, taille et recentrage. En dehors de ce mode, les préhensions et joysticks ne déplacent pas le plateau. Une préhension déplace le plateau ; deux préhensions permettent aussi rotation et redimensionnement. Le joystick gauche déplace et le droit pivote. Les boutons 3D proposent également toutes ces opérations à la gâchette. Sur les profils Touch reconnus, A confirme et B ferme un panneau ou termine les réglages ; les commandes système ne sont pas utilisées.
+
+Sélectionner un village ouvre une fiche contenant ses données existantes : propriétaire/numéro, biome, niveau, PV, habitants, six stocks locaux et bâtiments. Ces informations se mettent à jour depuis la même simulation ou les mêmes snapshots réseau que le desktop. Les transformations spatiales restent propres au casque ; elles ne modifient aucune position logique, ressource, vitesse ou règle du jeu.
+
+Une ancre non persistante est utilisée si disponible. Sans ancre, le plateau reste dans le repère de la session ; un changement d'origine impose un nouveau placement. Aucune restauration spatiale entre sessions n'est promise. Les valeurs de confort et les limites provisoires sont centralisées dans `Config.xr` avec la mention `TEMP_BALANCE_VALUE`.
+
+Les futures cartes suivront sélection → carte active → emplacements autorisés → confirmation, via un adaptateur appelant les fonctions métier partagées. Le jeu de cartes complet, ses coûts et ses effets ne sont pas ajoutés à cette étape. Le tutoriel scénarisé reste dans son interface actuelle. Les tests matériels à effectuer sont détaillés dans `QUEST3.md`.

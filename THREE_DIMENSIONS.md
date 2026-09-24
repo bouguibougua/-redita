@@ -26,6 +26,8 @@ Pendant un combat, la figurine bascule vers sa cible à chaque attaque et cligno
 
 Les chasseurs se déplacent dans leur région à partir des positions synchronisées par la simulation. Lorsqu’un village subit un coup, des particules de fumée procédurales apparaissent au-dessus du village et de ses bâtiments. Les unités qui traversent l'eau sont visuellement accompagnées de leur Barque ou Voilier ; une unité sans place disponible se noie selon la simulation, indépendamment du rendu. Huit fiches HTML communes aux vues 2D et 3D restent visibles sur le plateau et résument en permanence les PV, la population, les habitants disponibles et les six ressources de chaque village.
 
-## Prochaine étape AR
+## Mode réalité mixte
 
-La scène et le groupe `world` sont séparés du moteur. Une future session WebXR pourra placer ce groupe sur une surface détectée et conserver les mêmes interactions et la même synchronisation multijoueur.
+Le bouton **RÉALITÉ MIXTE · QUEST 3** du menu, ou **Réalité mixte** pendant une partie, ouvre désormais une session `immersive-ar`. Elle utilise le même renderer Three.js r186, la même scène et le même groupe `world`, socle compris. `renderer.setAnimationLoop` pilote le rendu et l'unique simulation ; un RAF prend le relais lorsque Three.js n'a pas chargé. Les villages sont sélectionnables au rayon dans ce mode.
+
+Le placement, les contrôleurs et les panneaux sont isolés dans `js/xr*.js`. L'adaptateur `js/game-view.js` relit l'état courant et utilise le contrôleur partagé avec le desktop, y compris pour un invité réseau. Aucun modèle ni état de partie n'est dupliqué. Voir [QUEST3.md](QUEST3.md) pour le lancement, les limites et les tests physiques.

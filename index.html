@@ -28,6 +28,7 @@
         <div class="setup-footer">
           <p id="setup-hint" class="hint">Les deux joueurs doivent confirmer leur territoire.</p>
           <button id="start-game" class="button button-primary" type="button" disabled>Lancer la partie</button>
+          <button class="button" data-open-xr type="button">Plateau en réalité mixte</button>
         </div>
       </section>
 
@@ -41,7 +42,7 @@
             </div>
             <div id="battlefield" class="battlefield">
               <div class="board-clock" role="timer" aria-label="Temps restant"><span id="phase-label">Temps normal</span><strong id="game-clock">12:30</strong></div>
-              <div class="view-controls"><button id="pause-game" class="button button-quiet" type="button">Pause</button><button id="toggle-board-view" class="button button-quiet" type="button" aria-pressed="false">Chargement 3D…</button></div>
+              <div class="view-controls"><button id="pause-game" class="button button-quiet" type="button">Pause</button><button id="toggle-board-view" class="button button-quiet" type="button" aria-pressed="false">Chargement 3D…</button><button class="button button-quiet" data-open-xr type="button">Réalité mixte</button></div>
               <div id="board-columns" class="board-columns"></div>
               <div id="battlefield-3d" class="battlefield-3d" hidden></div>
               <div id="units-layer" class="units-layer" aria-label="Unités sur le terrain"></div>
@@ -79,6 +80,7 @@
         <button class="menu-button menu-button-primary" data-menu-screen="play" type="button">JOUER</button>
         <button class="menu-button" data-menu-screen="decks" type="button">DECKS</button>
         <button class="menu-button" data-menu-screen="tutorial" type="button">TUTORIEL</button>
+        <button class="menu-button" data-open-xr type="button">RÉALITÉ MIXTE · QUEST 3</button>
       </nav>
     </section>
   </div>
@@ -149,6 +151,16 @@
     </section>
   </div>
 
+  <dialog id="xr-dialog" class="xr-dialog" aria-labelledby="xr-title">
+    <h2 id="xr-title">Votre plateau sur votre table</h2>
+    <p>Placez le plateau avec vos contrôleurs, ajustez sa taille puis sélectionnez un village pour consulter ses informations.</p>
+    <p>Depuis le menu, vous explorez le tirage actuel. Pour suivre une partie, préparez-la avec les modes habituels (entraînement, local ou salon), puis utilisez <strong>Réalité mixte</strong> sur le plateau. La partie continue pendant la session AR.</p>
+    <p>Visez votre vraie table et confirmez le repère à la gâchette. Le placement manuel permet d’ajuster la hauteur si aucune surface n’est détectée.</p>
+    <label class="xr-fallback"><input id="xr-manual-only" type="checkbox"> Placement manuel simplifié (sans hit-test ni ancre)</label>
+    <p id="xr-status" role="status" aria-live="polite">Vérification du navigateur…</p>
+    <div class="dialog-actions"><button id="xr-start" class="button button-primary" type="button" disabled>Entrer en réalité mixte</button><button id="xr-close" class="button" type="button">Retour</button></div>
+  </dialog>
+
   <script src="js/config.js"></script>
   <script src="js/biomes.js"></script>
   <script src="js/crops.js"></script>
@@ -169,6 +181,12 @@
   <script src="js/audio.js"></script>
   <script src="js/board3d.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/game-view.js"></script>
+  <script src="js/xr-input.js"></script>
+  <script src="js/xr-placement.js"></script>
+  <script src="js/xr-panels.js"></script>
+  <script src="js/xr-interactions.js"></script>
+  <script src="js/xr.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

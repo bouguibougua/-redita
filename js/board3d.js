@@ -15,6 +15,8 @@
   let ready = false;
   let enabled = true;
   let onSelectVillage = null;
+  let onFrame = null;
+  let xrPreview = false;
   let orbit = { angle: -0.72, elevation: 0.88, distance: 18 };
   let pointer = null;
   let dragged = false;
@@ -38,11 +40,13 @@
   function init(options = {}) {
     container = options.container || document.querySelector("#battlefield-3d");
     onSelectVillage = options.onSelectVillage || null;
+    onFrame = options.onFrame || null;
     if (!container) return;
     import("./vendor/three.module.min.js").then((module) => {
       THREE = module;
       setup();
       ready = true;
+      E.XR?.refreshAvailability();
       setMode(enabled);
       if (latestState) update(latestState, true);
     }).catch((error) => {
@@ -50,6 +54,7 @@
       enabled = false;
       container.innerHTML = '<p class="three-error">La vue 3D n’a pas pu être chargée. La vue 2D reste disponible.</p>';
       setMode(false);
+      E.XR?.refreshAvailability();
       const button = document.querySelector("#toggle-board-view");
       if (button) button.disabled = true;
     });
@@ -60,7 +65,8 @@
     scene.background = new THREE.Color(0x172019);
     scene.fog = new THREE.Fog(0x172019, 19, 32);
     camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+    renderer.xr.enabled = true;
     renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
@@ -88,7 +94,7 @@
     bindControls();
     new ResizeObserver(resize).observe(container);
     resize();
-    animate();
+    renderer.setAnimationLoop(animate);
   }
 
   function material(color, roughness = 0.82, metalness = 0) {
@@ -105,10 +111,10 @@
   function addBoardBase() {
     const base = mesh(new THREE.BoxGeometry(13.3, 0.42, 10.7), 0x44372a, { castShadow: false });
     base.position.y = -0.31;
-    scene.add(base);
+    world.add(base);
     const rim = mesh(new THREE.BoxGeometry(13.65, 0.16, 11.05), 0xb68a4d, { castShadow: false, metalness: 0.1 });
     rim.position.y = -0.48;
-    scene.add(rim);
+    world.add(rim);
   }
 
   function terrainTile(village) {
@@ -213,6 +219,7 @@
       const [x, z] = positions[index];
       const marker = mesh(new THREE.CylinderGeometry(0.35, 0.39, 0.06, 16), slot.type === "animal" ? 0x735f3c : 0x566744, { castShadow: false });
       marker.position.set(x, 0.1, z);
+      marker.userData.xrTarget = { kind: "slot", playerId: village.ownerId, lane: village.lane, slotIndex: index };
       group.add(marker);
       if (slot.content?.category === "crop") addCrop(group, slot.content.type, x, z);
       if (slot.content?.category === "livestock") addHerd(group, slot.content.type, slot.content.count, x, z);
@@ -264,6 +271,7 @@
     villageModel.position.set(-0.72, 0.12, outerZ);
     if (village.damageSmoke > 0) addStructureSmoke(villageModel, 0);
     tagSelectable(villageModel, village.ownerId, village.lane);
+    villageModel.userData.xrTarget = { kind: "village", playerId: village.ownerId, lane: village.lane };
     group.add(villageModel);
     village.buildings.forEach((building, index) => {
       const model = buildingModel(building.type, building.level, village.ownerId);
@@ -740,16 +748,20 @@
     latestState = state;
     if (!ready || !state) return;
     const nextSignature = signature(state);
+    let visualsChanged = false;
     if (force || nextSignature !== structureSignature) {
       structureSignature = nextSignature;
       clearGroup(terrainGroup);
       Object.values(state.players).forEach((player) => player.villages.forEach(terrainTile));
+      visualsChanged = true;
     }
     const now = performance.now();
     if (force || now - lastUnitUpdate > 70) {
       lastUnitUpdate = now;
       updateUnits(state);
+      visualsChanged = true;
     }
+    if (xrPreview && visualsChanged) setXRPreview(true, true);
   }
 
   function clearGroup(group) {
@@ -820,15 +832,16 @@
   }
 
   function resize() {
-    if (!renderer || !container.clientWidth || !container.clientHeight) return;
+    if (!renderer || renderer.xr.isPresenting || !container.clientWidth || !container.clientHeight) return;
     renderer.setSize(container.clientWidth, container.clientHeight, false);
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
   }
 
-  function animate() {
-    requestAnimationFrame(animate);
-    if (!enabled || !renderer) return;
+  function animate(timestamp, xrFrame) {
+    onFrame?.(timestamp);
+    E.XR?.update(timestamp, xrFrame);
+    if ((!enabled && !E.XR?.active) || !renderer) return;
     const time = performance.now() / 1200;
     terrainGroup?.traverse((item) => {
       const smoke = item.userData?.smoke;
@@ -840,7 +853,7 @@
       item.material.opacity = 0.5 * (1 - progress);
     });
     animateUnitEffects();
-    updateCamera();
+    if (!E.XR?.active) updateCamera();
     renderer.render(scene, camera);
   }
 
@@ -861,5 +874,28 @@
     if (ready) setMode(!enabled);
   }
 
-  E.Board3D = { init, update, toggle, setMode, get ready() { return ready; }, get enabled() { return enabled; }, get error() { return loadError; } };
+  function setXRPreview(value, force = false) {
+    if (xrPreview === value && !force) return;
+    xrPreview = value;
+    world?.traverse((item) => {
+      const materials = Array.isArray(item.material) ? item.material : [item.material];
+      materials.filter(Boolean).forEach((entry) => {
+        if (value && !entry.userData.xrOriginal) {
+          entry.userData.xrOriginal = { transparent: entry.transparent, opacity: entry.opacity, depthWrite: entry.depthWrite };
+          entry.transparent = true;
+          entry.opacity *= E.Config.xr.previewOpacity;
+          entry.depthWrite = false;
+          entry.needsUpdate = true;
+        } else if (!value && entry.userData.xrOriginal) {
+          Object.assign(entry, entry.userData.xrOriginal);
+          delete entry.userData.xrOriginal;
+          entry.needsUpdate = true;
+        }
+      });
+    });
+  }
+
+  E.Board3D = { init, update, toggle, setMode, setXRPreview, resize,
+    getXRContext: () => ready ? { THREE, renderer, scene, camera, world, terrainGroup } : null,
+    get ready() { return ready; }, get enabled() { return enabled; }, get error() { return loadError; } };
 }());

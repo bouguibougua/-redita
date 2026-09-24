@@ -9,6 +9,23 @@
     normalDuration: 750,
     bulkTaskInterval: 0.5,
     network: { connectionTimeoutMs: 8000 },
+    xr: {
+      // TEMP_BALANCE_VALUE — réglages de présentation/confort, sans effet sur les règles.
+      initialWidth: 0.8, minWidth: 0.45, maxWidth: 1.4,
+      boardWidth: 13.65, boardBottom: -0.56,
+      minDistance: 0.4, maxDistance: 2.5, rayLength: 4,
+      manualBelowEyes: 0.55,
+      minBelowEyes: 0.15, maxBelowEyes: 1.5, heightStep: 0.05,
+      surfaceNormalMin: 0.92, hitTestTimeoutMs: 8000,
+      moveSpeed: 0.3, turnSpeed: 0.8, moveStep: 0.05,
+      turnStep: Math.PI / 12, scaleStep: 1.1, stickDeadzone: 0.18,
+      minGripSeparation: 0.12, previewOpacity: 0.3,
+      panelWidth: 0.64, panelHeight: 0.56, panelDistance: 1.1,
+      panelSideOffset: 0.52, panelBelowEyes: 0.1,
+      panelUpdateMs: 250, desktopUpdateMs: 150,
+      feedbackMs: 450,
+      cameraNear: 0.02, cameraFar: 30
+    },
     biomes: ["montagne", "plaine", "littoral"],
     village: {
       T1: { hp: 200, populationMax: 15 },

@@ -635,3 +635,10 @@ body:has(.connection-screen:not([hidden])) { overflow: hidden; }
 @keyframes tutorial-highlight { from { box-shadow: 0 0 0 2px #ffe04f, 0 0 8px #ffe04f88; } to { box-shadow: 0 0 0 6px #ffe04f99, 0 0 28px #ffe04fcc; } }
 @keyframes tutorial-prompt { to { opacity: .45; } }
 @media (max-width: 620px) { .tutorial-dialog { grid-template-columns: 1fr 100px; min-height: 130px; } .tutorial-narrator::before { width: 65px; height: 65px; } .tutorial-dialog-copy { padding: 16px; } }
+/* Entrée WebXR : le menu existant et ses modes restent les points de navigation. */
+.xr-dialog { width: min(620px, calc(100vw - 32px)); max-height: 85vh; overflow: auto; padding: 28px; border: 1px solid #c1a66b; border-radius: 18px; color: #f6edda; background: #192a26; box-shadow: 0 20px 90px #0008; }
+.xr-dialog::backdrop { background: #09110ddd; }
+.xr-dialog p { line-height: 1.55; }
+.xr-fallback { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+.xr-fallback input { width: 22px; height: 22px; }
+#xr-status { padding: 12px; border-radius: 8px; background: #ffffff0c; }

@@ -5,6 +5,7 @@
   let state = E.Board.createState();
   let previousTimestamp = performance.now();
   let networkAccumulator = 0;
+  let previousDesktopRender = 0;
   let pendingBulkTasks = [];
   const localViewMethods = new Set(["selectVillage", "selectResident"]);
   const guestCommands = new Set(["selectDeck", "toggleBiome", "confirmBiomes", "placeCrop", "placeLivestock", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
@@ -418,7 +419,10 @@
     if (state.phase === "running" && !state.paused) {
       if (E.Network.mode !== "guest") update(Math.min(rawDelta, E.Config.simulation.maxDelta));
     }
-    E.UI.renderFrame(state);
+    if (!E.XR?.active || timestamp - previousDesktopRender >= E.Config.xr.desktopUpdateMs) {
+      E.UI.renderFrame(state);
+      previousDesktopRender = timestamp;
+    }
     E.Tutorial?.render(state);
     E.Board3D?.update(state);
     if (E.Network.mode === "host") {
@@ -428,7 +432,13 @@
         E.Network.sendState(state);
       }
     }
-    requestAnimationFrame(frame);
+  }
+
+  // Une seule horloge : setAnimationLoop en 3D/XR, RAF seulement si Three.js est indisponible.
+  function fallbackFrame(timestamp) {
+    if (E.Board3D?.ready) return;
+    frame(timestamp);
+    requestAnimationFrame(fallbackFrame);
   }
 
   E.Network.init({
@@ -455,7 +465,9 @@
   });
   E.UI.init(onlineController);
   E.Tutorial?.init({ controller: onlineController });
-  E.Board3D?.init({ container: document.querySelector("#battlefield-3d") });
+  E.GameView?.init({ getState: () => state, controller: onlineController });
+  E.Board3D?.init({ container: document.querySelector("#battlefield-3d"), onFrame: frame });
+  E.XR?.init();
   E.UI.render(state);
-  requestAnimationFrame(frame);
+  requestAnimationFrame(fallbackFrame);
 }());
