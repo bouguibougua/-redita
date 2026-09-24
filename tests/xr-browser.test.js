@@ -196,6 +196,8 @@ async function run() {
   assert.equal(await evaluate("JSON.stringify({...Eredita.GameView.getState(),xrBoardWidth:null})"), originalState, "Placer le plateau ne modifie pas la simulation");
   await evaluate("xrFixture.step()"); await delay(20); await evaluate("xrFixture.step()");
   assert.equal(await evaluate("Eredita.XR.diagnostics.anchored"), true);
+  assert.equal(await evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-village').length"), 8);
+  assert.equal(await evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-resident').length"), 5);
   await evaluate(`(() => { const {THREE,scene} = Eredita.Board3D.getXRContext(); scene.updateMatrixWorld(true); const target=xrFixture.interactions.targets.find(t=>t.userData.xrTarget.playerId==='red'&&t.userData.xrTarget.lane===2); xrFixture.aim(1,target.getWorldPosition(new THREE.Vector3()).toArray()); xrFixture.trigger(1); })()`);
   assert.deepEqual(await evaluate("Eredita.GameView.getState().selectedVillage"), {playerId:"red",lane:2});
   assert.deepEqual(await evaluate("Eredita.XR.diagnostics.selected"), {playerId:"red",lane:2});
@@ -244,7 +246,7 @@ async function run() {
   await guest.evaluate("xrFixture.step(); xrFixture.trigger()");
   assert.equal(await guest.evaluate("Eredita.XR.diagnostics.placed"), true);
   assert.ok(await guest.evaluate("Math.abs(Eredita.Board3D.getXRContext().world.parent.rotation.y) < 0.01"), "Orientation initiale du joueur Bleu");
-  await guest.evaluate("xrFixture.button('build'); xrFixture.button('build')");
+  await guest.evaluate("xrFixture.button('build')");
   await waitFor("Eredita.GameView.getState().players.blue.villages[0].buildings.some(b=>b.type==='bergerie')");
   await host.send("Page.bringToFront");
   await evaluate("Eredita.GameView.selectVillage('red',0)");

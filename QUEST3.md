@@ -34,7 +34,7 @@ Ouvrir dans Quest Browser l'adresse **HTTPS** d'un déploiement du projet comple
 
 ## Placement et commandes
 
-Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement, un tableau de bord répartit scores et horloge en haut, métiers et informations sur les côtés, tâches et bâtiments en bas, puis habitants sous le plateau. Il suit les grands déplacements du joueur avec un mouvement amorti. Les boutons se visent au rayon et s'activent à la gâchette ; leur surface est une vraie géométrie 3D.
+Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement, un tableau de bord inspiré de la référence répartit les huit fiches de villages, les ors globaux et l'horloge en haut, les métiers et le village sélectionné sur les côtés, les tâches et bâtiments en bas, puis les habitants sous le plateau. Il suit les grands déplacements du joueur avec un mouvement amorti. Les fiches et boutons se visent au rayon et s'activent à la gâchette ; leur surface est une vraie géométrie 3D. L'illustration montrait « Artisanat » et « Boucherie » parmi les tâches, mais les quatre tâches réellement jouables sont agriculture, élevage, pêche et chasse, conformément au Game Design.
 
 1. Viser la table. Un repère vert et un plateau transparent apparaissent sur une surface horizontale admissible. **Vérifier soi-même qu'il s'agit bien de sa table** : le code ne déduit aucune catégorie de mobilier.
 2. Appuyer sur la gâchette du contrôleur qui porte le repère pour confirmer. Si l'autre contrôleur était prioritaire, une première pression transfère la priorité à celui utilisé ; viser et confirmer une seconde fois.

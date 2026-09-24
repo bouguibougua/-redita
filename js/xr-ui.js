@@ -145,20 +145,53 @@
     }
     function render() {
       const s = state(), sel = selection(), v = village(), p = s.players[sel.playerId], own = controllable();
-      const score = (id) => { const player = s.players[id]; return [`Or ${Math.floor(player.gold)} · ${player.villages.filter((item) => !item.destroyed).length}/4 villages`]; };
-      dashboard.paint("red", s.players.red.name, score("red"), [row(button("Voir villages", { type: "cycle-village", playerId: "red" }))]);
-      dashboard.paint("blue", s.players.blue.name, score("blue"), [row(button("Voir villages", { type: "cycle-village", playerId: "blue" }))]);
+      for (const id of ["red", "blue"]) {
+        const player = s.players[id];
+        dashboard.paint(`${id}Gold`, `${id === "red" ? "VILLAGES ROUGES" : "VILLAGES BLEUS"} · ${Math.floor(player.gold)} or`, [], []);
+        player.villages.forEach((item, lane) => dashboard.paint(`${id}${lane}`,
+          `${id === "red" ? "ROUGE" : "BLEU"} V${lane + 1}`,
+          [`PV ${Math.ceil(item.hp)}/${item.maxHp}`, `Pop. ${item.population}/${item.populationMax}`,
+            `Dispo. ${item.residents.filter((resident) => resident.mission === "disponible" && !resident.unitId).length}`,
+            `🌾${Math.floor(item.resources.ble)} 🌰${Math.floor(item.resources.chataigne)} 🍇${Math.floor(item.resources.raisin)}`,
+            `🍖${Math.floor(item.resources.viande)} 🐟${Math.floor(item.resources.poisson)} 🥛${Math.floor(item.resources.lait)}`], [], true,
+          { action: { type: "select-village", playerId: id, lane }, selected: sel.playerId === id && sel.lane === lane }));
+      }
       const remaining = Math.max(0, E.Config.normalDuration - s.elapsed);
-      dashboard.paint("clock", s.phase === "setup" ? "Préparation" : `${Math.floor(remaining / 60)}:${String(Math.floor(remaining % 60)).padStart(2, "0")}`, [s.paused ? "Pause" : s.phase === "ended" ? "Terminé" : "Temps réel"], [row(button("⚙ Réglages", open("settings")))]);
+      dashboard.paint("clock", s.phase === "setup" ? "PRÉPARATION" : `${Math.floor(remaining / 60)}:${String(Math.floor(remaining % 60)).padStart(2, "0")}`, [s.paused ? "PAUSE" : s.phase === "ended" ? "TERMINÉ" : "FRONTIÈRE"], []);
+      dashboard.paint("gear", "⚙", [], [], true, { action: open("settings") });
       const managerVisible = visible && s.phase === "running";
-      dashboard.paint("jobs", `Métiers · V${sel.lane + 1}`, managerVisible && v ? [`Disponibles : ${E.Economy.getAvailableResidents(s, p.id, v.lane)}`, ...Object.entries(v.jobs).map(([key, amount]) => `${E.Config.jobs[key]?.label || key} : ${amount}`)] : [], [row(button("Changer métier", open("professions"), own), button("Pour tous", open("all-professions"), own))], managerVisible);
-      dashboard.paint("info", `${p.name} · V${sel.lane + 1}`, v ? [`${E.Biomes.labels[v.biome]} · T${v.level} · ${Math.ceil(v.hp)}/${v.maxHp} PV`, `${v.population}/${v.populationMax} habitants`, ...E.Config.resources.map((key) => `${labels[key]} : ${Math.floor(v.resources[key])}`)] : [], [row(button("Échoppes", open("shop"), own), button("Parcelles", open("slots"), own))], managerVisible);
-      dashboard.paint("tasks", "Tâches et combat", ["Gâchette : agir · B : retour"], [row(button("Mission", open("missions"), own), button("Tous", open("all-missions"), own)), row(button("Prochain", open("next-mission"), own), button("Proch. métier", open("next-profession"), own))], managerVisible);
-      dashboard.paint("buildings", "Bâtiments", v ? v.buildings.map((item) => `${item.type} T${item.level}`) : [], [row(button("Construire", open("build"), own), button("Village ↑", open("upgrade", "village"), own)), row(button("Bâtiment ↑", open("upgrade-list"), own))], managerVisible);
+      const available = v ? E.Economy.getAvailableResidents(s, p.id, v.lane) : 0;
+      dashboard.paint("jobs", `Métiers à attribuer · ${available} libres`, [], [
+        ...Object.entries(E.Config.jobs).map(([key, def]) => row(button(`${def.label} · +1`, command("changeJob", key, "add"), own && E.Economy.canAssignJob(s, p.id, v.lane, key)))),
+        row(button("Métier individuel", open("professions"), own), button("Métier à tous", open("all-professions"), own))
+      ], managerVisible);
+      dashboard.paint("info", `⌂ ${p.name} · Village ${sel.lane + 1}`, v ? [
+        `${E.Biomes.labels[v.biome]} · T${v.level} · ${Math.ceil(v.hp)}/${v.maxHp} PV`,
+        `${v.population}/${v.populationMax} habitants · ${available} libres`,
+        ...E.Config.resources.map((key) => `${labels[key]} : ${Math.floor(v.resources[key])}`)
+      ] : [], [row(button("Échoppes", open("shop"), own), button("Parcelles", open("slots"), own))], managerVisible);
+      dashboard.paint("tasks", "Tâches du village", [], [
+        row(button("Libérer cet habitant", command("releaseResident", selectedResident()?.id), own && Boolean(selectedResident()))),
+        row(button("Mission individuelle", open("missions"), own)),
+        row(button("Attribuer à tous", open("all-missions"), own)),
+        row(button("Pour les prochains", open("next-mission"), own))
+      ], managerVisible);
+      const buildingRows = [row(button(`Village T${v?.level || 1} · améliorer`, open("upgrade", "village"), own && v?.level < 3))];
+      E.Config.building.types.forEach((type) => {
+        const index = v?.buildings.findIndex((item) => item.type === type) ?? -1;
+        const built = index >= 0 ? v.buildings[index] : null;
+        buildingRows.push(row(button(built ? `${type} T${built.level} · améliorer` : `${type} · construire ${E.Config.building.T1.gold} or`,
+          built ? open("upgrade", index) : command("build", type),
+          own && (built ? built.level < 3 : p.gold >= E.Config.building.T1.gold && v.buildings.length < E.Config.building.slots))));
+      });
+      dashboard.paint("buildings", "Bâtiments du village", [], buildingRows, managerVisible);
       const residents = v?.residents || [];
       residentPage = Math.min(residentPage, Math.max(0, Math.ceil(residents.length / E.Config.xr.residentPageSize) - 1));
       const currentResidents = residents.slice(residentPage * E.Config.xr.residentPageSize, (residentPage + 1) * E.Config.xr.residentPageSize);
-      dashboard.paint("residents", `Habitants · ${residents.length} · ${residentPage + 1}/${Math.max(1, Math.ceil(residents.length / E.Config.xr.residentPageSize))}`, currentResidents.map((r) => `${r.id === s.selectedResidentId ? "▶ " : ""}${r.name} · ${E.Config.professions[r.profession || "habitant"].label} · ${r.mission}`), [row(button("◀", { type: "resident-page", delta: -1 }, residentPage > 0), button("Acheter", open("buy-resident"), own), button("▶", { type: "resident-page", delta: 1 }, (residentPage + 1) * E.Config.xr.residentPageSize < residents.length))], managerVisible);
+      dashboard.paint("residents", `Habitants disponibles (${available})`, [], [
+        currentResidents.map((resident) => button(`${resident.id === s.selectedResidentId ? "▶ " : ""}${resident.name}`, { type: "select-resident", residentId: resident.id })),
+        row(button("◀", { type: "resident-page", delta: -1 }, residentPage > 0), button(`Page ${residentPage + 1}/${Math.max(1, Math.ceil(residents.length / E.Config.xr.residentPageSize))}`, null, false), button("▶", { type: "resident-page", delta: 1 }, (residentPage + 1) * E.Config.xr.residentPageSize < residents.length))
+      ].filter((entry) => entry.length), managerVisible);
       if (s.phase === "setup" && !modal) setModal(E.Network.mode === "pending" ? "mode" : "setup", E.Network.mode === "local" ? "red" : owner());
       if (s.phase === "running" && modal?.name === "setup") setModal(null);
       if (s.phase === "ended" && modal?.name !== "result" && modal?.name !== "leave") setModal("result");
@@ -183,6 +216,8 @@
         const sel = selection(); const lane = sel.playerId === action.playerId ? (sel.lane + 1) % 4 : 0;
         E.GameView.selectVillage(action.playerId, lane); return true;
       }
+      if (action.type === "select-village") { E.GameView.selectVillage(action.playerId, action.lane); return true; }
+      if (action.type === "select-resident") { E.GameView.command("selectResident", action.residentId); return true; }
       if (action.type === "audio") { muted = !muted; E.Audio?.setMuted(muted); return true; }
       if (action.type === "quality") {
         quality = quality === "normal" ? "léger" : "normal";
