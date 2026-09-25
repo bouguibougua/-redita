@@ -74,12 +74,13 @@
       scene.background = null; scene.fog = null; renderer.setClearColor(0x000000, 0); renderer.shadowMap.enabled = false;
       camera.position.set(0, 0, 0); camera.quaternion.identity();
       camera.near = E.Config.xr.cameraNear; camera.far = E.Config.xr.cameraFar; camera.updateProjectionMatrix();
-      current = { ...context, session, root, saved, selected: null, manipulation: null, message: "Visez votre table, puis confirmez le repère à la gâchette.", lastPanel: -Infinity, lastTime: null, viewer: null, positioned: false, lastStick: 0, leaveAfterEnd: false };
+      current = { ...context, session, root, saved, selected: null, manipulation: null, message: "Visez votre table, puis confirmez le repère à la gâchette.", lastPanel: -Infinity, lastDashboard: -Infinity, lastTime: null, viewer: null, positioned: false, lastStick: 0, leaveAfterEnd: false };
       const runtime = current;
-      const status = (message) => { runtime.message = message; };
+      const status = (message) => { runtime.message = message; runtime.dashboard?.setFeedback(message, "info"); };
       session.addEventListener("end", cleanup, { once: true });
       current.panels = E.XRPanels.create(context);
       current.dashboard = E.XRDashboard.create(context);
+      current.windows = E.XRWindows.create({ ...context, dashboard: current.dashboard, status });
       current.dashboard.group.visible = false;
       current.ui = E.XRUI.create(current.dashboard, status);
       current.input = E.XRInput.create({ ...context, session });
@@ -87,7 +88,7 @@
       if (E.Network.mode === "guest") current.placement.setWidth(E.GameView.getState().xrBoardWidth || E.Config.xr.initialWidth);
       current.interactions = E.XRInteractions.create({ ...context, panels: current.panels, dashboard: current.dashboard });
       current.visibilityChanged = () => {
-        runtime.input.reset(); runtime.lastTime = null;
+        runtime.windows.reset(); runtime.input.reset(); runtime.lastTime = null;
         if (session.visibilityState !== "visible") runtime.message = "Session en attente du retour du suivi.";
       };
       session.addEventListener("visibilitychange", current.visibilityChanged);
@@ -96,7 +97,7 @@
       await renderer.xr.setSession(session);
       if (current !== runtime) return;
       current.space = renderer.xr.getReferenceSpace();
-      current.onReset = () => { runtime.placement.resetReference(); runtime.manipulation = null; runtime.selected = null; runtime.positioned = false; runtime.input.reset(); };
+      current.onReset = () => { runtime.windows.reset(); runtime.placement.resetReference(); runtime.manipulation = null; runtime.selected = null; runtime.positioned = false; runtime.input.reset(); };
       current.space.addEventListener("reset", current.onReset);
       $("#xr-dialog").close();
     } catch (error) {
@@ -115,7 +116,7 @@
     const { scene, renderer, camera, world, saved, root, session } = runtime;
     session.removeEventListener("visibilitychange", runtime.visibilityChanged);
     runtime.space?.removeEventListener("reset", runtime.onReset);
-    runtime.input?.dispose(); runtime.placement?.dispose(); runtime.interactions?.dispose(); runtime.panels?.dispose(); runtime.dashboard?.dispose();
+    runtime.windows?.dispose(); runtime.input?.dispose(); runtime.placement?.dispose(); runtime.interactions?.dispose(); runtime.panels?.dispose(); runtime.dashboard?.dispose();
     E.Board3D.setXRPreview(false);
     scene.add(world); scene.remove(root);
     world.position.copy(saved.worldPosition); world.quaternion.copy(saved.worldQuaternion); world.scale.copy(saved.worldScale); world.visible = saved.worldVisible;
@@ -134,11 +135,13 @@
   }
   function cancel() {
     const r = current;
+    if (r.windows.cancel()) { r.dashboard.setFeedback("Déplacement annulé ; fenêtre remise à sa place.", "info"); return; }
     if (r.ui?.modal && r.placement.placed && !r.manipulation) { r.ui.close(); return; }
     if (r.selected) { r.selected = null; return; }
     if (r.manipulation) { r.manipulation = null; r.placement.endManipulation(); r.message = "Manipulation terminée."; return; }
     if (!r.placement.placed && r.placement.cancelPlacement()) { r.message = "Repositionnement annulé."; return; }
-    r.message = "Ouvrez les réglages avec ⚙ pour quitter ou manipuler le plateau.";
+    r.message = "⚙ : réglages. Maintenez X pour récupérer toutes les fenêtres devant vous.";
+    r.dashboard.setFeedback(r.message, "info");
   }
   function action(name) {
     const r = current;
@@ -150,12 +153,15 @@
     if (name === "height-up" || name === "height-down") return r.placement.height(name === "height-up" ? 1 : -1);
     if (name === "cancel") return cancel();
     if (name === "recenter") {
+      r.windows.reset();
       r.selected = null; r.manipulation = null;
       r.placement.beginPlacement(); r.panels.position(r.viewer);
       r.message = "Replacez le plateau sur la table avec votre gâchette.";
       return;
     }
     if (["move", "rotate", "size"].includes(name)) {
+      if (E.Network.mode === "guest") return;
+      r.windows.reset();
       r.selected = null; r.manipulation = name; r.placement.beginManipulation();
       r.panels.position(r.viewer);
       r.message = "Préhension : déplacer ; deux mains : taille et rotation.";
@@ -165,18 +171,35 @@
     r.placement.adjust(name, r.viewer);
     r.message = `Largeur ${(r.placement.width * 100).toFixed(0)} cm · limites ${cfg.minWidth * 100}–${cfg.maxWidth * 100} cm`;
   }
+  function applyUIAction(result) {
+    const r = current;
+    if (result?.type === "manipulate") { r.ui.close(); action(result.mode); }
+    if (result?.type === "recenter") { r.ui.close(); action("recenter"); }
+    if (result?.type === "panels-recenter" || result?.type === "panels-reset") {
+      r.windows.reset();
+      if (result.type === "panels-reset") r.dashboard.resetLayout(r.viewer);
+      else r.dashboard.recenter(r.viewer);
+      r.dashboard.setFeedback(result.type === "panels-reset" ? "Disposition initiale restaurée." : "Fenêtres recentrées devant vous.", "info");
+    }
+    if (result?.type === "panel-adjust") r.windows.adjust(result.panelId, result.operation, r.viewer);
+    if (result?.type === "exit") end();
+    if (result?.type === "leave") { r.leaveAfterEnd = true; end(); }
+  }
   function confirm(record, hit) {
     const r = current;
+    if (record.squeezing || r.windows.active || performance.now() < record.suppressSelectUntil) return;
+    if (!hit && r.dashboard.group.visible && r.ui.focusedTarget) hit = { object: r.ui.focusedTarget };
     const target = hit?.object.userData.xrTarget;
     if (target?.kind === "dashboard-button") {
       const result = r.ui.activate(target);
       r.input.flash(record, Boolean(result));
-      if (result?.type === "manipulate") { r.ui.close(); action(result.mode); }
-      if (result?.type === "recenter") { r.ui.close(); action("recenter"); }
-      if (result?.type === "exit") end();
-      if (result?.type === "leave") { r.leaveAfterEnd = true; end(); }
+      r.dashboard.feedback(target, Boolean(result));
+      if (result && target.action?.type === "select-village") r.selected = { ...E.GameView.getState().selectedVillage };
+      if (result) E.Audio?.confirmInterface?.();
+      applyUIAction(result);
       return;
     }
+    if (target?.kind === "panel-handle") { r.dashboard.setFeedback("Maintenez la préhension sur la barre de titre pour déplacer cette fenêtre.", "info"); return; }
     if (target?.kind === "dashboard-panel") { r.input.flash(record, false); return; }
     if (target?.kind === "button") { r.input.flash(record, true); return action(target.action); }
     if (target?.kind === "panel") { r.input.flash(record, false); return; }
@@ -244,11 +267,11 @@
     if (!r || !frame || !r.space) return;
     const dt = r.lastTime === null ? 0 : Math.min((timestamp - r.lastTime) / 1000, 0.05);
     r.lastTime = timestamp;
-    if (r.session.visibilityState !== "visible") { r.input.reset(); return; }
+    if (r.session.visibilityState !== "visible") { r.windows.reset(); r.input.reset(); return; }
     const pose = frame.getViewerPose(r.space);
-    if (!pose) { r.root.visible = false; r.input.reset(); return; }
+    if (!pose) { r.root.visible = false; r.windows.reset(); r.input.reset(); return; }
     r.viewer = { position: new r.THREE.Vector3().copy(pose.transform.position), quaternion: new r.THREE.Quaternion().copy(pose.transform.orientation) };
-    if (!r.positioned) { r.panels.position(r.viewer); r.positioned = true; }
+    if (!r.positioned) { r.panels.position(r.viewer); r.dashboard.resetLayout(r.viewer); r.positioned = true; }
     r.dashboard.position(r.viewer, true, dt);
     r.input.update(frame, r.space);
     r.placement.update(frame, r.space, r.input.records, r.viewer, timestamp);
@@ -257,7 +280,7 @@
     if (r.manipulation && r.placement.placed) r.placement.manipulate(r.input.records, r.viewer, dt);
     E.Board3D.setXRPreview(!r.placement.placed);
     r.dashboard.group.visible = r.placement.placed && !r.manipulation;
-    if (r.dashboard.group.visible && timestamp - r.lastPanel >= E.Config.xr.dashboardRefreshMs) r.ui.render();
+    if (r.dashboard.group.visible && timestamp - r.lastDashboard >= E.Config.xr.dashboardRefreshMs) { r.ui.render(); r.lastDashboard = timestamp; }
     r.interactions.sync();
     r.scene.updateMatrixWorld(true);
     const hovered = new Set();
@@ -270,29 +293,31 @@
       const canPlace = !r.placement.placed && candidate?.record === record;
       r.input.feedback(record, hit?.distance || (canPlace ? record.position.distanceTo(candidate.position) : null), hovered.has(hit?.object) || canPlace);
     }
+    r.windows.update(r.input.records, hits, r.viewer, dt, r.dashboard.group.visible && !r.manipulation);
     for (const event of r.input.drain()) {
       if (event.type === "cancel") cancel();
-      else if (event.type === "panels" && r.placement.placed) r.ui.toggle();
-      else if (event.type === "cards" && r.placement.placed) r.ui.cards();
-      else if (event.type === "confirm" && event.button === 4 && r.placement.placed && hits.get(event.record)?.object.userData.xrTarget.kind === "village") {
-        confirm(event.record, hits.get(event.record)); r.ui.info();
-      } else if (event.type === "confirm" && event.button === 4 && r.placement.placed && !hits.get(event.record) && r.ui.focusedTarget) {
-        const result = r.ui.activate(r.ui.focusedTarget.userData.xrTarget);
-        if (result?.type === "manipulate") { r.ui.close(); action(result.mode); }
-        if (result?.type === "recenter") { r.ui.close(); action("recenter"); }
-        if (result?.type === "exit") end();
-        if (result?.type === "leave") { r.leaveAfterEnd = true; end(); }
-      }
-      else confirm(event.record, hits.get(event.record));
+      else if (event.type === "recover-panels" && r.placement.placed && !r.manipulation) {
+        r.windows.reset(); r.dashboard.resetLayout(r.viewer);
+        if (!r.ui.visible) r.ui.toggle();
+        r.dashboard.setFeedback("Toutes les fenêtres sont revenues devant vous.", "info");
+      } else if (r.windows.active) continue;
+      else if (event.type === "panels" && r.placement.placed && !r.manipulation) r.ui.toggle();
+      else if (event.type === "cards" && r.placement.placed && !r.manipulation) r.ui.cards();
+      else if (event.type === "info" && r.placement.placed && !r.manipulation) {
+        const target = hits.get(event.record)?.object.userData.xrTarget;
+        if (target?.kind === "village") E.GameView.selectVillage(target.playerId, target.lane);
+        r.ui.info();
+      } else if (event.type === "confirm") confirm(event.record, hits.get(event.record));
       if (current !== r) return;
-      r.lastPanel = -Infinity;
+      r.lastPanel = -Infinity; r.lastDashboard = -Infinity;
     }
     if (r.dashboard.group.visible && r.ui.focusedTarget) hovered.add(r.ui.focusedTarget);
-    r.interactions.highlight(hovered, r.selected);
-    if (r.dashboard.group.visible && !r.manipulation && timestamp - r.lastStick > E.Config.xr.dashboardStickRepeatMs) {
+    r.interactions.highlight(hovered, E.GameView.getState().selectedVillage);
+    if (r.dashboard.group.visible && !r.manipulation && !r.windows.active && timestamp - r.lastStick > E.Config.xr.dashboardStickRepeatMs) {
       for (const record of r.input.records) {
-        if (!record.tracked || Math.abs(record.axes[1]) < E.Config.xr.dashboardStickThreshold) continue;
-        r.ui.stick(record.source.handedness, Math.sign(record.axes[1])); r.lastStick = timestamp; break;
+        const axis = Math.abs(record.axes[0]) > Math.abs(record.axes[1]) ? record.axes[0] : record.axes[1];
+        if (!record.tracked || record.squeezing || Math.abs(axis) < E.Config.xr.dashboardStickThreshold) continue;
+        r.ui.stick(record.source.handedness, Math.sign(axis), hits.get(record)?.object.userData.xrTarget?.panelId); r.lastStick = timestamp; break;
       }
     }
     if (timestamp - r.lastPanel >= E.Config.xr.panelUpdateMs) { panelContent(); r.lastPanel = timestamp; }
@@ -305,6 +330,7 @@
         placed: current.placement.placed, manual: current.placement.manual,
         width: current.placement.width, anchored: current.placement.anchorTracked,
         manipulation: current.manipulation, selected: current.selected,
+        grabbedPanels: current.windows.diagnostics, textSize: current.dashboard.textSize,
         controllers: current.input.records.filter((r) => r.source).map((r) => ({ hand: r.source.handedness, profiles: r.source.profiles, mapping: r.source.gamepad?.mapping, tracked: r.tracked }))
       } : { active: false, supported };
     }

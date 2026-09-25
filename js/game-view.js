@@ -69,8 +69,9 @@
       } else if (method === "chooseRedirect") {
         if (E.Network.mode !== "local" && !String(args[0]).startsWith(`${this.getPlayerId()}-`)) return false;
       } else if (method !== "selectResident" && !this.canControl(readState().selectedVillage.playerId)) return false;
-      commands[method](...args);
-      return true;
+      // Les anciens contrôleurs retournent undefined ; préserver ce contrat,
+      // mais ne jamais transformer un rejet explicite en confirmation XR.
+      return commands[method](...args) !== false;
     },
     returnToLobby() {
       E.Network.leaveRoom();

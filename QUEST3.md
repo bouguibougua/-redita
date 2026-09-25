@@ -34,7 +34,7 @@ Ouvrir dans Quest Browser l'adresse **HTTPS** d'un déploiement du projet comple
 
 ## Placement et commandes
 
-Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement, un tableau de bord inspiré de la référence répartit les huit fiches de villages, les ors globaux et l'horloge en haut, les métiers et le village sélectionné sur les côtés, les tâches et bâtiments en bas, puis les habitants sous le plateau. Il suit les grands déplacements du joueur avec un mouvement amorti. Les fiches et boutons se visent au rayon et s'activent à la gâchette ; leur surface est une vraie géométrie 3D. L'illustration montrait « Artisanat » et « Boucherie » parmi les tâches, mais les quatre tâches réellement jouables sont agriculture, élevage, pêche et chasse, conformément au Game Design.
+Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement, le tableau de bord répartit les huit fiches de villages, les ors globaux et l'horloge en haut, les métiers et le village sélectionné sur les côtés, les tâches et bâtiments en bas, puis les habitants sous le plateau. Les fenêtres restent stables dans l’espace et peuvent être déplacées individuellement par leur barre supérieure. Les fiches et boutons se visent au rayon et s'activent à la gâchette index ; leur surface est une vraie géométrie 3D. Agriculture, élevage, pêche et chasse utilisent les missions économiques existantes ; les commandes de combat conservent également leurs règles.
 
 1. Viser la table. Un repère vert et un plateau transparent apparaissent sur une surface horizontale admissible. **Vérifier soi-même qu'il s'agit bien de sa table** : le code ne déduit aucune catégorie de mobilier.
 2. Appuyer sur la gâchette du contrôleur qui porte le repère pour confirmer. Si l'autre contrôleur était prioritaire, une première pression transfère la priorité à celui utilisé ; viser et confirmer une seconde fois.
@@ -46,17 +46,21 @@ Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. 
 | Commande | Effet |
 | --- | --- |
 | Gâchette gauche ou droite | Confirmer un placement, un bouton ou un village |
-| A, contrôleur droit Touch reconnu | Confirmer ; sur un village, ouvrir sa fiche détaillée |
+| A, contrôleur droit Touch reconnu | Ouvrir ou fermer les informations du village, sans activer le bouton visé |
 | B, contrôleur droit Touch reconnu | Revenir/fermer un menu, terminer la manipulation ou annuler un repositionnement |
 | X, contrôleur gauche Touch reconnu | Masquer ou afficher les panneaux de gestion |
+| X maintenu 1,2 seconde | Récupérer toutes les fenêtres devant soi, y compris hors champ |
 | Y, contrôleur gauche Touch reconnu | Afficher l'état des cartes actives |
 | Joystick droit, jeu | Parcourir les habitants du village sélectionné |
 | Joystick gauche, jeu | Parcourir les commandes du tableau de bord |
+| Préhension sur la barre supérieure, jeu | Saisir une seule fenêtre, la déplacer/orienter puis relâcher ; la gâchette index est neutralisée pendant la saisie |
+| Joystick pendant la saisie d'une fenêtre | Vertical : distance ; horizontal : taille ; B annule le déplacement |
+| Paramètres : recentrer / réinitialiser les fenêtres | Récupérer les panneaux devant soi / restaurer leur disposition initiale |
 | Joystick gauche, mode manipulation | Déplacer sur le plan horizontal relatif au regard |
 | Joystick droit, mode manipulation | Pivoter |
 | Une préhension, mode manipulation | Déplacer avec la main, hauteur comprise |
 | Deux préhensions, mode manipulation | Déplacer, tourner et changer la taille selon l'écartement |
-| Déplacer / Rotation / Taille | Ouvrir les réglages à boutons, tous utilisables à la gâchette |
+| Paramètres : Déplacer / Rotation / Taille | Ouvrir les réglages du plateau à boutons, tous utilisables à la gâchette |
 | Recentrer | Replacer sur la table ; ne déplace pas la caméra |
 
 Les boutons système ne sont jamais liés. Pour un profil inconnu, les événements WebXR `select`/`squeeze` restent utilisables et les boutons A/B sont ignorés. Les axes ne sont lus que pour une manette déclarant `xr-standard`. Les rayons donnent un retour vert pour une cible/confirmation et rouge pour une action invalide.
@@ -73,7 +77,9 @@ Réglages provisoires dans `js/config.js`, section `xr` : largeur initiale **0,8
 | `js/xr-input.js` (créé) | Deux contrôleurs, `handedness`, rayons, profils, boutons et préhensions |
 | `js/xr-interactions.js` (créé) | Raycaster, zones de sélection des villages et surbrillance |
 | `js/xr-panels.js` (créé) | Panneau flottant et boutons 3D, textes sur CanvasTexture |
+| `js/xr-design.js` | Couleurs reprises du CSS, typographie, espacements et composants Canvas partagés |
 | `js/xr-dashboard.js`, `js/xr-ui.js` | Tableau de bord spatial, menus et adaptation des commandes métier existantes |
+| `js/xr-windows.js` | Saisie individuelle, orientation, limites de confort et récupération des fenêtres |
 | `js/board3d.js` (modifié) | Renderer existant transparent/XR, socle dans `world`, tags des villages/slots, aperçu et boucle commune |
 | `js/game.js` (modifié) | Adaptateur de vue et unique pas de simulation appelé par `setAnimationLoop` ; RAF de repli si Three.js échoue |
 | `js/config.js` (modifié) | Paramètres temporaires de présentation et de confort |
@@ -110,6 +116,8 @@ node tests/network-server.test.js
 npm test
 ```
 
+Sous PowerShell si l'exécution de `npm.ps1` est bloquée, utiliser `npm.cmd` avec les mêmes arguments, sans changer la politique d'exécution. Le détail de la présente interface, de ses fichiers et de sa validation se trouve dans [MR_INTERFACE.md](MR_INTERFACE.md).
+
 Les deux suites XR et le test serveur passent. La suite XR utilise le vrai module Three.js pour vérifier géométrie, Raycaster, orientation Rouge/Bleu, limites, préhensions, profils, déconnexions, sources tardives et perte d'ancre. La suite navigateur utilise Edge sans fenêtre, le vrai rendu WebGL et un **périphérique XR simulé**. Elle vérifie le menu, le refus d'autorisation, l'activation au clic, les boutons 3D, les deux contrôleurs, le placement, les réglages, plusieurs entrées/sorties, le retour 2D/3D, une préparation solo lancée en XR, ainsi qu'un salon où l'invité construit en XR et l'hôte reçoit cette action. Elle ne teste pas la couche WebXR native du casque. Les API simulées sont uniquement dans `tests/`.
 
 Le test navigateur nécessite Node.js **22+** (WebSocket natif) et Edge sous Windows. `EREDITA_BROWSER` peut indiquer le chemin d'un Chromium différent. Il lance ses propres processus sur les ports 8787 et 9447 et les ferme après le test.
@@ -119,6 +127,8 @@ Le test navigateur nécessite Node.js **22+** (WebSocket natif) et Edge sous Win
 ## Vérification physique à faire sur le Quest 3
 
 **Non réalisée ici : aucun casque accessible.** Noter la version du navigateur, les permissions accordées et les éventuels messages de diagnostic.
+
+La procédure détaillée de l’interface, incluant mesures angulaires de texte, trois tailles, manipulation de chaque fenêtre, absence de conflit gâchette/préhension, récupération, interactions et performance, se trouve dans [MR_INTERFACE.md](MR_INTERFACE.md).
 
 - [ ] Depuis le menu, lancer l'AR et vérifier que la vraie pièce reste visible en passthrough, sans fond opaque.
 - [ ] Refuser une autorisation puis réessayer ; vérifier que le desktop reste utilisable.

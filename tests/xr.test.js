@@ -8,7 +8,8 @@ async function run() {
   const rootPath = path.resolve(__dirname, "..");
   const read = (file) => fs.readFileSync(path.join(rootPath, file), "utf8");
   const THREE = await import(`data:text/javascript;base64,${Buffer.from(read("js/vendor/three.core.js")).toString("base64")}`);
-  const context = vm.createContext({ window: {}, console, performance,
+  let inputTime = 0;
+  const context = vm.createContext({ window: {}, console, performance: { now: () => inputTime },
     XRRigidTransform: class { constructor(position, orientation) { this.position = position; this.orientation = orientation; } }
   });
   ["config", "biomes", "board", "transport", "game-view", "xr-input", "xr-placement", "xr-interactions"].forEach((name) => vm.runInContext(read(`js/${name}.js`), context));
@@ -58,7 +59,9 @@ async function run() {
   input.update(trackingFrame, {});
   right.gamepad.buttons[4].pressed = true;
   input.update(trackingFrame, {});
-  assert.equal(input.drain()[0].record.source.handedness, "right");
+  const informationEvent = input.drain()[0];
+  assert.equal(informationEvent.record.source.handedness, "right");
+  assert.equal(informationEvent.type, "info", "A ouvre les informations sans confirmer le bouton visé");
   input.update(trackingFrame, {});
   assert.equal(input.drain().length, 0, "A maintenu ne répète pas la commande");
   left.gamepad.buttons[4].pressed = true;
@@ -72,6 +75,25 @@ async function run() {
   assert.equal(input.drain().length, 0, "Le bouton système n'est jamais lié");
   nodes[1].dispatchEvent({ type: "select" });
   assert.equal(input.drain().length, 1, "La gâchette fonctionne sur la main gauche");
+  nodes[1].dispatchEvent({ type: "squeezestart" });
+  nodes[1].dispatchEvent({ type: "selectstart" });
+  nodes[1].dispatchEvent({ type: "select" });
+  assert.equal(input.drain().length, 0, "Une gâchette pendant une préhension ne déclenche pas de bouton");
+  nodes[1].dispatchEvent({ type: "squeezeend" });
+  nodes[1].dispatchEvent({ type: "selectstart" });
+  nodes[1].dispatchEvent({ type: "select" });
+  assert.equal(input.drain().length, 0, "Le relâchement simultané des gâchettes reste neutralisé");
+  inputTime += cfg.windowSelectGuardMs + 1;
+  nodes[1].dispatchEvent({ type: "selectstart" });
+  nodes[1].dispatchEvent({ type: "select" });
+  assert.equal(input.drain()[0].type, "confirm", "Une nouvelle sélection fonctionne après la garde de relâchement");
+  left.gamepad.buttons[4].pressed = false; input.update(trackingFrame, {}); input.drain();
+  left.gamepad.buttons[4].pressed = true; input.update(trackingFrame, {});
+  assert.equal(input.drain()[0].type, "panels");
+  inputTime += cfg.windowRecoveryHoldMs + 1; input.update(trackingFrame, {});
+  assert.equal(input.drain()[0].type, "recover-panels", "X maintenu récupère les fenêtres hors champ");
+  inputTime += cfg.windowRecoveryHoldMs + 1; input.update(trackingFrame, {});
+  assert.equal(input.drain().length, 0, "La récupération ne se répète pas tant que X reste maintenu");
   nodes[1].dispatchEvent({ type: "select" });
   nodes[1].dispatchEvent({ type: "disconnected" });
   assert.equal(input.drain().length, 0, "Aucune action d'un contrôleur disparu");

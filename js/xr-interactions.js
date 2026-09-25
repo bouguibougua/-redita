@@ -37,8 +37,10 @@
       hit(record, allowVillages) {
         raycaster.set(record.position, record.direction);
         const objects = panels.group.visible ? panels.targets.slice() : [];
-        const modal = dashboard?.group.visible && dashboard.targets.some((item) => item.parent?.position.z > 0.05);
-        if (dashboard?.group.visible) objects.push(...(modal ? dashboard.targets.filter((item) => item.parent?.position.z > 0.05) : dashboard.targets));
+        // Une fenêtre déplacée peut avoir n'importe quel z : seule la sémantique
+        // identifie une modale, jamais sa position dans l'espace.
+        const modal = dashboard?.group.visible && dashboard.modalActive;
+        if (dashboard?.group.visible) objects.push(...(modal ? dashboard.targets.filter((item) => item.userData.xrTarget?.panelId === "modal") : dashboard.targets));
         const interfaceHit = raycaster.intersectObjects(objects, false)[0];
         if (interfaceHit) return interfaceHit;
         return allowVillages && !modal && world.parent.visible ? raycaster.intersectObjects(targets, false)[0] || null : null;

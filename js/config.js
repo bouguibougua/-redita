@@ -31,6 +31,15 @@
       dashboardFontSize: 40, dashboardTitleSize: 48,
       dashboardStickThreshold: 0.65, dashboardStickRepeatMs: 260,
       dashboardRowsPerPage: 6, residentPageSize: 5,
+      // TEMP_BALANCE_VALUE — fenêtres indépendantes, distances en mètres.
+      windowMinDistance: 0.7, windowMaxDistance: 2.4,
+      windowMaxYaw: Math.PI / 2.8, windowMinY: -1.9, windowMaxY: 0.65,
+      dashboardPitch: 0.56,
+      windowSmoothing: 18, windowDepthSpeed: 0.45,
+      windowScaleSpeed: 0.35, windowMinScale: 0.85, windowMaxScale: 1.4,
+      windowMoveStep: 0.08, windowScaleStep: 1.08,
+      windowSelectGuardMs: 300, windowRecoveryHoldMs: 1200,
+      interfaceSoundHz: 660, interfaceSoundDuration: 0.055, interfaceSoundGain: 0.035,
       cameraNear: 0.02, cameraFar: 30
     },
     biomes: ["montagne", "plaine", "littoral"],

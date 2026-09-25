@@ -7,7 +7,7 @@
     "start": "node server.js",
     "test": "node tests/core.test.js && node tests/ai.test.js && node tests/livestock-shop.test.js && node tests/equipment.test.js && node tests/board3d-appearance.test.js && node tests/shop-network-commands.test.js && node tests/special-animals.test.js && node tests/donkey.test.js && node tests/board3d-animals.test.js && node tests/board3d-combat-animation.test.js && node tests/decks.test.js",
     "test:decks-browser": "node tests/decks-browser.test.js",
-    "test:xr": "node tests/xr.test.js",
+    "test:xr": "node tests/xr.test.js && node tests/xr-windows.test.js && node tests/xr-ui-premium.test.js",
     "test:xr-browser": "node tests/xr-browser.test.js"
   },
   "engines": {

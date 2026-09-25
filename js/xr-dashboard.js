@@ -1,123 +1,223 @@
 (function () {
   "use strict";
   const E = window.Eredita;
-  const cfg = E.Config.xr;
+  function create({ THREE, scene, renderer }) {
+    const D = E.XRDesign, T = D.tokens, C = D.theme(), S = T.spacing, F = T.type;
+    const group = new THREE.Group(); group.name = "xr-game-dashboard"; scene.add(group);
+    const targets = [], panels = new Map(), images = new Map();
+    const movable = new Set(["jobs", "info", "tasks", "buildings", "residents", "modal"]);
+    let positioned = false, textSize = "normal", disposed = false, feedbackUntil = 0, lastHighlight = performance.now();
+    const reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function create({ THREE, scene }) {
-    const group = new THREE.Group();
-    group.name = "xr-game-dashboard";
-    scene.add(group);
-    const targets = [];
-    const panels = new Map();
-    const layouts = {
-      redGold: [-0.55, 0.55, 0.64, 0.08], blueGold: [0.55, 0.55, 0.64, 0.08],
-      clock: [0, 0.38, 0.22, 0.23], gear: [1.04, 0.54, 0.11, 0.1],
-      jobs: [-0.81, -0.035, 0.44, 0.5], info: [0.81, -0.035, 0.44, 0.5],
-      tasks: [-0.265, -0.48, 0.5, 0.34], buildings: [0.265, -0.48, 0.5, 0.34],
-      residents: [0, -0.725, 0.94, 0.24], modal: [0, -0.08, 0.77, 0.77]
-    };
-    for (let lane = 0; lane < 4; lane++) {
-      layouts[`red${lane}`] = [-0.805 + lane * 0.215, 0.365, 0.2, 0.23];
-      layouts[`blue${lane}`] = [0.16 + lane * 0.215, 0.365, 0.2, 0.23];
-    }
-    function disposeMesh(mesh) { mesh.geometry.dispose(); mesh.material.map?.dispose(); mesh.material.dispose(); }
     function panel(id) {
       if (panels.has(id)) return panels.get(id);
-      const [x, y, width, height] = layouts[id];
-      const node = new THREE.Group(); node.position.set(x, y, id === "modal" ? 0.08 : 0); group.add(node);
-      const canvas = document.createElement("canvas"); canvas.width = /^(red\d|blue\d|gear)$/.test(id) ? 512 : 1024; canvas.height = Math.round(canvas.width * height / width);
-      const context = canvas.getContext("2d"); const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-      const face = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide }));
-      face.userData.xrTarget = { kind: "dashboard-panel" }; node.add(face);
-      const item = { node, face, canvas, context, texture, width, height, buttons: [], key: "", rowsKey: "" };
-      panels.set(id, item); return item;
+      const [x, y, width, height] = T.layouts[id];
+      const node = new THREE.Group(); node.name = `xr-window-${id}`; node.userData = { panelId: id, modal: id === "modal", windowUserScale: 1 };
+      node.position.set(x, y, id === "modal" ? 0.18 : 0); group.add(node);
+      const canvas = document.createElement("canvas"), density = Math.min(T.pixelsPerMeter, T.maxTextureSize / Math.max(width, height));
+      canvas.width = Math.round(width * density); canvas.height = Math.round(height * density);
+      const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(4, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+      texture.generateMipmaps = false; texture.minFilter = THREE.LinearFilter;
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide, toneMapped: false }));
+      face.userData.xrTarget = { kind: "dashboard-panel", panelId: id }; node.add(face);
+      const item = { id, node, face, canvas, context: canvas.getContext("2d"), texture, width, height, density, buttons: [], hitKey: "", key: "", data: null, page: 0, pageCount: 1, hover: new Set(), confirmed: null, confirmUntil: 0, drawCount: 0 };
+      if (movable.has(id)) {
+        const handle = new THREE.Mesh(new THREE.PlaneGeometry(width - 0.022, S.header / density - 0.006), new THREE.MeshBasicMaterial({ visible: false }));
+        handle.position.set(0, height / 2 - S.header / density / 2, 0.005);
+        handle.userData.xrTarget = { kind: "panel-handle", panelId: id }; node.add(handle); item.handle = handle;
+      }
+      panels.set(id, item); placeDefault(item); return item;
     }
-    function paint(id, title, lines, rows, visible = true, options = {}) {
-      const p = panel(id);
-      p.node.visible = visible;
-      if (!visible) return;
-      p.face.userData.xrTarget = options.action ? { kind: "dashboard-button", action: options.action, enabled: true } : { kind: "dashboard-panel" };
-      const key = JSON.stringify([title, lines, rows, options.selected]);
-      if (key === p.key) return;
-      p.key = key;
-      const rowsKey = JSON.stringify(rows);
-      const c = p.context, w = p.canvas.width, h = p.canvas.height;
-      const red = id.startsWith("red"), blue = id.startsWith("blue");
-      c.clearRect(0, 0, w, h); c.fillStyle = id === "modal" ? "#112930f5" : "#172026ed"; c.fillRect(0, 0, w, h);
-      c.strokeStyle = options.selected ? "#f7dc8a" : red ? "#aa5651" : blue ? "#4f9ac3" : "#8faba5";
-      c.lineWidth = options.selected ? 10 : 5; c.strokeRect(3, 3, w - 6, h - 6);
-      if (id === "clock") {
-        c.textAlign = "center";
-        c.fillStyle = "#f7d88d"; c.font = "bold 68px Georgia, serif"; c.fillText(lines[0] || "FRONTIÈRE", w / 2, 200, w - 80);
-        c.fillStyle = "#f4f7f5"; c.font = "bold 200px Georgia, serif"; c.fillText(title, w / 2, 600, w - 80);
-        c.textAlign = "left";
-      } else if (id === "gear") {
-        c.fillStyle = "#f4f7f5"; c.textAlign = "center"; c.font = "bold 240px sans-serif"; c.fillText(title, w / 2, h * 0.72, w - 80); c.textAlign = "left";
+    function placeDefault(p) {
+      const [x, y] = T.layouts[p.id], factor = T.textScales[textSize];
+      p.node.position.set(x * factor, y * factor, p.id === "modal" ? 0.18 : 0);
+      p.node.scale.setScalar(factor * (p.node.userData.windowUserScale || 1));
+      p.node.rotation.set(0, p.id === "jobs" ? 0.22 : p.id === "info" ? -0.22 : 0, 0);
+    }
+    const drawText = (c, value, x, y, width, size = F.body, color = C.ink, weight = 500, max = Infinity) => D.text(c, value, x, y, width, size, color, weight, max);
+    function surface(c, x, y, width, height, fill, stroke = C.gold, radius = T.radius.panel, lineWidth = T.border.normal) {
+      D.rounded(c, x, y, width, height, radius); c.fillStyle = fill; c.fill();
+      if (stroke) { c.strokeStyle = stroke; c.lineWidth = lineWidth; c.stroke(); }
+    }
+    function drawLines(p, lines, y) {
+      const c = p.context, w = p.canvas.width - 2 * S.inset;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (typeof line === "object" && line.kind === "stat") {
+          const cells = [line]; if (lines[i + 1]?.kind === "stat") cells.push(lines[++i]);
+          cells.forEach((cell, column) => {
+            const cw = (w - S.gap) / 2, x = S.inset + column * (cw + S.gap);
+            surface(c, x, y, cw, 100, C.raised, C.line, T.radius.button);
+            drawText(c, cell.label, x + 12, y + 9, cw - 24, F.detail, C.muted, 500, 1);
+            drawText(c, cell.value, x + 12, y + 43, cw - 24, F.value, C.ink, 700, 1);
+          }); y += 112;
+        } else if (typeof line === "object") {
+          drawText(c, line.label, S.inset, y + 10, w, F.detail, C.gold, 600); y += 56;
+        } else y += drawText(c, line, S.inset, y, w, F.body, C.muted) + 10;
+      }
+      return y;
+    }
+    function imageFor(src) {
+      if (images.has(src)) return images.get(src);
+      const img = new Image(); images.set(src, img);
+      img.onload = () => { if (!disposed) panels.forEach((p) => { if (p.id === "residents" && p.data) draw(p); }); };
+      img.src = src; return img;
+    }
+    function drawButton(p, entry, rect, index) {
+      const [label, action, enabled = true, meta = {}] = entry, c = p.context, { x, y, w, h } = rect;
+      const active = meta.selected, hovered = p.hover.has(index), confirmed = p.confirmed === index && performance.now() < p.confirmUntil;
+      surface(c, x, y, w, h, !enabled ? C.surface : hovered ? C.surface : C.raised, active || hovered || confirmed ? C.gold : C.line, T.radius.button, active || confirmed ? T.border.selected : T.border.normal);
+      if (hovered || confirmed) { c.fillStyle = `${C.gold}12`; D.rounded(c, x, y, w, h, T.radius.button); c.fill(); }
+      if (meta.portrait) {
+        const photo = imageFor(meta.portrait.src), side = Math.min(100, h * 0.36), px = x + (w - side) / 2, py = y + 12;
+        c.save(); D.rounded(c, px, py, side, side, T.radius.portrait); c.clip();
+        if (photo.complete && photo.naturalWidth) {
+          const { columns, rows, index: tile } = meta.portrait, sw = photo.naturalWidth / columns, sh = photo.naturalHeight / rows;
+          const [cx, cy, cw, ch] = T.portraitCrop;
+          c.drawImage(photo, ((tile % columns) + cx) * sw, (Math.floor(tile / columns) + cy) * sh, sw * cw, sh * ch, px, py, side, side);
+        } else D.icon(c, "person", px + side * 0.15, py + side * 0.15, side * 0.7, C.ink);
+        c.restore();
+        drawText(c, `${active ? "✓ " : ""}${label}`, x + 12, py + side + 10, w - 24, F.body, C.ink, 700, 1);
+        drawText(c, meta.profession, x + 12, py + side + 53, w - 24, F.detail, C.ink, 500, 1);
+        drawText(c, `${meta.detail || ""} · ${meta.status || ""}`, x + 12, py + side + 90, w - 24, F.detail, C.muted, 500, 2);
       } else {
-        c.fillStyle = "#ffe7a1"; c.font = `bold ${cfg.dashboardTitleSize}px ${/^(red\d|blue\d)$/.test(id) ? "sans-serif" : "Georgia, serif"}`; c.fillText(title, 30, 60, w - 60);
-        c.font = `${cfg.dashboardFontSize}px sans-serif`; c.fillStyle = "#f3f8f4";
-        const maxLines = Math.max(0, Math.floor((h - 90 - rows.length * 92) / 50));
-        lines.slice(0, maxLines).forEach((line, index) => c.fillText(String(line), 30, 116 + index * 50, w - 60));
+        const hasIcon = Boolean(meta.icon), inset = hasIcon ? 64 : 17;
+        if (hasIcon) D.icon(c, meta.icon, x + 16, y + 19, 34, enabled ? C.gold : C.muted);
+        const headingY = y + (meta.detail ? 15 : Math.max(14, (h - F.body * 1.25) / 2));
+        drawText(c, `${active ? "✓ " : ""}${label}`, x + inset, headingY, w - inset - 16, F.body, enabled ? C.ink : C.muted, 650, meta.detail ? 1 : 2);
+        if (meta.detail) drawText(c, meta.detail, x + inset, y + 59, w - inset - 16, F.detail, enabled ? C.muted : C.ink, 500, 2);
+        if (!enabled && action && !meta.detail && h > 100) drawText(c, "Indisponible", x + inset, y + h - 35, w - inset - 16, F.detail, C.muted, 500, 1);
       }
-      if (rowsKey !== p.rowsKey) {
-        p.rowsKey = rowsKey;
-        p.buttons.forEach((button) => { p.node.remove(button); disposeMesh(button); });
-        p.buttons = [];
-        const rowHeight = p.height / (h / 92);
-        rows.forEach((row, index) => {
-        const y = -p.height / 2 + rowHeight * (rows.length - index - 0.5);
-        const slotWidth = p.width / row.length;
-        row.forEach((entry, column) => {
-          const [label, action, enabled = true] = entry;
-          const bw = slotWidth - 0.012;
-          const bc = document.createElement("canvas"); bc.width = 512; bc.height = 128;
-          const bctx = bc.getContext("2d");
-          const portrait = action?.type === "select-resident";
-          const activeFill = id === "jobs" ? "#d2aa5d" : id === "tasks" ? "#8c453e" : id === "buildings" ? "#477b4c" : "#265b57";
-          bctx.fillStyle = portrait ? "#232f36" : enabled ? activeFill : "#3c4544"; bctx.fillRect(0, 0, 512, 128);
-          if (portrait) {
-            bctx.strokeStyle = label.startsWith("▶") ? "#f8d882" : "#78969e"; bctx.lineWidth = 8; bctx.strokeRect(4, 4, 504, 120);
-            bctx.fillStyle = "#d4a477"; bctx.beginPath(); bctx.arc(84, 42, 20, 0, Math.PI * 2); bctx.fill();
-            bctx.fillStyle = "#74644e"; bctx.beginPath(); bctx.moveTo(47, 112); bctx.lineTo(62, 69); bctx.lineTo(106, 69); bctx.lineTo(121, 112); bctx.fill();
-          }
-          bctx.fillStyle = enabled ? (id === "jobs" ? "#1f2525" : "#ffffff") : "#b9c0bd"; bctx.font = "bold 38px sans-serif"; bctx.textAlign = portrait ? "left" : "center"; bctx.textBaseline = "middle"; bctx.fillText(label.replace(/^▶ /, ""), portrait ? 135 : 256, 64, portrait ? 355 : 480);
-          const map = new THREE.CanvasTexture(bc); map.colorSpace = THREE.SRGBColorSpace;
-          const button = new THREE.Mesh(new THREE.PlaneGeometry(bw, rowHeight - 0.008), new THREE.MeshBasicMaterial({ map, transparent: true, side: THREE.DoubleSide }));
-          button.position.set((column - (row.length - 1) / 2) * slotWidth, y, 0.008);
-          button.userData.xrTarget = { kind: "dashboard-button", action, enabled };
-          p.node.add(button); p.buttons.push(button);
+    }
+    function syncButtons(p, entries) {
+      const key = JSON.stringify(entries.map(({ entry, rect }) => [entry, rect])); if (key === p.hitKey) return;
+      p.hitKey = key;
+      while (p.buttons.length > entries.length) { const old = p.buttons.pop(); p.node.remove(old); old.geometry.dispose(); old.material.dispose(); }
+      entries.forEach(({ entry, rect }, index) => {
+        let mesh = p.buttons[index];
+        if (!mesh) { mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ visible: false })); p.node.add(mesh); p.buttons.push(mesh); }
+        mesh.scale.set(rect.w / p.density, rect.h / p.density, 1);
+        mesh.position.set((rect.x + rect.w / 2) / p.density - p.width / 2, p.height / 2 - (rect.y + rect.h / 2) / p.density, 0.009);
+        const [label, action, enabled = true, meta = {}] = entry;
+        mesh.userData.xrTarget = { kind: "dashboard-button", panelId: p.id, label, action, enabled, ...meta, buttonIndex: index };
+      });
+    }
+    function draw(p) {
+      if (!p.data || !p.node.visible) return;
+      const { title, lines, rows, options } = p.data, c = p.context, w = p.canvas.width, h = p.canvas.height;
+      c.clearRect(0, 0, w, h); c.save(); c.shadowBlur = 14; c.shadowColor = "rgba(0,0,0,0.3)"; c.shadowOffsetY = 5;
+      surface(c, 4, 4, w - 8, h - 8, C.surface, C.gold, T.radius.panel, options.selected ? T.border.selected : T.border.normal); c.restore();
+      const team = p.id.startsWith("red") ? C.red : p.id.startsWith("blue") ? C.blue : null;
+      if (team) surface(c, 20, 19, 7, h - 38, team, null, 3);
+      if (p.id === "gear") {
+        D.icon(c, "gear", w / 2 - 34, 66, 68, C.ink); drawText(c, "Réglages", 14, 177, w - 28, F.detail, C.ink, 600, 1); syncButtons(p, []);
+      } else if (/^(red|blue)\d$/.test(p.id)) {
+        drawText(c, title, 38, 27, w - 52, F.body, C.ink, 750, 1);
+        drawText(c, lines[0] || "", 38, 79, w - 52, F.detail, C.muted, 500, 2);
+        drawText(c, String(lines[1] || "").replace("PV ", ""), 38, 147, w - 52, F.value, C.ink, 700, 1);
+        drawText(c, "Points de vie", 38, 205, w - 52, F.detail, C.muted, 500, 1);
+        drawText(c, lines[2] || "", 38, 246, w - 52, F.detail, C.ink, 500, 2); syncButtons(p, []);
+      } else if (p.id === "clock" || p.id.endsWith("Gold")) {
+        const clock = p.id === "clock";
+        drawText(c, clock ? lines[0] : title, 30, 38, w - 60, F.detail, C.muted, 600, 2);
+        drawText(c, clock ? title : lines[0], 30, 135, w - 60, clock && title.length > 7 ? F.body : 61, clock ? C.ink : C.gold, 750, 2); syncButtons(p, []);
+      } else if (p.id === "feedback") {
+        drawText(c, title, 26, 23, w - 52, F.body, options.kind === "error" ? C.danger : C.ink, 600, 4); syncButtons(p, []);
+      } else {
+        if (p.handle) {
+          const handleHover = p.hover.has("handle") || p.node.userData.grabbed;
+          if (handleHover) surface(c, 12, 10, w - 24, S.header - 15, C.raised, C.gold, 24);
+          surface(c, (w - 55) / 2, 16, 55, 4, handleHover ? C.gold : C.muted, null, 2);
+        }
+        drawText(c, title, S.inset, 39, w - 2 * S.inset, F.title, C.ink, 700, 1);
+        c.beginPath(); c.moveTo(S.inset, S.header - 8); c.lineTo(w - S.inset, S.header - 8); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
+        const startY = drawLines(p, lines, S.header + 10) + (lines.length ? 12 : 0);
+        const heights = rows.map((row) => row.some((entry) => entry[3]?.portrait) ? 265 : row.some((entry) => entry[3]?.detail) ? S.detailRow : S.row);
+        const available = h - startY - S.inset, total = heights.reduce((sum, height) => sum + height + S.gap, 0), hasPages = total > available;
+        const pageHeight = available - (hasPages ? S.footer : 0), pages = [[]]; let used = 0;
+        rows.forEach((row, i) => {
+          if (used + heights[i] + S.gap > pageHeight && pages.at(-1).length) { pages.push([]); used = 0; }
+          pages.at(-1).push(i); used += heights[i] + S.gap;
         });
+        p.pageCount = pages.length; p.page = Math.min(p.page, pages.length - 1);
+        let y = startY; const entries = [];
+        pages[p.page].forEach((rowIndex) => {
+          const row = rows[rowIndex], height = heights[rowIndex], bw = (w - 2 * S.inset - S.gap * (row.length - 1)) / row.length;
+          row.forEach((entry, col) => { const rect = { x: S.inset + col * (bw + S.gap), y, w: bw, h: height }; drawButton(p, entry, rect, entries.length); entries.push({ entry, rect }); }); y += height + S.gap;
         });
+        if (hasPages) {
+          const navigation = [["← Préc.", { type: "panel-page", panelId: p.id, delta: -1 }, p.page > 0, { reason: "Première page." }], [`${p.page + 1} / ${pages.length}`, null, false], ["Suiv. →", { type: "panel-page", panelId: p.id, delta: 1 }, p.page + 1 < pages.length, { reason: "Dernière page." }]];
+          const bw = (w - 2 * S.inset - 2 * S.gap) / 3;
+          navigation.forEach((entry, col) => { const rect = { x: S.inset + col * (bw + S.gap), y: h - S.footer, w: bw, h: S.footer - S.inset }; drawButton(p, entry, rect, entries.length); entries.push({ entry, rect }); });
+        }
+        syncButtons(p, entries);
       }
-      p.texture.needsUpdate = true;
+      p.texture.needsUpdate = true; p.drawCount++;
     }
-    function syncTargets() {
-      targets.length = 0;
-      panels.forEach((p) => { if (p.node.visible) targets.push(...p.buttons, p.face); });
+    function paint(id, title, lines = [], rows = [], visible = true, options = {}) {
+      const p = panel(id), wasVisible = p.node.visible; p.node.visible = visible;
+      if (!wasVisible && visible && !reducedMotion) p.face.material.opacity = 0.25;
+      p.face.userData.xrTarget = options.action ? { kind: "dashboard-button", panelId: id, action: options.action, enabled: true, label: title } : { kind: "dashboard-panel", panelId: id };
+      const key = JSON.stringify([title, lines, rows, options]);
+      if (p.data?.title !== title) p.page = 0;
+      p.data = { title, lines, rows, options };
+      if (key !== p.key || (!wasVisible && visible)) { p.key = key; draw(p); }
     }
-    function position(viewer, smooth = false, dt = 0) {
+    function syncTargets() { targets.length = 0; panels.forEach((p) => { if (p.node.visible && p.id !== "feedback") targets.push(...p.buttons, ...(p.handle ? [p.handle] : []), p.face); }); }
+    function position(viewer, smooth = false) {
+      if (smooth && positioned) return;
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewer.quaternion); forward.y = 0;
-      if (forward.lengthSq() < 0.01) forward.set(0, 0, -1);
-      forward.normalize();
-      const target = viewer.position.clone().addScaledVector(forward, cfg.dashboardDistance);
-      const yaw = Math.atan2(-forward.x, -forward.z);
-      if (!smooth || !group.visible) { group.position.copy(target); group.rotation.set(0, yaw, 0); }
-      else {
-        if (group.position.distanceTo(target) > cfg.dashboardMoveThreshold) group.position.lerp(target, Math.min(1, dt * cfg.dashboardSmoothness));
-        const difference = Math.atan2(Math.sin(yaw - group.rotation.y), Math.cos(yaw - group.rotation.y));
-        if (Math.abs(difference) > cfg.dashboardTurnThreshold) group.rotation.y += difference * Math.min(1, dt * cfg.dashboardSmoothness);
-      }
-      group.visible = true;
+      if (forward.lengthSq() < 0.01) forward.set(0, 0, -1); forward.normalize();
+      group.position.copy(viewer.position).addScaledVector(forward, E.Config.xr.dashboardDistance);
+      // Le cadre est orienté vers la table : ses commandes basses restent sous
+      // le plateau dans le champ visuel au lieu de passer derrière sa géométrie.
+      const pitch = E.Config.xr.dashboardPitch;
+      group.position.y -= Math.tan(pitch) * E.Config.xr.dashboardDistance;
+      group.rotation.set(-pitch, Math.atan2(-forward.x, -forward.z), 0, "YXZ"); positioned = true;
+    }
+    function resetLayout(viewer) { panels.forEach((p) => { p.node.userData.customLayout = false; p.node.userData.windowUserScale = 1; placeDefault(p); }); if (viewer) position(viewer, false); }
+    function recenter(viewer) {
+      panels.forEach((p) => { if (Math.abs(p.node.position.x) > 1.6 || Math.abs(p.node.position.y) > 1.5 || Math.abs(p.node.position.z) > 0.7) { p.node.userData.customLayout = false; placeDefault(p); } }); position(viewer, false);
+    }
+    function setTextSize(size) {
+      if (!T.textScales[size] || textSize === size) return;
+      const ratio = T.textScales[size] / T.textScales[textSize]; textSize = size;
+      panels.forEach((p) => { if (p.node.userData.customLayout) p.node.scale.multiplyScalar(ratio); else placeDefault(p); });
+    }
+    function setFeedback(message, kind = "info") {
+      feedbackUntil = performance.now() + T.feedbackMs; paint("feedback", message, [], [], true, { kind });
+      // Zone de notification réservée : aucune cible de gestion n'est recouverte.
+      placeDefault(panels.get("feedback"));
+    }
+    function highlight(objects) {
+      const now = performance.now(), fade = Math.min(1, (now - lastHighlight) / T.transitionMs); lastHighlight = now;
+      panels.forEach((p) => {
+        p.face.material.opacity = Math.min(1, p.face.material.opacity + fade);
+        const hover = new Set(); p.buttons.forEach((button, index) => { if (objects.has(button)) hover.add(index); });
+        if (p.handle && (objects.has(p.handle) || p.node.userData.grabbed)) hover.add("handle");
+        const changed = [...hover].join(",") !== [...p.hover].join(","), expired = p.confirmed !== null && now >= p.confirmUntil; p.hover = hover;
+        if (expired) p.confirmed = null; if (changed || expired) draw(p);
+        p.face.material.color.set(objects.has(p.face) ? C.gold : "#ffffff");
+      });
+      const notice = panels.get("feedback"); if (notice && now > feedbackUntil) notice.node.visible = false;
+    }
+    function navigate(id, amount) {
+      const p = panels.get(id); if (!p) return false; const next = THREE.MathUtils.clamp(p.page + amount, 0, p.pageCount - 1);
+      if (next === p.page) return false; p.page = next; draw(p); syncTargets(); return true;
+    }
+    function feedback(target, valid) {
+      const data = target?.userData?.xrTarget || target, p = panels.get(data?.panelId); if (!p) return;
+      if (valid) { p.confirmed = data.buttonIndex; p.confirmUntil = performance.now() + T.confirmationMs; draw(p); }
     }
     function dispose() {
-      panels.forEach((p) => { p.buttons.forEach(disposeMesh); disposeMesh(p.face); group.remove(p.node); });
-      scene.remove(group);
+      disposed = true;
+      panels.forEach((p) => { [p.face, p.handle, ...p.buttons].filter(Boolean).forEach((mesh) => { mesh.geometry.dispose(); mesh.material.dispose(); }); p.texture.dispose(); });
+      images.forEach((img) => { img.onload = null; }); images.clear(); panels.clear(); targets.length = 0; scene.remove(group);
     }
-    return { group, targets, paint, syncTargets, position, dispose,
-      highlight(objects) { panels.forEach((p) => {
-        p.buttons.forEach((button) => button.material.color.setHex(objects.has(button) ? 0x9dffe0 : 0xffffff));
-        p.face.material.color.setHex(objects.has(p.face) ? 0x9dffe0 : 0xffffff);
-      }); }
+    return { group, targets, paint, syncTargets, position, resetLayout, recenter, setTextSize, setFeedback, feedback, navigate, highlight, dispose,
+      getPanel: (id) => panels.get(id), get textSize() { return textSize; }, get modalActive() { return Boolean(panels.get("modal")?.node.visible); },
+      get diagnostics() { return [...panels.values()].map((p) => ({ id: p.id, visible: p.node.visible, position: p.node.position.toArray(), width: p.width * p.node.scale.x, height: p.height * p.node.scale.y, page: p.page, pages: p.pageCount, draws: p.drawCount, texture: [p.canvas.width, p.canvas.height] })); }
     };
   }
   E.XRDashboard = { create };
