@@ -1,0 +1,62 @@
+(function () {
+  "use strict";
+  const E = window.Eredita;
+  function create({ THREE, world, terrainGroup, panels, dashboard }) {
+    const overlay = new THREE.Group();
+    overlay.name = "xr-village-targets";
+    world.add(overlay);
+    const targets = [];
+    const raycaster = new THREE.Raycaster();
+    raycaster.far = E.Config.xr.rayLength;
+    let terrainVersion = null;
+    function clear() {
+      overlay.children.slice().forEach((item) => { overlay.remove(item); item.geometry.dispose(); item.material.dispose(); });
+      targets.length = 0;
+    }
+    function sync() {
+      if (terrainVersion === terrainGroup.children[0]) return;
+      terrainVersion = terrainGroup.children[0];
+      clear();
+      terrainGroup.traverse((item) => {
+        if (item.userData.xrTarget?.kind !== "village") return;
+        const position = item.position.clone().add(item.parent.position);
+        const target = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.5, 1.05), new THREE.MeshBasicMaterial({ visible: false }));
+        target.position.copy(position).add(new THREE.Vector3(0, 0.55, 0));
+        target.userData.xrTarget = item.userData.xrTarget;
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.58, 24), new THREE.MeshBasicMaterial({ color: 0x6cffba, side: THREE.DoubleSide }));
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.copy(position); ring.position.y += 0.02;
+        ring.visible = false;
+        target.userData.ring = ring;
+        overlay.add(target, ring);
+        targets.push(target);
+      });
+    }
+    return {
+      sync, targets,
+      hit(record, allowVillages) {
+        raycaster.set(record.position, record.direction);
+        const objects = panels.group.visible ? panels.targets.slice() : [];
+        // Une fenêtre déplacée peut avoir n'importe quel z : seule la sémantique
+        // identifie une modale, jamais sa position dans l'espace.
+        const modal = dashboard?.group.visible && dashboard.modalActive;
+        if (dashboard?.group.visible) objects.push(...(modal ? dashboard.targets.filter((item) => item.userData.xrTarget?.panelId === "modal") : dashboard.targets));
+        const interfaceHit = raycaster.intersectObjects(objects, false)[0];
+        if (interfaceHit) return interfaceHit;
+        return allowVillages && !modal && world.parent.visible ? raycaster.intersectObjects(targets, false)[0] || null : null;
+      },
+      highlight(objects, selected) {
+        targets.forEach((target) => {
+          const data = target.userData.xrTarget;
+          const chosen = selected?.playerId === data.playerId && selected?.lane === data.lane;
+          target.userData.ring.visible = objects.has(target) || chosen;
+          target.userData.ring.material.color.setHex(chosen ? 0xffdf72 : 0x6cffba);
+        });
+        panels.highlight(objects);
+        dashboard?.highlight(objects);
+      },
+      dispose() { clear(); world.remove(overlay); }
+    };
+  }
+  E.XRInteractions = { create };
+}());
