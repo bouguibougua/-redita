@@ -49,12 +49,13 @@
     },
 
     start() {
-      if (!state.players.red.setupConfirmed || !state.players.blue.setupConfirmed) return;
-      E.Audio?.play("game");
+      if (state.phase !== "setup" || !state.players.red.setupConfirmed || !state.players.blue.setupConfirmed) return false;
       state.phase = "running";
       state.elapsed = 0;
+      state.preparationRemaining = E.Network.mode === "tutorial" ? 0 : E.Config.preparation.duration;
       previousTimestamp = performance.now();
-      addLog("La partie commence. Les huit villages sont debout.");
+      if (state.preparationRemaining > 0) addLog("Préparation : vous avez une minute pour organiser vos villages et attribuer les tâches.");
+      else { E.Audio?.play("game"); addLog("La partie commence. Les huit villages sont debout."); }
       E.UI.render(state);
     },
 
@@ -305,15 +306,18 @@
     return { bergerie: "une Bergerie", artisanat: "un Artisanat", boucherie: "une Boucherie" }[type] || "un bâtiment";
   }
 
+  // Les attributions groupées avancent aussi pendant la préparation, contrairement au temps de combat.
+  const commandTime = () => state.elapsed + E.Config.preparation.duration - (state.preparationRemaining || 0);
   function queueBulkTasks(playerId, lane, residentIds, mission) {
-    residentIds.forEach((residentId, index) => pendingBulkTasks.push({ playerId, lane, residentId, mission, due: state.elapsed + index * E.Config.bulkTaskInterval }));
+    residentIds.forEach((residentId, index) => pendingBulkTasks.push({ playerId, lane, residentId, mission, due: commandTime() + index * E.Config.bulkTaskInterval }));
     processBulkTasks();
   }
 
   function processBulkTasks() {
     if (state.phase !== "running" || state.paused) return;
-    const due = pendingBulkTasks.filter((task) => task.due <= state.elapsed);
-    pendingBulkTasks = pendingBulkTasks.filter((task) => task.due > state.elapsed);
+    const now = commandTime();
+    const due = pendingBulkTasks.filter((task) => task.due <= now);
+    pendingBulkTasks = pendingBulkTasks.filter((task) => task.due > now);
     let changed = false;
     due.forEach((task) => {
       changed = (task.mission === "release"
@@ -326,6 +330,22 @@
   }
 
   function update(delta) {
+    if (!Number.isFinite(delta) || delta <= 0) return;
+    if (state.preparationRemaining > 0) {
+      const preparationDelta = Math.min(delta, state.preparationRemaining);
+      state.preparationRemaining = Math.max(0, state.preparationRemaining - preparationDelta);
+      processBulkTasks();
+      if (E.Config.preparation.productionDuringPreparation) E.Economy.updateProduction(state, preparationDelta);
+      // L’IA organise également ses villages ; toutes les unités restent immobiles.
+      if (E.Network.mode === "solo" && E.AI.update(state, preparationDelta)) E.UI.render(state);
+      delta -= preparationDelta;
+      if (state.preparationRemaining === 0) {
+        E.Audio?.play("game");
+        addLog("La préparation est terminée. Le combat commence !");
+        E.UI.render(state);
+      }
+      if (delta <= 0) return;
+    }
     state.elapsed += delta;
     processBulkTasks();
     E.Economy.update(state, delta);

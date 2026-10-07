@@ -151,7 +151,7 @@
   }
 
   function update(state, delta) {
-    if (state.phase !== "running" || state.paused || !Number.isFinite(delta) || delta <= 0) return;
+    if (state.phase !== "running" || state.paused || state.preparationRemaining > 0 || !Number.isFinite(delta) || delta <= 0) return;
     const damageEvents = [];
     Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
       village.damageSmoke = Math.max(0, (village.damageSmoke || 0) - delta);

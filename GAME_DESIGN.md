@@ -139,6 +139,20 @@ Une situation où les deux joueurs perdent leur dernier village simultanément p
 
 # 5. DURÉE NORMALE D'UNE PARTIE
 
+## 5.1 Préparation des villages — 1 minute
+
+Après la confirmation des decks et biomes des deux camps et le lancement de la partie, une préparation commune de **60 secondes** permet de sélectionner les villages, construire, acheter, attribuer les tâches et les métiers et définir les préférences des futurs habitants. Les coûts, prérequis et restrictions de contrôle restent identiques.
+
+Les ordres d’attaque et de défense peuvent être donnés pendant cette minute ; les troupes attendent la fin du compte à rebours avant tout déplacement ou combat. Les attributions groupées continuent à leur cadence habituelle de 0,5 seconde. L’IA prépare également ses villages.
+
+Le compte à rebours est visible sur écran et en réalité mixte. À zéro, le combat commence automatiquement. En réseau, seul l’hôte fait avancer ce compte à rebours et l’invité reçoit ses snapshots ; la pause de l’hôte suspend également la préparation. Un nouveau lancement n’est pas possible pendant une partie déjà commencée.
+
+TEMP_BALANCE_VALUE : par défaut, la production attend la fin de la préparation ; ce choix reste à valider et se règle avec `Config.preparation.productionDuringPreparation`. La génération naturelle des habitants commence avec le temps de combat. Le tutoriel scénarisé conserve son organisation guidée et sa durée libre.
+
+## 5.2 Temps de combat
+
+La minute de préparation s’ajoute au temps de combat. Les 12:30 et le seuil d’Overtime sont comptés **à partir de la fin de la préparation**.
+
 La phase normale dure :
 
 **12 minutes 30 secondes.**
@@ -2437,7 +2451,8 @@ Les éléments suivants doivent être considérés comme des règles actuelles :
 * deuxième à 10 min ;
 * 2 cartes proposées parmi les Mythologiques ;
 * 1 sélectionnée ;
-* durée normale = 12:30 ;
+* préparation des villages = 60 secondes après le choix des decks et biomes ;
+* durée normale de combat = 12:30, après cette préparation ;
 * ensuite Overtime ;
 * combat automatique en temps réel ;
 * Habitant = 20 secondes pour une colonne ;

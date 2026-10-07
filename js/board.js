@@ -80,6 +80,7 @@
       phase: "setup",
       paused: false,
       elapsed: 0,
+      preparationRemaining: 0,
       overtimeAccumulator: 0,
       xrBoardWidth: null,
       players: {

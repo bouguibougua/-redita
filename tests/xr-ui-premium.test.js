@@ -117,6 +117,13 @@ ui.execute({ type: "open", name: "settings" }); ui.close();
 assert.match(painted.get("modal").lines[0], /Joueur Bleu/, "Retour des réglages préserve la préparation du deuxième camp");
 assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true); assert.equal(state.phase, "running");
 
+state = E.Board.createState(); state.phase = "running"; state.preparationRemaining = E.Config.preparation.duration;
+ui.close(); ui.render();
+assert.equal(painted.get("clock").title, "1:00"); assert.equal(painted.get("clock").lines[0], "PRÉPARATION");
+assert.equal(painted.get("tasks").visible, true, "L’attribution reste accessible pendant la préparation");
+state.preparationRemaining = 0.0625; ui.render(); assert.equal(painted.get("clock").title, "0:01");
+state.preparationRemaining = 0; ui.render(); assert.equal(painted.get("clock").title, "12:30");
+
 state = E.Board.createState(); E.Network.mode = "pending"; ui.close();
 assert.equal(painted.get("modal").options.variant, "mode");
 assert.equal(painted.get("modal").options.footer[0][0], "Quitter le mode VR");

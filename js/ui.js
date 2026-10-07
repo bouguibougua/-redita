@@ -36,6 +36,7 @@
       shopVillageNav: document.querySelector("#shop-village-nav"),
       clock: document.querySelector("#game-clock"),
       phase: document.querySelector("#phase-label"),
+      preparationHint: document.querySelector("#preparation-hint"),
       pause: document.querySelector("#pause-game"),
       redirectDialog: document.querySelector("#redirect-dialog"),
       redirectCopy: document.querySelector("#redirect-copy"),
@@ -289,15 +290,20 @@
 
 
   function renderStatus(state) {
+    elements.preparationHint.hidden = !(state.preparationRemaining > 0);
     if (state.tutorial?.noTimer) {
       elements.clock.textContent = "∞";
       elements.phase.textContent = "Tutoriel libre";
+    } else if (state.preparationRemaining > 0) {
+      elements.clock.textContent = formatTime(Math.ceil(state.preparationRemaining));
+      elements.phase.textContent = "Préparation";
     } else {
     const overtime = state.elapsed >= E.Config.normalDuration;
     const shownTime = overtime ? state.elapsed - E.Config.normalDuration : E.Config.normalDuration - state.elapsed;
     elements.clock.textContent = `${overtime ? "+" : ""}${formatTime(shownTime)}`;
     elements.phase.textContent = overtime ? "Overtime" : "Temps normal";
     }
+    elements.clock.closest(".board-clock")?.setAttribute("aria-label", state.preparationRemaining > 0 ? "Préparation : attribuez vos tâches avant le combat" : "Temps restant");
     elements.pause.textContent = state.paused ? "Reprendre" : "Pause";
   }
 

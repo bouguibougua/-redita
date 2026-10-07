@@ -25,6 +25,7 @@
     let focused = 0;
     let hasFocus = false;
     let selectedVillageKey = "";
+    let wasPreparing = false;
     const owner = () => E.GameView.getPlayerId();
     const state = () => E.GameView.getState();
     const setupPlayer = () => E.Network.mode === "local" ? ["red", "blue"].find((id) => !state().players[id].setupConfirmed) || "red" : owner();
@@ -280,9 +281,13 @@
             `${item.population}/${item.populationMax} hab. · ${E.Economy.getAvailableResidents(s, id, lane)} libres`], [], inGame,
           { action: { type: "select-village", playerId: id, lane }, selected: sel.playerId === id && sel.lane === lane }));
       }
-      const remaining = Math.max(0, E.Config.normalDuration - s.elapsed);
+      const preparing = s.preparationRemaining > 0;
+      if (preparing && !wasPreparing) feedback("Préparation : une minute pour attribuer vos tâches et organiser vos villages.");
+      if (!preparing && wasPreparing && s.phase === "running") feedback("La préparation est terminée. Le combat commence !");
+      wasPreparing = preparing;
+      const remaining = preparing ? Math.ceil(s.preparationRemaining) : Math.max(0, E.Config.normalDuration - s.elapsed);
       const overtime = s.elapsed >= E.Config.normalDuration;
-      dashboard.paint("clock", s.phase === "setup" ? "PRÉPARATION" : `${Math.floor(remaining / 60)}:${String(Math.floor(remaining % 60)).padStart(2, "0")}`, [s.paused ? "PAUSE" : s.phase === "ended" ? "TERMINÉ" : overtime ? "OVERTIME" : "TEMPS RESTANT"], [], inGame);
+      dashboard.paint("clock", s.phase === "setup" ? "PRÉPARATION" : `${Math.floor(remaining / 60)}:${String(Math.floor(remaining % 60)).padStart(2, "0")}`, [s.paused ? "PAUSE" : s.phase === "ended" ? "TERMINÉ" : preparing ? "PRÉPARATION" : overtime ? "OVERTIME" : "TEMPS RESTANT"], [], inGame);
       dashboard.paint("gear", "⚙", [], [], inGame, { action: open("settings") });
       const managerVisible = visible && s.phase === "running";
       const available = v ? E.Economy.getAvailableResidents(s, p.id, v.lane) : 0;

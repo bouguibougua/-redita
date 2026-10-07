@@ -192,6 +192,11 @@ async function run() {
   await guest.click('[data-setup-action="keep"][data-player="blue"]');
   await waitFor("!document.querySelector('#start-game').disabled"); await click("#start-game");
   await guest.waitFor("Eredita.GameView.getState().phase === 'running'");
+  await guest.waitFor("Eredita.GameView.getState().preparationRemaining > 0");
+  assert.equal(await evaluate("Eredita.GameView.getState().elapsed"), 0, "Les 12:30 ne commencent pas pendant la préparation");
+  assert.equal(await evaluate("document.querySelector('#phase-label').textContent"), "Préparation");
+  assert.equal(await guest.evaluate("document.querySelector('#phase-label').textContent"), "Préparation");
+  assert.equal(await evaluate("document.querySelector('#preparation-hint').hidden"), false);
   assert.equal(await evaluate("document.querySelectorAll('[data-village-select]').length"), 8);
   await click("#pause-game");
   await guest.waitFor("Eredita.GameView.getState().paused");
@@ -218,6 +223,8 @@ async function run() {
   assert.equal(await evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-village').length"), 8);
   assert.equal(await evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-resident').length"), 4);
   assert.equal(await evaluate("['jobs','tasks','buildings','residents'].every(id=>xrFixture.dashboard.getPanel(id).node.visible && xrFixture.dashboard.getPanel(id).handle)"), true);
+  assert.equal(await evaluate("xrFixture.dashboard.getPanel('clock').data.lines[0]"), "PAUSE");
+  assert.equal(await evaluate("Eredita.GameView.getState().preparationRemaining>0 && Eredita.GameView.getState().elapsed===0"), true, "La préparation est aussi en pause dans le casque");
   assert.equal(await evaluate("Math.abs(xrFixture.dashboard.group.rotation.x)<0.001"), true, "Le tableau de bord reste droit");
   assert.equal(await evaluate("['red0','blue0','redGold','blueGold','clock'].every(id=>xrFixture.dashboard.getPanel(id).handle && xrFixture.dashboard.getPanel(id).node.rotation.x>0)"), true, "Scores inclinés et déplaçables");
   const stableFrame = await evaluate("xrFixture.dashboard.group.matrixWorld.toArray()");
@@ -304,10 +311,11 @@ async function run() {
   await click("#game-screen [data-open-xr]"); await waitFor("!document.querySelector('#xr-start').disabled");
   await evaluate("document.querySelector('#xr-manual-only').checked = true"); await click("#xr-start");
   await waitFor("Eredita.XR.active");
-  const time = await evaluate("Eredita.GameView.getState().elapsed");
+  const matchTime = "Eredita.Config.preparation.duration - (Eredita.GameView.getState().preparationRemaining || 0) + Eredita.GameView.getState().elapsed";
+  const time = await evaluate(matchTime);
   assert.equal(await evaluate("Eredita.GameView.getState().paused"), false);
-  await waitFor(`Eredita.GameView.getState().elapsed > ${time}`);
-  await guest.waitFor(`Eredita.GameView.getState().elapsed > ${time}`);
+  await waitFor(`(${matchTime}) > ${time}`);
+  await guest.waitFor(`(${matchTime}) > ${time}`);
   await evaluate("xrFixture.step(); xrFixture.button('exit')"); await waitFor("!Eredita.XR.active");
   assert.equal(await evaluate("Eredita.Network.roomCode"), room);
   assert.equal(await guest.evaluate("Eredita.Network.roomCode"), room);

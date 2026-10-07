@@ -7,6 +7,11 @@
   // prototype, mais ne constituent pas une règle validée du Game Design.
   window.Eredita.Config = {
     normalDuration: 750,
+    preparation: {
+      duration: 60,
+      // TEMP_BALANCE_VALUE — production pendant la préparation non encore validée.
+      productionDuringPreparation: false
+    },
     bulkTaskInterval: 0.5,
     network: { connectionTimeoutMs: 8000 },
     xr: {
