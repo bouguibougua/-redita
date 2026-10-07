@@ -205,7 +205,7 @@
     if (target?.kind === "panel") { r.input.flash(record, false); return; }
     if (!r.placement.placed) { r.input.flash(record, r.placement.confirm(record)); return; }
     if (r.manipulation) { r.input.flash(record, false); return; }
-    if (target?.kind === "village" && E.GameView.selectVillage(target.playerId, target.lane)) {
+    if (target?.kind === "village" && r.ui.selectVillage(target.playerId, target.lane)) {
       r.selected = { playerId: target.playerId, lane: target.lane };
       r.input.flash(record, true);
       r.ui.render();
@@ -272,6 +272,7 @@
     if (!pose) { r.root.visible = false; r.windows.reset(); r.input.reset(); return; }
     r.viewer = { position: new r.THREE.Vector3().copy(pose.transform.position), quaternion: new r.THREE.Quaternion().copy(pose.transform.orientation) };
     if (!r.positioned) { r.panels.position(r.viewer); r.dashboard.resetLayout(r.viewer); r.positioned = true; }
+    r.dashboard.setViewer(r.viewer);
     r.dashboard.position(r.viewer, true, dt);
     r.input.update(frame, r.space);
     r.placement.update(frame, r.space, r.input.records, r.viewer, timestamp);
@@ -279,7 +280,10 @@
     if (r.placement.placed && !r.widthShared && E.Network.mode !== "guest") { E.GameView.setXRBoardWidth(r.placement.width); r.widthShared = true; }
     if (r.manipulation && r.placement.placed) r.placement.manipulate(r.input.records, r.viewer, dt);
     E.Board3D.setXRPreview(!r.placement.placed);
-    r.dashboard.group.visible = r.placement.placed && !r.manipulation;
+    const showDashboard = r.placement.placed && !r.manipulation;
+    if (showDashboard && !r.dashboardShown) { r.dashboard.recenter(r.viewer); r.lastDashboard = -Infinity; }
+    r.dashboardShown = showDashboard;
+    r.dashboard.group.visible = showDashboard;
     if (r.dashboard.group.visible && timestamp - r.lastDashboard >= E.Config.xr.dashboardRefreshMs) { r.ui.render(); r.lastDashboard = timestamp; }
     r.interactions.sync();
     r.scene.updateMatrixWorld(true);
@@ -302,7 +306,7 @@
         r.dashboard.setFeedback("Toutes les fenêtres sont revenues devant vous.", "info");
       } else if (r.windows.active) continue;
       else if (event.type === "panels" && r.placement.placed && !r.manipulation) r.ui.toggle();
-      else if (event.type === "cards" && r.placement.placed && !r.manipulation) r.ui.cards();
+      else if (event.type === "shop" && r.placement.placed && !r.manipulation) r.ui.shop();
       else if (event.type === "info" && r.placement.placed && !r.manipulation) {
         const target = hits.get(event.record)?.object.userData.xrTarget;
         if (target?.kind === "village") E.GameView.selectVillage(target.playerId, target.lane);
@@ -313,11 +317,19 @@
     }
     if (r.dashboard.group.visible && r.ui.focusedTarget) hovered.add(r.ui.focusedTarget);
     r.interactions.highlight(hovered, E.GameView.getState().selectedVillage);
-    if (r.dashboard.group.visible && !r.manipulation && !r.windows.active && timestamp - r.lastStick > E.Config.xr.dashboardStickRepeatMs) {
+    if (r.dashboard.group.visible && !r.manipulation && !r.windows.active) {
       for (const record of r.input.records) {
-        const axis = Math.abs(record.axes[0]) > Math.abs(record.axes[1]) ? record.axes[0] : record.axes[1];
-        if (!record.tracked || record.squeezing || Math.abs(axis) < E.Config.xr.dashboardStickThreshold) continue;
-        r.ui.stick(record.source.handedness, Math.sign(axis), hits.get(record)?.object.userData.xrTarget?.panelId); r.lastStick = timestamp; break;
+        if (!record.tracked || record.squeezing || performance.now() < record.suppressSelectUntil) continue;
+        const hand = record.source.handedness;
+        const inGame = E.GameView.getState().phase === "running" && (!r.ui.modal || ["shop", "sell", "buy-resident", "store", "animals"].includes(r.ui.modal.name));
+        const vertical = inGame ? hand === "left" : Math.abs(record.axes[1]) >= Math.abs(record.axes[0]);
+        const axis = record.axes[vertical ? 1 : 0];
+        if (Math.abs(axis) < E.Config.xr.dashboardStickThreshold) { record.lastNavigation = -Infinity; continue; }
+        if (timestamp - (record.lastNavigation ?? -Infinity) < E.Config.xr.dashboardStickRepeatMs) continue;
+        const direction = Math.sign(axis) * (vertical ? -1 : 1);
+        r.ui.stick(hand, direction, hits.get(record)?.object.userData.xrTarget?.panelId, vertical ? "vertical" : "horizontal");
+        if (inGame) r.selected = { ...E.GameView.getState().selectedVillage };
+        record.lastNavigation = timestamp;
       }
     }
     if (timestamp - r.lastPanel >= E.Config.xr.panelUpdateMs) { panelContent(); r.lastPanel = timestamp; }

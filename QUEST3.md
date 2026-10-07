@@ -1,5 +1,16 @@
 # Eredità sur Meta Quest 3
 
+## Ergonomie VR — 7 octobre 2026
+
+Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation reprend les trois decks et la grille de quatre biomes colorés du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
+
+En partie, quatre fenêtres : Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite, Gestion du village en bas à droite (stocks, bâtiments, parcelles et ventes). Un clic sur un village les affiche. Les fiches de PV, les ors et le chronomètre ont des coins arrondis, une légère inclinaison vers le joueur et une poignée de déplacement. Les fenêtres de gestion et le menu sont également déplaçables.
+
+Y ouvre/ferme la boutique. Joystick gauche vertical : habitant suivant vers le haut, précédent vers le bas. Joystick droit horizontal : village suivant vers la droite, précédent vers la gauche, dans le camp sélectionné. Ces axes gardent le même rôle dans la boutique. Les joysticks d’une fenêtre saisie restent réservés à sa distance et sa taille ; le plateau bouge uniquement dans son mode de manipulation. X maintenu récupère les fenêtres.
+
+À vérifier sur Quest : lecture assise, placement des quatre fenêtres sans gêner la table, saisie des fiches de score, parcours entraînement → lancement, changements d’habitant et de village dans la boutique. Aucun essai physique effectué ici.
+
+
 Le mode réalité mixte est intégré au jeu existant. Il permet de placer le plateau sur une table et de piloter la préparation, la gestion et le combat avec les contrôleurs. Il utilise le module **Three.js r186 déjà présent**, sans CDN, framework ou seconde simulation.
 
 ## Lancer sur le casque
@@ -30,11 +41,11 @@ Ouvrir dans Quest Browser l'adresse **HTTPS** d'un déploiement du projet comple
 - **Pour suivre une partie** : préparer et lancer normalement l'entraînement, le local ou le salon, puis cliquer sur **Réalité mixte** au-dessus du plateau. Les mêmes unités, bâtiments et productions sont affichés. La simulation continue pendant le placement et les réglages ; mettre en pause avant l'entrée si souhaité et si le mode l'autorise.
 - **En réseau** : créer/rejoindre le salon comme d'habitude. Rouge reste l'hôte autoritaire, Bleu reste l'invité. Chacun peut choisir sa représentation. Le placement physique reste local au casque ; il n'est pas envoyé à l'autre joueur.
 - **Tutoriel** : le parcours guidé nécessite encore les contrôles HTML ; l'entrée AR y est désactivée. Revenir au menu à sa fin pour utiliser l'AR.
-- **Gestion économique** : les panneaux du casque permettent de construire, attribuer des métiers et missions, planter, élever, vendre et acheter en appelant le même moteur que le desktop. Les cartes actives n'existent pas encore dans le prototype desktop et Y l'indique dans le casque.
+- **Gestion économique** : les panneaux du casque permettent de construire, attribuer des métiers et missions, planter, élever, vendre et acheter en appelant le même moteur que le desktop. Les cartes actives n'existent pas encore dans le prototype desktop et Y ouvre la boutique.
 
 ## Placement et commandes
 
-Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement, le tableau de bord répartit les huit fiches de villages, les ors globaux et l'horloge en haut, les métiers et le village sélectionné sur les côtés, les tâches et bâtiments en bas, puis les habitants sous le plateau. Les fenêtres restent stables dans l’espace et peuvent être déplacées individuellement par leur barre supérieure. Les fiches et boutons se visent au rayon et s'activent à la gâchette index ; leur surface est une vraie géométrie 3D. Agriculture, élevage, pêche et chasse utilisent les missions économiques existantes ; les commandes de combat conservent également leurs règles.
+Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement et lancement, le tableau de bord répartit les huit fiches de villages, les ors globaux et l’horloge en haut, puis les quatre fenêtres de gestion décrites ci-dessus. Les fenêtres restent stables dans l’espace et peuvent être déplacées individuellement par leur barre supérieure. Les fiches et boutons se visent au rayon et s'activent à la gâchette index ; leur surface est une vraie géométrie 3D. Agriculture, élevage, pêche et chasse utilisent les missions économiques existantes ; les commandes de combat conservent également leurs règles.
 
 1. Viser la table. Un repère vert et un plateau transparent apparaissent sur une surface horizontale admissible. **Vérifier soi-même qu'il s'agit bien de sa table** : le code ne déduit aucune catégorie de mobilier.
 2. Appuyer sur la gâchette du contrôleur qui porte le repère pour confirmer. Si l'autre contrôleur était prioritaire, une première pression transfère la priorité à celui utilisé ; viser et confirmer une seconde fois.
@@ -50,9 +61,9 @@ Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. 
 | B, contrôleur droit Touch reconnu | Revenir/fermer un menu, terminer la manipulation ou annuler un repositionnement |
 | X, contrôleur gauche Touch reconnu | Masquer ou afficher les panneaux de gestion |
 | X maintenu 1,2 seconde | Récupérer toutes les fenêtres devant soi, y compris hors champ |
-| Y, contrôleur gauche Touch reconnu | Afficher l'état des cartes actives |
-| Joystick droit, jeu | Parcourir les habitants du village sélectionné |
-| Joystick gauche, jeu | Parcourir les commandes du tableau de bord |
+| Y, contrôleur gauche Touch reconnu | Ouvrir/fermer la boutique |
+| Joystick droit horizontal, jeu | Changer de village dans le camp sélectionné |
+| Joystick gauche vertical, jeu | Parcourir les habitants du village sélectionné |
 | Préhension sur la barre supérieure, jeu | Saisir une seule fenêtre, la déplacer/orienter puis relâcher ; la gâchette index est neutralisée pendant la saisie |
 | Joystick pendant la saisie d'une fenêtre | Vertical : distance ; horizontal : taille ; B annule le déplacement |
 | Paramètres : recentrer / réinitialiser les fenêtres | Récupérer les panneaux devant soi / restaurer leur disposition initiale |

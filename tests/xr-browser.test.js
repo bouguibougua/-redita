@@ -216,20 +216,22 @@ async function run() {
   await evaluate("xrFixture.step()"); await delay(20); await evaluate("xrFixture.step()");
   assert.equal(await evaluate("Eredita.XR.diagnostics.anchored"), true);
   assert.equal(await evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-village').length"), 8);
-  assert.equal(await evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-resident').length"), 5);
-  assert.equal(await evaluate("['jobs','info','tasks','buildings','residents'].every(id=>xrFixture.dashboard.getPanel(id).node.visible && xrFixture.dashboard.getPanel(id).handle)"), true);
+  assert.equal(await evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-resident').length"), 4);
+  assert.equal(await evaluate("['jobs','tasks','buildings','residents'].every(id=>xrFixture.dashboard.getPanel(id).node.visible && xrFixture.dashboard.getPanel(id).handle)"), true);
+  assert.equal(await evaluate("Math.abs(xrFixture.dashboard.group.rotation.x)<0.001"), true, "Le tableau de bord reste droit");
+  assert.equal(await evaluate("['red0','blue0','redGold','blueGold','clock'].every(id=>xrFixture.dashboard.getPanel(id).handle && xrFixture.dashboard.getPanel(id).node.rotation.x>0)"), true, "Scores inclinés et déplaçables");
   const stableFrame = await evaluate("xrFixture.dashboard.group.matrixWorld.toArray()");
   await evaluate("xrFixture.viewer.x += .15; xrFixture.step(); xrFixture.viewer.x -= .15; xrFixture.step()");
   assert.deepEqual(await evaluate("xrFixture.dashboard.group.matrixWorld.toArray()"), stableFrame, "Les fenêtres ne suivent pas les micromouvements de tête");
   const oldBoard = await evaluate("Eredita.Board3D.getXRContext().world.parent.matrixWorld.toArray()");
   const oldJobs = await evaluate("xrFixture.dashboard.getPanel('jobs').node.position.toArray()");
-  const oldInfo = await evaluate("xrFixture.dashboard.getPanel('info').node.position.toArray()");
+  const oldInfo = await evaluate("xrFixture.dashboard.getPanel('buildings').node.position.toArray()");
   await evaluate(`(() => { const {THREE,renderer}=Eredita.Board3D.getXRContext(); const handle=xrFixture.dashboard.getPanel('jobs').handle; handle.updateWorldMatrix(true,false); xrFixture.aim(1,handle.getWorldPosition(new THREE.Vector3()).toArray()); renderer.xr.getController(1).dispatchEvent({type:'squeezestart'}); xrFixture.step(); })()`);
   assert.deepEqual(await evaluate("Eredita.XR.diagnostics.grabbedPanels"), ["jobs"]);
   const oldSelection = await evaluate("Eredita.GameView.getState().selectedVillage");
   await evaluate("xrFixture.matrices.get(xrFixture.sources[1].gripSpace).elements[12] += .12; for(let i=0;i<24;i++)xrFixture.step(); xrFixture.trigger(1)");
   assert.notDeepEqual(await evaluate("xrFixture.dashboard.getPanel('jobs').node.position.toArray()"), oldJobs);
-  assert.deepEqual(await evaluate("xrFixture.dashboard.getPanel('info').node.position.toArray()"), oldInfo);
+  assert.deepEqual(await evaluate("xrFixture.dashboard.getPanel('buildings').node.position.toArray()"), oldInfo);
   assert.deepEqual(await evaluate("Eredita.Board3D.getXRContext().world.parent.matrixWorld.toArray()"), oldBoard);
   assert.deepEqual(await evaluate("Eredita.GameView.getState().selectedVillage"), oldSelection);
   await evaluate("Eredita.Board3D.getXRContext().renderer.xr.getController(1).dispatchEvent({type:'squeezeend'}); xrFixture.step()");
@@ -244,9 +246,28 @@ async function run() {
   assert.equal(await evaluate("xrFixture.dashboard.diagnostics.every(p=>p.texture.every(n=>n<=2048))"), true);
   await evaluate("xrFixture.button('normal'); xrFixture.button('back'); xrFixture.button('settings'); xrFixture.button('panels-reset'); xrFixture.button('back')");
   assert.deepEqual(await evaluate("xrFixture.dashboard.getPanel('jobs').node.position.toArray()"), oldJobs, "Les réglages restaurent la fenêtre déplacée");
-  const cached = await evaluate("xrFixture.dashboard.getPanel('info').drawCount");
+  await evaluate("xrFixture.sources[1].gamepad.buttons[5].pressed=true; xrFixture.step(); xrFixture.sources[1].gamepad.buttons[5].pressed=false; xrFixture.step()");
+  assert.equal(await evaluate("xrFixture.dashboard.getPanel('modal').data.title"), "Échoppes et ventes", "Y ouvre la boutique");
+  await evaluate("xrFixture.button('back')");
+  const laneBeforeStick = await evaluate("Eredita.GameView.getState().selectedVillage.lane");
+  await evaluate("xrFixture.sources[1].gamepad.axes[3]=-1; xrFixture.step(); xrFixture.sources[1].gamepad.axes[3]=0; xrFixture.step()");
+  assert.equal(await evaluate("Eredita.GameView.getState().selectedResidentId===Eredita.GameView.getState().players.red.villages[Eredita.GameView.getState().selectedVillage.lane].residents[1].id"), true, "Joystick gauche vertical sélectionne l’habitant suivant");
+  await evaluate("xrFixture.sources[0].gamepad.axes[2]=1; xrFixture.step(); xrFixture.sources[0].gamepad.axes[2]=0; xrFixture.step()");
+  assert.equal(await evaluate("Eredita.GameView.getState().selectedVillage.lane"), (laneBeforeStick+1)%4, "Joystick droit horizontal sélectionne le village suivant");
+  await evaluate("Eredita.GameView.selectVillage('red',0); xrFixture.step()");
+  if (process.env.EREDITA_XR_PREVIEW_DIR) {
+    fs.mkdirSync(process.env.EREDITA_XR_PREVIEW_DIR, { recursive: true });
+    const data = await evaluate(`(() => {
+      const ids=['residents','jobs','tasks','buildings'], canvas=document.createElement('canvas');
+      canvas.width=1960;canvas.height=2060;const c=canvas.getContext('2d');c.fillStyle='#161a17';c.fillRect(0,0,1960,2060);
+      ids.forEach((id,i)=>{const p=xrFixture.dashboard.getPanel(id);c.drawImage(p.canvas,20+(i%2)*970,20+Math.floor(i/2)*1000,940,p.canvas.height*940/p.canvas.width);});
+      return canvas.toDataURL('image/png').split(',')[1];
+    })()`);
+    fs.writeFileSync(path.join(process.env.EREDITA_XR_PREVIEW_DIR, "vr-gestion.png"), Buffer.from(data, "base64"));
+  }
+  const cached = await evaluate("xrFixture.dashboard.getPanel('buildings').drawCount");
   await evaluate("for(let i=0;i<12;i++)xrFixture.step()");
-  assert.equal(await evaluate("xrFixture.dashboard.getPanel('info').drawCount"), cached, "Une surface stable ne recharge pas sa texture");
+  assert.equal(await evaluate("xrFixture.dashboard.getPanel('buildings').drawCount"), cached, "Une surface stable ne recharge pas sa texture");
   if (process.env.EREDITA_XR_SCREENSHOT) {
     const data = await evaluate(`(() => { const {THREE,renderer,scene}=Eredita.Board3D.getXRContext(); const size=renderer.getSize(new THREE.Vector2()); renderer.setSize(2000,1500,false); const preview=new THREE.PerspectiveCamera(75,4/3,0.02,30); preview.position.copy(xrFixture.viewer); preview.lookAt(0,0.3,-1.2); scene.updateMatrixWorld(true); renderer.render(scene,preview); const png=renderer.domElement.toDataURL('image/png').split(',')[1]; renderer.setSize(size.x,size.y,false); return png; })()`);
     fs.writeFileSync(process.env.EREDITA_XR_SCREENSHOT, Buffer.from(data, "base64"));
@@ -296,7 +317,7 @@ async function run() {
   await guest.click("#game-screen [data-open-xr]"); await guest.waitFor("!document.querySelector('#xr-start').disabled");
   await guest.evaluate("document.querySelector('#xr-manual-only').checked = true"); await guest.click("#xr-start");
   await guest.waitFor("Eredita.XR.active");
-  await guest.evaluate("xrFixture.step(); xrFixture.trigger()");
+  await guest.evaluate("xrFixture.step(); xrFixture.trigger(); xrFixture.step()");
   assert.equal(await guest.evaluate("Eredita.XR.diagnostics.placed"), true);
   assert.ok(await guest.evaluate("Math.abs(Eredita.Board3D.getXRContext().world.parent.rotation.y) < 0.01"), "Orientation initiale du joueur Bleu");
   await guest.evaluate("xrFixture.button('build')");
@@ -311,13 +332,26 @@ async function run() {
   await guest.click('#main-menu [data-menu-screen="play"]'); await guest.click("#training-button");
   await guest.click("#setup-screen [data-open-xr]"); await guest.waitFor("!document.querySelector('#xr-start').disabled");
   await guest.click("#xr-start"); await guest.waitFor("Eredita.XR.active");
-  await guest.evaluate("xrFixture.step(); xrFixture.trigger(); xrFixture.button('page'); xrFixture.button('confirmBiomes'); xrFixture.button('start')");
+  await guest.evaluate("xrFixture.step(); xrFixture.trigger(); xrFixture.step()");
+  assert.equal(await guest.evaluate("xrFixture.dashboard.getPanel('modal').pageCount"), 1, "Toute la préparation tient sur un écran");
+  assert.equal(await guest.evaluate("Math.abs(xrFixture.dashboard.getPanel('modal').node.rotation.x)<0.001"), true);
+  if (process.env.EREDITA_XR_PREVIEW_DIR) {
+    fs.mkdirSync(process.env.EREDITA_XR_PREVIEW_DIR, { recursive: true });
+    const data = await guest.evaluate("xrFixture.dashboard.getPanel('modal').canvas.toDataURL('image/png').split(',')[1]");
+    fs.writeFileSync(path.join(process.env.EREDITA_XR_PREVIEW_DIR, "vr-preparation.png"), Buffer.from(data, "base64"));
+  }
+  await guest.evaluate("xrFixture.button('setup-launch')");
   assert.equal(await guest.evaluate("Eredita.GameView.getState().phase"), "running");
   await guest.evaluate("xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await guest.waitFor("!Eredita.XR.active");
   await guest.evaluate("Eredita.GameView.returnToLobby()");
   await guest.click("#main-menu [data-open-xr]"); await guest.waitFor("!document.querySelector('#xr-start').disabled");
   await guest.click("#xr-start"); await guest.waitFor("Eredita.XR.active");
-  await guest.evaluate("xrFixture.step(); xrFixture.trigger(); xrFixture.button('mode')");
+  await guest.evaluate("xrFixture.step(); xrFixture.trigger(); xrFixture.step()");
+  if (process.env.EREDITA_XR_PREVIEW_DIR) {
+    const data = await guest.evaluate("xrFixture.dashboard.getPanel('modal').canvas.toDataURL('image/png').split(',')[1]");
+    fs.writeFileSync(path.join(process.env.EREDITA_XR_PREVIEW_DIR, "vr-menu.png"), Buffer.from(data, "base64"));
+  }
+  await guest.evaluate("xrFixture.button('mode')");
   assert.equal(await guest.evaluate("Eredita.Network.mode"), "solo");
   await guest.evaluate("xrFixture.button('page'); xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await guest.waitFor("!Eredita.XR.active");
   assert.deepEqual(host.errors, []); assert.deepEqual(guest.errors, []);

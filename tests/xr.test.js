@@ -40,7 +40,7 @@ async function run() {
   assert.equal(E.XRInput.mapping(source("right")).cancel, 5);
   assert.equal(E.XRInput.mapping(source("left")).confirm, null);
   assert.equal(E.XRInput.mapping(source("left")).panels, 4);
-  assert.equal(E.XRInput.mapping(source("left")).cards, 5);
+  assert.equal(E.XRInput.mapping(source("left")).shop, 5);
   assert.equal(E.XRInput.mapping(source("right", ["unknown"])).confirm, null);
   assert.equal(E.XRInput.mapping(source("right", [], "standard")), null);
 
@@ -69,7 +69,7 @@ async function run() {
   assert.equal(input.drain()[0].type, "panels");
   left.gamepad.buttons[5].pressed = true;
   input.update(trackingFrame, {});
-  assert.equal(input.drain()[0].type, "cards");
+  assert.equal(input.drain()[0].type, "shop");
   left.gamepad.buttons[7].pressed = true;
   input.update(trackingFrame, {});
   assert.equal(input.drain().length, 0, "Le bouton système n'est jamais lié");
@@ -217,7 +217,8 @@ async function run() {
   assert.equal(board.terrainGroup.children.length, 8);
   assert.equal(board.world.children.length, 3, "Socle, bordure et terrains partagent world");
   const panels = { group: new THREE.Group(), targets: [], highlight() {} }; panels.group.visible = false;
-  const interactions = E.XRInteractions.create({ THREE, ...board, panels });
+  const dashboard = { group: new THREE.Group(), targets: [], modalActive: false, highlight() {} }; dashboard.group.visible = false;
+  const interactions = E.XRInteractions.create({ THREE, ...board, panels, dashboard });
   interactions.sync(); assert.equal(interactions.targets.length, 8);
   board.world.scale.setScalar(cfg.initialWidth / cfg.boardWidth);
   board.world.rotation.y = 0.7;
@@ -227,6 +228,19 @@ async function run() {
   const hit = interactions.hit({ position: center.clone().add(new THREE.Vector3(0, 1, 0)), direction: new THREE.Vector3(0, -1, 0) }, true);
   assert.equal(hit.object.userData.xrTarget.playerId, "red");
   assert.equal(interactions.hit({ position: center.clone().add(new THREE.Vector3(0, 1, 0)), direction: new THREE.Vector3(0, -1, 0) }, false), null);
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+  plane.rotation.x = -Math.PI / 2; plane.userData.xrTarget = { kind: "dashboard-panel", panelId: "modal" };
+  panels.group.add(plane); board.scene.add(panels.group); panels.targets.push(plane); panels.group.visible = true;
+  const ray = { position: center.clone().add(new THREE.Vector3(0, 1, 0)), direction: new THREE.Vector3(0, -1, 0) };
+  plane.position.copy(center).y -= 0.3; board.scene.updateMatrixWorld(true);
+  assert.equal(interactions.hit(ray, true).object, target, "Une fenêtre derrière le village ne vole pas la sélection");
+  plane.position.copy(center).y += 0.9; board.scene.updateMatrixWorld(true);
+  assert.equal(interactions.hit(ray, true).object, plane, "La fenêtre visible devant reste prioritaire");
+  plane.position.copy(center).y -= 0.3; board.scene.updateMatrixWorld(true);
+  dashboard.group.visible = true; dashboard.modalActive = true; dashboard.targets.push(plane);
+  assert.equal(interactions.hit(ray, true).object, plane, "Une modale bloque la sélection du plateau");
+  panels.group.remove(plane); board.scene.remove(panels.group); plane.geometry.dispose(); plane.material.dispose();
+  panels.targets.length = 0; panels.group.visible = false; dashboard.group.visible = false;
   let slotCount = 0;
   board.terrainGroup.traverse((item) => { if (item.userData.xrTarget?.kind === "slot") slotCount++; });
   assert.equal(slotCount, Object.values(state.players).flatMap((p) => p.villages).reduce((count, v) => count + v.slots.length, 0));

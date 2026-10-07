@@ -42,8 +42,11 @@
         const modal = dashboard?.group.visible && dashboard.modalActive;
         if (dashboard?.group.visible) objects.push(...(modal ? dashboard.targets.filter((item) => item.userData.xrTarget?.panelId === "modal") : dashboard.targets));
         const interfaceHit = raycaster.intersectObjects(objects, false)[0];
-        if (interfaceHit) return interfaceHit;
-        return allowVillages && !modal && world.parent.visible ? raycaster.intersectObjects(targets, false)[0] || null : null;
+        const villageHit = allowVillages && !modal && world.parent.visible ? raycaster.intersectObjects(targets, false)[0] || null : null;
+        // Une fenêtre derrière la table ne doit pas intercepter le village visible devant elle.
+        if (!interfaceHit) return villageHit;
+        if (!villageHit) return interfaceHit;
+        return interfaceHit.distance <= villageHit.distance ? interfaceHit : villageHit;
       },
       highlight(objects, selected) {
         targets.forEach((target) => {

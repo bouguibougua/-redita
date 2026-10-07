@@ -6,7 +6,8 @@
     pixelsPerMeter: 1600, maxTextureSize: 2048,
     type: { title: 40, body: 32, detail: 27, value: 46 },
     spacing: { inset: 26, gap: 12, header: 108, line: 45, row: 105, detailRow: 132, footer: 94 },
-    radius: { panel: 32, button: 20, portrait: 16 },
+    radius: { panel: 48, button: 24, portrait: 20 },
+    menu: { modeHeight: 0.56, setupHeight: 0.76, modeRow: 230, deckRow: 145, biomeRow: 220, actionRow: 110, footer: 122 },
     border: { normal: 1.5, selected: 3, hover: 2.5 },
     feedbackMs: 4000, confirmationMs: 320, transitionMs: 140,
     textScales: { normal: 1, large: 1.16, xlarge: 1.32 },
@@ -14,18 +15,18 @@
     font: '"Segoe UI", Inter, system-ui, sans-serif',
     // TEMP_BALANCE_VALUE — confort à mesurer physiquement sur Quest.
     layouts: {
-      redGold: [-0.24, 0.4, 0.21, 0.2], clock: [0, 0.4, 0.24, 0.2], blueGold: [0.24, 0.4, 0.21, 0.2],
-      gear: [1.2, 0.4, 0.11, 0.2],
-      jobs: [-1.3, -0.15, 0.56, 0.7], info: [1.3, -0.15, 0.56, 0.7],
-      tasks: [-0.32, -0.70, 0.6, 0.42], buildings: [0.32, -0.70, 0.6, 0.42],
-      residents: [0, -1.12, 1.25, 0.36], modal: [0, -0.13, 0.88, 0.94],
-      feedback: [0, 0.64, 1.25, 0.12]
+      redGold: [-0.24, 0.47, 0.21, 0.22], clock: [0, 0.47, 0.24, 0.22], blueGold: [0.24, 0.47, 0.21, 0.22],
+      gear: [1.2, 0.47, 0.11, 0.22],
+      residents: [-0.65, 0, 0.60, 0.60], tasks: [-0.65, -0.67, 0.60, 0.66],
+      jobs: [0.65, 0, 0.60, 0.60], buildings: [0.65, -0.67, 0.60, 0.66],
+      modal: [0, -0.04, 0.94, 0.94],
+      feedback: [0, 0.75, 1.25, 0.12]
     }
   };
   tokens.layouts.placement = [0, 0, 0.84, 0.72];
   for (let lane = 0; lane < 4; lane++) {
-    tokens.layouts[`red${lane}`] = [-1.04 + lane * 0.195, 0.4, 0.18, 0.2];
-    tokens.layouts[`blue${lane}`] = [0.455 + lane * 0.195, 0.4, 0.18, 0.2];
+    tokens.layouts[`red${lane}`] = [-1.04 + lane * 0.195, 0.47, 0.18, 0.22];
+    tokens.layouts[`blue${lane}`] = [0.455 + lane * 0.195, 0.47, 0.18, 0.22];
   }
   function theme() {
     const css = typeof getComputedStyle === "function" ? getComputedStyle(document.documentElement) : null;
@@ -54,6 +55,12 @@
     });
     return Math.min(lines.length, maxLines) * size * 1.25;
   }
+  function centered(c, value, x, y, width, size, color, weight = 600, maxLines = 2) {
+    c.save(); c.font = `${weight} ${size}px ${tokens.font}`; c.fillStyle = color; c.textAlign = "center"; c.textBaseline = "top";
+    const lines = wrap(c, value, width);
+    lines.slice(0, maxLines).forEach((line, i) => c.fillText(line, x + width / 2, y + i * size * 1.25));
+    c.restore(); return Math.min(lines.length, maxLines) * size * 1.25;
+  }
   function icon(c, key, x, y, size, color) {
     c.save(); c.translate(x, y); c.scale(size / 32, size / 32); c.strokeStyle = color; c.lineWidth = 1.8; c.lineJoin = "round"; c.lineCap = "round"; c.beginPath();
     if (["gear", "⚙"].includes(key)) {
@@ -81,5 +88,5 @@
     }
     c.stroke(); c.restore();
   }
-  E.XRDesign = { tokens, theme, rounded, wrap, text, icon };
+  E.XRDesign = { tokens, theme, rounded, wrap, text, centered, icon };
 }());

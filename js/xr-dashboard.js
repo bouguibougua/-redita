@@ -5,10 +5,17 @@
     const D = E.XRDesign, T = D.tokens, C = D.theme(), S = T.spacing, F = T.type;
     const group = new THREE.Group(); group.name = "xr-game-dashboard"; scene.add(group);
     const targets = [], panels = new Map(), images = new Map();
-    const movable = new Set(["jobs", "info", "tasks", "buildings", "residents", "modal"]);
+    const movable = new Set(Object.keys(T.layouts).filter((id) => !["feedback", "placement", "gear"].includes(id)));
+    const scorePanel = (id) => /^(red|blue)(\d|Gold)$/.test(id) || id === "clock";
+    let viewer = null, modalNeedsPlacement = false;
     let positioned = false, textSize = "normal", disposed = false, feedbackUntil = 0, lastHighlight = performance.now();
     const reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    function canvasTexture(canvas) {
+      const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(4, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+      texture.generateMipmaps = false; texture.minFilter = THREE.LinearFilter; return texture;
+    }
     function panel(id) {
       if (panels.has(id)) return panels.get(id);
       const [x, y, width, height] = T.layouts[id];
@@ -16,15 +23,14 @@
       node.position.set(x, y, id === "modal" ? 0.18 : 0); group.add(node);
       const canvas = document.createElement("canvas"), density = Math.min(T.pixelsPerMeter, T.maxTextureSize / Math.max(width, height));
       canvas.width = Math.round(width * density); canvas.height = Math.round(height * density);
-      const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-      texture.anisotropy = Math.min(4, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
-      texture.generateMipmaps = false; texture.minFilter = THREE.LinearFilter;
+      const texture = canvasTexture(canvas);
       const face = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide, toneMapped: false }));
       face.userData.xrTarget = { kind: "dashboard-panel", panelId: id }; node.add(face);
       const item = { id, node, face, canvas, context: canvas.getContext("2d"), texture, width, height, density, buttons: [], hitKey: "", key: "", data: null, page: 0, pageCount: 1, hover: new Set(), confirmed: null, confirmUntil: 0, drawCount: 0 };
       if (movable.has(id)) {
-        const handle = new THREE.Mesh(new THREE.PlaneGeometry(width - 0.022, S.header / density - 0.006), new THREE.MeshBasicMaterial({ visible: false }));
-        handle.position.set(0, height / 2 - S.header / density / 2, 0.005);
+        const header = scorePanel(id) ? 34 : S.header;
+        const handle = new THREE.Mesh(new THREE.PlaneGeometry(width - 0.022, header / density - 0.006), new THREE.MeshBasicMaterial({ visible: false }));
+        handle.position.set(0, height / 2 - header / density / 2, 0.015);
         handle.userData.xrTarget = { kind: "panel-handle", panelId: id }; node.add(handle); item.handle = handle;
       }
       panels.set(id, item); placeDefault(item); return item;
@@ -33,7 +39,7 @@
       const [x, y] = T.layouts[p.id], factor = T.textScales[textSize];
       p.node.position.set(x * factor, y * factor, p.id === "modal" ? 0.18 : 0);
       p.node.scale.setScalar(factor * (p.node.userData.windowUserScale || 1));
-      p.node.rotation.set(0, p.id === "jobs" ? 0.22 : p.id === "info" ? -0.22 : 0, 0);
+      p.node.rotation.set(scorePanel(p.id) ? E.Config.xr.scorePitch : 0, p.id === "modal" ? 0 : Math.atan2(-x * factor, E.Config.xr.dashboardDistance), 0, "YXZ");
     }
     const drawText = (c, value, x, y, width, size = F.body, color = C.ink, weight = 500, max = Infinity) => D.text(c, value, x, y, width, size, color, weight, max);
     function surface(c, x, y, width, height, fill, stroke = C.gold, radius = T.radius.panel, lineWidth = T.border.normal) {
@@ -67,9 +73,25 @@
     function drawButton(p, entry, rect, index) {
       const [label, action, enabled = true, meta = {}] = entry, c = p.context, { x, y, w, h } = rect;
       const active = meta.selected, hovered = p.hover.has(index), confirmed = p.confirmed === index && performance.now() < p.confirmUntil;
-      surface(c, x, y, w, h, !enabled ? C.surface : hovered ? C.surface : C.raised, active || hovered || confirmed ? C.gold : C.line, T.radius.button, active || confirmed ? T.border.selected : T.border.normal);
+      const biomeColors = { littoral: ["#568c85", "#285d73"], plaine: ["#98aa56", "#445727"], montagne: ["#85817a", "#454641"] };
+      let fill = meta.primary ? "#65522b" : active ? "#514526" : C.raised;
+      if (meta.biome) {
+        const colors = biomeColors[meta.biome], gradient = c.createLinearGradient(x, y, x + w, y + h);
+        gradient.addColorStop(0, colors[0]); gradient.addColorStop(0.48, colors[0]); gradient.addColorStop(0.51, colors[1]); gradient.addColorStop(1, colors[1]); fill = gradient;
+      }
+      surface(c, x, y, w, h, !enabled && !meta.biome ? C.surface : fill, active || hovered || confirmed ? C.gold : C.line, T.radius.button, active || confirmed ? T.border.selected : T.border.normal);
       if (hovered || confirmed) { c.fillStyle = `${C.gold}12`; D.rounded(c, x, y, w, h, T.radius.button); c.fill(); }
-      if (meta.portrait) {
+      if (meta.centered || meta.biome) {
+        const titleSize = meta.large ? F.title + 8 : F.body + 4;
+        const headingY = meta.detail ? y + h / 2 - titleSize * 1.25 : y + (h - titleSize * 1.25) / 2;
+        D.centered(c, label, x + 18, headingY, w - 36, titleSize, enabled || meta.biome ? C.ink : C.muted, 750, 1);
+        if (meta.detail) D.centered(c, meta.detail, x + 16, y + h / 2 + 13, w - 32, F.detail, C.ink, 500, 2);
+        if (meta.biome) {
+          surface(c, x + w - 64, y + 14, 46, 46, "rgba(0,0,0,0.26)", null, 23);
+          D.centered(c, String(meta.lane + 1), x + w - 64, y + 20, 46, F.detail, C.ink, 600, 1);
+          if (active) D.centered(c, "✓", x + 14, y + 19, 38, F.body, C.gold, 700, 1);
+        }
+      } else if (meta.portrait) {
         const photo = imageFor(meta.portrait.src), side = Math.min(100, h * 0.36), px = x + (w - side) / 2, py = y + 12;
         c.save(); D.rounded(c, px, py, side, side, T.radius.portrait); c.clip();
         if (photo.complete && photo.naturalWidth) {
@@ -103,11 +125,30 @@
         mesh.userData.xrTarget = { kind: "dashboard-button", panelId: p.id, label, action, enabled, ...meta, buttonIndex: index };
       });
     }
+    function drawMenu(p, startY) {
+      const { rows, options } = p.data, M = T.menu, w = p.canvas.width, h = p.canvas.height, entries = [];
+      let y = startY;
+      rows.forEach((row, rowIndex) => {
+        const height = options.variant === "mode" ? M.modeRow : rowIndex === 0 ? M.deckRow : rowIndex < 3 ? M.biomeRow : M.actionRow;
+        const bw = (w - 2 * S.inset - S.gap * (row.length - 1)) / row.length;
+        row.forEach((entry, col) => {
+          const rect = { x: S.inset + col * (bw + S.gap), y, w: bw, h: height };
+          drawButton(p, entry, rect, entries.length); entries.push({ entry, rect });
+        }); y += height + S.gap;
+      });
+      const footer = options.footer || [], bw = (w - 2 * S.inset - S.gap * (footer.length - 1)) / Math.max(1, footer.length);
+      footer.forEach((entry, col) => {
+        const rect = { x: S.inset + col * (bw + S.gap), y: h - M.footer - S.inset, w: bw, h: M.footer };
+        drawButton(p, entry, rect, entries.length); entries.push({ entry, rect });
+      });
+      p.page = 0; p.pageCount = 1; syncButtons(p, entries);
+    }
     function draw(p) {
       if (!p.data || !p.node.visible) return;
       const { title, lines, rows, options } = p.data, c = p.context, w = p.canvas.width, h = p.canvas.height;
       c.clearRect(0, 0, w, h); c.save(); c.shadowBlur = 14; c.shadowColor = "rgba(0,0,0,0.3)"; c.shadowOffsetY = 5;
       surface(c, 4, 4, w - 8, h - 8, C.surface, C.gold, T.radius.panel, options.selected ? T.border.selected : T.border.normal); c.restore();
+      if (p.handle && scorePanel(p.id)) surface(c, (w - 52) / 2, 12, 52, 4, p.hover.has("handle") || p.node.userData.grabbed ? C.gold : C.muted, null, 2);
       const team = p.id.startsWith("red") ? C.red : p.id.startsWith("blue") ? C.blue : null;
       if (team) surface(c, 20, 19, 7, h - 38, team, null, 3);
       if (p.id === "gear") {
@@ -133,6 +174,9 @@
         drawText(c, title, S.inset, 39, w - 2 * S.inset, F.title, C.ink, 700, 1);
         c.beginPath(); c.moveTo(S.inset, S.header - 8); c.lineTo(w - S.inset, S.header - 8); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
         const startY = drawLines(p, lines, S.header + 10) + (lines.length ? 12 : 0);
+        if (options.variant) {
+          drawMenu(p, startY); p.texture.needsUpdate = true; p.drawCount++; return;
+        }
         const heights = rows.map((row) => row.some((entry) => entry[3]?.portrait) ? 265 : row.some((entry) => entry[3]?.detail) ? S.detailRow : S.row);
         const available = h - startY - S.inset, total = heights.reduce((sum, height) => sum + height + S.gap, 0), hasPages = total > available;
         const pageHeight = available - (hasPages ? S.footer : 0), pages = [[]]; let used = 0;
@@ -157,6 +201,26 @@
     }
     function paint(id, title, lines = [], rows = [], visible = true, options = {}) {
       const p = panel(id), wasVisible = p.node.visible; p.node.visible = visible;
+      const height = id === "modal" ? options.variant === "mode" ? T.menu.modeHeight : options.variant === "setup" ? T.menu.setupHeight : T.layouts.modal[3] : p.height;
+      if (height !== p.height) {
+        p.height = height; p.canvas.height = Math.round(height * p.density);
+        // Une nouvelle taille exige de réallouer aussi le stockage GPU de la texture.
+        p.texture.dispose(); p.texture = canvasTexture(p.canvas);
+        p.face.material.map = p.texture; p.face.material.needsUpdate = true;
+        p.face.geometry.dispose(); p.face.geometry = new THREE.PlaneGeometry(p.width, height);
+        if (p.handle) p.handle.position.y = height / 2 - S.header / p.density / 2;
+        p.key = ""; p.hitKey = "";
+      }
+      if (id === "modal" && visible && (modalNeedsPlacement || !wasVisible) && viewer && !p.node.userData.customLayout) {
+        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewer.quaternion); forward.y = 0;
+        if (forward.lengthSq() < 0.01) forward.set(0, 0, -1); forward.normalize();
+        const point = viewer.position.clone().addScaledVector(forward, E.Config.xr.dashboardDistance);
+        point.y += T.layouts.modal[1];
+        group.updateWorldMatrix(true, false); p.node.position.copy(group.worldToLocal(point));
+        const yaw = Math.atan2(-forward.x, -forward.z);
+        p.node.quaternion.setFromEuler(new THREE.Euler(0, yaw, 0)).premultiply(group.getWorldQuaternion(new THREE.Quaternion()).invert());
+      }
+      if (id === "modal" && visible) modalNeedsPlacement = false;
       if (!wasVisible && visible && !reducedMotion) p.face.material.opacity = 0.25;
       p.face.userData.xrTarget = options.action ? { kind: "dashboard-button", panelId: id, action: options.action, enabled: true, label: title } : { kind: "dashboard-panel", panelId: id };
       const key = JSON.stringify([title, lines, rows, options]);
@@ -170,11 +234,8 @@
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewer.quaternion); forward.y = 0;
       if (forward.lengthSq() < 0.01) forward.set(0, 0, -1); forward.normalize();
       group.position.copy(viewer.position).addScaledVector(forward, E.Config.xr.dashboardDistance);
-      // Le cadre est orienté vers la table : ses commandes basses restent sous
-      // le plateau dans le champ visuel au lieu de passer derrière sa géométrie.
-      const pitch = E.Config.xr.dashboardPitch;
-      group.position.y -= Math.tan(pitch) * E.Config.xr.dashboardDistance;
-      group.rotation.set(-pitch, Math.atan2(-forward.x, -forward.z), 0, "YXZ"); positioned = true;
+      // Menus droits à hauteur du regard. Seules les fiches de score ont une inclinaison.
+      group.rotation.set(0, Math.atan2(-forward.x, -forward.z), 0, "YXZ"); positioned = true;
     }
     function resetLayout(viewer) { panels.forEach((p) => { p.node.userData.customLayout = false; p.node.userData.windowUserScale = 1; placeDefault(p); }); if (viewer) position(viewer, false); }
     function recenter(viewer) {
@@ -216,6 +277,7 @@
       images.forEach((img) => { img.onload = null; }); images.clear(); panels.clear(); targets.length = 0; scene.remove(group);
     }
     return { group, targets, paint, syncTargets, position, resetLayout, recenter, setTextSize, setFeedback, feedback, navigate, highlight, dispose,
+      setViewer(value) { viewer = value; }, presentModal() { modalNeedsPlacement = true; },
       getPanel: (id) => panels.get(id), get textSize() { return textSize; }, get modalActive() { return Boolean(panels.get("modal")?.node.visible); },
       get diagnostics() { return [...panels.values()].map((p) => ({ id: p.id, visible: p.node.visible, position: p.node.position.toArray(), width: p.width * p.node.scale.x, height: p.height * p.node.scale.y, page: p.page, pages: p.pageCount, draws: p.drawCount, texture: [p.canvas.width, p.canvas.height] })); }
     };

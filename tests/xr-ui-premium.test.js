@@ -14,14 +14,21 @@ E.GameView.init({ getState: () => state, controller: {
   selectResident(id) { state.selectedResidentId = id; },
   setProfession(id, profession) { const { playerId, lane } = state.selectedVillage; return E.Economy.setProfession(state, playerId, lane, id, profession); },
   build(type) { const { playerId, lane } = state.selectedVillage; return E.Buildings.buildT1(state, playerId, lane, type); },
-  selectVillage(playerId, lane) { state.selectedVillage = { playerId, lane }; }
+  selectVillage(playerId, lane) { state.selectedVillage = { playerId, lane }; state.selectedResidentId = state.players[playerId].villages[lane].residents[0]?.id || null; },
+  confirmBiomes(playerId, action) {
+    const player = state.players[playerId]; if (player.setupConfirmed) return false;
+    if (action === "exchange") player.setupSelection.forEach(lane => { player.villages[lane].biome = E.Biomes.randomBiome(player.villages[lane].biome); });
+    player.setupSelection = []; player.setupConfirmed = true;
+  },
+  start() { if (!state.players.red.setupConfirmed || !state.players.blue.setupConfirmed) return false; state.phase = "running"; },
+  sell(resource) { const { playerId, lane } = state.selectedVillage; return E.Economy.sell(state, playerId, lane, resource); }
 } });
 const painted = new Map(), feedback = [];
 const dashboard = { targets: [], textSize: "normal",
   paint(id, title, lines, rows, visible = true, options = {}) { painted.set(id, { title, lines, rows, visible, options }); },
   syncTargets() {
     this.targets = [...painted].flatMap(([panelId, p]) => p.visible ? [
-      ...p.rows.flat().map(([label, action, enabled, meta]) => ({ userData: { xrTarget: { kind: "dashboard-button", panelId, label, action, enabled, ...meta } } })),
+      ...[...p.rows.flat(), ...(p.options.footer || [])].map(([label, action, enabled, meta]) => ({ userData: { xrTarget: { kind: "dashboard-button", panelId, label, action, enabled, ...meta } } })),
       ...(p.options.action ? [{ userData: { xrTarget: { kind: "dashboard-button", panelId, action: p.options.action, enabled: true } } }] : [])
     ] : []);
   },
@@ -29,7 +36,7 @@ const dashboard = { targets: [], textSize: "normal",
 };
 const ui = E.XRUI.create(dashboard); ui.render();
 const find = predicate => dashboard.targets.find(t => predicate(t.userData.xrTarget))?.userData.xrTarget;
-for (const id of ["jobs", "info", "tasks", "buildings", "residents"]) assert.equal(painted.get(id).visible, true);
+for (const id of ["jobs", "tasks", "buildings", "residents"]) assert.equal(painted.get(id).visible, true);
 assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 8);
 assert.ok(painted.get("jobs").rows.flat().some(entry => entry[1]?.args?.[1] === "agriculteur"));
 assert.equal(painted.get("jobs").rows.flat().some(entry => entry[1]?.method === "changeJob"), false, "Métiers et tâches ne sont plus confondus");
@@ -53,7 +60,66 @@ assert.match(feedback.at(-1).message, /or global/);
 E.Network.mode = "solo"; state.selectedVillage = { playerId: "blue", lane: 0 }; ui.render();
 assert.equal(ui.activate(find(t => t.action?.method === "build")), false); assert.match(feedback.at(-1).message, /adversaire/);
 state = E.Board.createState(); state.phase = "running"; state.players.red.villages[0].resources.ble = 321; ui.render();
-assert.ok(painted.get("info").lines.some(line => line.label === "Blé" && line.value === "321"), "Les panneaux relisent le nouvel état réseau");
+assert.ok(painted.get("buildings").lines.some(line => line.includes("Blé : 321")), "La gestion relit le nouvel état réseau");
 assert.ok(painted.get("residents").rows[0][0][3].portrait.src.endsWith("characters-atlas.png"));
 ui.toggle(); assert.equal(painted.get("jobs").visible, false); assert.equal(painted.get("gear").visible, true);
-console.log("UI XR : vraies professions, tâches distinctes, coûts moteur, permissions, revalidation, snapshots, portraits et réglages validés.");
+// Les raccourcis fonctionnent sans viser une fenêtre et conservent le bon village.
+ui.toggle();
+const firstVillage = state.selectedVillage.lane;
+ui.stick("left", 1, "jobs", "vertical");
+assert.equal(state.selectedResidentId, state.players.red.villages[firstVillage].residents[1].id);
+ui.stick("right", 1, "tasks", "horizontal");
+assert.equal(state.selectedVillage.lane, (firstVillage + 1) % 4);
+ui.stick("right", -1, "residents", "horizontal"); assert.equal(state.selectedVillage.lane, firstVillage);
+const selected = state.selectedResidentId;
+assert.equal(ui.stick("left", 1, undefined, "horizontal"), false); assert.equal(state.selectedResidentId, selected);
+ui.shop(); assert.equal(ui.modal.name, "shop");
+ui.stick("left", 1, undefined, "vertical");
+assert.equal(state.selectedResidentId, state.players.red.villages[firstVillage].residents[1].id, "La boutique suit l’habitant choisi");
+ui.shop(); assert.equal(ui.modal, null);
+state.players.red.villages[firstVillage].resources.ble = 30;
+ui.execute({ type: "open", name: "sell" }); ui.render();
+assert.equal(ui.activate(find(t => t.action?.method === "sell" && t.action.args[0] === "ble")), true);
+assert.equal(ui.modal.name, "sell", "La vente conserve la boutique ouverte pour une deuxième action");
+assert.equal(state.players.red.villages[firstVillage].resources.ble, 20);
+ui.shop(); assert.equal(ui.modal, null, "Y ferme aussi un sous-menu de boutique");
+ui.toggle(); ui.selectVillage("red", 2); assert.equal(painted.get("jobs").visible, true, "Un clic village réaffiche les quatre fenêtres");
+assert.equal([...painted.values()].filter(p => p.visible && ["Habitants", "Métiers", "Tâches", "Gestion"].some(prefix => p.title.startsWith(prefix))).length, 4);
+
+// Préparation sur un seul écran et lancement explicite en une action.
+state = E.Board.createState(); E.Network.mode = "solo"; state.players.blue.setupConfirmed = true;
+ui.close(); ui.render();
+assert.equal(painted.get("modal").options.variant, "setup");
+assert.equal(painted.get("modal").rows[0].length, 3);
+assert.equal(painted.get("modal").rows[1].length, 2);
+assert.equal(painted.get("modal").rows[2].length, 2);
+assert.equal(painted.get("modal").options.footer[0][0], "Retour");
+assert.equal(painted.get("modal").options.footer[1][0], "Lancer la partie");
+assert.equal(painted.get("red0").visible, false);
+const originalBiomes = state.players.red.villages.map(v => v.biome);
+assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true);
+assert.equal(state.phase, "running"); assert.equal(state.players.red.setupConfirmed, true);
+assert.deepEqual(state.players.red.villages.map(v => v.biome), originalBiomes, "Lancer sans sélection conserve le tirage");
+
+// Une sélection de biomes est appliquée avant de lancer, dans la limite du moteur.
+state = E.Board.createState(); state.players.blue.setupConfirmed = true;
+state.players.red.setupSelection = [0, 1];
+const before = state.players.red.villages.map(v => v.biome);
+ui.close(); assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true);
+assert.equal(state.phase, "running");
+assert.notEqual(state.players.red.villages[0].biome, before[0]); assert.notEqual(state.players.red.villages[1].biome, before[1]);
+assert.equal(state.players.red.villages[2].biome, before[2]);
+
+state = E.Board.createState(); E.Network.mode = "local"; ui.close();
+assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true);
+assert.equal(state.phase, "setup"); assert.equal(ui.modal.data, "blue");
+ui.execute({ type: "open", name: "settings" }); ui.close();
+assert.match(painted.get("modal").lines[0], /Joueur Bleu/, "Retour des réglages préserve la préparation du deuxième camp");
+assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true); assert.equal(state.phase, "running");
+
+state = E.Board.createState(); E.Network.mode = "pending"; ui.close();
+assert.equal(painted.get("modal").options.variant, "mode");
+assert.equal(painted.get("modal").options.footer[0][0], "Quitter le mode VR");
+assert.equal(painted.get("modal").options.footer[0][1].type, "exit");
+assert.ok(painted.get("modal").rows.every(row => row[0][3].centered && row[0][3].large));
+console.log("UI XR : quatre fenêtres, commandes métier, permissions, stocks, joysticks, boutique Y et préparation en une action validés.");

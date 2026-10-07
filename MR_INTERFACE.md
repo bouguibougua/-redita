@@ -1,12 +1,23 @@
 # Validation de l’interface spatiale Eredità
 
+## Ergonomie VR — 7 octobre 2026
+
+Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation reprend les trois decks et la grille de quatre biomes colorés du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
+
+En partie, quatre fenêtres : Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite, Gestion du village en bas à droite (stocks, bâtiments, parcelles et ventes). Un clic sur un village les affiche. Les fiches de PV, les ors et le chronomètre ont des coins arrondis, une légère inclinaison vers le joueur et une poignée de déplacement. Les fenêtres de gestion et le menu sont également déplaçables.
+
+Y ouvre/ferme la boutique. Joystick gauche vertical : habitant suivant vers le haut, précédent vers le bas. Joystick droit horizontal : village suivant vers la droite, précédent vers la gauche, dans le camp sélectionné. Ces axes gardent le même rôle dans la boutique. Les joysticks d’une fenêtre saisie restent réservés à sa distance et sa taille ; le plateau bouge uniquement dans son mode de manipulation. X maintenu récupère les fenêtres.
+
+À vérifier sur Quest : lecture assise, placement des quatre fenêtres sans gêner la table, saisie des fiches de score, parcours entraînement → lancement, changements d’habitant et de village dans la boutique. Aucun essai physique effectué ici.
+
+
 Cette procédure porte sur l’interface autour du plateau, en complément du placement et des replis décrits dans [QUEST3.md](QUEST3.md). **Aucun test physique sur Meta Quest 3 n’a été réalisé dans cet environnement.** Un navigateur avec périphérique WebXR simulé ne mesure ni la netteté dans les lentilles, ni le confort, ni la stabilité du suivi réel.
 
 ## Référence graphique et limites
 
 Les valeurs de référence proviennent de `css/style.css` : texte `#f4efe2`, texte secondaire `#aaa99f`, surface `#20231f`, surface élevée `#2a2e28`, or `#dfb85e`, Rouge `#c54f46` / `#702f2a`, Bleu `#4e87b8` / `#294d70`, erreur `#e36a5f`. Les portraits proviennent de `assets/generated/characters-atlas.png`, cadrés sur le haut du personnage selon son vrai métier. Les boutons utilisent une famille d'icônes monochromes dessinées par le composant. Les assets de bâtiments déjà présents et le rendu du plateau sont conservés.
 
-Les réglages spatiaux et tailles de texte sont des valeurs de présentation provisoires, à valider avec le casque. La description écrite de la mission sert de référence de disposition lorsqu’aucune image n’est jointe : villages et ors en haut, métiers à gauche, village et ressources à droite, tâches et bâtiments sous le plateau, habitants en bas, paramètres en haut à droite.
+Les réglages spatiaux et tailles de texte sont des valeurs de présentation provisoires, à valider avec le casque. La disposition de référence est celle de la révision du 7 octobre ci-dessus : villages, ors et chronomètre en haut ; Habitants et Tâches à gauche ; Métiers et Gestion du village à droite ; paramètres en haut à droite.
 
 ## Implémentation et fichiers de cette mission
 
@@ -21,7 +32,7 @@ Les CanvasTexture ont au plus 2 048 pixels par axe, utilisent les couleurs CSS e
 ## Résultats automatiques et limites
 
 - `npm.cmd run test:xr` : géométrie réelle Three.js, profils Touch Plus, A séparé, garde index/préhension, X long ; déplacements indépendants à deux mains, rotation, taille, limites, annulation et perte de suivi ; UI branchée aux vraies professions/coûts, revalidation de disponibilité, droits adverses et remplacement d'état.
-- `npm.cmd run test:xr-browser` : Edge headless avec WebGL réel et périphérique XR simulé ; réseau hôte/invité, entrée/refus/sortie, préparation et construction, cinq poignées, stabilité après mouvement de tête, manipulation d'une fenêtre sans déplacement du plateau, A sans activation, tailles, réinitialisation et cache de texture. Capture de contrôle possible avec la variable `EREDITA_XR_SCREENSHOT` contenant un chemin PNG.
+- `npm.cmd run test:xr-browser` : Edge headless avec WebGL réel et périphérique XR simulé ; réseau hôte/invité, entrée/refus/sortie, préparation et construction, quatre fenêtres de gestion et poignées de score, stabilité après mouvement de tête, manipulation d'une fenêtre sans déplacement du plateau, A sans activation, tailles, réinitialisation et cache de texture. Capture de contrôle possible avec la variable `EREDITA_XR_SCREENSHOT` contenant un chemin PNG. `EREDITA_XR_PREVIEW_DIR` exporte les aperçus `vr-menu.png`, `vr-preparation.png` et `vr-gestion.png`. Les suites XR et navigateur ont été exécutées avec succès après la révision du 7 octobre 2026, incluant les axes gauche/droit, Y, le lancement en une action, les quatre fenêtres, les fiches de score déplaçables et la priorité du village visible devant une fenêtre.
 - `node tests/decks-browser.test.js` : menus desktop, contrôles, filtres, modales et sélections réussis ; le test XR vérifie aussi le retour aux vues 2D/3D et la simulation réseau.
 - `npm.cmd test` : noyau, IA, élevages, équipements, apparence 3D et commandes réseau réussis, puis les **deux échecs préexistants** de `tests/special-animals.test.js` (attente de dégâts de sanglier continus contre impacts par seconde). Les suites suivantes (âne, animaux 3D, animations de combat, decks) ont été exécutées séparément et réussissent. Aucune règle de combat n'a été modifiée pour faire passer ces assertions.
 - L'ancien `tests/browser-smoke.test.js` échoue déjà avant la partie parce qu'il clique le bouton local sans ouvrir le menu actuel. Le parcours navigateur à jour est couvert ci-dessus ; cet ancien script n'a pas été réécrit dans cette mission.
@@ -48,11 +59,11 @@ Ne pas conclure à la lisibilité à partir des pixels du canvas. Pour une haute
 
 ## Manipulation individuelle et récupération
 
-Réaliser les essais pour Métiers, Informations du village, Tâches, Bâtiments et Habitants, d’abord main droite puis main gauche.
+Réaliser les essais pour Habitants, Tâches, Métiers, Gestion du village et fiches supérieures, d’abord main droite puis main gauche.
 
 - [ ] Viser la barre supérieure : la poignée indique clairement la possibilité de saisir. Une pression de l’index ne déplace pas la fenêtre.
 - [ ] Maintenir la préhension sur cette poignée, déplacer la main latéralement et verticalement, approcher/éloigner le panneau, orienter le poignet, puis relâcher. Le panneau suit progressivement et reste où il a été déposé.
-- [ ] Comparer le plateau et les quatre autres panneaux avant/après : ils ne bougent pas avec la fenêtre saisie.
+- [ ] Comparer le plateau et les trois autres panneaux avant/après : ils ne bougent pas avec la fenêtre saisie.
 - [ ] Pendant la saisie, presser puis relâcher la gâchette index au-dessus d’un bouton. Aucun achat, attribution, sélection de village ou autre action ne doit partir. Refaire en relâchant les deux gâchettes presque simultanément.
 - [ ] Maintenir la préhension en dehors d’une poignée : aucun déplacement du plateau en mode jeu. Avec les deux mains, essayer deux poignées distinctes puis la même poignée ; aucun saut ni commande parasite.
 - [ ] Couper brièvement le suivi de la main saisissante, puis le rétablir. Le panneau ne doit pas bondir, rester verrouillé ou déclencher une action au retour du suivi.
@@ -63,9 +74,9 @@ Réaliser les essais pour Métiers, Informations du village, Tâches, Bâtiments
 
 ## Toutes les interactions
 
-- [ ] Avec chaque gâchette index, sélectionner les huit villages depuis le bandeau supérieur. Comparer au desktop les PV, population, disponibles, stocks et niveaux ; les cinq panneaux de gestion restent simultanément accessibles.
-- [ ] A ouvre/ferme les informations ; il ne valide pas une construction simplement visée. B annule/ferme le contexte courant. X masque/réaffiche la gestion ; la récupération et les paramètres restent accessibles. Y explique explicitement l’état des cartes non encore jouables.
-- [ ] Joystick droit : parcourir les habitants lorsque leur barre est active. Joystick gauche : parcourir le contexte visé, avec répétition maîtrisée et sans déplacement du plateau. Vérifier les solutions par boutons à la gâchette.
+- [ ] Avec chaque gâchette index, sélectionner les huit villages depuis le bandeau supérieur. Comparer au desktop les PV, population, disponibles, stocks et niveaux ; les quatre panneaux de gestion restent simultanément accessibles.
+- [ ] A ouvre/ferme les informations ; il ne valide pas une construction simplement visée. B annule/ferme le contexte courant. X masque/réaffiche la gestion ; la récupération et les paramètres restent accessibles. Y ouvre/ferme la boutique.
+- [ ] Joystick gauche vertical : parcourir les habitants. Joystick droit horizontal : changer de village, avec répétition maîtrisée et sans déplacement du plateau. Vérifier les solutions par boutons à la gâchette.
 - [ ] Parcourir chaque page des habitants. Chaque portrait correspond au métier réel, l’identifiant et l’état sont lisibles, l’habitant choisi garde son cadre doré, les autres panneaux reflètent cette sélection.
 - [ ] Construire Bergerie, Artisanat et Boucherie ; améliorer village et bâtiments jusqu’au niveau autorisé. Lire les coûts avant clic et comparer les dépenses réelles au desktop.
 - [ ] Sélectionner un habitant et attribuer/retirer chacun des six métiers quand ses conditions sont remplies. Tester aussi une condition absente : explication lisible, aucune dépense ni changement de métier.
