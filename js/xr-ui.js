@@ -6,7 +6,7 @@
   const missionLabels = { agriculture: "Agriculture", elevage: "Élevage", peche: "Pêche", chasse: "Chasse", attaque: "Attaquer", defense: "Défendre", disponible: "Disponible" };
   const missionIcons = { agriculture: "🌾", elevage: "🐑", peche: "🎣", chasse: "🏹", attaque: "⚔", defense: "🛡", disponible: "👤" };
   const portraitIndices = { habitant: 0, agriculteur: 1, berger: 2, pecheur: 3, guerrier: 4, chasseur: 5, ravageur: 6 };
-  const panelLabels = { residents: "Habitants", tasks: "Tâches", jobs: "Métiers", buildings: "Gestion du village",
+  const panelLabels = { modal: "Menu et paramètres", residents: "Habitants", tasks: "Tâches", jobs: "Métiers", buildings: "Gestion du village",
     ...Object.fromEntries(["red", "blue"].flatMap((team) => [0, 1, 2, 3].map((lane) => [`${team}${lane}`, `${team === "red" ? "Rouge" : "Bleu"} · Village ${lane + 1}`]))),
     redGold: "Or Rouge", blueGold: "Or Bleu", clock: "Chronomètre" };
   const textSizes = { normal: "Normal", large: "Grand", xlarge: "Très grand" };
@@ -132,22 +132,25 @@
         return { title, lines, rows: [
           row(button("Entraînement", { type: "mode", mode: "solo" }, true, { centered: true, large: true, primary: true, detail: "Jouer contre l’IA" })),
           row(button("Local à deux", { type: "mode", mode: "local" }, true, { centered: true, large: true, detail: "Deux joueurs sur le même plateau" }))
-        ], options: { variant: "mode", footer: [button("Quitter le mode VR", { type: "exit" }, true, { centered: true })] } };
+        ], options: { variant: "mode", footer: [button("Quitter le mode VR", { type: "exit" }, true, { centered: true }), button("Paramètres", open("settings"), true, { centered: true })] } };
       } else if (name === "settings") {
-        title = "Paramètres"; lines = ["Gâchette : choisir · Y : boutique · B : retour", "Joystick gauche ↕ : habitant · droit ↔ : village", "Préhension sur la barre : déplacer la fenêtre"];
-        entries = [button(muted ? "Réactiver le son" : "Couper le son", { type: "audio" }),
-          button(`Graphismes : ${quality}`, { type: "quality" }),
-          button(`Texte : ${textSizes[dashboard.textSize || "normal"]}`, open("text-size")),
-          button("Recentrer les fenêtres", { type: "panels-recenter" }),
-          button("Réinitialiser les fenêtres", { type: "panels-reset" }),
-          button("Ajuster une fenêtre", open("panel-layout")),
-          button(s.paused ? "Reprendre" : "Pause", command("togglePause"), s.phase === "running" && E.Network.mode !== "guest", { reason: E.Network.mode === "guest" ? "Seul l’hôte peut mettre la partie en pause." : "La partie n’est pas en cours." }),
-          button("Déplacer le plateau", { type: "manipulate", mode: "move" }, E.Network.mode !== "guest", { reason: "La manipulation du plateau est réservée à l’hôte." }),
-          button("Pivoter le plateau", { type: "manipulate", mode: "rotate" }, E.Network.mode !== "guest", { reason: "La manipulation du plateau est réservée à l’hôte." }),
-          button("Taille du plateau", { type: "manipulate", mode: "size" }, E.Network.mode !== "guest", { reason: "La taille du plateau est contrôlée par l’hôte." }),
-          button(E.Network.mode === "guest" ? "Replacer mon plateau" : "Recentrer le plateau", { type: "recenter" }),
-          button("Quitter le mode VR", { type: "exit" }),
-          button("Retour au salon", open("leave"))];
+        title = "Paramètres";
+        lines = ["Gâchettes ou A : choisir · B : retour", "Préhension : déplacer · joystick ↔ pendant la saisie : taille"];
+        const host = E.Network.mode !== "guest";
+        const scale = dashboard.windowScale || 1;
+        return { title, lines, rows: [
+          row(button("Agrandir les fenêtres", { type: "panels-scale", direction: "grow" }, scale < E.Config.xr.windowMaxScale, { centered: true, reason: "Taille maximale atteinte." }),
+            button("Réduire les fenêtres", { type: "panels-scale", direction: "shrink" }, scale > E.Config.xr.windowMinScale, { centered: true, reason: "Taille minimale atteinte." })),
+          row(button(E.Network.mode === "guest" ? "Replacer mon plateau" : "Replacer le plateau", { type: "recenter" }, true, { centered: true, primary: true })),
+          row(button("Ajuster une fenêtre", open("panel-layout")), button(`Texte : ${textSizes[dashboard.textSize || "normal"]}`, open("text-size"))),
+          row(button("Recentrer les fenêtres", { type: "panels-recenter" }), button("Réinitialiser les fenêtres", { type: "panels-reset" })),
+          row(button("Déplacer le plateau", { type: "manipulate", mode: "move" }, host, { reason: "La manipulation du plateau est réservée à l’hôte." }),
+            button("Pivoter le plateau", { type: "manipulate", mode: "rotate" }, host, { reason: "La manipulation du plateau est réservée à l’hôte." }),
+            button("Taille du plateau", { type: "manipulate", mode: "size" }, host, { reason: "La taille du plateau est contrôlée par l’hôte." })),
+          row(button(s.paused ? "Reprendre" : "Pause", command("togglePause"), s.phase === "running" && host, { reason: host ? "La partie n’est pas en cours." : "Seul l’hôte peut mettre la partie en pause." }),
+            button(muted ? "Réactiver le son" : "Couper le son", { type: "audio" }), button(`Graphismes : ${quality}`, { type: "quality" })),
+          row(button("Retour au salon", open("leave")))
+        ], options: { variant: "settings", footer: [button("Retour", { type: "back" }, true, { centered: true }), button("Quitter le mode VR", { type: "exit" }, true, { centered: true })] } };
       } else if (name === "text-size") {
         title = "Taille des textes";
         lines = ["Les fenêtres adaptent leur contenu et leur pagination."];
@@ -396,7 +399,7 @@
         if (ok) { if (action.method === "confirmBiomes" || action.method === "start") { if (state().phase === "running") setModal(null); } else if (s.phase === "running" && !["shop", "sell", "buy-resident", "store", "animals", "slot"].includes(modal?.name)) setModal(null); }
         return ok;
       }
-      if (["manipulate", "recenter", "leave", "exit", "panels-reset", "panels-recenter", "panel-adjust"].includes(action.type)) return action;
+      if (["manipulate", "recenter", "leave", "exit", "panels-reset", "panels-recenter", "panels-scale", "panel-adjust"].includes(action.type)) return action;
       return false;
     }
     function activate(target) {

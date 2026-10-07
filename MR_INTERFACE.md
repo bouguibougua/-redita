@@ -23,7 +23,7 @@ Les réglages spatiaux et tailles de texte sont des valeurs de présentation pro
 
 Créés : `js/xr-design.js` (tokens et dessins partagés), `js/xr-windows.js` (manipulation indépendante), `tests/xr-windows.test.js`, `tests/xr-ui-premium.test.js`, `MR_INTERFACE.md`.
 
-Modifiés : `js/xr-dashboard.js` (rendu, pagination, cibles réutilisées, tailles et dispositions), `js/xr-panels.js` (même composant pour le placement), `js/xr-ui.js` (vraies professions, tâches, coûts, états et menus), `js/xr-input.js` (A distinct de l'index, protection des clics, X maintenu), `js/xr-interactions.js` (identification explicite des modales), `js/xr.js` (orchestration), `js/config.js` (confort et manipulation), `js/audio.js` (confirmation courte respectant la sourdine), `js/game-view.js` (propagation des refus explicites du contrôleur), `index.html` (chargement), `package.json` (tests XR), `tests/xr.test.js`, `tests/xr-browser.test.js`, `QUEST3.md`, `GAME_DESIGN.md` (section 94 uniquement).
+Modifiés : `js/xr-dashboard.js` (rendu, pagination, cibles réutilisées, tailles et dispositions), `js/xr-panels.js` (même composant pour le placement), `js/xr-ui.js` (vraies professions, tâches, coûts, états et menus), `js/xr-input.js` (A et gâchettes équivalents, protection des clics, X maintenu), `js/xr-interactions.js` (identification explicite des modales), `js/xr.js` (orchestration), `js/config.js` (confort et manipulation), `js/audio.js` (confirmation courte respectant la sourdine), `js/game-view.js` (propagation des refus explicites du contrôleur), `index.html` (chargement), `package.json` (tests XR), `tests/xr.test.js`, `tests/xr-browser.test.js`, `QUEST3.md`, `GAME_DESIGN.md` (section 94 uniquement).
 
 Les fenêtres proposent préhension, orientation au poignet, joystick vertical pour la distance et horizontal pour la taille, annulation B, réglages alternatifs à la gâchette et récupération par X maintenu 1,2 s. Les paramètres regroupent audio, fovéation, trois tailles de texte, ajustement/recentrage/réinitialisation des fenêtres et manipulation du plateau suivant les droits réseau. Le retour au salon conserve sa confirmation. Aucun contrôle permanent de transformation du plateau n'est ajouté.
 
@@ -57,6 +57,14 @@ Ne pas conclure à la lisibilité à partir des pixels du canvas. Pour une haute
 - [ ] Vérifier les noms longs, les valeurs élevées, chaque niveau de bâtiment et les six stocks locaux. Les flèches de page et les libellés restent lisibles.
 - [ ] Pendant une minute de consultation, déplacer légèrement la tête : les panneaux restent dans l’espace ; ils ne poursuivent pas chaque mouvement. Leur disposition laisse les quatre lignes du plateau consultables.
 
+## Taille et replacement depuis les paramètres
+
+- [ ] Dès le menu initial, puis au choix des decks/biomes et pendant la minute de préparation, ouvrir Paramètres et Replacer le plateau sans changer de page. Confirmer avec A puis chacune des deux gâchettes ; B doit restaurer l’ancienne pose.
+- [ ] Agrandir/Réduire les fenêtres : vérifier la croissance des fenêtres et des espacements, le maintien des proportions, les limites et l’absence de transformation du plateau. Réinitialiser doit restaurer la taille d’origine.
+- [ ] Ajuster individuellement « Menu et paramètres » avant la partie puis chaque fenêtre en jeu ; vérifier la persistance entre les menus et le confort avec les trois tailles de texte.
+- [ ] En réseau invité, vérifier que le replacement et la taille des fenêtres restent locaux au casque et accessibles, avec la largeur du plateau toujours contrôlée par l’hôte.
+- [ ] Vérifier que les réglages ne remettent pas à zéro les compteurs et que la pause existante reste respectée.
+
 ## Manipulation individuelle et récupération
 
 Réaliser les essais pour Habitants, Tâches, Métiers, Gestion du village et fiches supérieures, d’abord main droite puis main gauche.
@@ -75,7 +83,7 @@ Réaliser les essais pour Habitants, Tâches, Métiers, Gestion du village et fi
 ## Toutes les interactions
 
 - [ ] Avec chaque gâchette index, sélectionner les huit villages depuis le bandeau supérieur. Comparer au desktop les PV, population, disponibles, stocks et niveaux ; les quatre panneaux de gestion restent simultanément accessibles.
-- [ ] A ouvre/ferme les informations ; il ne valide pas une construction simplement visée. B annule/ferme le contexte courant. X masque/réaffiche la gestion ; la récupération et les paramètres restent accessibles. Y ouvre/ferme la boutique.
+- [ ] A et les deux gâchettes valident les mêmes boutons, villages et placements ; une pression maintenue de A ne répète pas une action. B annule/ferme le contexte courant. X masque/réaffiche la gestion ; la récupération et les paramètres restent accessibles. Y ouvre/ferme la boutique.
 - [ ] Joystick gauche vertical : parcourir les habitants. Joystick droit horizontal : changer de village, avec répétition maîtrisée et sans déplacement du plateau. Vérifier les solutions par boutons à la gâchette.
 - [ ] Parcourir chaque page des habitants. Chaque portrait correspond au métier réel, l’identifiant et l’état sont lisibles, l’habitant choisi garde son cadre doré, les autres panneaux reflètent cette sélection.
 - [ ] Construire Bergerie, Artisanat et Boucherie ; améliorer village et bâtiments jusqu’au niveau autorisé. Lire les coûts avant clic et comparer les dépenses réelles au desktop.

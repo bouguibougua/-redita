@@ -1,5 +1,11 @@
 # Eredità sur Meta Quest 3
 
+## Réglages de taille et replacement
+
+Les paramètres restent accessibles dès « Choisir une partie », depuis le choix des decks et biomes, pendant la minute de préparation et pendant le combat. Un seul écran regroupe Agrandir/Réduire les fenêtres, Replacer le plateau, la taille du texte, les réglages individuels et les commandes existantes. Agrandir conserve les espaces entre fenêtres. Les limites restent dans Config.xr ; Réinitialiser restaure taille et disposition. Le menu lui-même peut être ajusté dans « Ajuster une fenêtre ».
+
+Une gâchette gauche, une gâchette droite et A effectuent la même sélection au rayon. B annule un replacement en restaurant la pose précédente. Le temps de jeu garde son état : mettre en pause si souhaité avant de régler le plateau.
+
 ## Ergonomie VR — 7 octobre 2026
 
 Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation reprend les trois decks et la grille de quatre biomes colorés du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
@@ -50,14 +56,14 @@ Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. 
 1. Viser la table. Un repère vert et un plateau transparent apparaissent sur une surface horizontale admissible. **Vérifier soi-même qu'il s'agit bien de sa table** : le code ne déduit aucune catégorie de mobilier.
 2. Appuyer sur la gâchette du contrôleur qui porte le repère pour confirmer. Si l'autre contrôleur était prioritaire, une première pression transfère la priorité à celui utilisé ; viser et confirmer une seconde fois.
 3. Si rien n'est détecté, choisir **Placement manuel**. Un plan virtuel remplace la surface détectée ; **Plus haut / Plus bas** règlent sa hauteur. Viser vers le bas et confirmer uniquement lorsque l'aperçu correspond à la vraie table. Le repère manuel est jaune.
-4. Après placement, pointer un village : son cercle devient vert. La gâchette le sélectionne et met à jour les panneaux ; A peut ouvrir sa fiche détaillée. Les PV, habitants, stocks et bâtiments proviennent du moteur.
-5. Utiliser **⚙ Réglages** pour déplacer, pivoter ou redimensionner le plateau. **Terminer** rétablit les commandes de jeu. **Recentrer** recommence le placement face à la position actuelle ; B/Annuler restaure la pose précédente tant que le repère spatial n'a pas changé.
+4. Après placement, pointer un village : son cercle devient vert. La gâchette le sélectionne et met à jour les panneaux ; A a le même effet que les deux gâchettes : sélectionner le village visé et afficher sa gestion. Les PV, habitants, stocks et bâtiments proviennent du moteur.
+5. Utiliser **⚙ Réglages** pour déplacer, pivoter ou redimensionner le plateau. **Terminer** rétablit les commandes de jeu. **Replacer le plateau**, accessible dès le menu de début et pendant les deux préparations, recommence le placement face à la position actuelle ; B/Annuler restaure la pose précédente tant que le repère spatial n'a pas changé.
 6. **Quitter la réalité mixte** ferme la session et restaure l'interface classique. **Retour au salon** demande une confirmation, ferme la session puis revient au menu.
 
 | Commande | Effet |
 | --- | --- |
 | Gâchette gauche ou droite | Confirmer un placement, un bouton ou un village |
-| A, contrôleur droit Touch reconnu | Ouvrir ou fermer les informations du village, sans activer le bouton visé |
+| A, contrôleur droit Touch reconnu | Même effet que les deux gâchettes : confirmer un placement, un bouton ou un village |
 | B, contrôleur droit Touch reconnu | Revenir/fermer un menu, terminer la manipulation ou annuler un repositionnement |
 | X, contrôleur gauche Touch reconnu | Masquer ou afficher les panneaux de gestion |
 | X maintenu 1,2 seconde | Récupérer toutes les fenêtres devant soi, y compris hors champ |
@@ -66,6 +72,7 @@ Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. 
 | Joystick gauche vertical, jeu | Parcourir les habitants du village sélectionné |
 | Préhension sur la barre supérieure, jeu | Saisir une seule fenêtre, la déplacer/orienter puis relâcher ; la gâchette index est neutralisée pendant la saisie |
 | Joystick pendant la saisie d'une fenêtre | Vertical : distance ; horizontal : taille ; B annule le déplacement |
+| Paramètres : Agrandir / Réduire les fenêtres | Modifier la taille de toutes les fenêtres et leurs espacements, sans déplacer le plateau |
 | Paramètres : recentrer / réinitialiser les fenêtres | Récupérer les panneaux devant soi / restaurer leur disposition initiale |
 | Joystick gauche, mode manipulation | Déplacer sur le plan horizontal relatif au regard |
 | Joystick droit, mode manipulation | Pivoter |
@@ -148,7 +155,7 @@ La procédure détaillée de l’interface, incluant mesures angulaires de texte
 - [ ] Tester sans hit-test et avec la case de lancement simplifié ; ajuster la hauteur manuellement jusqu'à la table.
 - [ ] Vérifier une largeur initiale de 80 cm, les quatre villages du joueur près de lui et l'eau littorale vers le centre, côté Rouge puis côté Bleu.
 - [ ] Sélectionner les huit villages avec chaque contrôleur ; comparer PV, habitants, ressources et bâtiments avec le desktop.
-- [ ] Ouvrir et fermer une fiche par gâchette, A, B et bouton Fermer ; vérifier la lisibilité assis et l'absence de masquage gênant.
+- [ ] Vérifier que les deux gâchettes et A sélectionnent les mêmes villages, activent les mêmes boutons et valident le placement. Pendant une saisie et juste après, aucun des trois ne déclenche d’action parasite.
 - [ ] En mode interaction, manipuler joysticks/préhensions : aucun déplacement du plateau.
 - [ ] En mode manipulation, déplacer et tourner avec les joysticks, saisir à une main, puis agrandir/réduire à deux mains ; vérifier les limites et l'absence de saut au relâchement.
 - [ ] Faire les mêmes réglages uniquement avec les boutons 3D à la gâchette ; tester Recentrer, Annuler et Terminer.

@@ -129,7 +129,7 @@
       const { rows, options } = p.data, M = T.menu, w = p.canvas.width, h = p.canvas.height, entries = [];
       let y = startY;
       rows.forEach((row, rowIndex) => {
-        const height = options.variant === "mode" ? M.modeRow : rowIndex === 0 ? M.deckRow : rowIndex < 3 ? M.biomeRow : M.actionRow;
+        const height = options.variant === "settings" ? S.row : options.variant === "mode" ? M.modeRow : rowIndex === 0 ? M.deckRow : rowIndex < 3 ? M.biomeRow : M.actionRow;
         const bw = (w - 2 * S.inset - S.gap * (row.length - 1)) / row.length;
         row.forEach((entry, col) => {
           const rect = { x: S.inset + col * (bw + S.gap), y, w: bw, h: height };
@@ -237,9 +237,15 @@
       // Menus droits à hauteur du regard. Seules les fiches de score ont une inclinaison.
       group.rotation.set(0, Math.atan2(-forward.x, -forward.z), 0, "YXZ"); positioned = true;
     }
-    function resetLayout(viewer) { panels.forEach((p) => { p.node.userData.customLayout = false; p.node.userData.windowUserScale = 1; placeDefault(p); }); if (viewer) position(viewer, false); }
+    function resetLayout(viewer) { group.scale.setScalar(1); panels.forEach((p) => { p.node.userData.customLayout = false; p.node.userData.windowUserScale = 1; placeDefault(p); }); if (viewer) position(viewer, false); }
     function recenter(viewer) {
       panels.forEach((p) => { if (Math.abs(p.node.position.x) > 1.6 || Math.abs(p.node.position.y) > 1.5 || Math.abs(p.node.position.z) > 0.7) { p.node.userData.customLayout = false; placeDefault(p); } }); position(viewer, false);
+    }
+    function adjustScale(direction) {
+      const cfg = E.Config.xr;
+      const factor = direction === "grow" ? cfg.windowScaleStep : direction === "shrink" ? 1 / cfg.windowScaleStep : 1;
+      // Agrandir aussi les espacements conserve la disposition sans superposer les fenêtres.
+      group.scale.setScalar(THREE.MathUtils.clamp(group.scale.x * factor, cfg.windowMinScale, cfg.windowMaxScale));
     }
     function setTextSize(size) {
       if (!T.textScales[size] || textSize === size) return;
@@ -276,10 +282,10 @@
       panels.forEach((p) => { [p.face, p.handle, ...p.buttons].filter(Boolean).forEach((mesh) => { mesh.geometry.dispose(); mesh.material.dispose(); }); p.texture.dispose(); });
       images.forEach((img) => { img.onload = null; }); images.clear(); panels.clear(); targets.length = 0; scene.remove(group);
     }
-    return { group, targets, paint, syncTargets, position, resetLayout, recenter, setTextSize, setFeedback, feedback, navigate, highlight, dispose,
+    return { group, targets, paint, syncTargets, position, resetLayout, recenter, adjustScale, setTextSize, setFeedback, feedback, navigate, highlight, dispose,
       setViewer(value) { viewer = value; }, presentModal() { modalNeedsPlacement = true; },
-      getPanel: (id) => panels.get(id), get textSize() { return textSize; }, get modalActive() { return Boolean(panels.get("modal")?.node.visible); },
-      get diagnostics() { return [...panels.values()].map((p) => ({ id: p.id, visible: p.node.visible, position: p.node.position.toArray(), width: p.width * p.node.scale.x, height: p.height * p.node.scale.y, page: p.page, pages: p.pageCount, draws: p.drawCount, texture: [p.canvas.width, p.canvas.height] })); }
+      getPanel: (id) => panels.get(id), get windowScale() { return group.scale.x; }, get textSize() { return textSize; }, get modalActive() { return Boolean(panels.get("modal")?.node.visible); },
+      get diagnostics() { return [...panels.values()].map((p) => ({ id: p.id, visible: p.node.visible, position: p.node.position.toArray(), width: p.width * p.node.scale.x * group.scale.x, height: p.height * p.node.scale.y * group.scale.y, page: p.page, pages: p.pageCount, draws: p.drawCount, texture: [p.canvas.width, p.canvas.height] })); }
     };
   }
   E.XRDashboard = { create };

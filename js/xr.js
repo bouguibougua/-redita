@@ -156,7 +156,7 @@
       r.windows.reset();
       r.selected = null; r.manipulation = null;
       r.placement.beginPlacement(); r.panels.position(r.viewer);
-      r.message = "Replacez le plateau sur la table avec votre gâchette.";
+      r.message = "Visez la table puis confirmez avec une gâchette ou A. B : annuler.";
       return;
     }
     if (["move", "rotate", "size"].includes(name)) {
@@ -180,6 +180,10 @@
       if (result.type === "panels-reset") r.dashboard.resetLayout(r.viewer);
       else r.dashboard.recenter(r.viewer);
       r.dashboard.setFeedback(result.type === "panels-reset" ? "Disposition initiale restaurée." : "Fenêtres recentrées devant vous.", "info");
+    }
+    if (result?.type === "panels-scale") {
+      r.windows.reset(); r.dashboard.adjustScale(result.direction);
+      r.dashboard.setFeedback(`Taille des fenêtres : ${Math.round(r.dashboard.windowScale * 100)} %.`, "info");
     }
     if (result?.type === "panel-adjust") r.windows.adjust(result.panelId, result.operation, r.viewer);
     if (result?.type === "exit") end();
@@ -307,11 +311,7 @@
       } else if (r.windows.active) continue;
       else if (event.type === "panels" && r.placement.placed && !r.manipulation) r.ui.toggle();
       else if (event.type === "shop" && r.placement.placed && !r.manipulation) r.ui.shop();
-      else if (event.type === "info" && r.placement.placed && !r.manipulation) {
-        const target = hits.get(event.record)?.object.userData.xrTarget;
-        if (target?.kind === "village") E.GameView.selectVillage(target.playerId, target.lane);
-        r.ui.info();
-      } else if (event.type === "confirm") confirm(event.record, hits.get(event.record));
+      else if (event.type === "confirm") confirm(event.record, hits.get(event.record));
       if (current !== r) return;
       r.lastPanel = -Infinity; r.lastDashboard = -Infinity;
     }
@@ -342,7 +342,7 @@
         placed: current.placement.placed, manual: current.placement.manual,
         width: current.placement.width, anchored: current.placement.anchorTracked,
         manipulation: current.manipulation, selected: current.selected,
-        grabbedPanels: current.windows.diagnostics, textSize: current.dashboard.textSize,
+        grabbedPanels: current.windows.diagnostics, textSize: current.dashboard.textSize, windowScale: current.dashboard.windowScale,
         controllers: current.input.records.filter((r) => r.source).map((r) => ({ hand: r.source.handedness, profiles: r.source.profiles, mapping: r.source.gamepad?.mapping, tracked: r.tracked }))
       } : { active: false, supported };
     }

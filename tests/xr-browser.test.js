@@ -93,7 +93,8 @@ function installXRFixture() {
     const node = renderer.xr.getController(index); node.position.copy(origin); node.quaternion.copy(quaternion); node.updateMatrixWorld(true);
   };
   fixture.trigger = (index = 0) => { fixture.step(); renderer.xr.getController(index).dispatchEvent({ type: "selectstart" }); renderer.xr.getController(index).dispatchEvent({ type: "select" }); fixture.step(); };
-  fixture.button = (action, index = 0) => {
+  fixture.a = () => { fixture.step(); fixture.sources[0].gamepad.buttons[4].pressed = true; fixture.step(); fixture.sources[0].gamepad.buttons[4].pressed = false; fixture.step(); };
+  fixture.button = (action, index = 0, method = "trigger") => {
     fixture.step();
     const active = () => {
       const all = fixture.dashboard?.group.visible ? fixture.dashboard.targets : fixture.panels.targets;
@@ -101,9 +102,9 @@ function installXRFixture() {
     };
     const matches = (target) => {
       const candidate = target.userData.xrTarget.action;
-      return target.userData.xrTarget.enabled !== false && (candidate === action || candidate?.name === action || candidate?.mode === action || candidate?.type === action || candidate?.method === action || candidate?.size === action);
+      return target.userData.xrTarget.enabled !== false && (candidate === action || candidate?.name === action || candidate?.mode === action || candidate?.type === action || candidate?.method === action || candidate?.size === action || candidate?.direction === action || candidate?.operation === action);
     };
-    const press = (mesh) => { mesh.updateWorldMatrix(true, false); fixture.aim(index, mesh.getWorldPosition(new THREE.Vector3()).toArray()); fixture.trigger(index); };
+    const press = (mesh) => { mesh.updateWorldMatrix(true, false); fixture.aim(index, mesh.getWorldPosition(new THREE.Vector3()).toArray()); if (method === "a") fixture.a(); else fixture.trigger(index); };
     if (action === "page") { const next = active().find(t => t.userData.xrTarget.action?.type === "panel-page" && t.userData.xrTarget.action.delta === 1 && t.userData.xrTarget.enabled); if (next) press(next); return; }
     let mesh = active().find(matches);
     if (!mesh) {
@@ -246,13 +247,27 @@ async function run() {
   await evaluate("xrFixture.step()"); assert.deepEqual(await evaluate("xrFixture.dashboard.getPanel('jobs').node.position.toArray()"), releasedJobs);
   await delay(350);
   await evaluate(`(() => { const {THREE}=Eredita.Board3D.getXRContext(); const button=xrFixture.dashboard.getPanel('blue0').face; button.updateWorldMatrix(true,false); xrFixture.aim(0,button.getWorldPosition(new THREE.Vector3()).toArray()); xrFixture.sources[0].gamepad.buttons[4].pressed=true; xrFixture.step(); xrFixture.sources[0].gamepad.buttons[4].pressed=false; xrFixture.step(); })()`);
-  assert.equal(await evaluate("xrFixture.dashboard.modalActive"), true, "A ouvre les informations");
-  assert.deepEqual(await evaluate("Eredita.GameView.getState().selectedVillage"), oldSelection, "A ne valide pas le bouton de village visé");
-  await evaluate("xrFixture.sources[0].gamepad.buttons[5].pressed=true; xrFixture.step(); xrFixture.sources[0].gamepad.buttons[5].pressed=false; xrFixture.step(); xrFixture.button('settings'); xrFixture.button('text-size'); xrFixture.button('xlarge')");
+  assert.equal(await evaluate("xrFixture.dashboard.modalActive"), false, "A sélectionne directement le village comme une gâchette");
+  assert.deepEqual(await evaluate("Eredita.GameView.getState().selectedVillage"), {playerId:"blue",lane:0});
+  assert.deepEqual(await evaluate("Eredita.XR.diagnostics.selected"), {playerId:"blue",lane:0});
+  await evaluate("Eredita.GameView.selectVillage('red',0); xrFixture.step()");
+  await evaluate("xrFixture.sources[0].gamepad.buttons[5].pressed=true; xrFixture.step(); xrFixture.sources[0].gamepad.buttons[5].pressed=false; xrFixture.step(); xrFixture.button('settings'); xrFixture.button('grow',0,'a')");
+  assert.ok(Math.abs(await evaluate("Eredita.XR.diagnostics.windowScale") - 1.08) < 1e-9);
+  assert.equal(await evaluate("xrFixture.dashboard.getPanel('modal').pageCount"), 1, "Les paramètres tiennent sur un écran");
+  assert.ok(Math.abs(await evaluate("xrFixture.dashboard.diagnostics.find(p=>p.id==='residents').width") - 0.60 * 1.08) < 1e-9, "Les fenêtres grandissent physiquement");
+  if (process.env.EREDITA_XR_PREVIEW_DIR) {
+    fs.mkdirSync(process.env.EREDITA_XR_PREVIEW_DIR, { recursive: true });
+    const data = await evaluate("xrFixture.dashboard.getPanel('modal').canvas.toDataURL('image/png').split(',')[1]");
+    fs.writeFileSync(path.join(process.env.EREDITA_XR_PREVIEW_DIR, "vr-parametres.png"), Buffer.from(data, "base64"));
+  }
+  assert.deepEqual(await evaluate("Eredita.Board3D.getXRContext().world.parent.matrixWorld.toArray()"), oldBoard, "Agrandir les fenêtres ne déplace pas le plateau");
+  await evaluate("xrFixture.button('shrink',1); xrFixture.button('text-size',0,'a'); xrFixture.button('xlarge',1)");
+  assert.ok(Math.abs(await evaluate("Eredita.XR.diagnostics.windowScale") - 1) < 1e-9);
   assert.equal(await evaluate("Eredita.XR.diagnostics.textSize"), "xlarge");
   assert.equal(await evaluate("xrFixture.dashboard.diagnostics.every(p=>p.texture.every(n=>n<=2048))"), true);
-  await evaluate("xrFixture.button('normal'); xrFixture.button('back'); xrFixture.button('settings'); xrFixture.button('panels-reset'); xrFixture.button('back')");
+  await evaluate("xrFixture.button('normal'); xrFixture.button('back'); xrFixture.button('settings'); xrFixture.button('grow'); xrFixture.button('panels-reset'); xrFixture.button('back')");
   assert.deepEqual(await evaluate("xrFixture.dashboard.getPanel('jobs').node.position.toArray()"), oldJobs, "Les réglages restaurent la fenêtre déplacée");
+  assert.equal(await evaluate("Eredita.XR.diagnostics.windowScale"), 1, "Réinitialiser restaure aussi la taille globale");
   await evaluate("xrFixture.sources[1].gamepad.buttons[5].pressed=true; xrFixture.step(); xrFixture.sources[1].gamepad.buttons[5].pressed=false; xrFixture.step()");
   assert.equal(await evaluate("xrFixture.dashboard.getPanel('modal').data.title"), "Échoppes et ventes", "Y ouvre la boutique");
   await evaluate("xrFixture.button('back')");
@@ -297,7 +312,13 @@ async function run() {
   // B ferme le panneau ; aucun index système n'est lu.
   await evaluate(`(() => { const {THREE,scene}=Eredita.Board3D.getXRContext(); scene.updateMatrixWorld(true); xrFixture.aim(0,xrFixture.interactions.targets[0].getWorldPosition(new THREE.Vector3()).toArray()); xrFixture.trigger(); xrFixture.sources[0].gamepad.buttons[5].pressed=true; xrFixture.step(); })()`);
   assert.equal(await evaluate("Eredita.XR.diagnostics.selected"), null);
-  await evaluate("xrFixture.sources[0].gamepad.buttons[5].pressed=false; xrFixture.step(); xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('recenter'); xrFixture.button('manual'); xrFixture.aim(0,[0,0.65,-0.85]); xrFixture.step(); xrFixture.trigger()");
+  await evaluate("xrFixture.sources[0].gamepad.buttons[5].pressed=false; xrFixture.step(); xrFixture.button('settings'); xrFixture.button('recenter',0,'a')");
+  assert.equal(await evaluate("Eredita.XR.diagnostics.placed"), false, "Replacer est accessible pendant la minute de préparation");
+  await evaluate("xrFixture.sources[0].gamepad.buttons[5].pressed=true; xrFixture.step(); xrFixture.sources[0].gamepad.buttons[5].pressed=false; xrFixture.step()");
+  assert.equal(await evaluate("Eredita.XR.diagnostics.placed"), true, "B restaure le placement précédent");
+  await evaluate("xrFixture.button('settings'); xrFixture.button('recenter',1); xrFixture.button('manual'); xrFixture.aim(0,[0.12,0.65,-0.85]); xrFixture.step(); xrFixture.a()");
+  assert.equal(await evaluate("Eredita.GameView.getState().elapsed"), 0);
+  assert.equal(await evaluate("Eredita.GameView.getState().preparationRemaining"), JSON.parse(originalState).preparationRemaining, "Les réglages conservent la préparation et la pause");
   assert.equal(await evaluate("Eredita.XR.diagnostics.placed && Eredita.XR.diagnostics.manual"), true);
   await evaluate("xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await waitFor("!Eredita.XR.active");
   assert.equal(await evaluate("Eredita.Board3D.getXRContext().world.parent === Eredita.Board3D.getXRContext().scene"), true);
@@ -359,6 +380,8 @@ async function run() {
     const data = await guest.evaluate("xrFixture.dashboard.getPanel('modal').canvas.toDataURL('image/png').split(',')[1]");
     fs.writeFileSync(path.join(process.env.EREDITA_XR_PREVIEW_DIR, "vr-menu.png"), Buffer.from(data, "base64"));
   }
+  await guest.evaluate("xrFixture.button('settings',0,'a'); xrFixture.button('recenter',0,'a'); xrFixture.aim(0,[0,0.65,-0.85]); xrFixture.step(); xrFixture.a()");
+  assert.equal(await guest.evaluate("Eredita.XR.diagnostics.placed"), true, "Le plateau peut être replacé dès le menu de début avec A");
   await guest.evaluate("xrFixture.button('mode')");
   assert.equal(await guest.evaluate("Eredita.Network.mode"), "solo");
   await guest.evaluate("xrFixture.button('page'); xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await guest.waitFor("!Eredita.XR.active");

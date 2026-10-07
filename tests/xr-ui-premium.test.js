@@ -51,6 +51,11 @@ assert.equal(ui.activate(find(t => t.action?.method === "setProfession" && t.act
 assert.equal(person.profession, "agriculteur"); assert.equal(person.mission, mission, "Attribuer un métier préserve la tâche");
 assert.ok(painted.get("buildings").rows.flat().some(entry => entry[3]?.detail.includes("200 or + 100 ressources")), "Le coût moteur d'amélioration est affiché");
 assert.equal(ui.activate(find(t => t.action?.name === "settings")), true);
+assert.equal(painted.get("modal").options.variant, "settings");
+assert.equal(JSON.stringify(ui.activate(find(t => t.action?.type === "panels-scale" && t.action.direction === "grow"))), JSON.stringify({ type: "panels-scale", direction: "grow" }));
+assert.equal(JSON.stringify(ui.activate(find(t => t.action?.type === "recenter"))), JSON.stringify({ type: "recenter" }));
+assert.equal(painted.get("modal").options.footer[0][0], "Retour");
+assert.equal(painted.get("modal").options.footer[1][0], "Quitter le mode VR");
 assert.equal(ui.activate(find(t => t.action?.name === "text-size")), true);
 assert.equal(ui.activate(find(t => t.action?.size === "xlarge")), true); assert.equal(dashboard.textSize, "xlarge");
 ui.close();
@@ -126,6 +131,11 @@ state.preparationRemaining = 0; ui.render(); assert.equal(painted.get("clock").t
 
 state = E.Board.createState(); E.Network.mode = "pending"; ui.close();
 assert.equal(painted.get("modal").options.variant, "mode");
+assert.equal(ui.activate(find(t => t.action?.name === "settings")), true, "Paramètres accessibles avant le choix du mode");
+assert.ok(find(t => t.action?.type === "recenter")?.enabled);
+assert.equal(ui.activate(find(t => t.action?.name === "panel-layout")), true);
+assert.ok(find(t => t.action?.name === "panel-adjust" && t.action.data === "modal"), "Le menu peut être ajusté dès le début");
+ui.close();
 assert.equal(painted.get("modal").options.footer[0][0], "Quitter le mode VR");
 assert.equal(painted.get("modal").options.footer[0][1].type, "exit");
 assert.ok(painted.get("modal").rows.every(row => row[0][3].centered && row[0][3].large));

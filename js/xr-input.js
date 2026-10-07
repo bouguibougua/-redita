@@ -70,7 +70,7 @@
         ["confirm", "cancel", "panels", "shop"].forEach((type) => {
           const index = layout[type];
           const pressed = index !== null && Boolean(source.gamepad.buttons[index]?.pressed);
-          if (pressed && record.buttons[type] === false && (type !== "confirm" || (!record.squeezing && !record.panelDragging && performance.now() >= record.suppressSelectUntil))) queue.push({ type: type === "confirm" ? "info" : type, record, source, button: index });
+          if (pressed && record.buttons[type] === false && (type !== "confirm" || (!record.squeezing && !record.panelDragging && performance.now() >= record.suppressSelectUntil))) queue.push({ type, record, source, button: index });
           if (type === "panels") {
             if (pressed && record.buttons[type] === false) { record.panelsHeldSince = performance.now(); record.recoverySent = false; }
             if (!pressed) record.panelsHeldSince = null;
