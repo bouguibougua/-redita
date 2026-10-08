@@ -8,7 +8,7 @@ for (const name of ["config", "biomes", "crops", "livestock", "units", "building
   vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "js", `${name}.js`), "utf8"), ctx);
 }
 const E = ctx.window.Eredita;
-let state = E.Board.createState(); state.phase = "running";
+let state = E.Board.createState("classic"); state.phase = "running";
 E.Network = { mode: "local", playerId: "red" };
 E.GameView.init({ getState: () => state, controller: {
   selectResident(id) { state.selectedResidentId = id; },
@@ -64,7 +64,7 @@ red.gold = 0; assert.equal(ui.activate(target), false, "Une dépense visée avan
 assert.match(feedback.at(-1).message, /or global/);
 E.Network.mode = "solo"; state.selectedVillage = { playerId: "blue", lane: 0 }; ui.render();
 assert.equal(ui.activate(find(t => t.action?.method === "build")), false); assert.match(feedback.at(-1).message, /adversaire/);
-state = E.Board.createState(); state.phase = "running"; state.players.red.villages[0].resources.ble = 321; ui.render();
+state = E.Board.createState("classic"); state.phase = "running"; state.players.red.villages[0].resources.ble = 321; ui.render();
 assert.ok(painted.get("buildings").lines.some(line => line.includes("Blé : 321")), "La gestion relit le nouvel état réseau");
 assert.ok(painted.get("residents").rows[0][0][3].portrait.src.endsWith("characters-atlas.png"));
 ui.toggle(); assert.equal(painted.get("jobs").visible, false); assert.equal(painted.get("gear").visible, true);
@@ -92,7 +92,7 @@ ui.toggle(); ui.selectVillage("red", 2); assert.equal(painted.get("jobs").visibl
 assert.equal([...painted.values()].filter(p => p.visible && ["Habitants", "Métiers", "Tâches", "Gestion"].some(prefix => p.title.startsWith(prefix))).length, 4);
 
 // Préparation sur un seul écran et lancement explicite en une action.
-state = E.Board.createState(); E.Network.mode = "solo"; state.players.blue.setupConfirmed = true;
+state = E.Board.createState("classic"); E.Network.mode = "solo"; state.players.blue.setupConfirmed = true;
 ui.close(); ui.render();
 assert.equal(painted.get("modal").options.variant, "setup");
 assert.equal(painted.get("modal").rows[0].length, 3);
@@ -107,7 +107,7 @@ assert.equal(state.phase, "running"); assert.equal(state.players.red.setupConfir
 assert.deepEqual(state.players.red.villages.map(v => v.biome), originalBiomes, "Lancer sans sélection conserve le tirage");
 
 // Une sélection de biomes est appliquée avant de lancer, dans la limite du moteur.
-state = E.Board.createState(); state.players.blue.setupConfirmed = true;
+state = E.Board.createState("classic"); state.players.blue.setupConfirmed = true;
 state.players.red.setupSelection = [0, 1];
 const before = state.players.red.villages.map(v => v.biome);
 ui.close(); assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true);
@@ -115,22 +115,25 @@ assert.equal(state.phase, "running");
 assert.notEqual(state.players.red.villages[0].biome, before[0]); assert.notEqual(state.players.red.villages[1].biome, before[1]);
 assert.equal(state.players.red.villages[2].biome, before[2]);
 
-state = E.Board.createState(); E.Network.mode = "local"; ui.close();
+state = E.Board.createState("classic"); E.Network.mode = "local"; ui.close();
 assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true);
 assert.equal(state.phase, "setup"); assert.equal(ui.modal.data, "blue");
 ui.execute({ type: "open", name: "settings" }); ui.close();
 assert.match(painted.get("modal").lines[0], /Joueur Bleu/, "Retour des réglages préserve la préparation du deuxième camp");
 assert.equal(ui.activate(find(t => t.action?.type === "setup-launch")), true); assert.equal(state.phase, "running");
 
-state = E.Board.createState(); state.phase = "running"; state.preparationRemaining = E.Config.preparation.duration;
+state = E.Board.createState("classic"); state.phase = "running"; state.preparationRemaining = E.Config.preparation.duration;
 ui.close(); ui.render();
 assert.equal(painted.get("clock").title, "1:00"); assert.equal(painted.get("clock").lines[0], "PRÉPARATION");
 assert.equal(painted.get("tasks").visible, true, "L’attribution reste accessible pendant la préparation");
 state.preparationRemaining = 0.0625; ui.render(); assert.equal(painted.get("clock").title, "0:01");
 state.preparationRemaining = 0; ui.render(); assert.equal(painted.get("clock").title, "12:30");
 
-state = E.Board.createState(); E.Network.mode = "pending"; ui.close();
+state = E.Board.createState("classic"); E.Network.mode = "pending"; ui.close();
 assert.equal(painted.get("modal").options.variant, "mode");
+assert.deepEqual(Array.from(painted.get("modal").rows[0], entry => entry[0]), ["2 camps", "4 camps"]);
+assert.equal(painted.get("modal").rows[0][0][3].selected, true);
+assert.equal(painted.get("modal").rows[0][1][3].selected, false);
 assert.equal(ui.activate(find(t => t.action?.name === "settings")), true, "Paramètres accessibles avant le choix du mode");
 assert.ok(find(t => t.action?.type === "recenter")?.enabled);
 assert.equal(ui.activate(find(t => t.action?.name === "panel-layout")), true);

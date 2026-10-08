@@ -19,7 +19,7 @@
     return true;
   }
   function formatChoices() {
-    return `<div class="match-formats" role="group" aria-label="Nombre de régions">${Object.entries(E.Config.formats).map(([id, value]) => `<button class="button ${format === id ? "selected" : ""}" type="button" data-match-format="${id}" aria-pressed="${format === id}"><strong>${value.label}</strong><span>${value.regions} régions par joueur</span></button>`).join("")}</div>`;
+    return `<div class="match-formats" role="group" aria-label="Nombre de camps par joueur">${Object.entries(E.Config.formats).map(([id, value]) => `<button class="button ${format === id ? "selected" : ""}" type="button" data-match-format="${id}" aria-pressed="${format === id}"><strong>${value.label}</strong><span>${value.regions} régions par joueur</span></button>`).join("")}</div>`;
   }
   function bindFormats(root) {
     root.querySelectorAll("[data-match-format]").forEach(button => button.addEventListener("click", () => selectFormat(button.dataset.matchFormat)));

@@ -470,7 +470,7 @@
   E.Network.init({
     onReady(session) {
       pendingBulkTasks = [];
-      state = E.Board.createState(session.mode === "tutorial" ? E.Config.defaultFormat : session.format || E.Config.defaultFormat);
+      state = E.Board.createState(session.mode === "tutorial" ? "classic" : session.format || E.Config.defaultFormat);
       previousTimestamp = performance.now();
       if (session.mode === "solo") E.AI.prepareSetup(state);
       if (session.mode === "tutorial") E.Tutorial.start(state);

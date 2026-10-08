@@ -177,7 +177,11 @@ async function run() {
   await waitFor("document.querySelector('#xr-start').disabled && document.querySelector('#xr-status').textContent.includes('immersive-ar')");
   await click("#xr-close");
   assert.equal(await evaluate("document.querySelectorAll('[data-menu-screen]').length"), 3);
-  await click('[data-menu-screen="play"]'); await click("#open-multiplayer"); await click("#create-online");
+  await click('[data-menu-screen="play"]');
+  assert.deepEqual(await evaluate("Array.from(document.querySelectorAll('#menu-subcontent [data-match-format] strong'), el => el.textContent)"), ["2 camps", "4 camps"]);
+  assert.equal(await evaluate("document.querySelector('#menu-subcontent [data-match-format].selected').dataset.matchFormat"), "simplified");
+  await click('#menu-subcontent [data-match-format="classic"]');
+  await click("#open-multiplayer"); await click("#create-online");
   await waitFor("Eredita.Network.mode === 'host'");
   const room = await evaluate("Eredita.Network.roomCode");
   const newPage = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, { method: "PUT" }).then((r) => r.json());
@@ -368,7 +372,7 @@ async function run() {
   await guest.evaluate("xrFixture.step(); xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await guest.waitFor("!Eredita.XR.active");
   // Une partie solo peut être préparée puis lancée sans quitter la session immersive.
   await guest.evaluate("Eredita.GameView.returnToLobby()");
-  await guest.click('#main-menu [data-menu-screen="play"]'); await guest.click('#menu-subcontent [data-match-format="simplified"]'); await guest.click("#training-button");
+  await guest.click('#main-menu [data-menu-screen="play"]'); await guest.click("#training-button");
   assert.equal(await guest.evaluate("Eredita.GameView.getState().players.red.villages.length"), 2);
   assert.equal(await guest.evaluate("document.querySelectorAll('[data-biome-choice]').length"), 4);
   await guest.click("#setup-screen [data-open-xr]"); await guest.waitFor("!document.querySelector('#xr-start').disabled");

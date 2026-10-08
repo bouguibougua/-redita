@@ -13,7 +13,7 @@ for (const file of ["config.js", "biomes.js", "crops.js", "livestock.js", "units
 }
 
 const E = global.Eredita;
-const state = E.Board.createState();
+const state = E.Board.createState("classic");
 E.AI.prepareSetup(state);
 assert.equal(state.players.red.setupConfirmed, false);
 assert.equal(state.players.blue.setupConfirmed, true);
@@ -38,7 +38,7 @@ const unitCount = state.units.length;
 assert.equal(E.AI.update(state, step), false);
 assert.equal(state.units.length, unitCount);
 
-const defense = E.Board.createState();
+const defense = E.Board.createState("classic");
 E.AI.prepareSetup(defense);
 defense.phase = "running";
 const intruder = E.Units.create("red", 0, "habitant");
@@ -48,7 +48,7 @@ assert.equal(E.AI.update(defense, step), true);
 assert.ok(defense.units.some((unit) => unit.ownerId === "blue" && unit.stance === "defense" && unit.lane === 0));
 assert.ok(defense.players.red.villages.every((village) => village.population === E.Config.startingPopulation));
 
-const redirect = E.Board.createState();
+const redirect = E.Board.createState("classic");
 E.AI.prepareSetup(redirect);
 redirect.phase = "running";
 redirect.players.red.villages[1].hp = 150;

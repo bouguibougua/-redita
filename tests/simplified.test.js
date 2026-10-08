@@ -25,7 +25,10 @@ for (let i = 0; i < 1000; i++) {
   }
   assert.equal(new Set(Object.values(state.players).flatMap(p => Array.from(p.villages, v => v.biome))).size, 3);
 }
-const classic = E.Board.createState();
+const defaultState = E.Board.createState();
+assert.equal(defaultState.format, "simplified");
+assert.equal(defaultState.players.red.villages.length, 2);
+const classic = E.Board.createState("classic");
 assert.equal(classic.players.red.villages.length, 4); assert.equal(E.Board.getFormat(classic).exchanges, 2);
 assert.equal(new Set(classic.players.red.villages.map(v => v.biome)).size, 3);
 controller.toggleBiome("red", 0); controller.toggleBiome("red", 1);

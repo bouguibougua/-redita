@@ -28,8 +28,8 @@ const root = path.resolve(__dirname, "..");
 
 const E = global.Eredita;
 assert.equal(E.Config.startingGold, 5000);
-assert.equal(E.Board.createState().players.red.gold, 5000);
-assert.equal(E.Board.createState().players.blue.gold, 5000);
+assert.equal(E.Board.createState("classic").players.red.gold, 5000);
+assert.equal(E.Board.createState("classic").players.blue.gold, 5000);
 
 for (let attempt = 0; attempt < 500; attempt += 1) {
   const draw = E.Biomes.createInitialDraw();
@@ -41,7 +41,7 @@ assert.equal(E.Biomes.createSlots("plaine").length, 4);
 assert.deepEqual(E.Biomes.createSlots("montagne").map((slot) => slot.type), ["free", "free", "animal", "animal"]);
 assert.equal(E.Biomes.createSlots("littoral").length, 2);
 
-const cropState = E.Board.createState();
+const cropState = E.Board.createState("classic");
 cropState.phase = "running";
 const cropVillage = cropState.players.red.villages[0];
 cropVillage.biome = "montagne";
@@ -56,7 +56,7 @@ assert.equal(E.Crops.place(cropState, "red", 0, 0, "vignoble"), true);
 assert.equal(cropVillage.slots[0].content.type, "vignoble");
 assert.equal(cropVillage.slots[0].content.hp, E.Config.crops.vignoble.hp);
 
-const freeHerdState = E.Board.createState();
+const freeHerdState = E.Board.createState("classic");
 freeHerdState.phase = "running";
 const freeHerdVillage = freeHerdState.players.red.villages[0];
 freeHerdVillage.biome = "montagne";
@@ -66,7 +66,7 @@ assert.equal(E.Livestock.place(freeHerdState, "red", 0, 2, "chevre"), true);
 assert.equal(freeHerdVillage.slots[2].content.count, E.Config.startingLivestockCount);
 assert.equal(E.Livestock.purchaseQuote(freeHerdState, "red", 0, "chevre").allowed, false);
 
-const missionState = E.Board.createState();
+const missionState = E.Board.createState("classic");
 missionState.phase = "running";
 const missionVillage = missionState.players.red.villages[0];
 missionVillage.biome = "montagne";
@@ -94,7 +94,7 @@ assert.equal(E.Economy.unassignResidentJob(missionState, "red", 0, farmer.id), t
 assert.equal(farmer.mission, "disponible");
 assert.equal(E.Economy.getAvailableResidents(missionState, "red", 0), 4);
 
-const bulkWorkState = E.Board.createState();
+const bulkWorkState = E.Board.createState("classic");
 bulkWorkState.phase = "running";
 const bulkWorkVillage = bulkWorkState.players.red.villages[0];
 bulkWorkVillage.biome = "plaine";
@@ -105,14 +105,14 @@ assert.equal(bulkWorkVillage.residents.every((resident) => resident.mission === 
 assert.equal(bulkWorkVillage.jobs.agriculture, E.Config.startingPopulation);
 assert.equal(E.Economy.getAvailableResidents(bulkWorkState, "red", 0), 0);
 
-const bulkCombatState = E.Board.createState();
+const bulkCombatState = E.Board.createState("classic");
 bulkCombatState.phase = "running";
 assert.equal(E.Economy.assignAllAvailableResidents(bulkCombatState, "blue", 0, "defense"), E.Config.startingPopulation);
 assert.equal(bulkCombatState.players.blue.villages[0].residents.every((resident) => resident.mission === "defense"), true);
 assert.equal(bulkCombatState.units.length, E.Config.startingPopulation);
 assert.equal(E.Economy.getAvailableResidents(bulkCombatState, "blue", 0), 0);
 
-const bulkProfessionState = E.Board.createState();
+const bulkProfessionState = E.Board.createState("classic");
 bulkProfessionState.phase = "running";
 const bulkProfessionVillage = bulkProfessionState.players.red.villages[0];
 bulkProfessionVillage.biome = "plaine";
@@ -137,7 +137,7 @@ assert.deepEqual(E.Config.villageShops.artisanat.tiers[1].map((item) => item.lab
 assert.deepEqual(E.Config.villageShops.boucherie.tiers[3].map((item) => item.label), ["Voilier"]);
 
 // Magasin maritime : déblocages du GDD, limites par Littoral et Filets.
-const maritimeState = E.Board.createState();
+const maritimeState = E.Board.createState("classic");
 maritimeState.phase = "running";
 maritimeState.players.red.gold = 5000;
 const maritimeVillage = maritimeState.players.red.villages[0];
@@ -165,7 +165,7 @@ assert.equal(E.Transport.buy(maritimeState, "red", 0, "voilier"), false);
 assert.equal(E.Transport.fleetCapacity(maritimeVillage), 38);
 
 // Une seule Barque protège deux personnes ; la troisième se noie immédiatement.
-const waterState = E.Board.createState();
+const waterState = E.Board.createState("classic");
 waterState.phase = "running";
 const waterVillage = waterState.players.red.villages[0];
 waterVillage.biome = "littoral";
@@ -183,7 +183,7 @@ waterState.units.forEach((unit) => { unit.position = E.Config.maritime.waterRang
 E.Combat.update(waterState, 0.1);
 assert.equal(waterState.units.every((unit) => unit.waterTransport === null), true);
 
-const drowningState = E.Board.createState();
+const drowningState = E.Board.createState("classic");
 drowningState.phase = "running";
 const drowningVillage = drowningState.players.red.villages[0];
 drowningVillage.biome = "littoral";
@@ -196,7 +196,7 @@ E.Combat.update(drowningState, 0.1);
 assert.equal(drowningState.units.length, 0);
 assert.equal(drowningVillage.population, E.Config.startingPopulation - 1);
 
-const fishingState = E.Board.createState();
+const fishingState = E.Board.createState("classic");
 fishingState.phase = "running";
 const fishingVillage = fishingState.players.red.villages[0];
 fishingVillage.biome = "littoral";
@@ -209,7 +209,7 @@ assert.equal(E.Economy.setProfession(fishingState, "red", 0, fishingVillage.resi
 E.Economy.updateProduction(fishingState, 30);
 assert.equal(fishingVillage.resources.poisson, 2.3);
 
-const huntingState = E.Board.createState();
+const huntingState = E.Board.createState("classic");
 huntingState.phase = "running";
 const huntingVillage = huntingState.players.red.villages[0];
 huntingVillage.biome = "littoral";
@@ -227,7 +227,7 @@ assert.ok(Math.abs(hunter.huntTargetLaneOffset) <= E.Config.temporaryProduction.
 E.Economy.updateProduction(huntingState, E.Config.temporaryProduction.huntingInterval);
 assert.equal(huntingVillage.resources.viande, E.Config.temporaryProduction.huntingSpecialistAmount);
 
-const state = E.Board.createState();
+const state = E.Board.createState("classic");
 assert.equal(state.players.red.villages.length, 4);
 assert.equal(state.players.blue.villages.length, 4);
 assert.equal(state.players.red.villages[0].hp, 200);
@@ -261,7 +261,7 @@ attacker.hp = 0;
 E.Combat.update(state, 0.1);
 assert.equal(redVillage.population, populationBeforeDeath - 1);
 
-const defenseState = E.Board.createState();
+const defenseState = E.Board.createState("classic");
 defenseState.phase = "running";
 assert.equal(E.Buildings.buildT1(defenseState, "red", 0, "artisanat"), true);
 const defenderResident = defenseState.players.red.villages[0].residents[0];
@@ -276,7 +276,7 @@ E.Combat.update(defenseState, 0.1);
 assert.equal(defender.position, guardPosition);
 assert.equal(intruder.hp, intruder.maxHp - defender.damage);
 
-const redirectState = E.Board.createState();
+const redirectState = E.Board.createState("classic");
 redirectState.phase = "running";
 redirectState.players.blue.villages[1].hp = 0;
 redirectState.players.blue.villages[1].destroyed = true;
@@ -290,7 +290,7 @@ assert.equal(E.Combat.chooseRedirect(redirectState, request.key, 0), true);
 E.Combat.update(redirectState, 0.1);
 assert.ok(redirectedUnit.lanePosition < 1 && redirectedUnit.lanePosition > 0);
 
-const victoryState = E.Board.createState();
+const victoryState = E.Board.createState("classic");
 victoryState.phase = "running";
 victoryState.players.blue.villages.forEach((village) => { village.hp = 0; });
 E.Combat.update(victoryState, 0.1);
@@ -298,7 +298,7 @@ assert.equal(victoryState.phase, "ended");
 assert.equal(victoryState.result, "red");
 
 // Un métier n'est ni une obligation pour agir ni un bonus universel.
-const roleState = E.Board.createState();
+const roleState = E.Board.createState("classic");
 roleState.phase = "running";
 const roleVillage = roleState.players.red.villages[0];
 roleVillage.biome = "plaine";
@@ -345,7 +345,7 @@ E.Combat.update(roleState, 0.1);
 assert.equal(roleState.players.blue.villages[0].hp, 200 - 7 - 5);
 
 // Vente : banque locale, lot borné, bonus, stock fractionnaire, aucune duplication.
-const tradeState = E.Board.createState();
+const tradeState = E.Board.createState("classic");
 tradeState.phase = "running";
 const tradeVillage = tradeState.players.red.villages[0];
 tradeVillage.resources.chataigne = 12.5;
@@ -402,7 +402,7 @@ function produceUntil(testState, condition) {
 
 // Une autre culture ou un autre village ne multiplie pas la cargaison de blé.
 for (const fieldCount of [1, 2]) {
-  const harvest = E.Board.createState();
+  const harvest = E.Board.createState("classic");
   harvest.phase = "running";
   const home = harvest.players.red.villages[0];
   home.biome = "plaine";
@@ -429,7 +429,7 @@ for (const fieldCount of [1, 2]) {
 
 // Chaque chèvre/vache compte, pas les cochons ; le lait n'est versé qu'au retour.
 for (const dairyCount of [1, 2]) {
-  const dairy = E.Board.createState();
+  const dairy = E.Board.createState("classic");
   dairy.phase = "running";
   const home = dairy.players.blue.villages[0];
   home.biome = "plaine";
@@ -457,7 +457,7 @@ for (const dairyCount of [1, 2]) {
 
 // Riposte : 5 PV/s pour chaque assaillant, indépendamment du pas de simulation.
 for (const step of [1, 0.25, 0.1]) {
-  const siege = E.Board.createState();
+  const siege = E.Board.createState("classic");
   siege.phase = "running";
   const home = siege.players.red.villages[0];
   const resident = home.residents[0];
@@ -479,7 +479,7 @@ for (const step of [1, 0.25, 0.1]) {
   assert.equal(home.population, E.Config.startingPopulation - 1);
   assert.equal(home.residents.some((item) => item.id === resident.id), false);
 }
-const siege = E.Board.createState();
+const siege = E.Board.createState("classic");
 siege.phase = "running";
 for (const resident of siege.players.blue.villages[0].residents.slice(0, 2)) E.Economy.deployResident(siege, "blue", 0, resident.id, "attaque");
 siege.units.forEach((unit) => { unit.position = 3; });
@@ -490,7 +490,7 @@ E.Combat.update(siege, 0.1);
 assert.ok(siege.units.every((unit) => unit.hp === 45), "Pas de riposte d'un village mort");
 
 // Achat d'un habitant : 50 or et 50 unités de la ressource locale choisie.
-const purchase = E.Board.createState();
+const purchase = E.Board.createState("classic");
 purchase.phase = "running";
 const purchaseVillage = purchase.players.red.villages[0];
 purchaseVillage.resources.raisin = 50;
@@ -504,7 +504,7 @@ assert.equal(purchasedResident.profession, "habitant");
 assert.equal(E.Economy.buyResident(purchase, "red", 0, "raisin"), false);
 
 // Les choix pour les nouveaux habitants restent locaux et actifs jusqu'à modification.
-const nextResidentState = E.Board.createState();
+const nextResidentState = E.Board.createState("classic");
 nextResidentState.phase = "running";
 const nextVillage = nextResidentState.players.red.villages[0];
 assert.equal(nextVillage.nextResidentMission, "disponible");
@@ -528,7 +528,7 @@ assert.equal(nextVillage.nextResidentMission, "disponible");
 assert.equal(nextVillage.nextResidentProfession, "habitant");
 assert.equal(nextResidentState.players.red.villages[1].nextResidentMission, "disponible");
 
-const naturalState = E.Board.createState();
+const naturalState = E.Board.createState("classic");
 naturalState.phase = "running";
 const naturalVillage = naturalState.players.red.villages[0];
 naturalVillage.biome = "littoral";
@@ -542,7 +542,7 @@ assert.equal(naturalVillage.residents.at(-1).mission, "peche");
 assert.equal(naturalVillage.nextResidentMission, "peche");
 assert.equal(naturalVillage.nextResidentProfession, "pecheur");
 
-const unmetState = E.Board.createState();
+const unmetState = E.Board.createState("classic");
 unmetState.phase = "running";
 const unmetVillage = unmetState.players.red.villages[0];
 unmetVillage.biome = "montagne";
@@ -557,7 +557,7 @@ assert.equal(unmetVillage.nextResidentProfession, "pecheur");
 
 // Abattage manuel : rendement par espèce, troupeau recalculé et viande locale.
 for (const [type, expectedMeat] of [["chevre", 4], ["cochon", 8], ["vache", 8]]) {
-  const slaughterState = E.Board.createState();
+  const slaughterState = E.Board.createState("classic");
   slaughterState.phase = "running";
   const slaughterVillage = slaughterState.players.red.villages[0];
   slaughterVillage.biome = "plaine";

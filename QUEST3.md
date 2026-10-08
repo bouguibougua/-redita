@@ -2,7 +2,7 @@
 
 ## Format simplifié et ergonomie — 8 octobre 2026
 
-Le choix Classique (4 régions par joueur) / Simplifié (2) est proposé avant l’entraînement, le local ou la création d’un salon, et directement dans le casque. En Simplifié, les trois biomes sont présents sur le plateau initial, sans doublon par joueur ; un seul échange par camp est permis, contre un autre biome aléatoire. Le nouveau format conserve les règles de jeu et les durées existantes.
+Les boutons « 2 camps » (Simplifié, sélectionné par défaut) et « 4 camps » (Classique) sont proposés avant l’entraînement, le local ou la création d’un salon, et directement dans le casque. En Simplifié, les trois biomes sont présents sur le plateau initial, sans doublon par joueur ; un seul échange par camp est permis, contre un autre biome aléatoire. Le nouveau format conserve les règles de jeu et les durées existantes.
 
 Toutes les fenêtres, y compris placement, manipulation, paramètres, réglages rapides et notifications, se déplacent par leur poignée. Elles apparaissent parallèles au joueur au-dessus du plateau. Le joystick gauche monte/descend dans les habitants ; le droit suit les villages à droite/gauche physiquement, y compris côté Rouge. Les poses restent stables jusqu’au déplacement ou recentrage volontaire.
 

@@ -131,7 +131,7 @@
         title = "Choisir une partie";
         lines = ["EREDITÀ · Choisissez votre aventure"];
         return { title, lines, rows: [
-          Object.entries(E.Config.formats).map(([id, value]) => button(`${value.label} · ${value.regions} régions`, { type: "format", format: id }, true, { centered: true, selected: format === id })),
+          Object.entries(E.Config.formats).map(([id, value]) => button(value.label, { type: "format", format: id }, true, { centered: true, selected: format === id })),
           row(button("Entraînement", { type: "mode", mode: "solo" }, true, { centered: true, large: true, primary: true, detail: "Jouer contre l’IA" })),
           row(button("Local à deux", { type: "mode", mode: "local" }, true, { centered: true, large: true, detail: "Deux joueurs sur le même plateau" }))
         ], options: { variant: "mode", footer: [button("Quitter le mode VR", { type: "exit" }, true, { centered: true }), button("Paramètres", open("settings"), true, { centered: true })] } };

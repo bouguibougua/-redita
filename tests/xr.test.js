@@ -15,14 +15,14 @@ async function run() {
   ["config", "biomes", "board", "transport", "game-view", "xr-input", "xr-placement", "xr-interactions"].forEach((name) => vm.runInContext(read(`js/${name}.js`), context));
   const E = context.window.Eredita;
   const cfg = E.Config.xr;
-  let state = E.Board.createState();
+  let state = E.Board.createState("classic");
   const calls = [];
   E.Network = { playerId: "blue" };
   E.GameView.init({ getState: () => state, controller: { selectVillage: (...args) => calls.push(args) } });
   assert.equal(E.GameView.getPlayerId(), "blue");
   state.players.blue.villages[1].resources.lait = 17;
   assert.equal(E.GameView.villageInfo("blue", 1).resources.find((r) => r.label === "Lait").amount, 17);
-  state = E.Board.createState(); // Le réseau remplace réellement sa référence d'état.
+  state = E.Board.createState("classic"); // Le réseau remplace réellement sa référence d'état.
   state.players.blue.villages[1].hp = 123;
   assert.equal(E.GameView.villageInfo("blue", 1).hp, 123);
   assert.equal(E.GameView.selectVillage("blue", 1), true);

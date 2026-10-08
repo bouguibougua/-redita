@@ -7,10 +7,10 @@
   // prototype, mais ne constituent pas une règle validée du Game Design.
   window.Eredita.Config = {
     normalDuration: 750,
-    defaultFormat: "classic",
+    defaultFormat: "simplified",
     formats: {
-      classic: { label: "Classique", regions: 4, exchanges: 2 },
-      simplified: { label: "Simplifié", regions: 2, exchanges: 1 }
+      simplified: { label: "2 camps", regions: 2, exchanges: 1 },
+      classic: { label: "4 camps", regions: 4, exchanges: 2 }
     },
     // TEMP_BALANCE_VALUE — dimensions visuelles du plateau, sans effet sur les distances logiques.
     board: { laneSpacing: 3, baseMargin: 1.3, rimMargin: 1.65 },
