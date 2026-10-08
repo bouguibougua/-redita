@@ -1,0 +1,70 @@
+"use strict";
+const assert = require("node:assert/strict"), fs = require("node:fs"), path = require("node:path"), vm = require("node:vm");
+const root = path.resolve(__dirname, "..");
+function game(mode = "local", format = "simplified") {
+  let now = 0, controller, handlers, frame, snapshot;
+  const rng = Object.create(Math);
+  const ctx = vm.createContext({ window: {}, console, Math: rng, performance: { now: () => now }, document: { querySelector: () => null }, requestAnimationFrame() {} });
+  for (const name of ["config", "biomes", "crops", "livestock", "equipment", "units", "buildings", "transport", "animals", "economy", "board", "combat", "ai", "game-view"]) vm.runInContext(fs.readFileSync(path.join(root, "js", name + ".js"), "utf8"), ctx);
+  const E = ctx.window.Eredita;
+  E.Network = { mode, playerId: mode === "guest" ? "blue" : mode === "host" || mode === "solo" ? "red" : null, init(value) { handlers = value; }, sendState(state) { snapshot = JSON.parse(JSON.stringify(state)); }, sendCommand() { return true; } };
+  E.UI = { init(value) { controller = value; }, render() {}, renderFrame() {} };
+  E.Board3D = { ready: true, init(value) { frame = value.onFrame; }, update() {} };
+  vm.runInContext(fs.readFileSync(path.join(root, "js/game.js"), "utf8"), ctx);
+  handlers.onReady({ mode, format });
+  return { E, controller, handlers, rng, get state() { return E.GameView.getState(); }, get snapshot() { return snapshot; }, advance(seconds) { for (let i = 0; i < seconds * 16; i++) { now += 62.5; frame(now); } } };
+}
+const g = game(), { E, controller } = g;
+for (let i = 0; i < 1000; i++) {
+  const state = E.Board.createState("simplified");
+  assert.equal(state.players.red.villages.length, 2); assert.equal(state.players.blue.villages.length, 2);
+  for (const player of Object.values(state.players)) {
+    assert.equal(new Set(player.villages.map(v => v.biome)).size, 2);
+    assert.deepEqual(Array.from(player.villages, v => v.lane), [0, 1]);
+    assert.ok(player.villages.every(v => v.slots.every(slot => slot.content === null)));
+  }
+  assert.equal(new Set(Object.values(state.players).flatMap(p => Array.from(p.villages, v => v.biome))).size, 3);
+}
+const classic = E.Board.createState();
+assert.equal(classic.players.red.villages.length, 4); assert.equal(E.Board.getFormat(classic).exchanges, 2);
+assert.equal(new Set(classic.players.red.villages.map(v => v.biome)).size, 3);
+controller.toggleBiome("red", 0); controller.toggleBiome("red", 1);
+assert.deepEqual(Array.from(g.state.players.red.setupSelection), [1], "Choisir un autre biome remplace la sélection en un clic");
+assert.equal(controller.toggleBiome("red", 3), false);
+g.state.players.red.villages[0].biome = "montagne"; g.state.players.red.villages[1].biome = "plaine";
+g.rng.random = () => 0; controller.confirmBiomes("red", "exchange"); delete g.rng.random;
+assert.equal(g.state.players.red.villages[1].biome, "montagne", "Après échange, un autre biome quelconque est permis, même déjà présent");
+assert.equal(g.state.players.red.setupConfirmed, true);
+controller.confirmBiomes("blue", "keep"); controller.start();
+assert.equal(g.state.preparationRemaining, 60); g.advance(60); assert.equal(g.state.elapsed, 0);
+g.state.players.blue.villages[0].hp = 0; E.Combat.update(g.state, 0.1);
+assert.equal(g.state.phase, "running", "Un seul village détruit ne suffit pas");
+controller.selectVillage("red", 0);
+const resident = g.state.players.red.villages[0].residents[0];
+controller.assignResidentMission(resident.id, "attaque");
+const unit = g.state.units.find(u => u.residentId === resident.id); assert.ok(unit);
+unit.position = 100; E.Combat.update(g.state, 0.1);
+assert.ok(unit.lanePosition > 0 && unit.lanePosition < 1, "Redirection progressive vers la seule autre ligne");
+g.state.players.blue.villages[1].hp = 0; E.Combat.update(g.state, 0.1);
+assert.equal(g.state.result, "red"); assert.equal(g.state.phase, "ended");
+controller.restart(); assert.equal(g.state.format, "simplified"); assert.equal(g.state.players.red.villages.length, 2);
+assert.equal(g.state.preparationRemaining, 0);
+const tie = game(); tie.state.phase = "running";
+Object.values(tie.state.players).forEach(p => p.villages.forEach(v => { v.hp = 0; }));
+tie.E.Combat.update(tie.state, 0.1); assert.equal(tie.state.result, "draw");
+const solo = game("solo"); assert.equal(solo.state.players.blue.setupConfirmed, true);
+solo.controller.confirmBiomes("red", "keep"); solo.controller.start(); solo.advance(61);
+assert.ok(solo.state.players.blue.villages.some(v => v.buildings.length));
+assert.ok(solo.state.units.every(u => u.lane < 2 && u.originLane < 2));
+const host = game("host");
+host.controller.confirmBiomes("red", "keep");
+host.handlers.onCommand({ method: "confirmBiomes", args: ["blue", "keep"], playerId: "blue", view: { selectedVillage: { playerId: "blue", lane: 1 } } });
+host.controller.start();
+host.handlers.onCommand({ method: "build", args: ["bergerie"], playerId: "blue", view: { selectedVillage: { playerId: "blue", lane: 1 } } });
+assert.ok(host.state.players.blue.villages[1].buildings.some(b => b.type === "bergerie"));
+assert.equal(host.snapshot.format, "simplified");
+const guest = game("guest", "classic"); guest.controller.selectVillage("blue", 3);
+guest.handlers.onState(host.snapshot);
+assert.equal(guest.state.format, "simplified"); assert.equal(guest.state.selectedVillage.playerId, "blue"); assert.equal(guest.state.selectedVillage.lane, 0);
+assert.equal(guest.state.players.blue.villages.length, 2);
+console.log("Simplifié : tirages, échange unique, doublons après échange, préparation, victoire, redirection, égalité, IA, reprise et snapshots réseau validés.");

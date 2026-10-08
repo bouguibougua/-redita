@@ -99,7 +99,7 @@ Le prototype propose un mode local à deux joueurs sur un même écran, un mode 
 
 TEMP_BALANCE_VALUE : la stratégie de l'IA est provisoire. Elle plante une culture compatible, construit un Artisanat, affecte un habitant à l'agriculture, forme des Guerriers, attaque et défend les lignes menacées avec ses habitants disponibles. Sa cadence de décision, ses réserves et ses limites d'unités sont centralisées dans `config.js`. Elle ne dispose d'aucune ressource ou statistique supplémentaire.
 
-Chaque joueur possède :
+Dans le format **Classique**, chaque joueur possède :
 
 * 4 régions ;
 * 4 villages ;
@@ -125,13 +125,21 @@ R4 ↔ B4
 
 Chaque colonne constitue donc un axe d'affrontement.
 
+## 3.1 Format simplifié — deux régions par joueur
+
+Le format **Simplifié** est un choix supplémentaire, proposé sur écran et dans le casque pour l’entraînement et le local ; l’hôte le choisit aussi avant de créer un salon réseau. Il possède **deux régions et deux villages par joueur**, donc quatre régions au total et deux lignes d’affrontement. Le format Classique et le tutoriel conservent quatre régions par joueur.
+
+Au tirage initial, chaque joueur reçoit deux biomes différents. L’ensemble des quatre régions contient obligatoirement au moins une Plaine, une Montagne et un Littoral. La répartition et l’ordre des régions sont aléatoires. Chaque joueur peut ensuite conserver son tirage ou échanger **une seule région**, une seule fois avant confirmation. Choisir une autre région déplace la sélection en un clic. Le nouveau biome est aléatoire parmi les autres types, même si le joueur possède déjà ce biome : les contraintes initiales ne sont pas réappliquées après échange.
+
+Le format reste dans l’état autoritaire et les snapshots réseau ; un redémarrage conserve le format choisi. Les coûts, ressources, métiers, tâches, decks, statistiques, minute de préparation, 12:30 de combat, Overtime et règles de génération par nombre de villages vivants restent identiques. La carte 2D/3D, les fiches et la navigation ne montrent que les villages existants. Les unités progressent sur deux lignes et sont redirigées vers l’autre village vivant suivant les règles existantes.
+
 ---
 
 # 4. CONDITION DE VICTOIRE
 
-L'objectif principal est de détruire les 4 villages adverses.
+L’objectif principal est de détruire tous les villages adverses : quatre en Classique, deux en Simplifié.
 
-Un joueur qui perd ses 4 villages perd la partie.
+Un joueur qui perd tous ses villages perd la partie.
 
 Une situation où les deux joueurs perdent leur dernier village simultanément peut provoquer une égalité.
 
@@ -199,7 +207,7 @@ Chaque région possède un biome.
 
 # 7. GÉNÉRATION DES BIOMES EN DÉBUT DE PARTIE
 
-Au début d'une partie, chaque joueur reçoit 4 biomes.
+En format Classique, chaque joueur reçoit 4 biomes. Le tirage du format Simplifié est décrit en section 3.1.
 
 Le premier tirage doit obligatoirement contenir au minimum :
 
@@ -230,7 +238,7 @@ Il peut décider d'en conserver la totalité.
 
 Il peut également sélectionner jusqu'à :
 
-**2 biomes maximum**
+**2 biomes maximum en Classique, 1 seul en Simplifié**
 
 qu'il souhaite remplacer.
 
@@ -421,7 +429,7 @@ Chaque joueur possède un village par région.
 
 Donc :
 
-**4 villages par joueur.**
+**4 villages par joueur en Classique, 2 en Simplifié.**
 
 Chaque village possède :
 
@@ -573,7 +581,7 @@ buildingUpgradeCosts = {
 
 # 21. ÉCONOMIE : PRINCIPE IMPORTANT
 
-Les ressources ne sont PLUS partagées entre les quatre villages.
+Les ressources ne sont PLUS partagées entre les villages.
 
 Chaque village possède sa propre banque locale.
 
@@ -644,7 +652,7 @@ L'or est donc :
 
 **GLOBAL**
 
-Chaque joueur commence une nouvelle partie avec **5 000 or**, partagés entre ses quatre villages.
+Chaque joueur commence une nouvelle partie avec **5 000 or**, partagés entre ses villages.
 
 alors que les autres ressources sont :
 
@@ -2077,7 +2085,7 @@ Le magasin ne doit pas nécessairement être une grande interface indépendante.
 
 Le système d'achat est intégré au village.
 
-La boutique s'ouvre depuis le panneau latéral et permet de naviguer entre les quatre villages du joueur sans la fermer. Elle comporte quatre colonnes sur grand écran : vente des six ressources locales du village sélectionné, Bergerie, Artisanat et Boucherie. L'or gagné par la vente reste global. Le choix de l'habitant à équiper et son équipement actuel apparaissent sous les ressources à vendre, dans la première colonne ; les articles de l'Artisanat restent dans la troisième colonne. Un clic en dehors de la fenêtre ferme la boutique, tout comme le bouton rouge « Retour ». Chaque échoppe exige le bâtiment associé et chaque rayon exige son bon tier. La Bergerie T1 débloque Chèvre, Cochon et Vache, T2 l'Âne, T3 Chien et Sanglier. L'Artisanat T1 débloque Barque et équipement en bois, T2 équipement en bronze et Piège, T3 Piège défensif et équipement en fer. La Boucherie T1 débloque Filet de pêche et Barque, T2 Piège de chasse, T3 Voilier. Barque, Voilier, Filet, chèvres, cochons, vaches, ânes, chiens, sangliers, outils et armures sont achetables et fonctionnels ; les éléments dont la mécanique n'est pas encore implémentée restent visibles mais non achetables. La liste « Compagnons du village » de la Bergerie permet de commander séparément chiens et sangliers et d'en consulter les PV. Le malus de reproduction actif est indiqué directement dans l'enclos touché.
+La boutique s'ouvre depuis le panneau latéral et permet de naviguer entre les villages du joueur sans la fermer. Elle comporte quatre colonnes sur grand écran : vente des six ressources locales du village sélectionné, Bergerie, Artisanat et Boucherie. L'or gagné par la vente reste global. Le choix de l'habitant à équiper et son équipement actuel apparaissent sous les ressources à vendre, dans la première colonne ; les articles de l'Artisanat restent dans la troisième colonne. Un clic en dehors de la fenêtre ferme la boutique, tout comme le bouton rouge « Retour ». Chaque échoppe exige le bâtiment associé et chaque rayon exige son bon tier. La Bergerie T1 débloque Chèvre, Cochon et Vache, T2 l'Âne, T3 Chien et Sanglier. L'Artisanat T1 débloque Barque et équipement en bois, T2 équipement en bronze et Piège, T3 Piège défensif et équipement en fer. La Boucherie T1 débloque Filet de pêche et Barque, T2 Piège de chasse, T3 Voilier. Barque, Voilier, Filet, chèvres, cochons, vaches, ânes, chiens, sangliers, outils et armures sont achetables et fonctionnels ; les éléments dont la mécanique n'est pas encore implémentée restent visibles mais non achetables. La liste « Compagnons du village » de la Bergerie permet de commander séparément chiens et sangliers et d'en consulter les PV. Le malus de reproduction actif est indiqué directement dans l'enclos touché.
 
 Chaque achat d'animal ajoute **un animal** à un enclos vivant de la même espèce, choisi au hasard **dans le village sélectionné**. S'il n'existe aucun enclos compatible, un emplacement libre autorisant les animaux est choisi au hasard pour en créer un. Aucune culture ni autre espèce n'est remplacée. S'il n'y a pas de place, l'achat est bloqué sans dépense. Les dégâts du troupeau et sa progression de reproduction sont conservés. TEMP_BALANCE_VALUE : achat d'une chèvre **50 or**, d'un cochon **65 or**, d'une vache **90 or**, avec Bergerie T1 minimum. Le placement direct d'un élevage est disponible sans Bergerie dans un emplacement libre compatible, selon les règles provisoires du prototype.
 
@@ -2093,7 +2101,7 @@ Vendre les ressources locales
 
 Le panneau élargi et repliable occupe toute la largeur sous le plateau et comporte quatre colonnes : habitants du village et statut de présence/mission ; tâches ; attribution d'un métier ; gestion du village et de ses bâtiments (construction et amélioration). Chaque tâche propose aussi **« Attribuer à tous »** : la commande affecte uniquement les habitants sans tâche, actuellement disponibles dans le village, un par un à **0,5 seconde d'intervalle** ; elle ne remplace jamais une tâche existante. Chaque métier possède la même commande, qui affecte uniquement les habitants sans métier et ne remplace jamais une spécialité existante. **« Retirer les tâches à tous »** libère progressivement tous les habitants affectés aux tâches économiques, sans changer leur métier. **« Retirer les métiers à tous »** retire les spécialités de tous les habitants locaux, y compris ceux qui travaillent, sans changer leur tâche. Ces deux retraits groupés ignorent toujours les habitants engagés en attaque ou en défense. Les métiers dont le bâtiment requis manque restent inaccessibles. À côté des commandes groupées, chaque tâche et chaque métier possède un bouton vert **« Attribuer aux prochain »**. Chaque village mémorise une tâche et un métier pour tous les habitants qui y apparaissent ensuite, par génération naturelle ou achat. Les choix restent actifs jusqu'à ce que le joueur en sélectionne d'autres. Les choix par défaut au début de la partie sont **« Rendre disponible »** et **« Sans métier »**. Le métier est appliqué avant la tâche ; si une condition d'accès manque à l'arrivée, le choix concerné ne s'applique pas et l'habitant conserve son état de base. Un encadré **bleu** et une étoile signalent un bonus de métier. Un encadré **jaune** signale le métier équipé ou la tâche active ; si cette tâche est aussi boostée, un liseré bleu intérieur reste visible. L'habitant sélectionné est entouré d'une lumière jaune dans la liste et sur le plateau 2D/3D. Les pêcheurs affectés ensemble restent visibles individuellement. La vente des ressources locales se fait dans la première colonne de la boutique. Informations, cultures et élevages restent à droite. Sur petit écran, les colonnes de gestion se réorganisent et les informations passent sous le plateau.
 
-La sélection ne se fait plus en cliquant sur le terrain. Les huit boutons Rouge V1 à V4 et Bleu V1 à V4, avec biome, PV et tier, se trouvent sous « Ouvrir la boutique ». La carte 2D/3D sert uniquement à visualiser la partie : ses villages et emplacements ne sont pas des boutons. Le temps restant apparaît en haut au centre de la carte. Dans le panneau latéral, un groupe unique de quatre boutons **Slot 1 à 4** remplace les listes séparées de cultures et d'élevages. Cliquer sur un slot ouvre juste sous ces boutons les cultures compatibles avec son biome et, si le slot l'autorise, les élevages disponibles. Un clic sur un type place directement le contenu ; un slot occupé par un élevage donne accès à l'abattage. Les slots inexistants sont grisés. Le Littoral ne possède toujours que deux slots.
+La sélection ne se fait plus en cliquant sur le terrain. Les boutons Rouge et Bleu V1 à V4 en Classique ou V1 à V2 en Simplifié, avec biome, PV et tier, se trouvent sous « Ouvrir la boutique ». La carte 2D/3D sert uniquement à visualiser la partie : ses villages et emplacements ne sont pas des boutons. Le temps restant apparaît en haut au centre de la carte. Dans le panneau latéral, un groupe unique de quatre boutons **Slot 1 à 4** remplace les listes séparées de cultures et d'élevages. Cliquer sur un slot ouvre juste sous ces boutons les cultures compatibles avec son biome et, si le slot l'autorise, les élevages disponibles. Un clic sur un type place directement le contenu ; un slot occupé par un élevage donne accès à l'abattage. Les slots inexistants sont grisés. Le Littoral ne possède toujours que deux slots.
 
 Huit fiches compactes restent superposées en permanence à la carte, une par village. Chacune affiche ses points de vie, sa population, le nombre d'habitants disponibles et ses six stocks locaux : blé, châtaigne, raisin, viande, poisson et lait. La fiche du village sélectionné est mise en évidence. Ces fiches sont communes aux vues 2D et 3D et restent purement informatives.
 
@@ -2111,7 +2119,7 @@ TEMP_BALANCE_VALUE visuelle : lorsqu’un village reçoit un coup, une fumée an
 
 TEMP_BALANCE_VALUE visuelle : en 3D, une unité bascule légèrement vers l'avant lorsqu'elle porte un coup et clignote une fois en rouge lorsqu'elle reçoit l'impact appliqué chaque seconde. À sa mort, sa figurine reste brièvement visible, prend une teinte rouge à **70 %**, tombe sur le côté, puis sa disparition produit une petite fumée. Les durées, le nombre de particules et les angles sont centralisés dans `config.js`. Ces animations n'affectent ni les dégâts, ni le moment où l'unité est retirée de la simulation.
 
-Le plateau principal possède désormais un rendu **Three.js 3D** qui représente les huit régions, leurs biomes, villages, bâtiments T1/T2/T3, cultures, élevages, habitants et unités. Les chasseurs itinérants et la fumée des structures attaquées sont visibles dans les deux rendus. La caméra peut tourner et zoomer ; la sélection du village passe par la barre de boutons hors carte afin que les vues 2D et 3D partagent exactement la même navigation. La simulation, l'économie, le combat et le multijoueur restent indépendants du rendu : l'état JavaScript actuel demeure la source de vérité. Une vue 2D reste accessible comme solution de repli et pour l'accessibilité. Cette séparation doit permettre d'ajouter WebXR/AR ultérieurement sans réécrire les règles du jeu.
+Le plateau principal possède désormais un rendu **Three.js 3D** qui représente les régions du format choisi, leurs biomes, villages, bâtiments T1/T2/T3, cultures, élevages, habitants et unités. Les chasseurs itinérants et la fumée des structures attaquées sont visibles dans les deux rendus. La caméra peut tourner et zoomer ; la sélection du village passe par la barre de boutons hors carte afin que les vues 2D et 3D partagent exactement la même navigation. La simulation, l'économie, le combat et le multijoueur restent indépendants du rendu : l'état JavaScript actuel demeure la source de vérité. Une vue 2D reste accessible comme solution de repli et pour l'accessibilité. Cette séparation doit permettre d'ajouter WebXR/AR ultérieurement sans réécrire les règles du jeu.
 
 ---
 
@@ -2420,11 +2428,12 @@ Les éléments suivants doivent être considérés comme des règles actuelles :
 
 * jeu 1v1 ;
 * temps réel ;
-* 4 villages par joueur ;
-* 4 régions par joueur ;
+* 4 villages par joueur en Classique, 2 en Simplifié ;
+* 4 régions par joueur en Classique, 2 en Simplifié ;
 * Montagne/Plaine/Littoral ;
-* au moins un biome de chaque au premier tirage ;
-* possibilité d'échanger jusqu'à 2 biomes ;
+* Classique : au moins un biome de chaque par joueur au premier tirage ;
+* Simplifié : trois types présents sur les quatre régions initiales, sans doublon chez un joueur ;
+* possibilité d’échanger jusqu’à 2 biomes en Classique, 1 en Simplifié ;
 * après échange, doublons totalement autorisés ;
 * Plaine = 4 slots libres ;
 * Montagne = 4 slots dont 2 réservés aux animaux ;
@@ -2458,7 +2467,7 @@ Les éléments suivants doivent être considérés comme des règles actuelles :
 * Habitant = 20 secondes pour une colonne ;
 * Chasseur = 50 % plus rapide ;
 * redirection militaire après destruction d'un village ;
-* victoire après destruction des 4 villages.
+* victoire après destruction de tous les villages adverses (4 ou 2 selon le format).
 
 ---
 
@@ -2704,15 +2713,15 @@ La première sélection ultérieure d'une Montagne ou d'un Littoral déclenche u
 
 # 94. RÉALITÉ MIXTE — INTERFACE JOUABLE QUEST 3
 
-La réalité mixte est une représentation supplémentaire de l'état existant, avec Three.js et une session WebXR **immersive-ar** sur fond transparent. Elle conserve les huit régions, les huit villages, les biomes, les emplacements et les littoraux orientés vers l'adversaire. Le menu HTML et les modes entraînement, local et salons sont conservés. Le mode entraînement ou local peut être choisi directement dans le casque ; le code du salon en ligne se saisit dans Quest Browser. La préparation et la partie peuvent ensuite être pilotées avec les contrôleurs sans revenir à l'interface classique. Les commandes XR appellent les mêmes fonctions métier que le desktop ; les règles et la simulation restent communes.
+La réalité mixte est une représentation supplémentaire de l'état existant, avec Three.js et une session WebXR **immersive-ar** sur fond transparent. Elle conserve les régions et villages du format choisi, les biomes, les emplacements et les littoraux orientés vers l'adversaire. Le menu HTML et les modes entraînement, local et salons sont conservés. Le mode entraînement ou local peut être choisi directement dans le casque ; le code du salon en ligne se saisit dans Quest Browser. La préparation et la partie peuvent ensuite être pilotées avec les contrôleurs sans revenir à l'interface classique. Les commandes XR appellent les mêmes fonctions métier que le desktop ; les règles et la simulation restent communes.
 
 Le joueur confirme lui-même le placement sur sa table avec la gâchette de l’un des deux contrôleurs ou A. Une surface détectée n'est pas automatiquement identifiée comme une table. Un aperçu transparent et un repère précèdent le placement ; si le hit-test n'est pas disponible, un plan manuel à hauteur réglable permet le même placement. La largeur initiale est d'environ **80 cm**, configurable. Le côté du joueur Rouge ou Bleu est orienté vers sa position initiale. Le socle et tous les éléments suivent un seul groupe de transformation.
 
-Un mode manipulation explicite, ouvert par les réglages, permet déplacement, rotation, taille et recentrage du plateau. En dehors de ce mode, les préhensions et joysticks ne déplacent pas le plateau. Une préhension déplace le plateau ; deux préhensions permettent rotation et redimensionnement. Sur les profils Touch reconnus, les deux gâchettes index et A ont exactement le même rôle : valider le placement, activer le bouton visé ou sélectionner le village visé ; B revient ou annule une saisie, X masque/affiche la gestion et Y ouvre/ferme la boutique. En partie, le joystick gauche vertical parcourt les habitants du village sélectionné (haut : suivant, bas : précédent), le joystick droit horizontal change de village dans le camp actuellement sélectionné (droite : suivant, gauche : précédent). Ces raccourcis fonctionnent aussi dans la boutique. Dans les autres menus, les joysticks servent à la navigation. Les commandes système ne sont pas utilisées.
+Un mode manipulation explicite, ouvert par les réglages, permet déplacement, rotation, taille et recentrage du plateau. En dehors de ce mode, les préhensions et joysticks ne déplacent pas le plateau. Une préhension déplace le plateau ; deux préhensions permettent rotation et redimensionnement. Sur les profils Touch reconnus, les deux gâchettes index et A ont exactement le même rôle : valider le placement, activer le bouton visé ou sélectionner le village visé ; B revient ou annule une saisie, X masque/affiche la gestion et Y ouvre/ferme la boutique. En partie, le joystick gauche vertical parcourt les habitants du village sélectionné (haut : précédent, bas : suivant), le joystick droit horizontal change de village dans le camp actuellement sélectionné (droite et gauche : village dans la direction physique correspondante sur le plateau, en tenant compte de son orientation Rouge/Bleu et de la rotation choisie). Ces raccourcis fonctionnent aussi dans la boutique. Dans les autres menus, les joysticks servent à la navigation. Les commandes système ne sont pas utilisées.
 
-Les quatre fenêtres de gestion sont Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite et Gestion du village en bas à droite. Cette dernière réunit les stocks locaux, les constructions, les améliorations et les accès aux parcelles, ventes et boutique. Les menus apparaissent droits face au joueur, à hauteur du regard, sans inclinaison globale vers la table. En partie, seules les fiches supérieures des villages, des ors et du chronomètre sont légèrement inclinées vers le joueur pour faciliter la lecture ; leurs angles sont configurables. Toutes ces fenêtres et fiches ont des coins arrondis et une poignée supérieure saisissable avec la préhension. La main déplace et oriente la fenêtre ; pendant la saisie, le joystick vertical ajuste sa distance et l’horizontal sa taille. B annule la pose en cours. Les clics sont neutralisés pendant la saisie et brièvement après relâchement. Les poses restent stables dans l’espace durant la session, sans suivi permanent de la tête. Les paramètres et X maintenu permettent de récupérer les fenêtres devant soi. Dès le menu « Choisir une partie », pendant le choix des decks/biomes, pendant la minute de préparation et en partie, les paramètres proposent « Agrandir les fenêtres », « Réduire les fenêtres » et « Replacer le plateau » sur un seul écran. L’échelle globale agrandit aussi les espacements pour préserver la disposition ; l’ajustement individuel inclut le menu et les paramètres. Réinitialiser restaure la taille et la disposition initiales. Le replacement demande une nouvelle validation ; B restaure la pose précédente. Ces réglages spatiaux n’altèrent pas la préparation ni le temps de combat, qui continuent selon l’état de pause existant. Le thème reprend les couleurs du site : surfaces sombres, accents dorés et cartes de biome colorées.
+Les quatre fenêtres de gestion sont Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite et Gestion du village en bas à droite. Cette dernière réunit les stocks locaux, les constructions, les améliorations et les accès aux parcelles, ventes et boutique. Toutes les fenêtres apparaissent par défaut dans un même plan vertical centré au-dessus du plateau, à hauteur du regard, parallèle au joueur. Elles ne sont ni inclinées vers la table, ni orientées en éventail. Les fenêtres de gestion, menus, fiches de village, ors, chronomètre, paramètres, notifications et panneau de placement/manipulation possèdent tous une poignée supérieure saisissable avec la préhension. Les poses personnalisées restent conservées pendant la session. La saisie d’une fenêtre de réglage neutralise la manipulation du plateau pendant le geste. La main déplace et oriente la fenêtre ; pendant la saisie, le joystick vertical ajuste sa distance et l’horizontal sa taille. B annule la pose en cours. Les clics sont neutralisés pendant la saisie et brièvement après relâchement. Les poses restent stables dans l’espace durant la session, sans suivi permanent de la tête. Les paramètres et X maintenu permettent de récupérer les fenêtres devant soi. Dès le menu « Choisir une partie », pendant le choix des decks/biomes, pendant la minute de préparation et en partie, les paramètres proposent « Agrandir les fenêtres », « Réduire les fenêtres » et « Replacer le plateau » sur un seul écran. L’échelle globale agrandit aussi les espacements pour préserver la disposition ; l’ajustement individuel inclut le menu et les paramètres. Réinitialiser restaure la taille et la disposition initiales. Le replacement demande une nouvelle validation ; B restaure la pose précédente. Ces réglages spatiaux n’altèrent pas la préparation ni le temps de combat, qui continuent selon l’état de pause existant. Le thème reprend les couleurs du site : surfaces sombres, accents dorés et cartes de biome colorées.
 
-Un clic à la gâchette directement sur un village ou sa fiche le sélectionne et affiche les quatre fenêtres de gestion, avec les scores et le chronomètre en haut. Les menus XR donnent accès aux missions individuelles et collectives, métiers, constructions et améliorations, cultures, élevages, ventes, achats et compagnons, sous réserve des mêmes conditions que sur desktop. Après placement, le menu « Choisir une partie » propose de grands boutons centrés et « Quitter le mode VR ». L’entraînement ouvre un seul écran de préparation avec trois decks et quatre cartes de biome, « Retour » en bas à gauche et « Lancer la partie » en bas à droite. Lancer confirme le tirage conservé ou applique les échanges sélectionnés, puis démarre lorsque les deux camps sont prêts. Le local prépare chaque joueur successivement ; l’invité réseau confirme son tirage et attend le lancement de l’hôte. Le bouton d’échange permet aussi de consulter le tirage final avant lancement. Ces actions utilisent les commandes existantes et conservent toutes les restrictions de préparation. Les données se mettent à jour depuis la même simulation ou les mêmes snapshots réseau que le desktop. La position et l'orientation spatiales restent propres à chaque casque ; la largeur choisie par l'hôte est communiquée à l'invité sans modifier les unités logiques du jeu. L'invité peut placer localement son plateau mais ne peut pas le redimensionner ni entrer dans sa manipulation.
+Un clic à la gâchette directement sur un village ou sa fiche le sélectionne et affiche les quatre fenêtres de gestion, avec les scores et le chronomètre en haut. Les menus XR donnent accès aux missions individuelles et collectives, métiers, constructions et améliorations, cultures, élevages, ventes, achats et compagnons, sous réserve des mêmes conditions que sur desktop. Après placement, le menu « Choisir une partie » propose de grands boutons centrés et « Quitter le mode VR ». Le menu propose les formats Classique et Simplifié. L’entraînement ouvre un seul écran de préparation avec trois decks et deux ou quatre cartes de biome selon le format, « Retour » en bas à gauche et « Lancer la partie » en bas à droite. Lancer confirme le tirage conservé ou applique les échanges sélectionnés, puis démarre lorsque les deux camps sont prêts. Le local prépare chaque joueur successivement ; l’invité réseau confirme son tirage et attend le lancement de l’hôte. Le bouton d’échange permet aussi de consulter le tirage final avant lancement. Ces actions utilisent les commandes existantes et conservent toutes les restrictions de préparation. Les données se mettent à jour depuis la même simulation ou les mêmes snapshots réseau que le desktop. La position et l'orientation spatiales restent propres à chaque casque ; la largeur choisie par l'hôte est communiquée à l'invité sans modifier les unités logiques du jeu. L'invité peut placer localement son plateau mais ne peut pas le redimensionner ni entrer dans sa manipulation.
 
 Une ancre non persistante est utilisée si disponible. Sans ancre, le plateau reste dans le repère de la session ; un changement d'origine impose un nouveau placement. Aucune restauration spatiale entre sessions n'est promise. Les valeurs de confort et les limites provisoires sont centralisées dans `Config.xr` avec la mention `TEMP_BALANCE_VALUE`.
 

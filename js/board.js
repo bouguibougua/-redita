@@ -28,8 +28,7 @@
     };
   }
 
-  function createPlayer(id, name) {
-    const draw = E.Biomes.createInitialDraw();
+  function createPlayer(id, name, draw = E.Biomes.createInitialDraw()) {
     const player = {
       id,
       name,
@@ -75,8 +74,16 @@
     return player;
   }
 
-  function createState() {
+  function getFormat(stateOrId) {
+    const id = typeof stateOrId === "string" ? stateOrId : stateOrId?.format;
+    return E.Config.formats[id] || E.Config.formats[E.Config.defaultFormat];
+  }
+
+  function createState(format = E.Config.defaultFormat) {
+    if (!E.Config.formats[format]) format = E.Config.defaultFormat;
+    const draw = format === "simplified" ? E.Biomes.createSimplifiedDraw() : null;
     return {
+      format,
       phase: "setup",
       paused: false,
       elapsed: 0,
@@ -84,8 +91,8 @@
       overtimeAccumulator: 0,
       xrBoardWidth: null,
       players: {
-        red: createPlayer("red", "Joueur Rouge"),
-        blue: createPlayer("blue", "Joueur Bleu")
+        red: createPlayer("red", "Joueur Rouge", draw?.red),
+        blue: createPlayer("blue", "Joueur Bleu", draw?.blue)
       },
       units: [],
       unitDeathEffects: [],
@@ -100,5 +107,5 @@
     };
   }
 
-  E.Board = { createState };
+  E.Board = { createState, getFormat };
 }());

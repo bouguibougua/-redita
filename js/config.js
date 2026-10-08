@@ -7,6 +7,13 @@
   // prototype, mais ne constituent pas une règle validée du Game Design.
   window.Eredita.Config = {
     normalDuration: 750,
+    defaultFormat: "classic",
+    formats: {
+      classic: { label: "Classique", regions: 4, exchanges: 2 },
+      simplified: { label: "Simplifié", regions: 2, exchanges: 1 }
+    },
+    // TEMP_BALANCE_VALUE — dimensions visuelles du plateau, sans effet sur les distances logiques.
+    board: { laneSpacing: 3, baseMargin: 1.3, rimMargin: 1.65 },
     preparation: {
       duration: 60,
       // TEMP_BALANCE_VALUE — production pendant la préparation non encore validée.
@@ -30,7 +37,7 @@
       panelUpdateMs: 250, desktopUpdateMs: 150,
       feedbackMs: 450,
       // TEMP_BALANCE_VALUE — disposition et cadence de l'interface dans le casque.
-      dashboardDistance: 1.55, dashboardMoveThreshold: 0.55,
+      dashboardDistance: 1.55, dashboardBoardOffset: 0.45, dashboardMoveThreshold: 0.55,
       dashboardTurnThreshold: 0.65, dashboardSmoothness: 3,
       dashboardRefreshMs: 200, dashboardRowHeight: 0.061,
       dashboardFontSize: 40, dashboardTitleSize: 48,
@@ -39,7 +46,7 @@
       // TEMP_BALANCE_VALUE — fenêtres indépendantes, distances en mètres.
       windowMinDistance: 0.7, windowMaxDistance: 2.4,
       windowMaxYaw: Math.PI / 2.8, windowMinY: -1.9, windowMaxY: 0.65,
-      dashboardPitch: 0, scorePitch: 0.16,
+      dashboardPitch: 0, scorePitch: 0,
       windowSmoothing: 18, windowDepthSpeed: 0.45,
       windowScaleSpeed: 0.35, windowMinScale: 0.85, windowMaxScale: 1.4,
       windowMoveStep: 0.08, windowScaleStep: 1.08,

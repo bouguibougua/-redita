@@ -138,5 +138,16 @@ assert.ok(find(t => t.action?.name === "panel-adjust" && t.action.data === "moda
 ui.close();
 assert.equal(painted.get("modal").options.footer[0][0], "Quitter le mode VR");
 assert.equal(painted.get("modal").options.footer[0][1].type, "exit");
-assert.ok(painted.get("modal").rows.every(row => row[0][3].centered && row[0][3].large));
+assert.ok(painted.get("modal").rows.filter(row => row[0][1]?.type === "mode").every(row => row[0][3].centered && row[0][3].large));
 console.log("UI XR : quatre fenêtres, commandes métier, permissions, stocks, joysticks, boutique Y et préparation en une action validés.");
+
+state = E.Board.createState("simplified"); E.Network.mode = "local"; ui.close();
+assert.equal(painted.get("modal").rows[1].length, 2);
+assert.equal(painted.get("modal").rows.length, 3, "Pas de ligne de biomes vide en format simplifié");
+assert.match(painted.get("modal").lines[0], /0\/1 biomes/);
+state.phase = "running"; ui.close();
+assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 4);
+assert.equal(painted.get("red2").visible, false);
+ui.execute({type:"open", name:"panel-layout"}); ui.render();
+assert.equal(find(t => t.action?.data === "red2"), undefined);
+console.log("UI simplifiée : deux biomes, un échange, quatre fiches et fenêtres existantes uniquement.");

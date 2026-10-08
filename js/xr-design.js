@@ -7,7 +7,7 @@
     type: { title: 40, body: 32, detail: 27, value: 46 },
     spacing: { inset: 26, gap: 12, header: 108, line: 45, row: 105, detailRow: 132, footer: 94 },
     radius: { panel: 48, button: 24, portrait: 20 },
-    menu: { modeHeight: 0.56, setupHeight: 0.76, modeRow: 230, deckRow: 145, biomeRow: 220, actionRow: 110, footer: 122 },
+    menu: { modeHeight: 0.76, setupHeight: 0.76, modeRow: 230, deckRow: 145, biomeRow: 220, actionRow: 110, footer: 122 },
     border: { normal: 1.5, selected: 3, hover: 2.5 },
     feedbackMs: 4000, confirmationMs: 320, transitionMs: 140,
     textScales: { normal: 1, large: 1.16, xlarge: 1.32 },
@@ -20,7 +20,7 @@
       residents: [-0.65, 0, 0.60, 0.60], tasks: [-0.65, -0.67, 0.60, 0.66],
       jobs: [0.65, 0, 0.60, 0.60], buildings: [0.65, -0.67, 0.60, 0.66],
       modal: [0, -0.04, 0.94, 0.94],
-      feedback: [0, 0.75, 1.25, 0.12]
+      feedback: [0, 0.65, 1.25, 0.12]
     }
   };
   tokens.layouts.placement = [0, 0, 0.84, 0.72];

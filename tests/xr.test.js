@@ -219,7 +219,7 @@ async function run() {
   // Géométrie du véritable plateau, pas une seconde carte de test.
   vm.runInContext(read("js/board3d.js").replace("  E.Board3D = {", `
     E.XRBoardTest = { build(module, state) {
-      THREE = module; scene = new THREE.Scene(); world = new THREE.Group(); terrainGroup = new THREE.Group();
+      THREE = module; latestState = state; scene = new THREE.Scene(); world = new THREE.Group(); terrainGroup = new THREE.Group();
       world.add(terrainGroup); scene.add(world); addBoardBase();
       Object.values(state.players).forEach(p => p.villages.forEach(terrainTile));
       return { scene, world, terrainGroup };
@@ -257,6 +257,13 @@ async function run() {
   board.terrainGroup.traverse((item) => { if (item.userData.xrTarget?.kind === "slot") slotCount++; });
   assert.equal(slotCount, Object.values(state.players).flatMap((p) => p.villages).reduce((count, v) => count + v.slots.length, 0));
   interactions.dispose();
+  const small = E.XRBoardTest.build(THREE, E.Board.createState("simplified"));
+  assert.equal(small.terrainGroup.children.length, 4);
+  const xs = [...new Set(small.terrainGroup.children.map(tile => tile.position.x))];
+  assert.equal(xs.length, 2); assert.equal(xs[0], -xs[1], "Les deux lignes sont centrées");
+  const rim = small.world.children.find(item => item.geometry?.parameters.height === 0.16);
+  assert.equal(rim.geometry.parameters.width, 7.65);
+  assert.ok(xs.every(x => Math.abs(x) + 1.46 < rim.geometry.parameters.width / 2), "Les terrains restent à l’intérieur du socle réduit");
   console.log("XR : état partagé, profils, gâchettes, limites, orientation, hit-test, ancres, nettoyage et Raycaster validés (API XR simulée, Three.js réel).");
 }
 run().catch((error) => { console.error(error); process.exitCode = 1; });

@@ -1,11 +1,11 @@
 (function () {
   "use strict";
   const E = window.Eredita;
-  function create({ THREE, scene, renderer }) {
+  function create({ THREE, scene, renderer, world }) {
     const D = E.XRDesign, T = D.tokens, C = D.theme(), S = T.spacing, F = T.type;
     const group = new THREE.Group(); group.name = "xr-game-dashboard"; scene.add(group);
     const targets = [], panels = new Map(), images = new Map();
-    const movable = new Set(Object.keys(T.layouts).filter((id) => !["feedback", "placement", "gear"].includes(id)));
+    const movable = new Set(Object.keys(T.layouts));
     const scorePanel = (id) => /^(red|blue)(\d|Gold)$/.test(id) || id === "clock";
     let viewer = null, modalNeedsPlacement = false;
     let positioned = false, textSize = "normal", disposed = false, feedbackUntil = 0, lastHighlight = performance.now();
@@ -39,7 +39,7 @@
       const [x, y] = T.layouts[p.id], factor = T.textScales[textSize];
       p.node.position.set(x * factor, y * factor, p.id === "modal" ? 0.18 : 0);
       p.node.scale.setScalar(factor * (p.node.userData.windowUserScale || 1));
-      p.node.rotation.set(scorePanel(p.id) ? E.Config.xr.scorePitch : 0, p.id === "modal" ? 0 : Math.atan2(-x * factor, E.Config.xr.dashboardDistance), 0, "YXZ");
+      p.node.rotation.set(0, 0, 0);
     }
     const drawText = (c, value, x, y, width, size = F.body, color = C.ink, weight = 500, max = Infinity) => D.text(c, value, x, y, width, size, color, weight, max);
     function surface(c, x, y, width, height, fill, stroke = C.gold, radius = T.radius.panel, lineWidth = T.border.normal) {
@@ -129,7 +129,7 @@
       const { rows, options } = p.data, M = T.menu, w = p.canvas.width, h = p.canvas.height, entries = [];
       let y = startY;
       rows.forEach((row, rowIndex) => {
-        const height = options.variant === "settings" ? S.row : options.variant === "mode" ? M.modeRow : rowIndex === 0 ? M.deckRow : rowIndex < 3 ? M.biomeRow : M.actionRow;
+        const height = options.variant === "settings" ? S.row : options.variant === "mode" ? row.some(entry => entry[3]?.large) ? M.modeRow : M.actionRow : rowIndex === 0 ? M.deckRow : row.some(entry => entry[3]?.biome) ? M.biomeRow : M.actionRow;
         const bw = (w - 2 * S.inset - S.gap * (row.length - 1)) / row.length;
         row.forEach((entry, col) => {
           const rect = { x: S.inset + col * (bw + S.gap), y, w: bw, h: height };
@@ -148,7 +148,7 @@
       const { title, lines, rows, options } = p.data, c = p.context, w = p.canvas.width, h = p.canvas.height;
       c.clearRect(0, 0, w, h); c.save(); c.shadowBlur = 14; c.shadowColor = "rgba(0,0,0,0.3)"; c.shadowOffsetY = 5;
       surface(c, 4, 4, w - 8, h - 8, C.surface, C.gold, T.radius.panel, options.selected ? T.border.selected : T.border.normal); c.restore();
-      if (p.handle && scorePanel(p.id)) surface(c, (w - 52) / 2, 12, 52, 4, p.hover.has("handle") || p.node.userData.grabbed ? C.gold : C.muted, null, 2);
+      if (p.handle && (scorePanel(p.id) || ["gear", "feedback"].includes(p.id))) surface(c, (w - 52) / 2, 12, 52, 4, p.hover.has("handle") || p.node.userData.grabbed ? C.gold : C.muted, null, 2);
       const team = p.id.startsWith("red") ? C.red : p.id.startsWith("blue") ? C.blue : null;
       if (team) surface(c, 20, 19, 7, h - 38, team, null, 3);
       if (p.id === "gear") {
@@ -212,13 +212,7 @@
         p.key = ""; p.hitKey = "";
       }
       if (id === "modal" && visible && (modalNeedsPlacement || !wasVisible) && viewer && !p.node.userData.customLayout) {
-        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewer.quaternion); forward.y = 0;
-        if (forward.lengthSq() < 0.01) forward.set(0, 0, -1); forward.normalize();
-        const point = viewer.position.clone().addScaledVector(forward, E.Config.xr.dashboardDistance);
-        point.y += T.layouts.modal[1];
-        group.updateWorldMatrix(true, false); p.node.position.copy(group.worldToLocal(point));
-        const yaw = Math.atan2(-forward.x, -forward.z);
-        p.node.quaternion.setFromEuler(new THREE.Euler(0, yaw, 0)).premultiply(group.getWorldQuaternion(new THREE.Quaternion()).invert());
+        placeDefault(p);
       }
       if (id === "modal" && visible) modalNeedsPlacement = false;
       if (!wasVisible && visible && !reducedMotion) p.face.material.opacity = 0.25;
@@ -228,13 +222,18 @@
       p.data = { title, lines, rows, options };
       if (key !== p.key || (!wasVisible && visible)) { p.key = key; draw(p); }
     }
-    function syncTargets() { targets.length = 0; panels.forEach((p) => { if (p.node.visible && p.id !== "feedback") targets.push(...p.buttons, ...(p.handle ? [p.handle] : []), p.face); }); }
+    function syncTargets() { targets.length = 0; panels.forEach((p) => { if (p.node.visible) targets.push(...p.buttons, ...(p.handle ? [p.handle] : []), p.face); }); }
     function position(viewer, smooth = false) {
       if (smooth && positioned) return;
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewer.quaternion); forward.y = 0;
       if (forward.lengthSq() < 0.01) forward.set(0, 0, -1); forward.normalize();
       group.position.copy(viewer.position).addScaledVector(forward, E.Config.xr.dashboardDistance);
-      // Menus droits à hauteur du regard. Seules les fiches de score ont une inclinaison.
+      // Toutes les fenêtres sont parallèles au joueur et centrées au-dessus du plateau.
+      if (world?.parent?.name === "xr-board-placement" && world.parent.visible) {
+        const boardPosition = world.parent.getWorldPosition(new THREE.Vector3());
+        group.position.copy(boardPosition).addScaledVector(forward, E.Config.xr.dashboardBoardOffset);
+        group.position.y = viewer.position.y;
+      }
       group.rotation.set(0, Math.atan2(-forward.x, -forward.z), 0, "YXZ"); positioned = true;
     }
     function resetLayout(viewer) { group.scale.setScalar(1); panels.forEach((p) => { p.node.userData.customLayout = false; p.node.userData.windowUserScale = 1; placeDefault(p); }); if (viewer) position(viewer, false); }
@@ -255,7 +254,7 @@
     function setFeedback(message, kind = "info") {
       feedbackUntil = performance.now() + T.feedbackMs; paint("feedback", message, [], [], true, { kind });
       // Zone de notification réservée : aucune cible de gestion n'est recouverte.
-      placeDefault(panels.get("feedback"));
+      if (!panels.get("feedback").node.userData.customLayout) placeDefault(panels.get("feedback"));
     }
     function highlight(objects) {
       const now = performance.now(), fade = Math.min(1, (now - lastHighlight) / T.transitionMs); lastHighlight = now;
@@ -267,7 +266,7 @@
         if (expired) p.confirmed = null; if (changed || expired) draw(p);
         p.face.material.color.set(objects.has(p.face) ? C.gold : "#ffffff");
       });
-      const notice = panels.get("feedback"); if (notice && now > feedbackUntil) notice.node.visible = false;
+      const notice = panels.get("feedback"); if (notice && now > feedbackUntil && !notice.node.userData.grabbed) notice.node.visible = false;
     }
     function navigate(id, amount) {
       const p = panels.get(id); if (!p) return false; const next = THREE.MathUtils.clamp(p.page + amount, 0, p.pageCount - 1);

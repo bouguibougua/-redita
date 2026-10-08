@@ -25,10 +25,11 @@
 
     toggleBiome(playerId, lane) {
       const player = state.players[playerId];
-      if (state.phase !== "setup" || !player || player.setupConfirmed) return;
+      if (state.phase !== "setup" || !player || player.setupConfirmed || !Number.isInteger(lane) || !player.villages[lane]) return false;
       const currentIndex = player.setupSelection.indexOf(lane);
       if (currentIndex >= 0) player.setupSelection.splice(currentIndex, 1);
-      else if (player.setupSelection.length < 2) player.setupSelection.push(lane);
+      else if (E.Board.getFormat(state).exchanges === 1) player.setupSelection = [lane];
+      else if (player.setupSelection.length < E.Board.getFormat(state).exchanges) player.setupSelection.push(lane);
       E.UI.render(state);
     },
 
@@ -36,7 +37,7 @@
       const player = state.players[playerId];
       if (state.phase !== "setup" || !player || player.setupConfirmed) return;
       if (action === "exchange") {
-        if (!player.setupSelection.length || player.setupSelection.length > 2) return;
+        if (!player.setupSelection.length || player.setupSelection.length > E.Board.getFormat(state).exchanges || player.setupSelection.some(lane => !Number.isInteger(lane) || !player.villages[lane])) return false;
         player.setupSelection.forEach((lane) => {
           const village = player.villages[lane];
           village.biome = E.Biomes.randomBiome(village.biome);
@@ -55,7 +56,7 @@
       state.preparationRemaining = E.Network.mode === "tutorial" ? 0 : E.Config.preparation.duration;
       previousTimestamp = performance.now();
       if (state.preparationRemaining > 0) addLog("Préparation : vous avez une minute pour organiser vos villages et attribuer les tâches.");
-      else { E.Audio?.play("game"); addLog("La partie commence. Les huit villages sont debout."); }
+      else { E.Audio?.play("game"); addLog("La partie commence. Tous les villages sont debout."); }
       E.UI.render(state);
     },
 
@@ -295,7 +296,7 @@
     restart() {
       E.Audio?.play("menu");
       pendingBulkTasks = [];
-      state = E.Board.createState();
+      state = E.Board.createState(state.format);
       if (E.Network.mode === "solo") E.AI.prepareSetup(state);
       previousTimestamp = performance.now();
       E.UI.render(state);
@@ -374,6 +375,11 @@
 
   function restoreView(view) {
     if (!view?.selectedVillage) return;
+    if (!state.players[view.selectedVillage.playerId]?.villages[view.selectedVillage.lane]) {
+      const player = state.players[view.selectedVillage.playerId];
+      if (player) { state.selectedVillage = { playerId: player.id, lane: 0 }; state.selectedResidentId = player.villages[0].residents[0]?.id || null; state.pendingPlacement = null; }
+      return;
+    }
     state.selectedVillage = view.selectedVillage;
     state.selectedResidentId = view.selectedResidentId;
     state.pendingPlacement = view.pendingPlacement;
@@ -463,6 +469,9 @@
 
   E.Network.init({
     onReady(session) {
+      pendingBulkTasks = [];
+      state = E.Board.createState(session.mode === "tutorial" ? E.Config.defaultFormat : session.format || E.Config.defaultFormat);
+      previousTimestamp = performance.now();
       if (session.mode === "solo") E.AI.prepareSetup(state);
       if (session.mode === "tutorial") E.Tutorial.start(state);
       if (session.mode === "guest") {
@@ -470,6 +479,7 @@
         state.selectedResidentId = state.players.blue.villages[0].residents[0]?.id || null;
       }
       E.UI.render(state);
+      E.Board3D?.update(state);
       if (session.mode === "host") E.Network.sendState(state);
     },
     onState(snapshot) {
@@ -477,6 +487,7 @@
       const guestView = viewState();
       state = snapshot;
       restoreView(guestView);
+      E.Board3D?.update(state);
       previousTimestamp = performance.now();
       E.UI.render(state);
     },

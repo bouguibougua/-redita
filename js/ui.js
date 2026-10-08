@@ -220,7 +220,7 @@
       return `<article class="setup-player ${player.setupConfirmed ? "confirmed" : ""}">
         <div class="setup-player-head">
           <h3>${player.name}</h3>
-          <span class="status-pill">${player.setupConfirmed ? `Deck ${player.selectedDeck + 1} · confirmé` : `Deck ${player.selectedDeck + 1} · ${player.setupSelection.length}/2 biomes`}</span>
+          <span class="status-pill">${player.setupConfirmed ? `Deck ${player.selectedDeck + 1} · confirmé` : `Deck ${player.selectedDeck + 1} · ${player.setupSelection.length}/${E.Board.getFormat(state).exchanges} biomes`}</span>
         </div>
         <section class="setup-decks" aria-label="Choix du deck de ${player.name}">
           <h4>Deck pour cette partie</h4>
@@ -277,9 +277,9 @@
   function syncShopModal(state) {
     if (!state || elements.shopModal.hidden) return;
     const playerId = E.Network.mode === "solo" ? "red" : state.selectedVillage.playerId;
-    if (elements.shopVillageNav.dataset.player !== playerId) {
+    if (elements.shopVillageNav.dataset.player !== playerId || elements.shopVillageNav.childElementCount !== state.players[playerId].villages.length) {
       elements.shopVillageNav.dataset.player = playerId;
-      elements.shopVillageNav.innerHTML = [0, 1, 2, 3].map((lane) => `<button class="button button-quiet" data-player="${playerId}" data-shop-village="${lane}" type="button">Village ${lane + 1}</button>`).join("");
+      elements.shopVillageNav.innerHTML = state.players[playerId].villages.map((_, lane) => `<button class="button button-quiet" data-player="${playerId}" data-shop-village="${lane}" type="button">Village ${lane + 1}</button>`).join("");
     }
     elements.shopVillageNav.querySelectorAll("[data-shop-village]").forEach((button) => {
       const selected = Number(button.dataset.shopVillage) === state.selectedVillage.lane;
@@ -338,7 +338,7 @@
         const selected = state.selectedVillage.playerId === playerId && state.selectedVillage.lane === village.lane;
         const available = E.Economy.getAvailableResidents(state, playerId, village.lane);
         const resources = E.Config.resources.map((resource) => `<div title="${resourceLabels[resource]}"><dt>${resourceIcons[resource]}</dt><dd data-map-resource="${resource}">${formatNumber(village.resources[resource])}</dd></div>`).join("");
-        return `<article class="map-village-popup ${playerId} lane-${village.lane} ${selected ? "selected" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""} ${village.destroyed ? "destroyed" : ""}" data-map-village data-player="${playerId}" data-lane="${village.lane}" aria-current="${selected}">
+        return `<article style="left:calc(${village.lane * 100 / player.villages.length}% + 4px);width:calc(${100 / player.villages.length}% - 8px)" class="map-village-popup ${playerId} lane-${village.lane} ${selected ? "selected" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""} ${village.destroyed ? "destroyed" : ""}" data-map-village data-player="${playerId}" data-lane="${village.lane}" aria-current="${selected}">
           <header><strong>${playerId === "red" ? "Rouge" : "Bleu"} V${village.lane + 1}</strong><span>${biomeIcons[village.biome]}</span></header>
           <div class="map-village-stats"><span title="Points de vie">PV <b data-map-hp>${Math.ceil(village.hp)}/${village.maxHp}</b></span><span title="Population">Pop. <b data-map-population>${village.population}/${village.populationMax}</b></span><span title="Habitants disponibles">Dispo. <b data-map-available>${available}</b></span></div>
           <dl>${resources}</dl>
@@ -374,7 +374,8 @@
 
   function renderBoard(state) {
     elements.columns.dataset.signature = terrainSignature(state);
-    elements.columns.innerHTML = [0, 1, 2, 3].map((lane) => {
+    elements.columns.style.setProperty("--region-count", state.players.red.villages.length);
+    elements.columns.innerHTML = state.players.red.villages.map((_, lane) => {
       const redVillage = state.players.red.villages[lane];
       const blueVillage = state.players.blue.villages[lane];
       return `<article class="lane">
@@ -436,9 +437,10 @@
   }
 
   function renderUnits(state) {
+    const regionCount = state.players.red.villages.length;
     const combatUnits = state.units.map((unit) => {
       const stats = E.Config.units[unit.role];
-      const left = ((unit.lanePosition + 0.5) / 4) * 100;
+      const left = ((unit.lanePosition + 0.5) / regionCount) * 100;
       const top = Math.max(1.2, Math.min(98.8, unit.position));
       const vessel = unit.waterTransport ? `<span class="unit-vessel" title="Transporté par ${E.Config.maritime.shop[unit.waterTransport].label.toLowerCase()}">${E.Config.maritime.shop[unit.waterTransport].icon}</span>` : "";
       const selected = unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane;
@@ -453,7 +455,7 @@
         .filter((resident) => ["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null)
         .map((resident) => {
           const laneOffset = resident.mission === "chasse" ? 0.5 + (resident.workLaneOffset || 0) : resident.mission === "elevage" ? 0.62 : 0.45;
-          const left = ((village.lane + laneOffset) / 4) * 100;
+          const left = ((village.lane + laneOffset) / regionCount) * 100;
           const top = Math.max(1.2, Math.min(98.8, resident.workPosition));
           const carrying = resident.carrying ? " carrying" : "";
           const selected = resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane;
@@ -473,8 +475,8 @@
           const fisherColumns = narrow ? 4 : 7;
           const fishingSlot = fishing ? fisherIndex++ : 0;
           const left = fishing
-            ? ((village.lane + (fishingSlot % fisherColumns + 0.5) / fisherColumns) / 4) * 100
-            : ((village.lane + 0.2 + (index % 4) * 0.18) / 4) * 100;
+            ? ((village.lane + (fishingSlot % fisherColumns + 0.5) / fisherColumns) / regionCount) * 100
+            : ((village.lane + 0.2 + (index % 4) * 0.18) / regionCount) * 100;
           const distance = fishing ? 23 + Math.floor(fishingSlot / fisherColumns) * (narrow ? 1.9 : 3) : 8 + Math.floor(index / 4) * 2;
           const top = player.id === "red" ? distance : 100 - distance;
           const selected = resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane;
@@ -484,7 +486,7 @@
     )).join("");
     const localAnimals = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
       village.destroyed ? [] : (village.animals || []).filter((animal) => !animal.unitId).map((animal, index) => {
-        const left = ((village.lane + 0.22 + (index % 4) * 0.17) / 4) * 100;
+        const left = ((village.lane + 0.22 + (index % 4) * 0.17) / regionCount) * 100;
         const distance = 18 + Math.floor(index / 4) * 2;
         return `<div class="local-person ${player.id}" data-local-animal="${animal.id}" style="left:${left}%;top:${player.id === "red" ? distance : 100 - distance}%" title="${E.Config.specialAnimals[animal.type].label}">${animalAppearance(animal.type, "unit-body")}</div>`;
       })

@@ -128,7 +128,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .board-legend span:nth-child(2) { padding: 0 15px; }
 .board-legend span:last-child { text-align: right; }
 .battlefield { position: relative; height: min(72vh, 730px); min-height: 560px; border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: #30382d; box-shadow: 0 22px 70px rgba(0,0,0,.3); }
-.board-columns { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border-radius: inherit; }
+.board-columns { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--region-count, 4), minmax(0, 1fr)); overflow: hidden; border-radius: inherit; }
 .battlefield-3d { position: absolute; z-index: 1; inset: 0; overflow: hidden; border-radius: inherit; background: #172019; touch-action: none; }
 .battlefield-3d[hidden] { display: none; }
 .battlefield-3d canvas { display: block; width: 100%; height: 100%; cursor: grab; }
@@ -643,3 +643,8 @@ body:has(.connection-screen:not([hidden])) { overflow: hidden; }
 .xr-fallback { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
 .xr-fallback input { width: 22px; height: 22px; }
 #xr-status { padding: 12px; border-radius: 8px; background: #ffffff0c; }
+
+.match-formats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+.match-formats .button { display: grid; gap: 6px; padding: 18px 12px; text-align: center; }
+.match-formats .button span { font-size: .9em; opacity: .8; }
+.match-formats .button.selected { border-color: var(--gold); background: #65522b; color: var(--ink); }

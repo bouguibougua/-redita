@@ -80,7 +80,7 @@
       session.addEventListener("end", cleanup, { once: true });
       current.panels = E.XRPanels.create(context);
       current.dashboard = E.XRDashboard.create(context);
-      current.windows = E.XRWindows.create({ ...context, dashboard: current.dashboard, status });
+      current.windows = E.XRWindows.create({ ...context, dashboard: { getPanel: (id) => runtime.dashboard.getPanel(id) || runtime.panels.getPanel(id) }, status });
       current.dashboard.group.visible = false;
       current.ui = E.XRUI.create(current.dashboard, status);
       current.input = E.XRInput.create({ ...context, session });
@@ -177,8 +177,8 @@
     if (result?.type === "recenter") { r.ui.close(); action("recenter"); }
     if (result?.type === "panels-recenter" || result?.type === "panels-reset") {
       r.windows.reset();
-      if (result.type === "panels-reset") r.dashboard.resetLayout(r.viewer);
-      else r.dashboard.recenter(r.viewer);
+      if (result.type === "panels-reset") { r.dashboard.resetLayout(r.viewer); r.panels.resetLayout(r.viewer); }
+      else { r.dashboard.recenter(r.viewer); r.panels.recenter(r.viewer); }
       r.dashboard.setFeedback(result.type === "panels-reset" ? "Disposition initiale restaurée." : "Fenêtres recentrées devant vous.", "info");
     }
     if (result?.type === "panels-scale") {
@@ -282,7 +282,6 @@
     r.placement.update(frame, r.space, r.input.records, r.viewer, timestamp);
     if (E.Network.mode === "guest" && E.GameView.getState().xrBoardWidth) r.placement.setWidth(E.GameView.getState().xrBoardWidth);
     if (r.placement.placed && !r.widthShared && E.Network.mode !== "guest") { E.GameView.setXRBoardWidth(r.placement.width); r.widthShared = true; }
-    if (r.manipulation && r.placement.placed) r.placement.manipulate(r.input.records, r.viewer, dt);
     E.Board3D.setXRPreview(!r.placement.placed);
     const showDashboard = r.placement.placed && !r.manipulation;
     if (showDashboard && !r.dashboardShown) { r.dashboard.recenter(r.viewer); r.lastDashboard = -Infinity; }
@@ -301,12 +300,13 @@
       const canPlace = !r.placement.placed && candidate?.record === record;
       r.input.feedback(record, hit?.distance || (canPlace ? record.position.distanceTo(candidate.position) : null), hovered.has(hit?.object) || canPlace);
     }
-    r.windows.update(r.input.records, hits, r.viewer, dt, r.dashboard.group.visible && !r.manipulation);
+    r.windows.update(r.input.records, hits, r.viewer, dt, r.dashboard.group.visible || r.panels.group.visible);
+    if (r.manipulation && r.placement.placed) r.placement.manipulate(r.windows.active ? [] : r.input.records, r.viewer, dt);
     for (const event of r.input.drain()) {
       if (event.type === "cancel") cancel();
-      else if (event.type === "recover-panels" && r.placement.placed && !r.manipulation) {
-        r.windows.reset(); r.dashboard.resetLayout(r.viewer);
-        if (!r.ui.visible) r.ui.toggle();
+      else if (event.type === "recover-panels") {
+        r.windows.reset(); r.dashboard.resetLayout(r.viewer); r.panels.resetLayout(r.viewer);
+        if (r.placement.placed && !r.manipulation && !r.ui.visible) r.ui.toggle();
         r.dashboard.setFeedback("Toutes les fenêtres sont revenues devant vous.", "info");
       } else if (r.windows.active) continue;
       else if (event.type === "panels" && r.placement.placed && !r.manipulation) r.ui.toggle();
@@ -326,7 +326,12 @@
         const axis = record.axes[vertical ? 1 : 0];
         if (Math.abs(axis) < E.Config.xr.dashboardStickThreshold) { record.lastNavigation = -Infinity; continue; }
         if (timestamp - (record.lastNavigation ?? -Infinity) < E.Config.xr.dashboardStickRepeatMs) continue;
-        const direction = Math.sign(axis) * (vertical ? -1 : 1);
+        let direction = Math.sign(axis) * (vertical && !inGame ? -1 : 1);
+        if (inGame && !vertical) {
+          const boardRight = new r.THREE.Vector3(1, 0, 0).applyQuaternion(r.root.quaternion);
+          const viewerRight = new r.THREE.Vector3(1, 0, 0).applyQuaternion(r.viewer.quaternion);
+          direction *= boardRight.dot(viewerRight) < 0 ? -1 : 1;
+        }
         r.ui.stick(hand, direction, hits.get(record)?.object.userData.xrTarget?.panelId, vertical ? "vertical" : "horizontal");
         if (inGame) r.selected = { ...E.GameView.getState().selectedVillage };
         record.lastNavigation = timestamp;

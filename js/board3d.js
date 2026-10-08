@@ -25,7 +25,11 @@
   const unitModels = new Map();
   const handledDeathEffects = new Set();
 
-  const laneX = (lane) => (lane - 1.5) * 3;
+  let baseLanes = 0;
+  const baseMeshes = [];
+  const laneCount = () => latestState?.players.red.villages.length || E.Config.formats[E.Config.defaultFormat].regions;
+  const boardWidth = () => laneCount() * E.Config.board.laneSpacing + E.Config.board.rimMargin;
+  const laneX = (lane) => (lane - (laneCount() - 1) / 2) * E.Config.board.laneSpacing;
   const colors = {
     montagne: 0x77766d,
     plaine: 0x708a49,
@@ -109,12 +113,14 @@
   }
 
   function addBoardBase() {
-    const base = mesh(new THREE.BoxGeometry(13.3, 0.42, 10.7), 0x44372a, { castShadow: false });
+    baseMeshes.splice(0).forEach(item => { item.removeFromParent(); disposeObject(item); });
+    baseLanes = laneCount();
+    const base = mesh(new THREE.BoxGeometry(baseLanes * E.Config.board.laneSpacing + E.Config.board.baseMargin, 0.42, 10.7), 0x44372a, { castShadow: false });
     base.position.y = -0.31;
     world.add(base);
-    const rim = mesh(new THREE.BoxGeometry(13.65, 0.16, 11.05), 0xb68a4d, { castShadow: false, metalness: 0.1 });
+    const rim = mesh(new THREE.BoxGeometry(boardWidth(), 0.16, 11.05), 0xb68a4d, { castShadow: false, metalness: 0.1 });
     rim.position.y = -0.48;
-    world.add(rim);
+    world.add(rim); baseMeshes.push(base, rim);
   }
 
   function terrainTile(village) {
@@ -747,6 +753,7 @@
   function update(state, force = false) {
     latestState = state;
     if (!ready || !state) return;
+    if (baseLanes !== laneCount()) addBoardBase();
     const nextSignature = signature(state);
     let visualsChanged = false;
     if (force || nextSignature !== structureSignature) {
@@ -895,7 +902,8 @@
     });
   }
 
-  E.Board3D = { init, update, toggle, setMode, setXRPreview, resize,
+  E.Board3D = {
+    getBoardWidth: boardWidth, init, update, toggle, setMode, setXRPreview, resize,
     getXRContext: () => ready ? { THREE, renderer, scene, camera, world, terrainGroup } : null,
     get ready() { return ready; }, get enabled() { return enabled; }, get error() { return loadError; } };
 }());

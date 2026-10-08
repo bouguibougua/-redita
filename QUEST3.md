@@ -1,5 +1,14 @@
 # Eredità sur Meta Quest 3
 
+## Format simplifié et ergonomie — 8 octobre 2026
+
+Le choix Classique (4 régions par joueur) / Simplifié (2) est proposé avant l’entraînement, le local ou la création d’un salon, et directement dans le casque. En Simplifié, les trois biomes sont présents sur le plateau initial, sans doublon par joueur ; un seul échange par camp est permis, contre un autre biome aléatoire. Le nouveau format conserve les règles de jeu et les durées existantes.
+
+Toutes les fenêtres, y compris placement, manipulation, paramètres, réglages rapides et notifications, se déplacent par leur poignée. Elles apparaissent parallèles au joueur au-dessus du plateau. Le joystick gauche monte/descend dans les habitants ; le droit suit les villages à droite/gauche physiquement, y compris côté Rouge. Les poses restent stables jusqu’au déplacement ou recentrage volontaire.
+
+À vérifier sur Quest : chaque poignée, les deux orientations du plateau, le maintien des poses entre menus, les deux formats en 2D/3D et les salons à deux régions. Les tests automatiques utilisent un périphérique simulé.
+
+
 ## Réglages de taille et replacement
 
 Les paramètres restent accessibles dès « Choisir une partie », depuis le choix des decks et biomes, pendant la minute de préparation et pendant le combat. Un seul écran regroupe Agrandir/Réduire les fenêtres, Replacer le plateau, la taille du texte, les réglages individuels et les commandes existantes. Agrandir conserve les espaces entre fenêtres. Les limites restent dans Config.xr ; Réinitialiser restaure taille et disposition. Le menu lui-même peut être ajusté dans « Ajuster une fenêtre ».
@@ -8,11 +17,11 @@ Une gâchette gauche, une gâchette droite et A effectuent la même sélection a
 
 ## Ergonomie VR — 7 octobre 2026
 
-Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation reprend les trois decks et la grille de quatre biomes colorés du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
+Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation reprend les trois decks et la grille de deux ou quatre biomes colorés selon le format du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
 
-En partie, quatre fenêtres : Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite, Gestion du village en bas à droite (stocks, bâtiments, parcelles et ventes). Un clic sur un village les affiche. Les fiches de PV, les ors et le chronomètre ont des coins arrondis, une légère inclinaison vers le joueur et une poignée de déplacement. Les fenêtres de gestion et le menu sont également déplaçables.
+En partie, quatre fenêtres : Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite, Gestion du village en bas à droite (stocks, bâtiments, parcelles et ventes). Un clic sur un village les affiche. Les fiches de PV, les ors et le chronomètre ont des coins arrondis et une poignée de déplacement. Toutes les fenêtres sont parallèles au joueur, dans un même plan vertical au-dessus du plateau. Les fenêtres de gestion et le menu sont également déplaçables.
 
-Y ouvre/ferme la boutique. Joystick gauche vertical : habitant suivant vers le haut, précédent vers le bas. Joystick droit horizontal : village suivant vers la droite, précédent vers la gauche, dans le camp sélectionné. Ces axes gardent le même rôle dans la boutique. Les joysticks d’une fenêtre saisie restent réservés à sa distance et sa taille ; le plateau bouge uniquement dans son mode de manipulation. X maintenu récupère les fenêtres.
+Y ouvre/ferme la boutique. Joystick gauche vertical : habitant précédent vers le haut, suivant vers le bas. Joystick droit horizontal : village physiquement à droite ou à gauche sur le plateau, dans le camp sélectionné, en tenant compte de l’orientation du plateau. Ces axes gardent le même rôle dans la boutique. Les joysticks d’une fenêtre saisie restent réservés à sa distance et sa taille ; le plateau bouge uniquement dans son mode de manipulation. X maintenu récupère les fenêtres.
 
 À vérifier sur Quest : lecture assise, placement des quatre fenêtres sans gêner la table, saisie des fiches de score, parcours entraînement → lancement, changements d’habitant et de village dans la boutique. Aucun essai physique effectué ici.
 
@@ -51,7 +60,7 @@ Ouvrir dans Quest Browser l'adresse **HTTPS** d'un déploiement du projet comple
 
 ## Placement et commandes
 
-Le panneau de placement apparaît devant le joueur, légèrement sur sa gauche. Après placement et lancement, le tableau de bord répartit les huit fiches de villages, les ors globaux et l’horloge en haut, puis les quatre fenêtres de gestion décrites ci-dessus. Les fenêtres restent stables dans l’espace et peuvent être déplacées individuellement par leur barre supérieure. Les fiches et boutons se visent au rayon et s'activent à la gâchette index ; leur surface est une vraie géométrie 3D. Agriculture, élevage, pêche et chasse utilisent les missions économiques existantes ; les commandes de combat conservent également leurs règles.
+Le panneau de placement apparaît droit devant le joueur, parallèle à lui, et possède aussi une poignée de déplacement. Après placement et lancement, le tableau de bord répartit les quatre ou huit fiches de villages, les ors globaux et l’horloge en haut, puis les quatre fenêtres de gestion décrites ci-dessus. Les fenêtres restent stables dans l’espace et peuvent être déplacées individuellement par leur barre supérieure. Les fiches et boutons se visent au rayon et s'activent à la gâchette index ; leur surface est une vraie géométrie 3D. Agriculture, élevage, pêche et chasse utilisent les missions économiques existantes ; les commandes de combat conservent également leurs règles.
 
 1. Viser la table. Un repère vert et un plateau transparent apparaissent sur une surface horizontale admissible. **Vérifier soi-même qu'il s'agit bien de sa table** : le code ne déduit aucune catégorie de mobilier.
 2. Appuyer sur la gâchette du contrôleur qui porte le repère pour confirmer. Si l'autre contrôleur était prioritaire, une première pression transfère la priorité à celui utilisé ; viser et confirmer une seconde fois.
@@ -154,7 +163,7 @@ La procédure détaillée de l’interface, incluant mesures angulaires de texte
 - [ ] Viser un mur, une zone lointaine et le sol : aucune identification automatique comme « table » ; vérifier les limites et la confirmation volontaire.
 - [ ] Tester sans hit-test et avec la case de lancement simplifié ; ajuster la hauteur manuellement jusqu'à la table.
 - [ ] Vérifier une largeur initiale de 80 cm, les quatre villages du joueur près de lui et l'eau littorale vers le centre, côté Rouge puis côté Bleu.
-- [ ] Sélectionner les huit villages avec chaque contrôleur ; comparer PV, habitants, ressources et bâtiments avec le desktop.
+- [ ] Sélectionner les quatre ou huit villages avec chaque contrôleur ; comparer PV, habitants, ressources et bâtiments avec le desktop.
 - [ ] Vérifier que les deux gâchettes et A sélectionnent les mêmes villages, activent les mêmes boutons et valident le placement. Pendant une saisie et juste après, aucun des trois ne déclenche d’action parasite.
 - [ ] En mode interaction, manipuler joysticks/préhensions : aucun déplacement du plateau.
 - [ ] En mode manipulation, déplacer et tourner avec les joysticks, saisir à une main, puis agrandir/réduire à deux mains ; vérifier les limites et l'absence de saut au relâchement.

@@ -23,6 +23,12 @@
     return shuffle([...E.Config.biomes, fourth]);
   }
 
+  function createSimplifiedDraw() {
+    // Deux paires distinctes de biomes : leur union couvre nécessairement les trois types.
+    const types = shuffle(E.Config.biomes);
+    return { red: shuffle([types[0], types[1]]), blue: shuffle([types[2], types[Math.floor(Math.random() * 2)]]) };
+  }
+
   function createSlots(biome) {
     if (biome === "littoral") {
       return [{ type: "free", content: null }, { type: "free", content: null }];
@@ -38,5 +44,5 @@
     return Array.from({ length: 4 }, () => ({ type: "free", content: null }));
   }
 
-  E.Biomes = { labels, createInitialDraw, randomBiome, createSlots };
+  E.Biomes = { labels, createInitialDraw, createSimplifiedDraw, randomBiome, createSlots };
 }());

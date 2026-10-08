@@ -26,6 +26,7 @@
     let hasFocus = false;
     let selectedVillageKey = "";
     let wasPreparing = false;
+    let format = E.Network.format || E.Config.defaultFormat;
     const owner = () => E.GameView.getPlayerId();
     const state = () => E.GameView.getState();
     const setupPlayer = () => E.Network.mode === "local" ? ["red", "blue"].find((id) => !state().players[id].setupConfirmed) || "red" : owner();
@@ -130,6 +131,7 @@
         title = "Choisir une partie";
         lines = ["EREDITÀ · Choisissez votre aventure"];
         return { title, lines, rows: [
+          Object.entries(E.Config.formats).map(([id, value]) => button(`${value.label} · ${value.regions} régions`, { type: "format", format: id }, true, { centered: true, selected: format === id })),
           row(button("Entraînement", { type: "mode", mode: "solo" }, true, { centered: true, large: true, primary: true, detail: "Jouer contre l’IA" })),
           row(button("Local à deux", { type: "mode", mode: "local" }, true, { centered: true, large: true, detail: "Deux joueurs sur le même plateau" }))
         ], options: { variant: "mode", footer: [button("Quitter le mode VR", { type: "exit" }, true, { centered: true }), button("Paramètres", open("settings"), true, { centered: true })] } };
@@ -158,7 +160,7 @@
       } else if (name === "panel-layout") {
         title = "Ajuster les fenêtres";
         lines = ["Alternative à la préhension des poignées."];
-        entries = Object.entries(panelLabels).map(([id, label]) => button(label, open("panel-adjust", id)));
+        entries = Object.entries(panelLabels).filter(([id]) => !/^(red|blue)\d$/.test(id) || state().players[id.replace(/\d$/, "")].villages[Number(id.at(-1))]).map(([id, label]) => button(label, open("panel-adjust", id)));
       } else if (name === "panel-adjust") {
         title = `Fenêtre · ${panelLabels[data]}`;
         entries = [["Rapprocher", "near"], ["Éloigner", "far"], ["Orienter vers moi", "face"], ["À gauche", "left"], ["À droite", "right"], ["Monter", "up"], ["Descendre", "down"], ["Agrandir", "grow"], ["Réduire", "shrink"]]
@@ -229,21 +231,21 @@
         title = "Préparer la partie";
         const id = E.Network.mode === "local" ? (data || setupPlayer()) : owner(), player = s.players[id];
         const otherId = id === "red" ? "blue" : "red";
-        lines = [`${player.name} · Deck ${player.selectedDeck + 1} · ${player.setupSelection.length}/2 biomes`,
-          player.setupConfirmed ? "Territoire confirmé · prêt à jouer" : "Choisissez votre deck et jusqu’à deux biomes à échanger."];
+        lines = [`${player.name} · Deck ${player.selectedDeck + 1} · ${player.setupSelection.length}/${E.Board.getFormat(s).exchanges} biomes`,
+          player.setupConfirmed ? "Territoire confirmé · prêt à jouer" : "Choisissez votre deck et les biomes à échanger."];
         const decks = [0, 1, 2].map((index) => button(`Deck ${index + 1}`, command("selectDeck", id, index), !player.setupConfirmed,
           { centered: true, selected: player.selectedDeck === index, detail: player.selectedDeck === index ? "Sélectionné ✓" : "Choisir" }));
         const biomes = player.villages.map((item, lane) => button(`${{ littoral: "≈", plaine: "≋", montagne: "▲" }[item.biome]} ${E.Biomes.labels[item.biome]}`, command("toggleBiome", id, lane),
-          !player.setupConfirmed && (player.setupSelection.includes(lane) || player.setupSelection.length < 2), {
+          !player.setupConfirmed && (player.setupSelection.includes(lane) || E.Board.getFormat(s).exchanges === 1 || player.setupSelection.length < E.Board.getFormat(s).exchanges), {
             centered: true, biome: item.biome, lane, selected: player.setupSelection.includes(lane),
-            reason: player.setupConfirmed ? "Le territoire est déjà confirmé." : "Deux biomes maximum.",
+            reason: player.setupConfirmed ? "Le territoire est déjà confirmé." : `${E.Board.getFormat(s).exchanges} biome(s) maximum.`,
             detail: item.biome === "littoral" ? "2 emplacements libres" : item.biome === "montagne" ? "2 libres · 2 animaux" : "4 emplacements libres"
           }));
         const nextPlayer = E.Network.mode === "local" && !s.players[otherId].setupConfirmed;
         const launchLabel = nextPlayer ? `Préparer ${otherId === "red" ? "Rouge" : "Bleu"} →` : E.Network.mode === "guest" ? "Confirmer · prêt" : "Lancer la partie";
-        return { title, lines, rows: [decks, biomes.slice(0, 2), biomes.slice(2),
+        return { title, lines, rows: [decks, biomes.slice(0, 2), ...(biomes.length > 2 ? [biomes.slice(2)] : []),
           row(button(player.setupConfirmed ? "Tirage confirmé ✓" : "Échanger la sélection", command("confirmBiomes", id, "exchange"),
-            !player.setupConfirmed && player.setupSelection.length > 0, { centered: true, reason: "Sélectionnez un ou deux biomes à échanger." }), button("Réglages", open("settings"), true, { centered: true }))],
+            !player.setupConfirmed && player.setupSelection.length > 0, { centered: true, reason: `Sélectionnez jusqu’à ${E.Board.getFormat(s).exchanges} biome(s) à échanger.` }), button("Réglages", open("settings"), true, { centered: true }))],
           options: { variant: "setup", footer: [
             button("Retour", { type: "setup-back" }, true, { centered: true }),
             button(launchLabel, { type: "setup-launch", playerId: id }, !(E.Network.mode === "guest" && player.setupConfirmed),
@@ -276,6 +278,7 @@
       const key = `${sel.playerId}:${sel.lane}`;
       if (selectedVillageKey !== key) { selectedVillageKey = key; residentPage = 0; }
       for (const id of ["red", "blue"]) {
+        for (let lane = s.players[id].villages.length; lane < E.Config.formats.classic.regions; lane++) dashboard.paint(`${id}${lane}`, "", [], [], false);
         const player = s.players[id];
         dashboard.paint(`${id}Gold`, `${id === "red" ? "ROUGE" : "BLEU"} · OR GLOBAL`, [String(Math.floor(player.gold))], [], inGame);
         player.villages.forEach((item, lane) => dashboard.paint(`${id}${lane}`,
@@ -357,7 +360,8 @@
       if (!action) return false;
       const s = state();
       if (action.type === "open") { setModal(action.name, action.data); return true; }
-      if (action.type === "mode") { if (!E.Network.startMode(action.mode)) return false; setModal("setup", "red"); return true; }
+      if (action.type === "format") { format = action.format; E.Network.selectFormat?.(format); return true; }
+      if (action.type === "mode") { if (!E.Network.startMode(action.mode, format)) return false; setModal("setup", "red"); return true; }
       if (action.type === "back") { setModal(s.phase === "setup" ? (E.Network.mode === "pending" ? "mode" : "setup") : null); return true; }
       if (action.type === "setup-back") {
         if (["solo", "local"].includes(E.Network.mode)) { E.GameView.returnToLobby(); setModal("mode"); }
@@ -382,7 +386,7 @@
       if (action.type === "text-size") { dashboard.setTextSize(action.size); feedback(`Taille des textes : ${textSizes[action.size]}.`); return true; }
       if (action.type === "resident-page") { residentPage = Math.max(0, residentPage + action.delta); return true; }
       if (action.type === "cycle-village") {
-        const sel = selection(); const lane = sel.playerId === action.playerId ? (sel.lane + 1) % 4 : 0;
+        const sel = selection(); const lane = sel.playerId === action.playerId ? (sel.lane + 1) % state().players[action.playerId].villages.length : 0;
         E.GameView.selectVillage(action.playerId, lane); return true;
       }
       if (action.type === "select-village") { return selectVillage(action.playerId, action.lane); }

@@ -102,7 +102,7 @@ function installXRFixture() {
     };
     const matches = (target) => {
       const candidate = target.userData.xrTarget.action;
-      return target.userData.xrTarget.enabled !== false && (candidate === action || candidate?.name === action || candidate?.mode === action || candidate?.type === action || candidate?.method === action || candidate?.size === action || candidate?.direction === action || candidate?.operation === action);
+      return target.userData.xrTarget.enabled !== false && (candidate === action || candidate?.name === action || candidate?.mode === action || candidate?.type === action || candidate?.method === action || candidate?.size === action || candidate?.direction === action || candidate?.operation === action || candidate?.format === action);
     };
     const press = (mesh) => { mesh.updateWorldMatrix(true, false); fixture.aim(index, mesh.getWorldPosition(new THREE.Vector3()).toArray()); if (method === "a") fixture.a(); else fixture.trigger(index); };
     if (action === "page") { const next = active().find(t => t.userData.xrTarget.action?.type === "panel-page" && t.userData.xrTarget.action.delta === 1 && t.userData.xrTarget.enabled); if (next) press(next); return; }
@@ -215,6 +215,13 @@ async function run() {
   assert.equal(await evaluate("xrFixture.requests.at(-1).activated"), true);
   assert.equal(await evaluate("xrFixture.requests.at(-1).mode"), "immersive-ar");
   assert.equal(await evaluate("xrFixture.placement.candidate !== null"), true);
+  const placementPose = await evaluate("xrFixture.panels.getPanel('placement').node.position.toArray()");
+  await evaluate("(() => { const {THREE,renderer}=Eredita.Board3D.getXRContext(); const handle=xrFixture.panels.getPanel('placement').handle; handle.updateWorldMatrix(true,false); xrFixture.aim(1,handle.getWorldPosition(new THREE.Vector3()).toArray()); renderer.xr.getController(1).dispatchEvent({type:'squeezestart'}); xrFixture.step(); })()");
+  assert.deepEqual(await evaluate("Eredita.XR.diagnostics.grabbedPanels"), ["placement"], "La fenêtre de placement est saisissable avant la partie");
+  await evaluate("xrFixture.matrices.get(xrFixture.sources[1].gripSpace).elements[12]+=.1; for(let i=0;i<20;i++)xrFixture.step()");
+  assert.notDeepEqual(await evaluate("xrFixture.panels.getPanel('placement').node.position.toArray()"), placementPose);
+  await evaluate("xrFixture.sources[0].gamepad.buttons[5].pressed=true; xrFixture.step(); xrFixture.sources[0].gamepad.buttons[5].pressed=false; xrFixture.step(); Eredita.Board3D.getXRContext().renderer.xr.getController(1).dispatchEvent({type:'squeezeend'}); xrFixture.step(); xrFixture.aim(0,[0,.65,-.85])");
+  assert.deepEqual(await evaluate("xrFixture.panels.getPanel('placement').node.position.toArray()"), placementPose, "B annule aussi le déplacement du panneau de placement");
   await evaluate("xrFixture.trigger(0)");
   assert.equal(await evaluate("Eredita.XR.diagnostics.placed"), true);
   assert.equal(await evaluate("Eredita.XR.diagnostics.width"), 0.8);
@@ -227,7 +234,7 @@ async function run() {
   assert.equal(await evaluate("xrFixture.dashboard.getPanel('clock').data.lines[0]"), "PAUSE");
   assert.equal(await evaluate("Eredita.GameView.getState().preparationRemaining>0 && Eredita.GameView.getState().elapsed===0"), true, "La préparation est aussi en pause dans le casque");
   assert.equal(await evaluate("Math.abs(xrFixture.dashboard.group.rotation.x)<0.001"), true, "Le tableau de bord reste droit");
-  assert.equal(await evaluate("['red0','blue0','redGold','blueGold','clock'].every(id=>xrFixture.dashboard.getPanel(id).handle && xrFixture.dashboard.getPanel(id).node.rotation.x>0)"), true, "Scores inclinés et déplaçables");
+  assert.equal(await evaluate("['red0','blue0','redGold','blueGold','clock','jobs','tasks','buildings','residents','gear','feedback'].every(id=>xrFixture.dashboard.getPanel(id).handle && xrFixture.dashboard.getPanel(id).node.quaternion.angleTo(new (Eredita.Board3D.getXRContext().THREE.Quaternion)())<0.001)"), true, "Toutes les fenêtres sont parallèles et déplaçables");
   const stableFrame = await evaluate("xrFixture.dashboard.group.matrixWorld.toArray()");
   await evaluate("xrFixture.viewer.x += .15; xrFixture.step(); xrFixture.viewer.x -= .15; xrFixture.step()");
   assert.deepEqual(await evaluate("xrFixture.dashboard.group.matrixWorld.toArray()"), stableFrame, "Les fenêtres ne suivent pas les micromouvements de tête");
@@ -273,9 +280,9 @@ async function run() {
   await evaluate("xrFixture.button('back')");
   const laneBeforeStick = await evaluate("Eredita.GameView.getState().selectedVillage.lane");
   await evaluate("xrFixture.sources[1].gamepad.axes[3]=-1; xrFixture.step(); xrFixture.sources[1].gamepad.axes[3]=0; xrFixture.step()");
-  assert.equal(await evaluate("Eredita.GameView.getState().selectedResidentId===Eredita.GameView.getState().players.red.villages[Eredita.GameView.getState().selectedVillage.lane].residents[1].id"), true, "Joystick gauche vertical sélectionne l’habitant suivant");
+  assert.equal(await evaluate("Eredita.GameView.getState().selectedResidentId===Eredita.GameView.getState().players.red.villages[Eredita.GameView.getState().selectedVillage.lane].residents.at(-1).id"), true, "Joystick gauche vers le haut sélectionne l’habitant précédent");
   await evaluate("xrFixture.sources[0].gamepad.axes[2]=1; xrFixture.step(); xrFixture.sources[0].gamepad.axes[2]=0; xrFixture.step()");
-  assert.equal(await evaluate("Eredita.GameView.getState().selectedVillage.lane"), (laneBeforeStick+1)%4, "Joystick droit horizontal sélectionne le village suivant");
+  assert.equal(await evaluate("Eredita.GameView.getState().selectedVillage.lane"), (laneBeforeStick+3)%4, "À droite côté Rouge sélectionne le village physiquement à droite");
   await evaluate("Eredita.GameView.selectVillage('red',0); xrFixture.step()");
   if (process.env.EREDITA_XR_PREVIEW_DIR) {
     fs.mkdirSync(process.env.EREDITA_XR_PREVIEW_DIR, { recursive: true });
@@ -349,6 +356,9 @@ async function run() {
   await guest.evaluate("xrFixture.step(); xrFixture.trigger(); xrFixture.step()");
   assert.equal(await guest.evaluate("Eredita.XR.diagnostics.placed"), true);
   assert.ok(await guest.evaluate("Math.abs(Eredita.Board3D.getXRContext().world.parent.rotation.y) < 0.01"), "Orientation initiale du joueur Bleu");
+  await guest.evaluate("xrFixture.sources[0].gamepad.axes[2]=1; xrFixture.step(); xrFixture.sources[0].gamepad.axes[2]=0; xrFixture.step()");
+  assert.equal(await guest.evaluate("Eredita.GameView.getState().selectedVillage.lane"), 1, "À droite côté Bleu conserve le sens physique");
+  await guest.evaluate("Eredita.GameView.selectVillage('blue',0); xrFixture.step()");
   await guest.evaluate("xrFixture.button('build')");
   await waitFor("Eredita.GameView.getState().players.blue.villages[0].buildings.some(b=>b.type==='bergerie')");
   await host.send("Page.bringToFront");
@@ -358,7 +368,9 @@ async function run() {
   await guest.evaluate("xrFixture.step(); xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await guest.waitFor("!Eredita.XR.active");
   // Une partie solo peut être préparée puis lancée sans quitter la session immersive.
   await guest.evaluate("Eredita.GameView.returnToLobby()");
-  await guest.click('#main-menu [data-menu-screen="play"]'); await guest.click("#training-button");
+  await guest.click('#main-menu [data-menu-screen="play"]'); await guest.click('#menu-subcontent [data-match-format="simplified"]'); await guest.click("#training-button");
+  assert.equal(await guest.evaluate("Eredita.GameView.getState().players.red.villages.length"), 2);
+  assert.equal(await guest.evaluate("document.querySelectorAll('[data-biome-choice]').length"), 4);
   await guest.click("#setup-screen [data-open-xr]"); await guest.waitFor("!document.querySelector('#xr-start').disabled");
   await guest.click("#xr-start"); await guest.waitFor("Eredita.XR.active");
   await guest.evaluate("xrFixture.step(); xrFixture.trigger(); xrFixture.step()");
@@ -371,6 +383,9 @@ async function run() {
   }
   await guest.evaluate("xrFixture.button('setup-launch')");
   assert.equal(await guest.evaluate("Eredita.GameView.getState().phase"), "running");
+  assert.equal(await guest.evaluate("xrFixture.dashboard.targets.filter(t=>t.userData.xrTarget.action?.type==='select-village').length"), 4);
+  assert.equal(await guest.evaluate("Eredita.Board3D.getXRContext().terrainGroup.children.length"), 4);
+  assert.ok(Math.abs(await guest.evaluate("Eredita.XR.diagnostics.width") - 0.8) < 1e-9);
   await guest.evaluate("xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await guest.waitFor("!Eredita.XR.active");
   await guest.evaluate("Eredita.GameView.returnToLobby()");
   await guest.click("#main-menu [data-open-xr]"); await guest.waitFor("!document.querySelector('#xr-start').disabled");
@@ -382,9 +397,29 @@ async function run() {
   }
   await guest.evaluate("xrFixture.button('settings',0,'a'); xrFixture.button('recenter',0,'a'); xrFixture.aim(0,[0,0.65,-0.85]); xrFixture.step(); xrFixture.a()");
   assert.equal(await guest.evaluate("Eredita.XR.diagnostics.placed"), true, "Le plateau peut être replacé dès le menu de début avec A");
-  await guest.evaluate("xrFixture.button('mode')");
+  await guest.evaluate("xrFixture.button('simplified'); xrFixture.button('mode')");
+  assert.equal(await guest.evaluate("Eredita.GameView.getState().format"), "simplified");
+  assert.equal(await guest.evaluate("Eredita.GameView.getState().players.red.villages.length"), 2);
   assert.equal(await guest.evaluate("Eredita.Network.mode"), "solo");
   await guest.evaluate("xrFixture.button('page'); xrFixture.button('settings'); xrFixture.button('page'); xrFixture.button('exit')"); await guest.waitFor("!Eredita.XR.active");
+  // Le format de l’hôte est transmis au véritable second navigateur.
+  await host.evaluate("Eredita.GameView.returnToLobby()"); await guest.evaluate("Eredita.GameView.returnToLobby()");
+  await host.click('#main-menu [data-menu-screen="play"]'); await host.click('#menu-subcontent [data-match-format="simplified"]'); await host.click("#open-multiplayer"); await host.click("#create-online");
+  await host.waitFor("Eredita.Network.mode==='host'");
+  const smallRoom = await host.evaluate("Eredita.Network.roomCode");
+  await guest.click('#main-menu [data-menu-screen="play"]'); await guest.click('#menu-subcontent [data-match-format="classic"]'); await guest.click("#open-multiplayer");
+  await guest.evaluate(`document.querySelector('#room-code').value='${smallRoom}'`); await guest.click("#join-online");
+  await guest.waitFor("Eredita.Network.mode==='guest' && Eredita.GameView.getState().format==='simplified'");
+  await host.click("#continue-online");
+  await host.click('[data-setup-action="keep"][data-player="red"]');
+  await guest.click('[data-biome-choice][data-player="blue"][data-lane="0"]');
+  await guest.waitFor("Eredita.GameView.getState().players.blue.setupSelection.includes(0)");
+  await guest.click('[data-setup-action="exchange"][data-player="blue"]');
+  await host.waitFor("Eredita.GameView.getState().players.blue.setupConfirmed"); await host.click("#start-game");
+  await guest.waitFor("Eredita.GameView.getState().phase==='running'");
+  assert.equal(await host.evaluate("document.querySelectorAll('[data-village-select]').length"), 4);
+  assert.equal(await guest.evaluate("document.querySelectorAll('[data-village-select]').length"), 4);
+  assert.equal(await guest.evaluate("document.querySelectorAll('#board-columns .lane').length"), 2);
   assert.deepEqual(host.errors, []); assert.deepEqual(guest.errors, []);
   console.log("Navigateur : placement, manipulation, préparation solo et construction invitée en XR, plus synchronisation réseau validés. Périphérique XR simulé.");
 }

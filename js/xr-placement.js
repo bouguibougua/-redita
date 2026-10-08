@@ -4,6 +4,7 @@
   function create({ THREE, session, root, scene, playerId, manualOnly, status }) {
     const cfg = E.Config.xr;
     const sources = new Map();
+    let logicalWidth = E.Board3D?.getBoardWidth?.() || cfg.boardWidth;
     let disposed = false;
     let manual = manualOnly;
     let placed = false;
@@ -19,7 +20,7 @@
     let requestedAt = null;
     let referenceSpace;
     let latestViewer;
-    root.scale.setScalar(cfg.initialWidth / cfg.boardWidth);
+    root.scale.setScalar(cfg.initialWidth / logicalWidth);
     root.visible = false;
     const reticle = new THREE.Mesh(new THREE.RingGeometry(0.045, 0.055, 32), new THREE.MeshBasicMaterial({ color: 0x6cffba, side: THREE.DoubleSide }));
     reticle.rotation.x = -Math.PI / 2;
@@ -45,7 +46,7 @@
       offset.setLength(THREE.MathUtils.clamp(length, cfg.minDistance, cfg.maxDistance));
       root.position.x = viewer.position.x + offset.x; root.position.z = viewer.position.z + offset.z;
       root.position.y = THREE.MathUtils.clamp(root.position.y, viewer.position.y - cfg.maxBelowEyes, viewer.position.y - cfg.minBelowEyes);
-      root.scale.setScalar(THREE.MathUtils.clamp(root.scale.x, cfg.minWidth / cfg.boardWidth, cfg.maxWidth / cfg.boardWidth));
+      root.scale.setScalar(THREE.MathUtils.clamp(root.scale.x, cfg.minWidth / logicalWidth, cfg.maxWidth / logicalWidth));
     }
     function requestSource(record) {
       const source = record.source;
@@ -94,6 +95,8 @@
       reticle.material.color.setHex(manual ? 0xffd778 : 0x6cffba);
     }
     function update(frame, space, records, viewer, timestamp) {
+      const nextWidth = E.Board3D?.getBoardWidth?.() || cfg.boardWidth;
+      if (nextWidth !== logicalWidth) { root.scale.multiplyScalar(logicalWidth / nextWidth); logicalWidth = nextWidth; }
       referenceSpace = space;
       latestViewer = viewer;
       if (!initialViewer) initialViewer = viewer.position.clone();
@@ -179,7 +182,7 @@
           const oldVector = start.points[1].clone().sub(start.points[0]);
           const newVector = grips[1].gripPosition.clone().sub(grips[0].gripPosition);
           if (oldVector.length() >= cfg.minGripSeparation && newVector.length() >= cfg.minGripSeparation) {
-            const scale = THREE.MathUtils.clamp(start.scale * newVector.length() / oldVector.length(), cfg.minWidth / cfg.boardWidth, cfg.maxWidth / cfg.boardWidth);
+            const scale = THREE.MathUtils.clamp(start.scale * newVector.length() / oldVector.length(), cfg.minWidth / logicalWidth, cfg.maxWidth / logicalWidth);
             const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(newVector.x, newVector.z) - Math.atan2(oldVector.x, oldVector.z));
             const oldMid = start.points[0].clone().add(start.points[1]).multiplyScalar(0.5);
             const newMid = grips[0].gripPosition.clone().add(grips[1].gripPosition).multiplyScalar(0.5);
@@ -202,8 +205,8 @@
       update, confirm, beginPlacement, cancelPlacement, manipulate,
       get placed() { return placed; }, get manual() { return manual; },
       get manualOnly() { return manualOnly; },
-      get candidate() { return candidate; }, get width() { return root.scale.x * cfg.boardWidth; },
-      setWidth(width) { if (Number.isFinite(width)) root.scale.setScalar(THREE.MathUtils.clamp(width, cfg.minWidth, cfg.maxWidth) / cfg.boardWidth); },
+      get candidate() { return candidate; }, get width() { return root.scale.x * logicalWidth; },
+      setWidth(width) { if (Number.isFinite(width)) root.scale.setScalar(THREE.MathUtils.clamp(width, cfg.minWidth, cfg.maxWidth) / logicalWidth); },
       get anchorTracked() { return Boolean(anchor && root.visible); },
       setManual(value) { manual = value; candidate = null; requestedAt = null; status(value ? "Plan manuel : ajustez sa hauteur à votre table puis confirmez." : "Visez votre table. Confirmez uniquement le repère souhaité."); },
       height(direction) { manualHeight = THREE.MathUtils.clamp(manualHeight + direction * cfg.heightStep, latestViewer.position.y - cfg.maxBelowEyes, latestViewer.position.y - cfg.minBelowEyes); },
