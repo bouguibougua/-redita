@@ -28,8 +28,10 @@
   let baseLanes = 0;
   const baseMeshes = [];
   const laneCount = () => latestState?.players.red.villages.length || E.Config.formats[E.Config.defaultFormat].regions;
-  const boardWidth = () => laneCount() * E.Config.board.laneSpacing + E.Config.board.rimMargin;
-  const laneX = (lane) => (lane - (laneCount() - 1) / 2) * E.Config.board.laneSpacing;
+  const terrainWidthScale = () => laneCount() === E.Config.formats.simplified.regions ? E.Config.board.simplifiedWidthScale : 1;
+  const laneSpacing = () => E.Config.board.laneSpacing * terrainWidthScale();
+  const boardWidth = () => laneCount() * laneSpacing() + E.Config.board.rimMargin;
+  const laneX = (lane) => (lane - (laneCount() - 1) / 2) * laneSpacing();
   const colors = {
     montagne: 0x77766d,
     plaine: 0x708a49,
@@ -115,7 +117,7 @@
   function addBoardBase() {
     baseMeshes.splice(0).forEach(item => { item.removeFromParent(); disposeObject(item); });
     baseLanes = laneCount();
-    const base = mesh(new THREE.BoxGeometry(baseLanes * E.Config.board.laneSpacing + E.Config.board.baseMargin, 0.42, 10.7), 0x44372a, { castShadow: false });
+    const base = mesh(new THREE.BoxGeometry(baseLanes * laneSpacing() + E.Config.board.baseMargin, 0.42, 10.7), 0x44372a, { castShadow: false });
     base.position.y = -0.31;
     world.add(base);
     const rim = mesh(new THREE.BoxGeometry(boardWidth(), 0.16, 11.05), 0xb68a4d, { castShadow: false, metalness: 0.1 });
@@ -130,11 +132,11 @@
     group.position.set(laneX(village.lane), 0, z);
     group.userData = { playerId: owner, lane: village.lane };
 
-    const tile = mesh(new THREE.BoxGeometry(2.82, 0.22, 4.85), colors[village.biome], { castShadow: false });
+    const tile = mesh(new THREE.BoxGeometry(2.82 * terrainWidthScale(), 0.22, 4.85), colors[village.biome], { castShadow: false });
     tile.position.y = -0.08;
     group.add(tile);
 
-    const border = mesh(new THREE.BoxGeometry(2.92, 0.08, 4.95), owner === "red" ? colors.red : colors.blue, { castShadow: false, metalness: 0.15 });
+    const border = mesh(new THREE.BoxGeometry(2.92 * terrainWidthScale(), 0.08, 4.95), owner === "red" ? colors.red : colors.blue, { castShadow: false, metalness: 0.15 });
     border.position.y = -0.19;
     group.add(border);
 
@@ -143,6 +145,8 @@
     if (village.biome === "littoral") addCoast(group, village);
     addSlots(group, village);
     addVillageAndBuildings(group, village);
+    // Espacer les éléments sans étirer les bâtiments, les cultures ou les animaux.
+    group.children.forEach(item => { item.position.x *= terrainWidthScale(); });
     terrainGroup.add(group);
   }
 
@@ -171,7 +175,7 @@
   function addCoast(group, village) {
     const owner = village.ownerId;
     const waterZ = owner === "red" ? 1.46 : -1.46;
-    const water = mesh(new THREE.BoxGeometry(2.78, 0.08, 1.82), 0x238eb0, { castShadow: false, roughness: 0.25, metalness: 0.1 });
+    const water = mesh(new THREE.BoxGeometry(2.78 * terrainWidthScale(), 0.08, 1.82), 0x238eb0, { castShadow: false, roughness: 0.25, metalness: 0.1 });
     water.position.set(0, 0.08, waterZ);
     group.add(water);
     for (let index = 0; index < 5; index++) {
@@ -389,16 +393,16 @@
         figure.rotation.y = facing === 1 ? 0 : Math.PI;
         if (isWorker) {
           const lateral = resident.mission === "chasse" ? (resident.workLaneOffset || 0) * 2.7 : (index % 2 ? 0.3 : -0.3);
-          figure.position.set(laneX(village.lane) + lateral, 0.18, -4.35 + (resident.workPosition / 100) * 8.7);
+          figure.position.set(laneX(village.lane) + lateral * terrainWidthScale(), 0.18, -4.35 + (resident.workPosition / 100) * 8.7);
         } else if (resident.mission === "peche" && village.biome === "littoral") {
           // Fishermen stand on dry shoreline; this never puts a resident in the water.
           const row = Math.floor(fisherIndex / 7);
           const column = fisherIndex++ % 7;
-          figure.position.set(laneX(village.lane) - 1.08 + column * 0.36, 0.18, facing * (-2.55 + 0.36 - row * 0.34));
+          figure.position.set(laneX(village.lane) + (-1.08 + column * 0.36) * terrainWidthScale(), 0.18, facing * (-2.55 + 0.36 - row * 0.34));
         } else {
           const row = Math.floor(localIndex / 7);
           const column = localIndex++ % 7;
-          figure.position.set(laneX(village.lane) - 1.05 + column * 0.35, 0.18, facing * (-2.55 - 1.28 + row * 0.23));
+          figure.position.set(laneX(village.lane) + (-1.05 + column * 0.35) * terrainWidthScale(), 0.18, facing * (-2.55 - 1.28 + row * 0.23));
         }
         active.add(key);
       });
@@ -411,7 +415,7 @@
         const column = animalIndex++ % 6;
         figure.scale.setScalar(0.8);
         figure.rotation.y = facing === 1 ? 0 : Math.PI;
-        figure.position.set(laneX(village.lane) - 1 + column * 0.38, 0.18, facing * (-2.55 - 0.67 + row * 0.31));
+        figure.position.set(laneX(village.lane) + (-1 + column * 0.38) * terrainWidthScale(), 0.18, facing * (-2.55 - 0.67 + row * 0.31));
         active.add(key);
       });
     }));

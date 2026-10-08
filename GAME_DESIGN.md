@@ -133,6 +133,8 @@ Au tirage initial, chaque joueur reçoit deux biomes différents. L’ensemble d
 
 Le format reste dans l’état autoritaire et les snapshots réseau ; un redémarrage conserve le format choisi. Les coûts, ressources, métiers, tâches, decks, statistiques, minute de préparation, 12:30 de combat, Overtime et règles de génération par nombre de villages vivants restent identiques. La carte 2D/3D, les fiches et la navigation ne montrent que les villages existants. Les unités progressent sur deux lignes et sont redirigées vers l’autre village vivant suivant les règles existantes.
 
+TEMP_BALANCE_VALUE — présentation : en 3D et en réalité mixte, les terrains du format à deux camps sont élargis de 15 % pour équilibrer les proportions du plateau. Le socle, les bordures, le littoral et les positions des éléments suivent cette largeur, sans étirer les modèles. Cette valeur visuelle est centralisée dans `Config.board.simplifiedWidthScale` et ne change pas les distances logiques ou les règles de jeu.
+
 ---
 
 # 4. CONDITION DE VICTOIRE

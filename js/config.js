@@ -13,7 +13,7 @@
       classic: { label: "4 camps", regions: 4, exchanges: 2 }
     },
     // TEMP_BALANCE_VALUE — dimensions visuelles du plateau, sans effet sur les distances logiques.
-    board: { laneSpacing: 3, baseMargin: 1.3, rimMargin: 1.65 },
+    board: { laneSpacing: 3, simplifiedWidthScale: 1.15, baseMargin: 1.3, rimMargin: 1.65 },
     preparation: {
       duration: 60,
       // TEMP_BALANCE_VALUE — production pendant la préparation non encore validée.

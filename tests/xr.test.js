@@ -262,8 +262,8 @@ async function run() {
   const xs = [...new Set(small.terrainGroup.children.map(tile => tile.position.x))];
   assert.equal(xs.length, 2); assert.equal(xs[0], -xs[1], "Les deux lignes sont centrées");
   const rim = small.world.children.find(item => item.geometry?.parameters.height === 0.16);
-  assert.equal(rim.geometry.parameters.width, 7.65);
-  assert.ok(xs.every(x => Math.abs(x) + 1.46 < rim.geometry.parameters.width / 2), "Les terrains restent à l’intérieur du socle réduit");
+  assert.ok(Math.abs(rim.geometry.parameters.width - 8.55) < 1e-9);
+  assert.ok(xs.every(x => Math.abs(x) + 1.46 * E.Config.board.simplifiedWidthScale < rim.geometry.parameters.width / 2), "Les terrains restent à l’intérieur du socle réduit");
   console.log("XR : état partagé, profils, gâchettes, limites, orientation, hit-test, ancres, nettoyage et Raycaster validés (API XR simulée, Three.js réel).");
 }
 run().catch((error) => { console.error(error); process.exitCode = 1; });
