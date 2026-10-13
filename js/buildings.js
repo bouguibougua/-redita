@@ -9,6 +9,7 @@
     const config = E.Config.building;
 
     if (state.phase !== "running" || state.paused || !village || village.destroyed) return false;
+    if (E.CardEffects?.isBurned(state, village)) return false;
     if (!config.types.includes(type) || village.buildings.length >= config.slots) return false;
     if (player.gold < config.T1.gold) return false;
 
@@ -16,6 +17,7 @@
     village.buildings.push({ type, level: 1, hpBonus: config.T1.hp });
     village.maxHp += config.T1.hp;
     village.hp += config.T1.hp;
+    E.CardEffects?.updateArtisanatBonuses(state);
     return true;
   }
 

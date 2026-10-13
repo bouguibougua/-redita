@@ -1,0 +1,57 @@
+"use strict";
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+global.window = global;
+const read = name => fs.readFileSync(path.join(__dirname, "..", "js", `${name}.js`), "utf8");
+for (const name of ["config", "biomes", "crops", "livestock", "equipment", "units", "buildings", "transport", "animals", "economy", "board", "combat", "cards", "card-effects", "card-game", "decks", "game-view"]) vm.runInThisContext(read(name), { filename: name });
+const E = global.Eredita;
+const state = E.Board.createState("classic");
+for (const player of Object.values(state.players)) player.villages.forEach(v => { v.biome = "plaine"; v.slots = E.Biomes.createSlots("plaine"); });
+E.Board.createState = () => state;
+let callbacks, snapshots = 0;
+E.Network = { mode: "host", playerId: "red", init: handlers => { callbacks = handlers; }, sendState: () => snapshots++ };
+E.UI = { init() {}, render() {}, renderFrame() {} };
+global.document = { querySelector: () => null };
+global.requestAnimationFrame = () => {};
+vm.runInThisContext(read("game"), { filename: "game" });
+const originalView = JSON.stringify([state.selectedVillage, state.selectedResidentId]);
+function remote(method, args, ownerId = "blue") {
+  callbacks.onCommand({ playerId: "blue", method, args, view: { selectedVillage: { playerId: ownerId, lane: 0 } } });
+  assert.equal(JSON.stringify([state.selectedVillage, state.selectedResidentId]), originalView);
+}
+const custom = { quantities: { artisanat: 4, "champ-ble": 4, habitant: 1 }, mythological: ["u-mazzeru", "a-stregha", "squadra-arozza"] };
+const before = JSON.stringify(state);
+remote("selectDeck", ["blue", 0, { quantities: { habitant: 999 }, mythological: [] }]);
+assert.equal(JSON.stringify(state), before, "A forged deck is rejected");
+remote("selectDeck", ["blue", 2, custom]);
+remote("confirmBiomes", ["blue", "keep", custom]);
+assert.deepEqual(state.players.blue.matchDeck, custom, "The guest supplies its own composition");
+assert.equal(state.players.blue.setupConfirmed, true);
+state.players.red.setupConfirmed = true;
+const random = Math.random; Math.random = () => 0.999999;
+E.GameView.command("start"); Math.random = random;
+assert.equal(state.players.blue.cards.hand.length, 5);
+assert.equal(state.players.blue.cards.drawPile.length, 4);
+const held = state.players.blue.cards.hand.find(card => card.cardId === "artisanat");
+const redCard = state.players.red.cards.hand[0];
+for (const [id, target, owner] of [[redCard.id, { lane: 0 }, "blue"], [held.id, { lane: 0 }, "red"], [held.id, { lane: 0, playerId: "red" }, "blue"], [held.id, null, "blue"]]) {
+  const before = JSON.stringify(state);
+  remote("playCard", [id, target], owner);
+  assert.equal(JSON.stringify(state), before, "Invalid ownership or target cannot change the match");
+}
+const gold = state.players.blue.gold;
+remote("playCard", [held.id, { lane: 0 }]);
+assert.equal(state.players.blue.gold, gold - E.Config.building.T1.gold);
+assert.equal(state.players.blue.villages[0].buildings.length, 1);
+assert.equal(state.players.blue.cards.hand.length, 4);
+const after = JSON.stringify(state);
+remote("playCard", [held.id, { lane: 0 }]);
+assert.equal(JSON.stringify(state), after, "A duplicate network command cannot charge twice");
+const snapshot = JSON.parse(JSON.stringify(state));
+const next = snapshot.players.blue.cards.hand.find(card => card.cardId === "champ-ble");
+assert.equal(E.CardGame.quote(snapshot, "blue", next.id, { lane: 0, slotIndex: 0 }).allowed, true);
+assert.ok(snapshots > 0);
+callbacks.onCommand({ playerId: "blue", method: "playCard", args: null });
+console.log("Cartes réseau : deck invité, validation autoritaire, propriété des cartes, cibles, rejeu et snapshots validés.");

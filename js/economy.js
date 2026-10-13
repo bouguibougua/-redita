@@ -87,6 +87,7 @@
     const resident = getResident(state, playerId, lane, residentId);
     if (state.phase !== "running" || state.paused || !village || village.destroyed || !resident ||
       resident.mission !== "disponible" || resident.unitId || !["attaque", "defense"].includes(mission)) return false;
+    if (E.CardEffects?.isBurned(state, village)) return false;
     const role = isBoosted(resident, mission) ? resident.profession : "habitant";
     const unit = E.Units.create(playerId, lane, role, {
       residentId,
@@ -100,6 +101,7 @@
     resident.mission = mission;
     resident.unitId = unit.id;
     state.units.push(unit);
+    E.CardEffects?.updateArtisanatBonuses(state);
     return true;
   }
 
@@ -150,8 +152,7 @@
     if (!definition) return false;
     if (job === "agriculture") return hasContent(village, "crop");
     if (job === "elevage") return hasContent(village, "livestock");
-    // La pêche en rivière sera ajoutée avec la carte Rivière.
-    if (job === "peche") return village.biome === "littoral";
+    if (job === "peche") return village.biome === "littoral" || Boolean(village.terrain?.river);
     if (job === "chasse") return true;
     return false;
   }
@@ -288,7 +289,7 @@
     const player = state.players[playerId];
     const village = player?.villages[lane];
     const cost = E.Config.residentPurchase;
-    return Boolean(state.phase === "running" && !state.paused && village && !village.destroyed &&
+    return Boolean(state.phase === "running" && !state.paused && village && !village.destroyed && !E.CardEffects?.isBurned(state, village) &&
       E.Config.resources.includes(resource) && village.population < village.populationMax &&
       player.gold >= cost.gold && village.resources[resource] >= cost.resourceAmount);
   }
@@ -310,6 +311,7 @@
     const index = village.residents.findIndex((resident) => resident.id === residentId);
     if (index < 0) return false;
     const [resident] = village.residents.splice(index, 1);
+    E.CardEffects?.recordDeath(state, village, resident);
     if (economicMissions.includes(resident.mission)) {
       village.jobs[resident.mission] = Math.max(0, village.jobs[resident.mission] - 1);
     }
@@ -325,6 +327,7 @@
       if (!interval) return;
 
       livingVillages.forEach((village) => {
+        if (E.CardEffects?.isBurned(state, village)) return;
         if (village.population >= village.populationMax) {
           village.populationTimer = 0;
           return;
@@ -393,7 +396,7 @@
     const field = config.agricultureFieldPositionByOwner[village.ownerId];
     const farming = resident.mission === "agriculture";
     const profession = E.Config.professions[resident.profession || "habitant"];
-    const movementSpeed = E.Config.movement.inhabitantSpeed * (1 + (isBoosted(resident, resident.mission) ? profession.speedBonus || 0 : 0)) * donkeyMultiplier(resident, "movementBonus");
+    const movementSpeed = E.Config.movement.inhabitantSpeed * (1 + (isBoosted(resident, resident.mission) ? profession.speedBonus || 0 : 0)) * donkeyMultiplier(resident, "movementBonus") * (village.terrain?.trail ? 1 + E.Config.cardGame.trailSpeedBonus : 1);
 
     // Une récolte déjà chargée reste livrée même si sa source disparaît.
     if (resident.workPhase === "toVillage") {
@@ -445,8 +448,8 @@
         resident.carrying = {
           resource: farming ? cropResources[target.slot.content.type] : "lait",
           amount: farming
-            ? cropCount(village, target.slot.content.type) * config.agricultureAmountPerTrip * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus")
-            : dairyAnimalCount(village) * config.milkAmountPerAnimal * (1 + bonus + bergerieBonus(village)) * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus")
+            ? cropCount(village, target.slot.content.type) * config.agricultureAmountPerTrip * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.terrain?.mill ? 1 + E.Config.cardGame.millProductionBonus : 1) * (village.productionMultiplier ?? 1)
+            : dairyAnimalCount(village) * config.milkAmountPerAnimal * (1 + bonus + bergerieBonus(village)) * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.productionMultiplier ?? 1)
         };
         resident.workPhase = "toVillage";
       }
@@ -463,7 +466,7 @@
 
   function updateFishing(village, delta) {
     const workers = village.jobs.peche;
-    if (!workers || village.biome !== "littoral") return;
+    if (!workers || (village.biome !== "littoral" && !village.terrain?.river)) return;
     const interval = E.Config.temporaryProduction.fishingInterval;
     village.residents.filter((resident) => resident.mission === "peche").forEach((resident) => {
       const equipment = E.Equipment.bonuses(resident);
@@ -471,7 +474,7 @@
       const fisherYield = (1 + workBonus(village, resident, "peche")) * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus");
       while (resident.workTimer >= interval) {
         resident.workTimer -= interval;
-        village.resources.poisson += E.Config.temporaryProduction.fishAmountPerWorker * fisherYield;
+        village.resources.poisson += E.Config.temporaryProduction.fishAmountPerWorker * fisherYield * (village.productionMultiplier ?? 1);
       }
     });
   }
@@ -517,7 +520,7 @@
       if (!Number.isFinite(resident.workLaneOffset)) resident.workLaneOffset = 0;
       if (!Number.isFinite(resident.huntTargetPosition) || !Number.isFinite(resident.huntTargetLaneOffset)) chooseHuntTarget(village, resident);
 
-      const movementSpeed = (isBoosted(resident, "chasse") ? E.Config.movement.hunterSpeed : E.Config.movement.inhabitantSpeed) * donkeyMultiplier(resident, "movementBonus");
+      const movementSpeed = (isBoosted(resident, "chasse") ? E.Config.movement.hunterSpeed : E.Config.movement.inhabitantSpeed) * donkeyMultiplier(resident, "movementBonus") * (village.terrain?.trail ? 1 + E.Config.cardGame.trailSpeedBonus : 1);
       const reachedPosition = moveWorker(resident, resident.huntTargetPosition, movementSpeed, delta);
       const lateralDistance = resident.huntTargetLaneOffset - resident.workLaneOffset;
       const lateralStep = config.huntingLateralSpeed * donkeyMultiplier(resident, "movementBonus") * delta;
@@ -530,7 +533,7 @@
       while (resident.workTimer >= config.huntingInterval) {
         resident.workTimer -= config.huntingInterval;
         const amount = isBoosted(resident, "chasse") ? config.huntingSpecialistAmount : config.huntingBaseAmount;
-        village.resources.viande += amount * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus");
+        village.resources.viande += amount * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.productionMultiplier ?? 1);
       }
     });
   }
@@ -538,6 +541,8 @@
   function updateProduction(state, delta) {
     Object.values(state.players).forEach((player) => {
       player.villages.filter((village) => !village.destroyed).forEach((village) => {
+        village.productionMultiplier = E.CardEffects?.productionMultiplier(state, village) ?? 1;
+        E.Transport.maritimeState(village).productionMultiplier = village.productionMultiplier;
         updateWorkerTrips(village, delta);
         updateFishing(village, delta);
         E.Transport.updateFishingNets(village, delta);
@@ -545,7 +550,7 @@
         village.slots.forEach((slot, slotIndex) => {
           if (slot.content?.category !== "livestock") return;
           const penalty = E.Animals?.harassment(state, village, slotIndex)?.penalty || 0;
-          updateHerd(village, slot.content, delta * (1 - penalty));
+          updateHerd(village, slot.content, delta * (1 - penalty) * village.productionMultiplier);
         });
       });
     });

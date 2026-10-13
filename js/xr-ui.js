@@ -15,6 +15,11 @@
   const command = (method, ...args) => ({ type: "command", method, args });
   const open = (name, data) => ({ type: "open", name, data });
 
+  function fleetSummary(state, village) {
+    const fleet = E.Transport.fleetStatus(state, village);
+    return `Barques : ${fleet.barque}/${E.Config.maritime.shop.barque.max} · places libres ${fleet.available}/${fleet.capacity}`;
+  }
+
   function create(dashboard, status) {
     let modal = null;
     let residentPage = 0;
@@ -195,7 +200,7 @@
         entries = resources.map((resource) => { const q = upgradeInfo(data, resource); return button(data === "village" ? "Améliorer le village" : `Payer en ${labels[resource]}`, command("upgrade", data, resource), !q.reason, { detail: q.cost, reason: q.reason }); });
       } else if (name === "shop") {
         title = "Échoppes et ventes";
-        lines = [`Or : ${Math.floor(p.gold)}`];
+        lines = [`Or : ${Math.floor(p.gold)}`, fleetSummary(s, v)];
         entries = [button("Vendre ressources", open("sell")), button("Acheter un habitant", open("buy-resident")),
           ...Object.entries(E.Config.villageShops).map(([key, shop]) => button(shop.label, open("store", key), E.Transport.buildingLevel(v, key) > 0)),
           button("Compagnons", open("animals"))];
@@ -205,6 +210,7 @@
         entries = E.Config.resources.map((resource) => button(`${labels[resource]} · ${Math.floor(v.resources[resource])}`, command(name === "sell" ? "sell" : "buyResident", resource), own && (name === "sell" ? E.Economy.saleQuote(v, resource).amount > 0 : E.Economy.canBuyResident(s, p.id, v.lane, resource))));
       } else if (name === "store") {
         title = E.Config.villageShops[data].label;
+        lines = [fleetSummary(s, v), "Embarquement automatique · places réutilisables sur terre"];
         const level = E.Transport.buildingLevel(v, data);
         entries = Object.entries(E.Config.villageShops[data].tiers).flatMap(([tier, items]) => items.map((item) => {
           const resident = selectedResident();
@@ -263,8 +269,28 @@
         lines = [`${E.Biomes.labels[v.biome]} · T${v.level} · ${Math.ceil(v.hp)}/${v.maxHp} PV`, `${v.population}/${v.populationMax} habitants`, ...E.Config.resources.map((key) => `${labels[key]} : ${Math.floor(v.resources[key])}`), ...v.buildings.map((building) => `${building.type} T${building.level}`)];
         entries = [button("Gérer ce village", { type: "back" })];
       } else if (name === "cards") {
-        title = "Cartes";
-        lines = ["Les cartes actives ne sont pas encore", "implémentées dans le jeu classique.", "Aucune carte ne peut être jouée ici."];
+        title = "Cartes en main";
+        const playerId = E.Network.mode === "local" ? selection().playerId : owner();
+        const held = s.players[playerId].cards;
+        lines = held ? [`${held.hand.length}/${E.Config.cardGame.handMax} cartes · ${held.drawPile.length} dans le deck`] : ["Les cartes apparaissent au lancement d’une partie."];
+        entries = held ? [...held.hand, ...held.mythological].map(item => {
+          const card = E.Cards.get(item.cardId), unlocked = item.unlockAt === undefined || s.elapsed >= item.unlockAt;
+          return button(card.name, open("card-play", item.id), !item.used && unlocked, { icon: card.icon,
+            portrait: { src: card.image, columns: 1, rows: 1, index: 0 }, artwork: true,
+            fullCard: card.fullCard, cardName: card.name, shortEffect: card.shortEffect,
+            generatedTitle: card.generatedTitle, descriptionTop: card.descriptionTop, descriptionHeight: card.descriptionHeight,
+            profession: card.category, status: item.used ? "Jouée" : unlocked ? "Prête" : "Verrouillée", detail: item.used ? "Jouée" : !unlocked ? `Disponible à ${item.unlockAt / 60} min` : `${E.CardEffects.cost(card.id)} or · choisir une cible` });
+        }) : [];
+      } else if (name === "card-play") {
+        const playerId = E.Network.mode === "local" ? selection().playerId : owner();
+        const held = E.CardGame?.find(s, playerId, data), card = held && E.Cards.get(held.cardId);
+        title = card?.name || "Carte jouée";
+        lines = card ? [card.effect || card.description, "Choisissez une cible pour confirmer la carte."] : ["Cette carte n’est plus dans la main."];
+        entries = held ? E.CardEffects.targets(s, playerId, card.id).map(target => {
+          const quote = E.CardGame.quote(s, playerId, data, target);
+          return button(E.CardUI.targetLabel(s, playerId, target), { type: "play-card", playerId, instanceId: data, target }, quote.allowed,
+            { detail: quote.allowed ? `${quote.gold} or${quote.resourceAmount ? ` + ${quote.resourceAmount} ${quote.resource}` : ""}` : quote.reason, reason: quote.reason });
+        }) : [];
       }
       // La pagination appartient au composant spatial : une seule navigation,
       // calculée avec les dimensions des textes et des cibles, pour tous les menus.
@@ -326,10 +352,11 @@
       for (let i = 0; i < buildingCards.length; i += 2) buildingGrid.push(buildingCards.slice(i, i + 2));
       buildingGrid.push(row(button("Construire", open("build")), button("Parcelles", open("slots"))));
       buildingGrid.push(row(button("Boutique · Y", open("shop")), button("Vendre", open("sell"))));
+      if (s.cardGameStarted) buildingGrid.push(row(button("Cartes en main", open("cards"))));
       const stockLines = [];
       for (let i = 0; i < E.Config.resources.length; i += 2) stockLines.push(E.Config.resources.slice(i, i + 2).map((key) => `${labels[key]} : ${Math.floor(v.resources[key])}`).join(" · "));
       dashboard.paint("buildings", `Gestion · Village ${sel.lane + 1}`, [
-        `${E.Biomes.labels[v.biome]} · T${v.level} · ${Math.ceil(v.hp)}/${v.maxHp} PV · ${Math.floor(p.gold)} or`, ...stockLines
+        `${E.Biomes.labels[v.biome]} · T${v.level} · ${Math.ceil(v.hp)}/${v.maxHp} PV · ${Math.floor(p.gold)} or`, fleetSummary(s, v), ...stockLines
       ], buildingGrid, managerVisible);
       const residents = v?.residents || [];
       residentPage = Math.min(residentPage, Math.max(0, Math.ceil(residents.length / E.Config.xr.residentPageSize) - 1));
@@ -391,6 +418,13 @@
       }
       if (action.type === "select-village") { return selectVillage(action.playerId, action.lane); }
       if (action.type === "select-resident") { E.GameView.command("selectResident", action.residentId); return true; }
+      if (action.type === "play-card") {
+        if (!E.GameView.canControl(action.playerId) || !E.CardGame.quote(s, action.playerId, action.instanceId, action.target).allowed) return false;
+        E.GameView.selectVillage(action.playerId, action.target.lane);
+        const result = E.GameView.command("playCard", action.instanceId, action.target);
+        if (result || E.Network.mode === "guest") { setModal("cards"); return true; }
+        return false;
+      }
       if (action.type === "audio") { muted = !muted; E.Audio?.setMuted(muted); return true; }
       if (action.type === "quality") {
         quality = quality === "normal" ? "léger" : "normal";

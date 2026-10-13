@@ -143,11 +143,62 @@
     if (village.biome === "montagne") addMountains(group, village.lane);
     if (village.biome === "plaine") addPlainDetails(group, village.lane);
     if (village.biome === "littoral") addCoast(group, village);
+    addCardTerrain(group, village);
     addSlots(group, village);
     addVillageAndBuildings(group, village);
+    const visible = E.CardEffects?.vision(latestState, cardViewer(latestState), village);
+    if (visible && visible.fraction < 1) {
+      const length = 4.85 * (1 - visible.fraction);
+      const fog = mesh(new THREE.BoxGeometry(2.8 * terrainWidthScale(), 1.25, length), 0x253039, { castShadow: false });
+      fog.name = "card-fog"; fog.position.set(0, 0.56, owner === "red" ? -2.425 + length / 2 : 2.425 - length / 2);
+      fog.material.transparent = true; fog.material.opacity = 0.94;
+      group.add(fog);
+    }
     // Espacer les éléments sans étirer les bâtiments, les cultures ou les animaux.
     group.children.forEach(item => { item.position.x *= terrainWidthScale(); });
     terrainGroup.add(group);
+  }
+
+  function cardViewer(state) {
+    return E.Network?.mode === "local" ? state.selectedVillage.playerId : E.Network?.playerId || "red";
+  }
+
+  function addCardTerrain(group, village) {
+    const t = village.terrain || {};
+    const facing = village.ownerId === "red" ? 1 : -1;
+    if (t.river) {
+      const river = mesh(new THREE.BoxGeometry(2.65, 0.025, 0.17), 0x49a4bf, { castShadow: false });
+      river.name = "card-river"; river.position.set(0, 0.055, 0); river.rotation.y = 0.13; group.add(river);
+    }
+    if (t.mill) {
+      const mill = buildingModel("artisanat", 1, village.ownerId); mill.scale.setScalar(0.55);
+      mill.name = "card-mill"; mill.position.set(-0.7, 0.13, 0.15);
+      const wheel = mesh(new THREE.TorusGeometry(0.2, 0.04, 5, 10), 0x8f6540);
+      wheel.position.set(-0.27, 0.23, 0); mill.add(wheel); group.add(mill);
+    }
+    if (t.tower) {
+      const tower = mesh(new THREE.CylinderGeometry(0.17, 0.22, 0.65, 10), 0xc8b899);
+      tower.name = "card-genoese-tower"; tower.position.set(0.87, 0.42, -facing * 0.25); group.add(tower);
+      const rim = mesh(new THREE.TorusGeometry(0.18, 0.045, 5, 10), 0xa49073);
+      rim.rotation.x = Math.PI / 2; rim.position.copy(tower.position); rim.position.y += 0.34; group.add(rim);
+    }
+    if (t.trail) {
+      const trail = mesh(new THREE.BoxGeometry(0.16, 0.025, 4), 0xc3a580, { castShadow: false });
+      trail.name = "card-trail"; trail.position.set(0.38, 0.055, 0); trail.rotation.y = 0.18; group.add(trail);
+    }
+    for (const [i, trap] of (t.traps || []).entries()) {
+      const snare = mesh(new THREE.TorusGeometry(0.12, 0.025, 4, 10), 0x856c41);
+      snare.name = "card-trap"; snare.rotation.x = Math.PI / 2;
+      snare.position.set(-0.25 + i * 0.22, 0.06, -4.35 + trap.position / 100 * 8.7 - group.position.z); group.add(snare);
+    }
+    if (village.burnUntil > latestState.elapsed) {
+      const burned = mesh(new THREE.BoxGeometry(2.75, 0.035, 4.76), 0x3c2219, { castShadow: false });
+      burned.name = "card-burned-terrain"; burned.position.y = 0.07; group.add(burned);
+    }
+    if (village.curseUntil > latestState.elapsed) {
+      const curse = mesh(new THREE.BoxGeometry(2.76, 0.02, 4.77), 0x745296, { castShadow: false });
+      curse.name = "card-cursed-terrain"; curse.position.y = 0.085; curse.material.transparent = true; curse.material.opacity = 0.3; group.add(curse);
+    }
   }
 
   function seeded(lane, index) {
@@ -365,11 +416,12 @@
     const deployedAnimals = new Set();
     state.units.forEach((unit) => {
       if (unit.hp <= 0) return;
+      if (E.CardEffects && !E.CardEffects.unitVisible(state, cardViewer(state), unit)) return;
       const key = `unit-${unit.id}`;
       const resident = state.players[unit.ownerId]?.villages[unit.originLane]?.residents.find((entry) => entry.id === unit.residentId);
       const appearance = resident || unit;
       const swimming = (unit.animalType || unit.role) === "sanglier" && Boolean(unit.waterOwner);
-      const figure = unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
+      const figure = unit.isCart ? cartModel(key, unit.ownerId) : unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
       markSelected(figure, Boolean(unit.residentId && unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane));
       figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, -4.35 + (unit.position / 100) * 8.7);
       figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
@@ -380,10 +432,12 @@
     });
     Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
       if (village.destroyed) return;
+      const known = E.CardEffects?.vision(state, cardViewer(state), village);
       let localIndex = 0;
       let fisherIndex = 0;
       const facing = player.id === "red" ? 1 : -1;
       village.residents.forEach((resident, index) => {
+        if (known && !known.people) return;
         if (resident.hp <= 0 || deployedResidents.has(`${player.id}:${resident.id}`) || resident.unitId) return;
         const key = `resident-${player.id}-${resident.id}`;
         const figure = unitModel(key, player.id, resident);
@@ -408,6 +462,7 @@
       });
       let animalIndex = 0;
       (village.animals || []).forEach((animal) => {
+        if (known && !known.all) return;
         if (animal.hp <= 0 || animal.unitId || deployedAnimals.has(`${player.id}:${animal.id}`) || animal.mission !== "disponible") return;
         const key = `animal-${player.id}-${animal.id}`;
         const figure = unitModel(key, player.id, { animalType: animal.type });
@@ -518,6 +573,22 @@
         tintFigure(figure, flash);
       } else tintFigure(figure, 0);
     });
+  }
+
+  function cartModel(key, owner) {
+    let figure = unitModels.get(key);
+    if (figure) return figure;
+    figure = new THREE.Group(); figure.name = "charrette";
+    const body = mesh(new THREE.BoxGeometry(0.5, 0.22, 0.7), 0x926c42);
+    body.position.y = 0.2; figure.add(body);
+    for (const x of [-0.3, 0.3]) for (const z of [-0.24, 0.24]) {
+      const wheel = mesh(new THREE.TorusGeometry(0.13, 0.035, 4, 10), 0x4f3b28);
+      wheel.rotation.y = Math.PI / 2; wheel.position.set(x, 0.13, z); figure.add(wheel);
+    }
+    const banner = mesh(new THREE.BoxGeometry(0.37, 0.03, 0.03), colors[owner]);
+    banner.position.set(0, 0.34, -0.33); figure.add(banner);
+    figure.userData = { visualSignature: `charrette:${owner}` };
+    unitModels.set(key, figure); unitGroup.add(figure); return figure;
   }
 
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
@@ -748,6 +819,8 @@
   function signature(state) {
     return Object.values(state.players).flatMap((player) => player.villages.map((village) => [
       village.id, village.biome, village.level, village.destroyed, village.damageSmoke > 0,
+      JSON.stringify(village.terrain || {}), village.burnUntil > state.elapsed, village.curseUntil > state.elapsed,
+      E.CardEffects?.vision(state, cardViewer(state), village)?.fraction ?? 1,
       village.buildings.map((building) => `${building.type}${building.level}`).join(","),
       `${village.maritime?.barque || 0}:${village.maritime?.voilier || 0}:${village.maritime?.filet || 0}`,
       village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}:${slot.content.count || 1}` : "-").join(",")

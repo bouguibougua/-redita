@@ -17,6 +17,7 @@
       !state.paused &&
       village &&
       !village.destroyed &&
+      !E.CardEffects?.isBurned(state, village) &&
       get(type) &&
       slot &&
       (slot.type === "free" || slot.type === "animal") &&
@@ -75,6 +76,7 @@
     if (state.phase !== "running") reason = "Partie inactive";
     else if (state.paused) reason = "Partie en pause";
     else if (village.destroyed) reason = "Village détruit";
+    else if (E.CardEffects?.isBurned(state, village)) reason = "Terrain brûlé";
     else if (buildingLevel < requiredTier) reason = `Bergerie T${requiredTier} requise`;
     else if (!slotIndices.length) reason = "Aucun enclos compatible disponible";
     else if (player.gold < gold) reason = "Or insuffisant";

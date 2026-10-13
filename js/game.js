@@ -8,7 +8,7 @@
   let previousDesktopRender = 0;
   let pendingBulkTasks = [];
   const localViewMethods = new Set(["selectVillage", "selectResident"]);
-  const guestCommands = new Set(["selectDeck", "toggleBiome", "confirmBiomes", "placeCrop", "placeLivestock", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
+  const guestCommands = new Set(["selectDeck", "toggleBiome", "confirmBiomes", "playCard", "placeCrop", "placeLivestock", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
 
   function addLog(message) {
     state.logs.unshift(message);
@@ -16,10 +16,12 @@
   }
 
   const controller = {
-    selectDeck(playerId, deckIndex) {
+    selectDeck(playerId, deckIndex, deckInput) {
       const player = state.players[playerId];
       if (state.phase !== "setup" || !player || player.setupConfirmed || ![0, 1, 2].includes(deckIndex)) return;
+      if (deckInput && E.CardGame && !E.CardGame.validateDeck(deckInput)) return false;
       player.selectedDeck = deckIndex;
+      if (E.CardGame) player.matchDeck = E.CardGame.matchDeck(deckIndex, deckInput || E.Decks?.exportDeck(deckIndex));
       E.UI.render(state);
     },
 
@@ -33,9 +35,11 @@
       E.UI.render(state);
     },
 
-    confirmBiomes(playerId, action) {
+    confirmBiomes(playerId, action, deckInput) {
       const player = state.players[playerId];
       if (state.phase !== "setup" || !player || player.setupConfirmed) return;
+      if (deckInput && E.CardGame && !E.CardGame.validateDeck(deckInput)) return false;
+      if (E.CardGame) player.matchDeck = E.CardGame.matchDeck(player.selectedDeck, deckInput || player.matchDeck || E.Decks?.exportDeck(player.selectedDeck));
       if (action === "exchange") {
         if (!player.setupSelection.length || player.setupSelection.length > E.Board.getFormat(state).exchanges || player.setupSelection.some(lane => !Number.isInteger(lane) || !player.villages[lane])) return false;
         player.setupSelection.forEach((lane) => {
@@ -54,6 +58,7 @@
       state.phase = "running";
       state.elapsed = 0;
       state.preparationRemaining = E.Network.mode === "tutorial" ? 0 : E.Config.preparation.duration;
+      if (E.Network.mode !== "tutorial") E.CardGame?.start(state);
       previousTimestamp = performance.now();
       if (state.preparationRemaining > 0) addLog("Préparation : vous avez une minute pour organiser vos villages et attribuer les tâches.");
       else { E.Audio?.play("game"); addLog("La partie commence. Tous les villages sont debout."); }
@@ -65,6 +70,12 @@
       state.paused = !state.paused;
       previousTimestamp = performance.now();
       E.UI.render(state);
+    },
+
+    playCard(instanceId, target) {
+      const result = E.CardGame?.play(state, state.selectedVillage.playerId, instanceId, target);
+      E.UI.render(state);
+      return result;
     },
 
     selectVillage(playerId, lane) {
@@ -230,7 +241,7 @@
     buyShopItem(type) {
       const { playerId, lane } = state.selectedVillage;
       const purchase = E.Transport.buy(state, playerId, lane, type);
-      if (purchase) addLog(`${state.players[playerId].name} achète ${purchase.label.toLowerCase()} pour le Littoral de la ligne ${lane + 1}.`);
+      if (purchase) addLog(`${state.players[playerId].name} achète ${purchase.label.toLowerCase()} pour le village ${lane + 1}.`);
       E.UI.render(state);
     },
 
@@ -348,6 +359,8 @@
       if (delta <= 0) return;
     }
     state.elapsed += delta;
+    E.CardGame?.update(state, delta);
+    E.CardEffects?.update(state, delta);
     processBulkTasks();
     E.Economy.update(state, delta);
     E.Combat.update(state, delta);
@@ -393,6 +406,7 @@
   }
 
   function applyRemoteCommand(message) {
+    if (!message || !Array.isArray(message.args)) return;
     if (E.Network.mode !== "host" || !onlineAllowed(message.method, message.args || [], message.playerId, message.view)) return;
     const hostView = viewState();
     restoreView(message.view);
@@ -406,6 +420,10 @@
     get(target, method) {
       if (typeof target[method] !== "function") return target[method];
       return (...args) => {
+        if (E.Decks && args.length < 3 && ["selectDeck", "confirmBiomes"].includes(method)) {
+          const deckIndex = method === "selectDeck" ? args[1] : state.players[args[0]]?.selectedDeck;
+          if (Number.isInteger(deckIndex)) args.push(E.Decks.exportDeck(deckIndex));
+        }
         if (E.Network.mode === "local" || E.Network.mode === "pending") return target[method](...args);
         if (E.Network.mode === "tutorial") {
           if (!E.Tutorial?.allow(method, args, state)) return;
@@ -495,6 +513,7 @@
     onStateRequest() { E.Network.sendState(state); }
   });
   E.UI.init(onlineController);
+  E.CardUI?.init(onlineController);
   E.Tutorial?.init({ controller: onlineController });
   E.GameView?.init({ getState: () => state, controller: onlineController });
   E.Board3D?.init({ container: document.querySelector("#battlefield-3d"), onFrame: frame });

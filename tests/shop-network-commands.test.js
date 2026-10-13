@@ -116,4 +116,14 @@ remote("orderAnimal", [dog.id, "attaque"], "red");
 remote("slaughterSpecialAnimal", [dog.id], "red");
 assert.equal(JSON.stringify(state), protectedState);
 
+// Les Barques rejoignent aussi la réserve d'un village terrestre via une commande invitée.
+blueVillage.biome = "plaine";
+initialGold = state.players.blue.gold;
+remote("buyShopItem", ["barque"]);
+assert.equal(blueVillage.maritime.barque, 1);
+assert.equal(state.players.blue.gold, initialGold - E.Config.maritime.shop.barque.gold);
+const boatState = JSON.stringify(state);
+remote("buyShopItem", ["barque"], "red");
+assert.equal(JSON.stringify(state), boatState, "La réserve adverse reste protégée");
+
 console.log("Shop network command tests passed.");

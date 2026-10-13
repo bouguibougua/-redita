@@ -14,6 +14,21 @@
   let purchaseResource = "ble";
   let currentState = null;
   let selectedSlot = null;
+  const viewerId = state => E.Network.mode === "local" ? state.selectedVillage.playerId : E.Network.playerId || "red";
+  const vision = (state, village) => E.CardEffects?.vision(state, viewerId(state), village) || { fraction: 1, all: true, people: true };
+
+  function cardEffectsText(state, village) {
+    const values = [];
+    if (village.burnUntil > state.elapsed) values.push(`Terrain brûlé : ${Math.ceil(village.burnUntil - state.elapsed)} s`);
+    if (village.curseUntil > state.elapsed) values.push(`Malédiction : rendement ÷2 · ${Math.ceil(village.curseUntil - state.elapsed)} s`);
+    if (village.terrain?.river) values.push("Rivière · pêche disponible");
+    if (village.terrain?.mill) values.push(`Moulin · +30 % agriculture · ${Math.ceil(village.terrain.mill.hp)} PV`);
+    if (village.terrain?.tower) values.push(`Tour génoise · vision ${village.biome === "littoral" ? 50 : 25} % · ${Math.ceil(village.terrain.tower.hp)} PV`);
+    if (village.terrain?.trail) values.push("Sentier · +20 % déplacement");
+    if (village.terrain?.traps?.length) values.push(`${village.terrain.traps.length} piège(s)`);
+    if (E.Buildings.has(village, "artisanat")) values.push(`Artisanat · +${E.Config.building.artisanatBonus.damage} dégâts / +${E.Config.building.artisanatBonus.hp} PV par habitant allié de la colonne`);
+    return values.join(" · ");
+  }
 
   function init(gameController) {
     controller = gameController;
@@ -200,6 +215,7 @@
     updateInspectorState(state);
     updateShopState(state);
     syncShopModal(state);
+    E.CardUI?.render(state);
     renderRedirect(state, false);
     renderResult(state);
   }
@@ -224,7 +240,12 @@
         </div>
         <section class="setup-decks" aria-label="Choix du deck de ${player.name}">
           <h4>Deck pour cette partie</h4>
-          <div>${[0, 1, 2].map((deckIndex) => `<button type="button" class="setup-deck-choice ${player.selectedDeck === deckIndex ? "selected" : ""}" data-setup-deck="${deckIndex}" data-player="${player.id}" aria-pressed="${player.selectedDeck === deckIndex}" ${player.setupConfirmed || (E.Network.mode === "tutorial" && (player.id !== "red" || deckIndex !== 1)) ? "disabled" : ""}>${E.Network.mode === "tutorial" ? E.Tutorial.deckLabels[deckIndex] : `Deck ${deckIndex + 1}`}<small>${player.selectedDeck === deckIndex ? "Sélectionné ✓" : "Choisir"}</small></button>`).join("")}</div>
+          <div>${[0, 1, 2].map((deckIndex) => {
+            const deck = E.CardGame?.matchDeck(deckIndex, player.selectedDeck === deckIndex && player.matchDeck ? player.matchDeck : E.Decks?.exportDeck(deckIndex));
+            const count = deck ? Object.values(deck.quantities).reduce((sum, quantity) => sum + quantity, 0) : 0;
+            const detail = E.Network.mode !== "tutorial" && deck ? `${count} cartes · ${deck.mythological.length} Mythologiques` : player.selectedDeck === deckIndex ? "Sélectionné ✓" : "Choisir";
+            return `<button type="button" class="setup-deck-choice ${player.selectedDeck === deckIndex ? "selected" : ""}" data-setup-deck="${deckIndex}" data-player="${player.id}" aria-pressed="${player.selectedDeck === deckIndex}" ${player.setupConfirmed || (E.Network.mode === "tutorial" && (player.id !== "red" || deckIndex !== 1)) ? "disabled" : ""}>${E.Network.mode === "tutorial" ? E.Tutorial.deckLabels[deckIndex] : `Deck ${deckIndex + 1}`}<small>${detail}</small></button>`;
+          }).join("")}</div>
         </section>
         <div class="biome-choice-grid">${cards}</div>
         <div class="setup-actions">
@@ -255,6 +276,7 @@
     renderVillageSelector(state);
     renderBoard(state);
     renderMapVillagePopups(state);
+    updateMapVillagePopups(state);
     renderUnits(state);
     renderInspector(state);
     renderShop(state);
@@ -263,6 +285,7 @@
     [elements.inspector, elements.residents, elements.shop].forEach((panel) => panel.classList.toggle("opponent-readonly", readonly));
     renderRedirect(state, true);
     renderResult(state);
+    E.CardUI?.render(state);
   }
 
   function openShopModal() {
@@ -362,12 +385,13 @@
       const hp = popup.querySelector("[data-map-hp]");
       const population = popup.querySelector("[data-map-population]");
       const available = popup.querySelector("[data-map-available]");
+      const known = vision(state, village);
       if (hp) hp.textContent = `${Math.ceil(village.hp)}/${village.maxHp}`;
-      if (population) population.textContent = `${village.population}/${village.populationMax}`;
-      if (available) available.textContent = E.Economy.getAvailableResidents(state, player.id, village.lane);
+      if (population) population.textContent = known.people ? `${village.population}/${village.populationMax}` : "?";
+      if (available) available.textContent = known.people ? E.Economy.getAvailableResidents(state, player.id, village.lane) : "?";
       E.Config.resources.forEach((resource) => {
         const value = popup.querySelector(`[data-map-resource="${resource}"]`);
-        if (value) value.textContent = formatNumber(village.resources[resource]);
+        if (value) value.textContent = known.all ? formatNumber(village.resources[resource]) : "?";
       });
     }));
   }
@@ -400,6 +424,8 @@
   }
 
   function regionMarkup(state, village, playerId) {
+    const known = vision(state, village);
+    const overlays = `<div class="terrain-card-overlays">${village.terrain?.river ? '<span class="terrain-card-overlay river" title="Rivière"></span>' : ""}${village.terrain?.mill ? '<span class="terrain-card-overlay mill">⚙ Moulin</span>' : ""}${village.terrain?.tower ? '<span class="terrain-card-overlay tower">♜ Tour</span>' : ""}${village.terrain?.trail ? '<span class="terrain-card-overlay trail">〽 Sentier</span>' : ""}${village.terrain?.traps?.length && playerId === viewerId(state) ? `<span class="terrain-card-overlay trap">🪤 ×${village.terrain.traps.length}</span>` : ""}</div>`;
     const slots = village.slots.map((slot, index) => {
       const crop = slot.content && slot.content.category === "crop" ? E.Crops.get(slot.content.type) : null;
       const herd = slot.content && slot.content.category === "livestock" ? E.Livestock.get(slot.content.type) : null;
@@ -428,31 +454,33 @@
       <span class="fleet-group fleet-filet" data-terrain-fleet="filet"><span class="terrain-net">🕸</span><b>${maritime.filet}</b></span>
       <span class="fleet-group fleet-barque" data-terrain-fleet="barque">${boatIcons("barque")}<b>${maritime.barque}/4</b></span>
     </div>` : "";
-    return `<div class="region ${village.biome} ${playerId}">
+    return `<div class="region ${village.biome} ${playerId} ${village.burnUntil > state.elapsed ? "card-burned" : ""} ${village.curseUntil > state.elapsed ? "card-cursed" : ""}">
       <div class="region-name"><span>${E.Biomes.labels[village.biome]}</span><span data-region-population>${village.population}/${village.populationMax} hab.</span></div>
       <div class="terrain-building-layer ${village.destroyed ? "destroyed" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""}" aria-label="Village et bâtiments visibles sur le terrain">${terrainBuildings}</div>
       ${maritimeLayer}
+      ${overlays}
+      ${known.fraction < 1 ? `<div class="terrain-card-fog" style="height:${(1 - known.fraction) * 100}%" aria-label="Zone non révélée"></div>` : ""}
       <div class="slot-grid">${slots}</div>
     </div>`;
   }
 
   function renderUnits(state) {
     const regionCount = state.players.red.villages.length;
-    const combatUnits = state.units.map((unit) => {
+    const combatUnits = state.units.filter(unit => !E.CardEffects || E.CardEffects.unitVisible(state, viewerId(state), unit)).map((unit) => {
       const stats = E.Config.units[unit.role];
       const left = ((unit.lanePosition + 0.5) / regionCount) * 100;
       const top = Math.max(1.2, Math.min(98.8, unit.position));
       const vessel = unit.waterTransport ? `<span class="unit-vessel" title="Transporté par ${E.Config.maritime.shop[unit.waterTransport].label.toLowerCase()}">${E.Config.maritime.shop[unit.waterTransport].icon}</span>` : "";
       const selected = unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane;
       return `<div class="unit ${unit.ownerId} role-${unit.role} ${selected ? "selected-resident" : ""} ${unit.waitingForRedirect ? "waiting" : ""} ${unit.waterTransport ? `on-water transport-${unit.waterTransport}` : ""}" style="left:${left}%;top:${top}%" title="${stats.label} · ${Math.ceil(unit.hp)} PV${unit.waterTransport ? ` · ${E.Config.maritime.shop[unit.waterTransport].label}` : ""}">
-        ${unit.animalType ? animalAppearance(unit.animalType, "unit-body") : residentAppearance(unit, "unit-body")}
+        ${unit.isCart ? '<span class="unit-body" aria-hidden="true">🛞</span>' : unit.animalType ? animalAppearance(unit.animalType, "unit-body") : residentAppearance(unit, "unit-body")}
         ${vessel}
         <span class="hp-track"><i style="width:${Math.max(0, unit.hp / unit.maxHp) * 100}%"></i></span>
       </div>`;
     }).join("");
     const workers = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
       village.residents
-        .filter((resident) => ["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null)
+        .filter((resident) => vision(state, village).people && ["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null)
         .map((resident) => {
           const laneOffset = resident.mission === "chasse" ? 0.5 + (resident.workLaneOffset || 0) : resident.mission === "elevage" ? 0.62 : 0.45;
           const left = ((village.lane + laneOffset) / regionCount) * 100;
@@ -465,7 +493,7 @@
         })
     )).join("");
     const locals = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
-      village.destroyed ? [] : (() => {
+      village.destroyed || !vision(state, village).people ? [] : (() => {
         const visible = village.residents.filter((resident) => !resident.unitId && !["attaque", "defense"].includes(resident.mission)
           && !(["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null));
         let fisherIndex = 0;
@@ -485,7 +513,7 @@
       })()
     )).join("");
     const localAnimals = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
-      village.destroyed ? [] : (village.animals || []).filter((animal) => !animal.unitId).map((animal, index) => {
+      village.destroyed || !vision(state, village).all ? [] : (village.animals || []).filter((animal) => !animal.unitId).map((animal, index) => {
         const left = ((village.lane + 0.22 + (index % 4) * 0.17) / regionCount) * 100;
         const distance = 18 + Math.floor(index / 4) * 2;
         return `<div class="local-person ${player.id}" data-local-animal="${animal.id}" style="left:${left}%;top:${player.id === "red" ? distance : 100 - distance}%" title="${E.Config.specialAnimals[animal.type].label}">${animalAppearance(animal.type, "unit-body")}</div>`;
@@ -495,7 +523,7 @@
   }
 
   function terrainSignature(state) {
-    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}` : "-").join(",")}`)).join("|");
+    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${JSON.stringify(village.terrain || {})}:${village.burnUntil > state.elapsed}:${village.curseUntil > state.elapsed}:${vision(state, village).fraction}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}` : "-").join(",")}`)).join("|");
   }
 
   function animalAppearance(type, className) {
@@ -559,6 +587,13 @@
       return;
     }
     elements.inspector.dataset.herdSignature = herdSignature(village);
+    const known = vision(state, village);
+    if (!known.all && player.id !== viewerId(state)) {
+      elements.inspector.innerHTML = `<h3>Village adverse · informations cachées</h3><p class="section-help">Une Tour génoise révèle une partie de la région. U Mazzeru révèle les habitants ; l’Œil de Sainte-Lucie révèle les Littoraux.</p>${known.people ? `<p>${village.population} habitants · ${village.residents.map(person => E.Config.professions[person.profession || "habitant"].label).join(", ")}</p>` : ""}`;
+      elements.residents.innerHTML = "";
+      elements.inspector.dataset.vision = `${known.people}:${known.all}`;
+      return;
+    }
     const resources = E.Config.resources.map((key) => `<div class="resource-row"><dt>${resourceLabels[key]}</dt><dd data-resource="${key}">${formatNumber(village.resources[key])}</dd></div>`).join("");
     const noSlot = village.buildings.length >= E.Config.building.slots;
     const cannotBuy = player.gold < E.Config.building.T1.gold || noSlot || village.destroyed || state.phase !== "running" || state.paused;
@@ -597,6 +632,11 @@
       <h3>Banque locale</h3>
       <p class="section-help">Ressources disponibles dans ce village.</p>
       <dl class="resource-list">${resources}</dl>
+    </section><section class="inspector-section" aria-label="Réserve de barques du village">
+      <h3>Réserve de barques</h3>
+      <p data-fleet-summary>${fleetSummary(state, village)}</p>
+      <p class="card-effects-status" data-card-effects-status>${cardEffectsText(state, village)}</p>
+      <p class="section-help">Embarquement automatique depuis ce village, même sur l’eau adverse. Les places se libèrent sur terre. Sans place libre, l’unité se noie.</p>
     </section>` : ""}
     ${slots}`;
 
@@ -701,6 +741,12 @@
     const player = state.players[selection.playerId];
     const village = player && player.villages[selection.lane];
     if (!village) return;
+    const known = vision(state, village);
+    if (state.cardGameStarted && player.id !== viewerId(state)) {
+      const visibility = `${known.people}:${known.all}`;
+      if (elements.inspector.dataset.vision !== visibility) { elements.inspector.dataset.vision = visibility; renderInspector(state); }
+      if (!known.all) return;
+    }
     if (elements.inspector.dataset.herdSignature !== herdSignature(village)) {
       renderInspector(state);
       return;
@@ -712,6 +758,8 @@
     setText("[data-inspector-available]", E.Economy.getAvailableResidents(state, player.id, village.lane));
     setText("[data-inspector-gold]", formatNumber(player.gold));
     setText("[data-inspector-birth]", nextPopulationText(state, player, village));
+    setText("[data-fleet-summary]", fleetSummary(state, village));
+    setText("[data-card-effects-status]", cardEffectsText(state, village));
     E.Config.resources.forEach((resource) => {
       const target = elements.inspector.querySelector(`[data-resource="${resource}"]`);
       if (target) target.textContent = formatNumber(village.resources[resource]);
@@ -778,7 +826,11 @@
       elements.shop.innerHTML = '<p class="empty-copy">Sélectionnez un village.</p>';
       return;
     }
-    const fleet = E.Transport.maritimeState(village);
+    if (!vision(state, village).all && player.id !== viewerId(state)) {
+      elements.shop.innerHTML = '<p class="section-help">Stocks adverses non révélés.</p>';
+      elements.shop.dataset.signature = shopSignature(state, village);
+      return;
+    }
     const resident = shopResident(state, village);
     elements.shop.dataset.signature = shopSignature(state, village);
     const sales = `<section class="shop-sales" aria-label="Vendre les ressources du village"><header><h3>Vendre les ressources</h3><span>Or global <b data-shop-gold>${formatNumber(player.gold)}</b></span></header><p>Stocks du village ${village.lane + 1} · jusqu’à ${E.Config.saleBatchSize} unités par vente.</p><div class="shop-sale-list">${E.Config.resources.map((resource) => `<div class="shop-sale" data-shop-sale="${resource}"><div><strong>${resourceIcons[resource]} ${resourceLabels[resource]}</strong><small>Stock : <b data-shop-stock="${resource}">${formatNumber(village.resources[resource])}</b></small></div><span data-shop-sale-preview="${resource}"></span><button class="sell-button" type="button" data-sell="${resource}">Vendre</button></div>`).join("")}</div></section>`;
@@ -816,7 +868,8 @@
       }).join("");
       return `<section class="shop-store ${buildingLevel ? "unlocked" : "locked"}" data-shop-store="${buildingType}" data-level="${buildingLevel}"><header><span>${store.icon} ${store.label}</span><b>${buildingLevel ? `T${buildingLevel}` : "Bâtiment requis"}</b></header>${tiers}${buildingType === "bergerie" ? renderAnimalRoster(state, player, village) : ""}</section>`;
     }).join("");
-    elements.shop.innerHTML = `<div class="shop-columns"><div class="shop-sales-column">${sales}${equipmentTarget}</div>${stores}</div>`;
+    const fleetReserve = `<section class="shop-equipment-target" aria-label="Réserve de barques du village"><header><span>🛶 Réserve de barques</span></header><p data-fleet-summary>${fleetSummary(state, village)}</p><p class="section-help">Achetez vos barques à l’Artisanat T1 ou à la Boucherie T1. Elles transportent automatiquement les unités de ce village ; les places sont réutilisables après la traversée.</p></section>`;
+    elements.shop.innerHTML = `<div class="shop-columns"><div class="shop-sales-column">${sales}${fleetReserve}${equipmentTarget}</div>${stores}</div>`;
     updateShopSales(state, player, village);
   }
 
@@ -893,9 +946,15 @@
     return type === "filet" ? `${quote.count} installé${quote.count > 1 ? "s" : ""}` : `${quote.count}/${quote.max} · ${quote.capacity} places chacun`;
   }
 
+  function fleetSummary(state, village) {
+    const fleet = E.Transport.fleetStatus(state, village);
+    const sailboats = fleet.voilier ? ` · ${fleet.voilier} voilier(s)` : "";
+    return `${fleet.barque}/${E.Config.maritime.shop.barque.max} barques${sailboats} · ${fleet.available}/${fleet.capacity} places libres`;
+  }
+
   function shopItemEffect(type, quote) {
     if (type === "filet") return `+${quote.fishAmount} poisson toutes les ${quote.interval} s par filet`;
-    return type === "barque" ? "Transport maritime léger · côté droit" : "Transport maritime lourd · côté gauche";
+    return type === "barque" ? "Réserve du village · embarquement automatique" : "Transport maritime lourd · côté gauche";
   }
 
   function updateShopState(state) {
@@ -908,8 +967,8 @@
       return;
     }
     updateShopSales(state, player, village);
-    const capacity = elements.shop.querySelector("[data-shop-capacity]");
-    if (capacity) capacity.textContent = `${E.Transport.fleetCapacity(village)} places`;
+    const reserve = elements.shop.querySelector("[data-fleet-summary]");
+    if (reserve) reserve.textContent = fleetSummary(state, village);
     elements.shop.querySelectorAll("[data-buy-shop-item]").forEach((button) => {
       const type = button.dataset.buyShopItem;
       const quote = E.Transport.shopQuote(state, player.id, village.lane, type);

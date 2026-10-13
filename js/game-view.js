@@ -54,7 +54,7 @@
     },
     command(method, ...args) {
       const allowed = new Set([
-        "selectDeck", "toggleBiome", "confirmBiomes", "start", "togglePause",
+        "selectDeck", "toggleBiome", "confirmBiomes", "start", "togglePause", "playCard",
         "selectResident", "placeCrop", "placeLivestock", "slaughter", "build", "upgrade", "changeJob",
         "setProfession", "assignProfessionToAll", "setNextResidentProfession",
         "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "setNextResidentMission",

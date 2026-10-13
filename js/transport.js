@@ -32,7 +32,8 @@
     if (state.phase !== "running") reason = "Partie inactive";
     else if (state.paused) reason = "Partie en pause";
     else if (village.destroyed) reason = "Village détruit";
-    else if (village.biome !== "littoral") reason = "Littoral requis";
+    else if (E.CardEffects?.isBurned(state, village)) reason = "Terrain brûlé";
+    else if (item.biome && village.biome !== item.biome) reason = "Littoral requis";
     else reason = unlockReason(village, item);
     if (!reason && item.max !== null && count >= item.max) reason = "Limite atteinte";
     if (!reason && player.gold < item.gold) reason = "Or insuffisant";
@@ -67,9 +68,16 @@
     return state.units.filter((unit) => unit !== ignoredUnit && unit.hp > 0 && unit.transportHomeId === village.id && unit.waterTransport === type).length;
   }
 
+  function fleetStatus(state, village) {
+    const fleet = maritimeState(village);
+    const capacity = fleetCapacity(village);
+    const occupied = vesselTypes.reduce((total, type) => total + occupiedSeats(state, village, type), 0);
+    return { barque: fleet.barque, voilier: fleet.voilier, capacity, occupied, available: Math.max(0, capacity - occupied) };
+  }
+
   function boardUnit(state, unit) {
     const village = state.players[unit.ownerId]?.villages[unit.originLane];
-    if (!village || village.biome !== "littoral") return false;
+    if (!village) return false;
     const fleet = maritimeState(village);
     for (const type of vesselTypes) {
       const capacity = fleet[type] * E.Config.maritime.shop[type].capacity;
@@ -111,7 +119,7 @@
     maritime.filetTimer += delta;
     while (maritime.filetTimer >= item.interval) {
       maritime.filetTimer -= item.interval;
-      village.resources.poisson += maritime.filet * item.fishAmount;
+        village.resources.poisson += maritime.filet * item.fishAmount * (maritime.productionMultiplier ?? 1);
     }
   }
 
@@ -119,5 +127,5 @@
     return (unit.animalType || unit.role) === "sanglier" && unit.waterOwner ? E.Config.specialAnimals.sanglier.waterSpeedMultiplier : 1;
   }
 
-  E.Transport = { maritimeState, buildingLevel, shopQuote, buy, fleetCapacity, waterOwnerAt, updateUnitWaterState, updateFishingNets, movementMultiplier };
+  E.Transport = { maritimeState, buildingLevel, shopQuote, buy, fleetCapacity, fleetStatus, waterOwnerAt, updateUnitWaterState, updateFishingNets, movementMultiplier };
 }());

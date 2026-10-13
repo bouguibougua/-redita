@@ -289,7 +289,7 @@ Cette orientation doit rester correcte quelle que soit la colonne dans laquelle 
 
 Le rendu utilise deux illustrations littorales complémentaires conçues séparément : une pour le territoire Rouge et une pour le territoire Bleu. L'illustration bleue ne doit pas être une simple rotation à 180° de l'illustration rouge ; rochers, végétation et courbe du rivage ont une composition propre tout en gardant la même direction artistique.
 
-Toute personne qui entre dans l'eau sans embarcation meurt immédiatement. Le Sanglier constitue l'unique exception : il nage sans consommer de place, à la moitié de sa vitesse terrestre. Le Chien doit utiliser une embarcation. Dans le prototype, l'embarquement est automatique : une unité utilise une place libre de la flotte de son Littoral d'origine pendant toute sa présence dans l'eau, puis libère cette place dès son retour sur terre. Si toutes les places sont occupées, elle se noie. Une flotte ennemie ne transporte pas l'assaillant. Les trajets économiques terrestres, notamment la chasse, restent bornés hors de l'eau. TEMP_BALANCE_VALUE : dans la colonne logique de 100 unités, les zones d'eau occupent actuellement 38–50 côté Rouge et 50–62 côté Bleu afin de correspondre au rendu du rivage.
+Toute personne qui entre dans l'eau sans embarcation meurt immédiatement. Le Sanglier constitue l'unique exception : il nage sans consommer de place, à la moitié de sa vitesse terrestre. Le Chien doit utiliser une embarcation. Dans le prototype, l'embarquement est automatique : une unité utilise une place libre de la réserve de son village d'origine pendant toute sa présence dans l'eau, puis libère cette place dès son retour sur terre. **Les Barques peuvent être achetées et stockées dans tous les villages, quel que soit leur biome**, pour traverser aussi bien l'eau alliée que l'eau adverse. Chaque achat augmente la réserve locale ; l'embarquement occupe une place sans supprimer la Barque, qui reste réutilisable. Si toutes les places sont occupées, l'unité se noie. La réserve d'un autre village allié ou d'un village ennemi ne transporte pas l'assaillant. Les trajets économiques terrestres, notamment la chasse, restent bornés hors de l'eau. TEMP_BALANCE_VALUE : dans la colonne logique de 100 unités, les zones d'eau occupent actuellement 38–50 côté Rouge et 50–62 côté Bleu afin de correspondre au rendu du rivage.
 
 ---
 
@@ -1087,15 +1087,7 @@ L'ancienne règle liée au bétail est supprimée.
 
 Règle actuelle :
 
-**Artisanat donne +2 dégâts et +5 PV par personne présente dans la colonne.**
-
-L'interprétation exacte du cumul devra être confirmée avant l'implémentation définitive :
-
-* buff appliqué individuellement à chaque personne ?
-* effet selon le niveau du bâtiment ?
-* cumul possible avec plusieurs effets ?
-
-Ne pas inventer ces détails.
+**Décision du concepteur : l'Artisanat donne +2 dégâts et +5 PV à chaque habitant allié de sa colonne, sans cumul entre plusieurs Artisanats.** Le bonus ne dépend pas du nombre d'habitants ni du tier du bâtiment. Il s'applique aussi aux passagers humains d'une Charrette ; les animaux et la Charrette elle-même n'en bénéficient pas. Les unités perdent ce bonus lorsqu'elles quittent cette colonne pour une colonne sans Artisanat allié ou lorsque le village qui fournit le bonus est détruit. Les dégâts déjà subis sont conservés lors de la modification des PV maximum, selon la convention des améliorations existantes.
 
 Déblocages :
 
@@ -1481,11 +1473,11 @@ Lorsqu'elle est :
 * achetée ;
 * ou directement placée grâce à une carte ;
 
-elle apparaît physiquement sur le bord du Littoral.
+elle rejoint la réserve de son village. Sur un Littoral, elle apparaît aussi physiquement sur le bord de l'eau.
 
 Maximum :
 
-**4 Barques par Littoral.**
+**4 Barques par village, dans tous les biomes.**
 
 Position visuelle :
 
@@ -1497,7 +1489,9 @@ Capacité :
 
 La vitesse exacte reste à définir.
 
-TEMP_BALANCE_VALUE : en attendant la définition du prix, une Barque coûte **100 or** dans le magasin du village. Elle est achetable sur un Littoral disposant d'un Artisanat T1 ou d'une Boucherie T1. Ses deux places peuvent être utilisées simultanément.
+Une Barque est achetable dans n'importe quel village disposant d'un **Artisanat T1 ou d'une Boucherie T1**. La réserve est propre au village et ses deux places peuvent être utilisées simultanément. L'embarquement est automatique à l'entrée dans l'eau, même si le village d'origine est une Plaine ou une Montagne et que l'eau appartient à l'adversaire. Les places sont libérées à la sortie de l'eau ou à la mort de l'unité et peuvent être réutilisées. Le nombre de Barques achetées et les places libres sont visibles dans la fiche du village et la boutique, y compris en réalité mixte. Les Voiliers et les Filets restent réservés aux Littoraux.
+
+TEMP_BALANCE_VALUE : en attendant la définition du prix, une Barque coûte **100 or** dans le magasin du village.
 
 ---
 
@@ -1673,7 +1667,7 @@ Deck normal :
 
 **jusqu'à 30 cartes.**
 
-Un deck incomplet est autorisé dans le constructeur actuel et ne bloque pas le lancement d'une partie tant que les cartes ne sont pas utilisées dans le gameplay.
+Un deck incomplet de 1 à 30 cartes est autorisé et utilisé tel quel en partie. Si le deck choisi est vide, un deck de départ de 30 cartes est proposé automatiquement ; les trois compositions temporaires se trouvent dans `Config.cardGame.starterDecks`. Le constructeur permet aussi de charger explicitement ce deck de départ pour le modifier.
 
 Maximum d'exemplaires d'une même carte :
 
@@ -1683,7 +1677,7 @@ Toutes les cartes normales définies peuvent être ajoutées au deck, quelle que
 
 Le constructeur propose trois decks indépendants. Dans le prototype actuel, leur contenu reste uniquement dans l'état JavaScript de la session et n'est pas sauvegardé après actualisation.
 
-Chaque deck sélectionne également **3 cartes Mythologiques parmi 5**. Pour une future partie, **2 de ces 3 cartes** seront tirées au sort et deviendront disponibles.
+Chaque deck sélectionne également **3 cartes Mythologiques parmi 5**. Pour la partie, **2 de ces 3 cartes** sont tirées au sort et deviennent disponibles. TEMP_BALANCE_VALUE : une sélection incomplète est complétée avec les choix du deck de départ, en conservant les cartes déjà choisies.
 
 ---
 
@@ -1713,9 +1707,7 @@ Maximum :
 
 **15 cartes en main simultanément.**
 
-Le comportement lorsqu'une nouvelle carte doit être donnée alors que la main contient déjà 15 cartes n'est PAS encore défini.
-
-Ne pas détruire automatiquement la carte ou inventer une règle sans confirmation.
+**Décision du concepteur : lorsque la main contient 15 cartes, la pioche est suspendue sans perdre de carte.** La prochaine carte reste dans le deck et arrive dès qu'une place se libère si l'intervalle est déjà écoulé. Une seule pioche peut attendre ; il n'y a pas d'accumulation de plusieurs cartes pendant ce blocage. Le prochain intervalle repart après cette pioche.
 
 ---
 
@@ -1745,7 +1737,7 @@ Disponible après :
 
 La première des deux cartes Mythologiques tirées au sort pour la partie devient disponible.
 
-Le tirage parmi les trois cartes présélectionnées et leur utilisation en partie ne sont pas encore implémentés dans le prototype.
+Le tirage est effectué une seule fois au lancement, par la simulation autoritaire. Chaque Mythologique peut être jouée une fois ; la seconde se débloque à 10 minutes. Les Mythologiques ne prennent pas de place dans la main normale.
 
 ---
 
@@ -1934,11 +1926,7 @@ la fenêtre passe à :
 
 **5 minutes.**
 
-Question encore ouverte :
-
-Si le village d'origine d'un Habitant ressuscité a été détruit, il faut déterminer où cet Habitant réapparaît.
-
-Ne pas inventer cette règle avant confirmation.
+**Décision du concepteur : si le village d'origine est détruit, l'Habitant revient dans le village allié vivant le plus proche.** TEMP_BALANCE_VALUE : en cas d'égalité de distance, le village de plus petit numéro est choisi ; si le village d'accueil est plein ou brûlé, l'Habitant attend sa place dans une file de résurrection. Le plafond de population reste respecté. Il revient disponible, avec son métier, son outil et son armure ; son âne mort n'est pas ressuscité. Chaque décès est compté une seule fois et reçoit un nouvel identifiant au retour.
 
 ---
 
@@ -2460,8 +2448,8 @@ Les éléments suivants doivent être considérés comme des règles actuelles :
 * 2 Mythologiques séparées ;
 * premier choix Mythologique à 5 min ;
 * deuxième à 10 min ;
-* 2 cartes proposées parmi les Mythologiques ;
-* 1 sélectionnée ;
+* 3 Mythologiques présélectionnées par deck, puis 2 tirées au sort pour la partie ;
+* chaque Mythologique tirée peut être jouée une seule fois ;
 * préparation des villages = 60 secondes après le choix des decks et biomes ;
 * durée normale de combat = 12:30, après cette préparation ;
 * ensuite Overtime ;
@@ -2489,8 +2477,7 @@ Ils devront être demandés au concepteur lorsque leur implémentation devient n
 
 ### Deck
 
-* comportement lorsque la main est déjà à 15 cartes ;
-* comportement exact de la pioche à 12:30.
+* validation définitive de l'arrêt de la pioche à 12:30 (convention temporaire actuelle : aucune pioche à 12:30 ou pendant l'Overtime).
 
 ### Combat
 
@@ -2510,7 +2497,6 @@ Ils devront être demandés au concepteur lorsque leur implémentation devient n
 ### Bâtiments
 
 * ressource T2/T3 de chaque bâtiment ;
-* fonctionnement exact du buff Artisanat ;
 * signification exacte des réductions -10/-20/-30 de la Bergerie.
 
 ### Animaux
@@ -2526,7 +2512,7 @@ Ils devront être demandés au concepteur lorsque leur implémentation devient n
 
 ### Mythologiques
 
-* emplacement de résurrection avec A Squadra d'Arozza si le village d'origine est détruit.
+* validation de la file d'attente de résurrection lorsque le village d'accueil est plein ou brûlé.
 
 ### Overtime
 
@@ -2727,4 +2713,35 @@ Un clic à la gâchette directement sur un village ou sa fiche le sélectionne e
 
 Une ancre non persistante est utilisée si disponible. Sans ancre, le plateau reste dans le repère de la session ; un changement d'origine impose un nouveau placement. Aucune restauration spatiale entre sessions n'est promise. Les valeurs de confort et les limites provisoires sont centralisées dans `Config.xr` avec la mention `TEMP_BALANCE_VALUE`.
 
-Les futures cartes suivront sélection → carte active → emplacements autorisés → confirmation, via un adaptateur appelant les fonctions métier partagées. Le jeu de cartes complet, ses coûts et ses effets n'existent pas encore sur desktop et ne sont donc pas ajoutés à cette interface ; Y est réservé à la boutique. Le tutoriel scénarisé reste dans son interface actuelle. Les tests matériels à effectuer sont détaillés dans `QUEST3.md`.
+Les cartes suivent sélection → carte active → cibles autorisées → confirmation, via les mêmes commandes métier sur écran, en réseau et dans le casque. La gestion du village donne accès à la main ; choisir une carte ouvre ses cibles et leur coût, puis choisir une cible confirme l'effet. Y reste réservé à la boutique. Le tutoriel scénarisé conserve ses étapes et n'active pas le système de main. Les tests matériels à effectuer sont détaillés dans `QUEST3.md`.
+
+---
+
+# 95. CARTES JOUABLES ET ILLUSTRATIONS
+
+Les **34 cartes normales et 5 Mythologiques** utilisent le style fantastique validé par le concepteur : cadres ornés dorés, illustrations corses et panneau de texte sombre. Les **31 cartes de la planche fournie** sont extraites dans `assets/cards/fantasy/` en conservant leurs illustrations et cadres. Les **8 cartes absentes** (Âne, Voilier, Champ de blé, Vignoble, Châtaignier, Bergerie, Artisanat et Boucherie) disposent d'illustrations assorties générées avec cette planche comme référence. Les PNG originaux sont conservés ; les copies WebP optimisées sont utilisées par le jeu. La provenance, les recadrages et les prompts des compléments sont conservés dans `assets/cards/fantasy/SOURCE.md` et `manifest.json`. La première série d'illustrations et ses prompts restent archivés dans `assets/cards/`.
+
+La planche constitue une référence visuelle. Ses descriptions imprimées ne remplacent pas les règles écrites : le rendu HTML et XR affiche les textes validés par le Game Design sur le panneau sombre de chaque carte, notamment pour les Mythologiques, les animaux et le Piège. Les titres des huit compléments, les catégories, prix et états restent rendus par l'interface. Les fiches affichent les conditions et statistiques complètes. Les cadres complets sont visibles dans la collection, la main, les fiches et en XR. Les figures mythologiques sont des interprétations graphiques pour le prototype, sans prétention de restitution historique.
+
+La composition du deck choisi est copiée dans l'état de chaque joueur à la confirmation de sa préparation. L'hôte valide les identifiants, les quantités, les 30 cartes maximum, les 4 copies maximum et les choix mythologiques de l'invité. Il mélange les deux decks une seule fois au lancement et distribue **5 cartes**, ou toutes les cartes si le deck en contient moins. Les cartes restantes sont piochées toutes les **30 secondes de combat**, sans recyclage des cartes jouées. La pause et la minute de préparation suspendent la pioche. TEMP_BALANCE_VALUE : aucune pioche à exactement 12:30 ou pendant l'Overtime (`Config.cardGame.drawDuringOvertime`).
+
+Sur écran, la main appartient au joueur contrôlé ; en local, elle suit le camp sélectionné. Une carte est d'abord sélectionnée, puis le joueur choisit son village, son habitant ou son slot compatible et confirme. Le coût et les conditions sont affichés avant le jeu. Une action refusée ne dépense rien et conserve la carte. Une action réussie ne débite son coût qu'une fois et retire uniquement cet exemplaire de la main. Les boutiques, tâches et placements directs existants restent des voies complémentaires de développement.
+
+Les cartes Habitant, métiers, bâtiments, animaux, cultures, embarcations et équipements réutilisent les règles existantes. L'Habitant coûte toujours **50 or et 50 ressources locales** ; les métiers ciblent un habitant local hors combat et conservent leurs prérequis de bâtiments. Une carte d'animal d'élevage place un animal dans le slot choisi ou en ajoute un à un troupeau de même espèce, sans écraser une culture. Les cartes Chien, Sanglier et Âne suivent les tiers de Bergerie et les prix du magasin ; les cartes d'équipement suivent les tiers d'Artisanat. La Barque fonctionne avec la réserve de tous les villages. Les cultures et premiers animaux suivent les coûts temporaires de placement direct déjà centralisés.
+
+Les aménagements de terrain sont des overlays sans modifier le nombre de slots du biome :
+
+* **Rivière** : Plaine ou Montagne, ouvre la pêche personnelle ;
+* **Moulin** : exige une Rivière, **250 PV**, **+30 % rendement agricole** ;
+* **Tour génoise** : **300 PV**, révèle les **25 %** de la région adverse proches de la frontière, ou **50 %** si la tour est construite sur un Littoral ;
+* **Sentier** : Montagne, **+20 % déplacement** des unités et travailleurs alliés ;
+* **Piège** : terrestre, déclenché une fois par un ennemi à proximité, **50 dégâts** et **−50 % déplacement pendant 3 secondes** ;
+* **Charrette** : **150 PV**, jusqu'à **8 habitants disponibles** de son village, libérés à l'arrivée ou à sa destruction. Les passagers gardent leur métier et équipement et ne sont pas supprimés avec la Charrette. En Montagne sa vitesse est divisée par deux. TEMP_BALANCE_VALUE : vitesse **8 unités/s** et débarquement avant l'eau pour laisser les unités utiliser les barques.
+
+TEMP_BALANCE_VALUE : un exemplaire par village pour Rivière, Moulin, Tour et Sentier, **4 Pièges maximum** ; prix respectifs **100 / 250 / 300 / 75 / 100 / 200 or** pour Rivière, Moulin, Tour, Sentier, Piège et Charrette. Les positions et portées temporaires sont dans `Config.cardGame`. Le Moulin et la Tour ont leurs propres PV ; les assaillants peuvent les détruire avant de poursuivre vers le village.
+
+U Mazzeru révèle les effectifs et métiers humains adverses pendant **120 secondes**. A Stregha divise les rendements de la région adverse choisie et sa vitesse de reproduction par **2 pendant 120 secondes**, sans ralentir les déplacements. U Diavulu tue les habitants, cultures et animaux des deux camps de la colonne choisie, bloque les nouveaux placements pendant **120 secondes**, et inflige **125 dégâts** au réservoir commun du village/bâtiments adverse lorsqu'il est lancé depuis une Montagne. A Squadra d'Arozza suit la fenêtre de **3 minutes**, ou **5 depuis une Plaine**, et la destination de résurrection décidée plus haut. L'Œil de Sainte-Lucie exige un Littoral d'origine et révèle tous les Littoraux ennemis jusqu'à la fin de la partie.
+
+Les informations économiques et les forces présentes dans la partie non révélée du territoire adverse sont masquées à l'écran et en 3D. Les PV des villages et les biomes restent lisibles. TEMP_BALANCE_VALUE : la visibilité est une présentation du snapshot partagé ; ce prototype ne protège pas les données adverses contre l'inspection technique du client.
+
+TEMP_BALANCE_VALUE : l'IA joue les cartes ayant une cible compatible et utilise les mêmes coûts ; sa priorité est centralisée dans `Config.ai.cardPriority`. Elle achète également des Barques avant une attaque sur une ligne contenant de l'eau. Elle n'utilise pas encore U Diavulu pour sacrifier une de ses régions.

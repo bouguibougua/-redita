@@ -21,6 +21,32 @@
     },
     bulkTaskInterval: 0.5,
     network: { connectionTimeoutMs: 8000 },
+    cardGame: {
+      startingHand: 5, handMax: 15, drawInterval: 30,
+      mythologicalUnlocks: [300, 600],
+      effectDuration: 120, resurrectionWindow: 180, plainsResurrectionWindow: 300,
+      diavuluMountainDamage: 125,
+      // TEMP_BALANCE_VALUE — pas de pioche à la frontière 12:30 ni pendant l'Overtime.
+      drawDuringOvertime: false,
+      // TEMP_BALANCE_VALUE — les coûts non définis des cartes sont regroupés ici.
+      // Les autres cartes reprennent les coûts et prérequis de leur action existante.
+      terrainCosts: { riviere: 100, moulin: 250, "tour-genoise": 300, sentier: 75, piege: 100, charrette: 200 },
+      terrainHp: { moulin: 250, "tour-genoise": 300 },
+      millProductionBonus: 0.3, trailSpeedBonus: 0.2,
+      trapDamage: 50, trapSlowMultiplier: 0.5, trapSlowDuration: 3,
+      towerRevealFraction: 0.25, coastalTowerRevealFraction: 0.5,
+      // TEMP_BALANCE_VALUE — placement des overlays, limites et vitesse de la charrette.
+      trapLimit: 4, trapRange: 1.5, cartCapacity: 8,
+      cartMountainMultiplier: 0.5, structurePositionByOwner: { red: 23, blue: 77 },
+      // TEMP_BALANCE_VALUE — les ressuscités attendent une place pour respecter le plafond.
+      resurrectionWaitForSpace: true,
+      // TEMP_BALANCE_VALUE — decks prêts à jouer utilisés quand le deck choisi est vide.
+      starterDecks: [
+        { quantities: { "champ-ble": 4, chataignier: 2, bergerie: 3, artisanat: 3, boucherie: 2, agriculteur: 3, guerrier: 3, barque: 4, chevre: 2, "outil-bois": 2, riviere: 1, moulin: 1 }, mythological: ["u-mazzeru", "a-stregha", "squadra-arozza"] },
+        { quantities: { chataignier: 4, vignoble: 2, bergerie: 3, artisanat: 2, boucherie: 2, berger: 3, guerrier: 3, barque: 3, chevre: 3, sentier: 2, "outil-bronze": 1, riviere: 1, moulin: 1 }, mythological: ["u-diavulu", "u-mazzeru", "squadra-arozza"] },
+        { quantities: { "champ-ble": 3, vignoble: 3, artisanat: 3, boucherie: 3, bergerie: 2, pecheur: 3, guerrier: 3, barque: 4, "filet-peche": 3, "tour-genoise": 1, vache: 2 }, mythological: ["oeil-sainte-lucie", "a-stregha", "u-diavulu"] }
+      ]
+    },
     xr: {
       // TEMP_BALANCE_VALUE — réglages de présentation/confort, sans effet sur les règles.
       initialWidth: 0.8, minWidth: 0.45, maxWidth: 1.4,
@@ -62,6 +88,7 @@
     },
     building: {
       slots: 3,
+      artisanatBonus: { hp: 5, damage: 2 },
       types: ["bergerie", "artisanat", "boucherie"],
       T1: { hp: 75, gold: 200 },
       T2: { hp: 150, gold: 200, resourceAmount: 100, resourceType: null },
@@ -253,11 +280,13 @@
       waterRanges: { red: { min: 38, max: 50 }, blue: { min: 50, max: 62 } },
       shop: {
         barque: { label: "Barque", icon: "🛶", gold: 100, max: 4, capacity: 2, unlock: "artisanat-ou-boucherie-t1" },
-        voilier: { label: "Voilier", icon: "⛵", gold: 350, max: 2, capacity: 15, unlock: "boucherie-t3" },
-        filet: { label: "Filet de pêche", icon: "🕸", gold: 75, max: null, fishAmount: 1, interval: 30, unlock: "boucherie-t1" }
+        voilier: { label: "Voilier", icon: "⛵", gold: 350, max: 2, capacity: 15, biome: "littoral", unlock: "boucherie-t3" },
+        filet: { label: "Filet de pêche", icon: "🕸", gold: 75, max: null, fishAmount: 1, interval: 30, biome: "littoral", unlock: "boucherie-t1" }
       }
     },
     units: {
+      // PV fixés par le GDD ; TEMP_BALANCE_VALUE — vitesse de la Charrette.
+      charrette: { label: "Charrette", shortLabel: "🛞", hp: 150, damage: 0, speed: 8 },
       habitant: { label: "Habitant", shortLabel: "H", hp: 50, damage: 5, speed: 5 },
       guerrier: { label: "Guerrier", shortLabel: "G", hp: 70, damage: 10, speed: 5.5, requires: "artisanat" },
       // TEMP_BALANCE_VALUE — spécialisation du Ravageur contre les villages/bâtiments.
@@ -292,6 +321,8 @@
     simulation: { maxDelta: 0.1 },
     // TEMP_BALANCE_VALUE — comportement provisoire de l'adversaire solo.
     ai: {
+      // TEMP_BALANCE_VALUE — priorité des cartes et achats de transport de l'IA.
+      cardPriority: ["bergerie", "artisanat", "boucherie", "champ-ble", "chataignier", "vignoble", "barque", "riviere", "moulin", "guerrier", "agriculteur", "berger", "pecheur"],
       decisionInterval: 3,
       attackInterval: 9,
       reserveResidents: 2,

@@ -40,7 +40,7 @@
   }
 
   const categorySlug = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const visual = (item, large = false) => item.image
+  const visual = (item, large = false) => E.CardArt ? E.CardArt.html(item) : item.image
     ? `<img src="${item.image}" alt="" loading="lazy">`
     : `<span class="deck-card-placeholder${large ? " large" : ""}" aria-hidden="true"><i>${item.icon || "✦"}</i><small>${item.name}</small></span>`;
 
@@ -72,7 +72,7 @@
     return `<section class="deck-collection" aria-label="Collection de cartes">
       <header class="deck-collection-header"><div><span>Cartes disponibles</span><h3>Collection</h3></div><b>${filtered.length} carte${filtered.length > 1 ? "s" : ""}</b></header>
       <nav class="deck-filters" aria-label="Filtres de cartes">${["Toutes", ...categories].map((category) => `<button type="button" data-filter="${category}" class="${state.filter === category ? "selected" : ""}">${category}</button>`).join("")}</nav>
-      <div class="deck-collection-grid">${filtered.map((item) => `<article class="deck-collection-card category-${categorySlug(item.category)}">
+      <div class="deck-collection-grid">${filtered.map((item) => `<article class="deck-collection-card ${item.fullCard ? "full-card" : ""} category-${categorySlug(item.category)}">
         <button type="button" class="deck-card-body" data-open-card="${item.id}">${visual(item)}<span class="deck-card-copy"><b>${item.name}</b><small>${item.category}${item.rarity ? ` · ${item.rarity}` : ""}</small></span></button>
         ${quantityControl(item)}
       </article>`).join("")}</div>
@@ -87,7 +87,7 @@
       <div class="deck-myth-grid">${cards.mythological.map((item) => {
         const isSelected = selected.includes(item.id);
         const disabled = !isSelected && selected.length >= cards.rules.mythologicalMax;
-        return `<article class="deck-myth-card ${isSelected ? "selected" : ""}">
+        return `<article class="deck-myth-card ${item.fullCard ? "full-card" : ""} ${isSelected ? "selected" : ""}">
           <button type="button" class="deck-card-body" data-open-card="${item.id}">${visual(item)}<span class="deck-card-copy"><b>${item.name}</b><small>Mythologique</small></span></button>
           <button type="button" class="deck-myth-toggle" data-toggle-myth="${item.id}" ${disabled ? "disabled" : ""}>${isSelected ? "Sélectionnée" : "Sélectionner"}</button>
         </article>`;
@@ -127,7 +127,7 @@
   function render() {
     if (!root) return;
     root.innerHTML = `<div class="deck-builder">
-      <header class="deck-builder-top"><div class="deck-tabs" role="tablist">${state.decks.map((_, index) => `<button type="button" role="tab" aria-selected="${index === state.activeDeck}" class="${index === state.activeDeck ? "selected" : ""}" data-deck-index="${index}">Deck ${index + 1}</button>`).join("")}</div><p>Les changements sont conservés pendant cette session.</p></header>
+      <header class="deck-builder-top"><div class="deck-tabs" role="tablist">${state.decks.map((_, index) => `<button type="button" role="tab" aria-selected="${index === state.activeDeck}" class="${index === state.activeDeck ? "selected" : ""}" data-deck-index="${index}">Deck ${index + 1}</button>`).join("")}</div><button type="button" class="button" data-use-starter>Charger le deck de départ</button><p>Les changements sont conservés pendant cette session.</p></header>
       <div class="deck-main-layout">${currentDeckHtml()}${collectionHtml()}</div>
       ${mythologicalHtml()}
       ${modalHtml()}
@@ -152,6 +152,10 @@
   }
 
   function handleClick(event) {
+    if (event.target.closest("[data-use-starter]") && E.Config?.cardGame) {
+      state.decks[state.activeDeck] = JSON.parse(JSON.stringify(E.Config.cardGame.starterDecks[state.activeDeck]));
+      render(); return;
+    }
     const quantityButton = event.target.closest("[data-quantity]");
     if (quantityButton) {
       event.stopPropagation();
@@ -194,5 +198,6 @@
     root = null;
   }
 
-  E.Decks = { mount, unmount, state, createState, deckTotal, quantity, adjustQuantity, toggleMythological };
+  const exportDeck = index => JSON.parse(JSON.stringify(state.decks[index] || state.decks[0]));
+  E.Decks = { mount, unmount, state, createState, deckTotal, quantity, adjustQuantity, toggleMythological, exportDeck };
 })();

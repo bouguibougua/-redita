@@ -22,6 +22,7 @@
       !state.paused &&
       village &&
       !village.destroyed &&
+      !E.CardEffects?.isBurned(state, village) &&
       slot &&
       slot.type === "free" &&
       (!slot.content || (slot.content.category === "crop" && slot.content.type !== type)) &&

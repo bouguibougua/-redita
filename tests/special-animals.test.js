@@ -260,30 +260,36 @@ test("boars prioritize enemy crops over nearby troops and destroy the crop at ei
   const crop = enemy.slots[0].content;
   const villageHp = enemy.hp;
   E.Combat.update(state, 0.25);
-  near(crop.hp, crop.maxHp - 2, "Quarter-second crop damage");
+  near(crop.hp, crop.maxHp - 8, "The first crop hit deals eight damage");
   assert.equal(soldier.hp, soldier.maxHp);
   assert.equal(enemy.hp, villageHp);
   crop.hp = 2;
   E.Combat.update(state, 0.25);
+  assert.equal(crop.hp, 2, "The boar waits for its next one-second hit");
+  E.Combat.update(state, 0.75);
   assert.equal(enemy.slots[0].content, null, "Destruction clears the slot");
   assert.equal(E.Crops.canPlace(state, "blue", 0, 0, "ble"), true);
   E.Combat.update(state, 0.25);
-  near(soldier.hp, soldier.maxHp - 2, "Quarter-second damage after the crop is gone");
+  assert.equal(soldier.hp, soldier.maxHp, "No fractional damage between impacts");
+  E.Combat.update(state, 0.75);
+  near(soldier.hp, soldier.maxHp - 8, "The next impact targets the soldier after the crop is gone");
   E.Economy.updateProduction(state, 200);
   assert.equal(enemy.resources.ble, 0, "A destroyed field cannot produce another harvest");
 });
 
-test("boar village damage is continuous and its death credits only the origin village", () => {
+test("boar village hits and retaliation occur each second and death credits only the origin village", () => {
   const { state, village, enemy } = scenario();
   const humansBefore = population(state);
   const { animal, unit } = deploy(state, "sanglier");
   unit.position = E.Config.movement.columnLength;
   const hpBefore = enemy.hp;
   E.Combat.update(state, 0.25);
-  near(enemy.hp, hpBefore - 2, "Quarter-second village damage");
+  near(enemy.hp, hpBefore - 8, "The first village hit deals eight damage");
   unit.lane = unit.lanePosition = 1;
   unit.hp = E.Config.combat.villageRetaliationDamagePerSecond * 0.25;
   E.Combat.update(state, 0.25);
+  assert.ok(unit.hp > 0, "The boar survives until the next retaliation impact");
+  E.Combat.update(state, 0.75);
   assert.equal(unit.hp, 0, "Village retaliation kills the wounded boar");
   assert.equal(village.resources.viande, 8);
   assert.equal(state.players.red.villages[1].resources.viande, 0);
