@@ -1,8 +1,8 @@
 # Illustrations des cartes Eredità
 
-Cette première série est conservée comme archive. Les visuels utilisés actuellement par le jeu sont dans `fantasy/` ; leur référence et les prompts des huit compléments sont documentés dans [fantasy/SOURCE.md](fantasy/SOURCE.md).
+Cette première série est conservée dans une sauvegarde externe, documentée dans `NETTOYAGE.md`, pour alléger le projet. Les visuels utilisés actuellement par le jeu sont dans `fantasy/` ; leur référence et les prompts des huit compléments sont documentés dans [fantasy/SOURCE.md](fantasy/SOURCE.md).
 
-39 illustrations originales générées avec l'outil intégré `image_gen`, le 13 octobre 2026. Les PNG de ce dossier conservent les originaux de cette première série. Ses copies WebP sont limitées à 768 pixels sur le grand côté et encodées à qualité 88 %. Elles peuvent être préparées avec `node scripts/prepare-card-art.js` (Edge sur Windows). Cette série utilisait des titres, cadres, catégories et prix rendus en HTML/CSS.
+39 illustrations originales générées avec l'outil intégré `image_gen`, le 13 octobre 2026. Les PNG et anciennes copies WebP de cette première série sont archivés hors du projet. Cette série utilisait des titres, cadres, catégories et prix rendus en HTML/CSS. Les prompts ci-dessous sont conservés pour leur provenance ; le script de préparation obsolète a été remplacé par `scripts/prepare-assets.js` pour les visuels actuels.
 
 Les figures mythologiques sont des interprétations artistiques pour le prototype ; elles ne constituent pas des restitutions historiques documentées.
 

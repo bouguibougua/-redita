@@ -523,7 +523,7 @@
   }
 
   function terrainSignature(state) {
-    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${JSON.stringify(village.terrain || {})}:${village.burnUntil > state.elapsed}:${village.curseUntil > state.elapsed}:${vision(state, village).fraction}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}` : "-").join(",")}`)).join("|");
+    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${E.CardEffects?.terrainVisualKey(village) || ""}:${village.burnUntil > state.elapsed}:${village.curseUntil > state.elapsed}:${vision(state, village).fraction}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}` : "-").join(",")}`)).join("|");
   }
 
   function animalAppearance(type, className) {
@@ -1008,13 +1008,6 @@
     return job ? job.label : mission;
   }
 
-  function residentIcon(mission) {
-    if (mission === "disponible") return "👤";
-    if (mission === "attaque") return "⚔";
-    if (mission === "defense") return "🛡";
-    return E.Config.jobs[mission] ? E.Config.jobs[mission].icon : "👤";
-  }
-
   function residentsSignature(village) {
     return village.residents.map((resident) => `${resident.id}:${resident.profession}:${resident.mission}:${resident.unitId || 0}:${resident.tool || ""}:${resident.armor || ""}:${resident.donkey || false}`).join("|");
   }
@@ -1034,7 +1027,7 @@
 
   function setText(selector, value) {
     const target = elements.inspector.querySelector(selector);
-    if (target) target.textContent = value;
+    if (target && target.textContent !== String(value)) target.textContent = value;
   }
 
   function jobRequirementText(village, job) {

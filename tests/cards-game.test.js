@@ -36,7 +36,7 @@ function readyVillage(state, lane = 0) {
   return v;
 }
 
-test("all 39 cards have a unique optimized illustration, a PNG original and valid starter decks", () => {
+test("all 39 cards have a unique optimized illustration and valid starter decks", () => {
   assert.equal(E.Cards.all.length, 39);
   assert.equal(new Set(E.Cards.all.map(card => card.image)).size, 39);
   for (const card of E.Cards.all) {
@@ -44,8 +44,6 @@ test("all 39 cards have a unique optimized illustration, a PNG original and vali
     assert.equal(bytes.subarray(0, 4).toString(), "RIFF", card.id);
     assert.equal(bytes.subarray(8, 12).toString(), "WEBP", card.id);
     assert.ok(bytes.length < 250000, `${card.id}: small enough for the collection and XR`);
-    const original = fs.readFileSync(path.join(__dirname, "..", card.image.replace(/\.webp$/, ".png")));
-    assert.equal(original.subarray(1, 4).toString(), "PNG", card.id);
   }
   for (const deck of E.Config.cardGame.starterDecks) {
     assert.equal(E.CardGame.validateDeck(deck), true);

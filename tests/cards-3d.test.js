@@ -3,9 +3,9 @@ const assert = require("node:assert/strict"), fs = require("node:fs"), path = re
 async function run() {
   const read = name => fs.readFileSync(path.join(__dirname, "..", "js", `${name}.js`), "utf8");
   const THREE = await import(`data:text/javascript;base64,${Buffer.from(read("vendor/three.core")).toString("base64")}`);
-  const ctx = vm.createContext({ window: {}, console });
+  const ctx = vm.createContext({ window: {}, console, performance });
   for (const name of ["config", "biomes", "crops", "livestock", "units", "buildings", "transport", "equipment", "animals", "economy", "board", "combat", "cards", "card-effects", "card-game"]) vm.runInContext(read(name), ctx);
-  const source = read("board3d").replace("  E.Board3D = {", "  E.CardRenderTest = { prepare(module, state) { THREE = module; latestState = state; unitGroup = new THREE.Group(); terrainGroup = new THREE.Group(); }, terrainTile, updateUnits, get terrain() { return terrainGroup; }, get models() { return unitModels; } };\n  E.Board3D = {");
+  const source = read("board3d").replace("  E.Board3D = {", "  E.CardRenderTest = { prepare(module, state) { THREE = module; latestState = state; unitGroup = new THREE.Group(); terrainGroup = new THREE.Group(); baseLanes = state.players.red.villages.length; ready = true; }, terrainTile, updateUnits, get terrain() { return terrainGroup; }, get models() { return unitModels; } };\n  E.Board3D = {");
   vm.runInContext(source, ctx);
   const E = ctx.window.Eredita, state = E.Board.createState("classic");
   state.phase = "running"; E.CardGame.start(state);
@@ -22,6 +22,15 @@ async function run() {
     if (part.geometry) { part.geometry.computeBoundingSphere(); assert.ok(Number.isFinite(part.geometry.boundingSphere.radius)); }
   });
   v.burnUntil = v.curseUntil = 0;
+  E.Board3D.update(state,true);
+  const originalTerrain=renderer.terrain.children[0];
+  v.terrain.tower.hp-=10; v.terrain.mill.hp-=10; E.Board3D.update(state);
+  assert.equal(renderer.terrain.children[0],originalTerrain,"Damage does not rebuild all terrain meshes");
+  v.terrain.traps[0].position+=1; E.Board3D.update(state);
+  assert.notEqual(renderer.terrain.children[0],originalTerrain,"Moving a trap updates the geometry");
+  const tower=v.terrain.tower; delete v.terrain.tower; E.Board3D.update(state);
+  assert.equal(renderer.terrain.getObjectByName("card-genoese-tower"),undefined,"A destroyed tower disappears immediately");
+  v.terrain.tower=tower; E.Board3D.update(state);
   const enemyUnit = E.Units.create("blue", 0, "habitant"); enemyUnit.position = 90;
   state.units.push(enemyUnit); renderer.updateUnits(state);
   assert.equal(renderer.models.has(`unit-${enemyUnit.id}`), false, "A hidden enemy is not rendered");

@@ -83,10 +83,11 @@
         <div class="card-myth-row"><div><strong>Mythologiques</strong><small>Deux cartes tirées parmi votre sélection · utilisables une fois</small></div><div class="card-myth-list">${cards.mythological.map(item => cardHtml(state, item, true)).join("")}</div></div>`;
     }
     const timer = root.querySelector("[data-next-card]");
-    if (timer) timer.textContent = !cards.drawPile.length ? "Deck épuisé" : state.preparationRemaining > 0 ? "Pioche après la préparation" :
+    const nextDraw = !cards.drawPile.length ? "Deck épuisé" : state.preparationRemaining > 0 ? "Pioche après la préparation" :
       !E.Config.cardGame.drawDuringOvertime && state.elapsed >= E.Config.overtime.start ? "Pioche terminée" :
         cards.hand.length >= E.Config.cardGame.handMax && cards.drawTimer >= E.Config.cardGame.drawInterval ? "Pioche en attente · main pleine" :
           `Prochaine carte : ${Math.ceil(E.Config.cardGame.drawInterval - cards.drawTimer)} s`;
+    if (timer && timer.textContent !== nextDraw) timer.textContent = nextDraw;
     document.querySelectorAll("[data-select-slot]").forEach(button => {
       const selected = state.selectedVillage;
       const allowed = Boolean(card && targets.some((target, i) => quotes[i].allowed && playerId === selected.playerId && target.lane === selected.lane && target.slotIndex === Number(button.dataset.selectSlot)));

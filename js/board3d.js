@@ -819,7 +819,7 @@
   function signature(state) {
     return Object.values(state.players).flatMap((player) => player.villages.map((village) => [
       village.id, village.biome, village.level, village.destroyed, village.damageSmoke > 0,
-      JSON.stringify(village.terrain || {}), village.burnUntil > state.elapsed, village.curseUntil > state.elapsed,
+      E.CardEffects?.terrainVisualKey(village) || "", village.burnUntil > state.elapsed, village.curseUntil > state.elapsed,
       E.CardEffects?.vision(state, cardViewer(state), village)?.fraction ?? 1,
       village.buildings.map((building) => `${building.type}${building.level}`).join(","),
       `${village.maritime?.barque || 0}:${village.maritime?.voilier || 0}:${village.maritime?.filet || 0}`,

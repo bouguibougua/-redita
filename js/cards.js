@@ -102,11 +102,13 @@
     card("oeil-sainte-lucie", "Œil de Sainte-Lucie", "Mythologique", "◉", "Dissipe durablement le brouillard sur les côtes adverses.", { effect: "Révèle les biomes Littoraux adverses jusqu’à la fin de la partie.", conditions: ["Utilisable uniquement depuis un Littoral."] })
   ];
 
+  const all = Object.freeze([...normal, ...mythological]);
+  const byId = new Map(all.map(item => [item.id, item]));
   E.Cards = Object.freeze({
     rules: Object.freeze({ deckCount: 3, normalDeckMax: 30, copiesPerCardMax: 4, mythologicalMax: 3, futureMythologicalDraw: 2 }),
     normal: Object.freeze(normal),
     mythological: Object.freeze(mythological),
-    all: Object.freeze([...normal, ...mythological]),
-    get(id) { return this.all.find((item) => item.id === id) || null; }
+    all,
+    get(id) { return byId.get(id) || null; }
   });
 })();

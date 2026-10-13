@@ -35,7 +35,7 @@ async function createBrowser({ url, serverPort = 8878, debugPort = 9446 } = {}) 
         if (message.error) reject(new Error(message.error.message)); else resolve(message.result);
       }
       if (message.method === "Runtime.exceptionThrown") exceptions.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
-      if (message.method === "Network.responseReceived" && message.params.response.status >= 400 && /assets\/cards\//.test(message.params.response.url)) imageErrors.push(message.params.response.url);
+      if (message.method === "Network.responseReceived" && message.params.response.status >= 400 && /\/(assets|js|css)\//.test(message.params.response.url)) imageErrors.push(message.params.response.url);
     };
     function send(method, params = {}) {
       const messageId = ++id;

@@ -13,6 +13,12 @@
   const isBurned = (state, village) => Boolean(village && village.burnUntil > state.elapsed);
   const productionMultiplier = (state, village) => village.curseUntil > state.elapsed ? 0.5 : 1;
 
+  // Only geometry changes rebuild the board; damage to an existing structure does not.
+  function terrainVisualKey(village) {
+    const t = terrain(village);
+    return [!!t.river, !!t.mill, !!t.tower, !!t.trail, (t.traps || []).map(trap => trap.position).join(",")].join("/");
+  }
+
   function cost(id) {
     if (E.Config.building.types.includes(id)) return E.Config.building.T1.gold;
     if (vesselTypes[id]) return E.Config.maritime.shop[vesselTypes[id]].gold;
@@ -246,10 +252,12 @@
       const active = village && !village.destroyed && E.Buildings.has(village, "artisanat");
       const hpBonus = active ? bonus.hp : 0, damageBonus = active ? bonus.damage : 0;
       const difference = hpBonus - (unit.artisanatHpBonus || 0);
+      const damageDifference = damageBonus - (unit.artisanatDamageBonus || 0);
+      if (!difference && !damageDifference) continue;
       // Même convention que les améliorations : conserver les dégâts déjà subis.
       unit.maxHp += difference;
       unit.hp = Math.max(0, Math.min(unit.maxHp, unit.hp + difference));
-      unit.damage += damageBonus - (unit.artisanatDamageBonus || 0);
+      unit.damage += damageDifference;
       unit.artisanatHpBonus = hpBonus; unit.artisanatDamageBonus = damageBonus;
     }
   }
@@ -289,6 +297,6 @@
     }
   }
 
-  E.CardEffects = { quote, apply, targets, cost, terrain, isBurned, productionMultiplier, recordDeath,
+  E.CardEffects = { quote, apply, targets, cost, terrain, terrainVisualKey, isBurned, productionMultiplier, recordDeath,
     update, vision, unitVisible, movementMultiplier, updateArtisanatBonuses, releaseCart, residentCards };
 }());

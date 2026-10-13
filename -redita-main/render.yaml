@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: eredita-multijoueur
-    runtime: node
-    plan: free
-    region: frankfurt
-    buildCommand: npm install
-    startCommand: npm start

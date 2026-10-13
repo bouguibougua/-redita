@@ -160,8 +160,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .lane:last-child { border-right: 0; }
 .lane-label { position: absolute; z-index: 2; top: 50%; left: 8px; transform: translateY(-50%); color: rgba(255,255,255,.58); font-size: .65rem; font-weight: 900; }
 .village-token { position: relative; z-index: 3; width: calc(100% - 14px); margin: 4px 7px; padding: 3px 7px; border: 1px solid rgba(255,255,255,.26); border-radius: 9px; color: white; cursor: default; pointer-events: none; }
-.village-token.red { background: linear-gradient(90deg, #6e2825dd, #a43d37dd), url("../assets/generated/buildings-atlas.png") 0 0 / 200% 200%; }
-.village-token.blue { background: linear-gradient(90deg, #365d78dd, #274d70dd), url("../assets/generated/buildings-atlas.png") 0 0 / 200% 200%; }
+.village-token.red { background: linear-gradient(90deg, #6e2825dd, #a43d37dd), url("../assets/generated/buildings-atlas.webp") 0 0 / 200% 200%; }
+.village-token.blue { background: linear-gradient(90deg, #365d78dd, #274d70dd), url("../assets/generated/buildings-atlas.webp") 0 0 / 200% 200%; }
 .village-token.selected { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(223,184,94,.38), 0 0 18px rgba(223,184,94,.28); }
 .village-token.destroyed { filter: grayscale(1); opacity: .42; text-decoration: line-through; }
 .village-token.under-attack { border-color: #ff766c; animation: structure-hit .32s infinite alternate; }
@@ -170,16 +170,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .hp-track i { display: block; height: 100%; background: #e6d89a; }
 .region { position: relative; overflow: hidden; padding: 8px; }
 .region::before { content: ""; position: absolute; inset: 0; opacity: .82; background-position: center; background-size: cover; }
-.region.plaine::before { background-image: linear-gradient(#16201122, #16201144), url("../assets/generated/terrain-plaine.png"); }
-.region.montagne::before { background-image: linear-gradient(#1116, #1112), url("../assets/generated/terrain-montagne.png"); }
-.region.littoral.red::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral-rouge.png"); }
-.region.littoral.blue::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral-bleu.png"); }
+.region.plaine::before { background-image: linear-gradient(#16201122, #16201144), url("../assets/generated/terrain-plaine.webp"); }
+.region.montagne::before { background-image: linear-gradient(#1116, #1112), url("../assets/generated/terrain-montagne.webp"); }
+.region.littoral.red::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral-rouge.webp"); }
+.region.littoral.blue::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral-bleu.webp"); }
 .region-name { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 5px; font-size: clamp(.58rem, 1vw, .72rem); font-weight: 850; text-shadow: 0 1px 4px #000; }
 .terrain-building-layer { position: absolute; z-index: 2; left: 4px; right: 4px; display: flex; align-items: end; justify-content: center; gap: 1px; height: clamp(46px, 8vh, 70px); pointer-events: none; filter: drop-shadow(0 4px 4px #0009); }
 .region.red .terrain-building-layer { top: 18px; }
 .region.blue .terrain-building-layer { bottom: 5px; }
 .terrain-building-layer.destroyed { filter: grayscale(1) drop-shadow(0 4px 4px #0009); opacity: .42; }
-.terrain-building { position: relative; flex: 0 1 clamp(34px, 4.5vw, 54px); width: clamp(34px, 4.5vw, 54px); aspect-ratio: 1; overflow: visible; background-image: url("../assets/generated/buildings-tier-atlas.png"); background-size: 400% 300%; background-repeat: no-repeat; }
+.terrain-building { position: relative; flex: 0 1 clamp(34px, 4.5vw, 54px); width: clamp(34px, 4.5vw, 54px); aspect-ratio: 1; overflow: visible; background-image: url("../assets/generated/buildings-tier-atlas.webp"); background-size: 400% 300%; background-repeat: no-repeat; }
 .terrain-building-layer.under-attack .terrain-building::before { content: ""; position: absolute; z-index: 4; left: 42%; bottom: 62%; width: 18px; height: 24px; background: radial-gradient(circle at 35% 78%, #555c 0 20%, transparent 22%), radial-gradient(circle at 64% 50%, #777b 0 23%, transparent 25%), radial-gradient(circle at 42% 20%, #9998 0 19%, transparent 22%); filter: blur(.6px); animation: structure-smoke 1.15s infinite ease-out; }
 .terrain-building.terrain-village { flex-basis: clamp(44px, 5.5vw, 66px); width: clamp(44px, 5.5vw, 66px); }
 .terrain-building::after { content: "T" attr(data-building-tier); position: absolute; right: 0; bottom: 0; padding: 1px 3px; border: 1px solid #ffffff66; border-radius: 4px; background: #171914d9; color: #ffe7a0; font-size: .46rem; font-weight: 900; line-height: 1.1; }
@@ -212,11 +212,11 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .slot.crop, .slot.livestock { grid-template-rows: auto auto auto; line-height: 1; }
 .content-icon { font-size: clamp(1rem, 2vw, 1.5rem); }
 .slot.crop .content-icon, .slot.livestock .content-icon { width: 32px; height: 32px; display: block; background-repeat: no-repeat; font-size: 0; filter: drop-shadow(0 2px 2px #0008); }
-.slot.crop .content-icon { background-image: url("../assets/generated/crops-atlas.png"); background-size: 300% 100%; }
+.slot.crop .content-icon { background-image: url("../assets/generated/crops-atlas.webp"); background-size: 300% 100%; }
 .slot.crop-chataignier .content-icon { background-position: 0 0; }
 .slot.crop-ble .content-icon { background-position: 50% 0; }
 .slot.crop-vignoble .content-icon { background-position: 100% 0; }
-.slot.livestock .content-icon { background-image: url("../assets/generated/livestock-atlas.png"); background-size: 300% 100%; }
+.slot.livestock .content-icon { background-image: url("../assets/generated/livestock-atlas.webp"); background-size: 300% 100%; }
 .slot.livestock-chevre .content-icon { background-position: 0 0; }
 .slot.livestock-cochon .content-icon { background-position: 50% 0; }
 .slot.livestock-vache .content-icon { background-position: 100% 0; }
@@ -246,7 +246,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .unit-vessel { position: absolute; z-index: -1; left: 50%; top: 45%; transform: translate(-50%, -50%); font-size: clamp(1.45rem, 2.8vw, 2.1rem); filter: drop-shadow(0 3px 3px #001c); }
 .unit.on-water .unit-body { transform: scale(.72) translateY(-4px); border-color: #dff8ff; }
 .unit.selected-resident .unit-body { border-color: #ffe34d; }
-.unit-body, .resident-avatar { background-image: url("../assets/generated/characters-atlas.png") !important; background-size: 400% 200% !important; background-repeat: no-repeat !important; font-size: 0 !important; }
+.unit-body, .resident-avatar { background-image: url("../assets/generated/characters-atlas.webp") !important; background-size: 400% 200% !important; background-repeat: no-repeat !important; font-size: 0 !important; }
 .profession-habitant { background-position: 0 0 !important; }
 .profession-guerrier { background-position: 0 100% !important; }
 .profession-ravageur { background-position: 66.666% 100% !important; }
@@ -355,7 +355,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .mission-button.assigned:disabled, .profession-button.selected:disabled { opacity: 1; }
 .mission-button.assigned.boosted { box-shadow: 0 0 10px #ffe34d55, inset 0 0 0 2px #57b8ff; }
 .management-card { padding: 9px; margin-bottom: 8px; border-radius: 8px; background: #ffffff08; font-size: .8rem; }
-.building-card { min-height: 72px; padding-left: 72px; background-image: url("../assets/generated/buildings-atlas.png"); background-size: 200% 200%; background-repeat: no-repeat; }
+.building-card { min-height: 72px; padding-left: 72px; background-image: url("../assets/generated/buildings-atlas.webp"); background-size: 200% 200%; background-repeat: no-repeat; }
 .building-village { background-position: 0 0; }
 .building-bergerie { background-position: 100% 0; }
 .building-artisanat { background-position: 0 100%; }

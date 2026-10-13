@@ -364,7 +364,7 @@
       dashboard.paint("residents", `Habitants · ${available} disponibles / ${residents.length}`, residents.length ? [] : ["Ce village ne possède plus d’habitants."], [
         ...pairs(currentResidents.map((item) => button(item.name, { type: "select-resident", residentId: item.id }, true, {
           selected: item.id === resident?.id,
-          portrait: { src: "assets/generated/characters-atlas.png", columns: 4, rows: 2, index: portraitIndices[item.profession || "habitant"] ?? 0 },
+          portrait: { src: "assets/generated/characters-atlas.webp", columns: 4, rows: 2, index: portraitIndices[item.profession || "habitant"] ?? 0 },
           profession: E.Config.professions[item.profession || "habitant"]?.label || "Sans métier",
           status: item.unitId ? item.mission === "defense" ? "En défense" : "Au combat" : missionLabels[item.mission] || item.mission,
           detail: `#${String(item.id).split("-").at(-1)}`

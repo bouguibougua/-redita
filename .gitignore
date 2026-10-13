@@ -3,3 +3,8 @@ node_modules/
 npm-debug.log*
 artifacts/
 output/cards/
+.asset-sources/
+-redita-main/
+.DS_Store
+Thumbs.db
+Desktop.ini

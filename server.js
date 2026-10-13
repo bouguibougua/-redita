@@ -4,6 +4,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const { gzipSync } = require("node:zlib");
 const { EventEmitter } = require("node:events");
 
 const port = Number(process.env.PORT) || 8765;
@@ -12,8 +13,67 @@ const rooms = new Map();
 const mimeTypes = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
-  ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml"
+  ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml", ".mp3": "audio/mpeg"
 };
+// Cache only text assets; large music files are streamed and images use browser caching.
+const textCache = new Map();
+const textCacheLimit = 4 * 1024 * 1024;
+let textCacheBytes = 0;
+
+function cacheText(filename, entry) {
+  const previous = textCache.get(filename);
+  if (previous) { textCacheBytes -= previous.bytes; textCache.delete(filename); }
+  if (entry.bytes > textCacheLimit) return;
+  while (textCacheBytes + entry.bytes > textCacheLimit) {
+    const oldest = textCache.keys().next().value;
+    textCacheBytes -= textCache.get(oldest).bytes; textCache.delete(oldest);
+  }
+  textCache.set(filename, entry); textCacheBytes += entry.bytes;
+}
+
+function serveFile(request, response, filename) {
+  fs.stat(filename, (error, stat) => {
+    if (error || !stat.isFile()) return response.writeHead(404).end("Introuvable");
+    const ext = path.extname(filename), compressible = [".html", ".css", ".js", ".json", ".svg"].includes(ext);
+    const etag = `W/"${stat.size.toString(16)}-${stat.mtimeMs.toString(16)}"`;
+    const headers = { "Content-Type":mimeTypes[ext] || "application/octet-stream", "Cache-Control":"no-cache", ETag:etag, "Last-Modified":stat.mtime.toUTCString() };
+    if (compressible) headers.Vary = "Accept-Encoding";
+    if ((request.headers["if-none-match"] || "").split(",").some(tag => tag.trim() === "*" || tag.trim().replace(/^W\//, "") === etag.slice(2))) return response.writeHead(304,headers).end();
+    if (ext === ".mp3") {
+      let start = 0, end = stat.size - 1, status = 200;
+      headers["Accept-Ranges"] = "bytes";
+      if (request.headers.range && !request.headers["if-range"]) {
+        const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.range);
+        if (range?.[1]) { start = Number(range[1]); end = range[2] ? Math.min(Number(range[2]),end) : end; }
+        else if (range?.[2]) start = Math.max(0,stat.size - Number(range[2]));
+        if (!range || (!range[1] && !range[2]) || start > end || start >= stat.size) return response.writeHead(416,{ ...headers,"Content-Range":`bytes */${stat.size}` }).end();
+        status = 206; headers["Content-Range"] = `bytes ${start}-${end}/${stat.size}`;
+      }
+      headers["Content-Length"] = end - start + 1;
+      response.writeHead(status,headers);
+      if (request.method === "HEAD") return response.end();
+      const stream = fs.createReadStream(filename,{ start,end });
+      stream.on("error",() => response.destroy()); response.on("close",() => stream.destroy());
+      return stream.pipe(response);
+    }
+    const reply = entry => {
+      const gzip = /(?:^|,)\s*gzip(?:\s*;\s*q=([\d.]+))?(?:\s*,|\s*$)/i.exec(request.headers["accept-encoding"] || "");
+      const data = entry.gzip && gzip && (gzip[1] === undefined || Number(gzip[1]) > 0) ? entry.gzip : entry.data;
+      if (data === entry.gzip) headers["Content-Encoding"] = "gzip";
+      headers["Content-Length"] = data.length;
+      response.writeHead(200,headers).end(request.method === "HEAD" ? undefined : data);
+    };
+    const cached = textCache.get(filename);
+    if (compressible && cached?.etag === etag) return reply(cached);
+    fs.readFile(filename,(readError,data) => {
+      if (readError) return response.writeHead(404).end("Introuvable");
+      const zipped = compressible && data.length >= 1024 ? gzipSync(data) : null;
+      const entry = { etag,data,gzip:zipped,bytes:data.length + (zipped?.length || 0) };
+      if (compressible) cacheText(filename,entry);
+      reply(entry);
+    });
+  });
+}
 
 function send(socket, message) {
   if (socket && !socket.destroyed) socket.send(JSON.stringify(message));
@@ -80,7 +140,9 @@ function roomCode() {
 
 const server = http.createServer((request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
-  let relative = decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname);
+  let relative;
+  try { relative = decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname); }
+  catch (_) { response.writeHead(400).end("Adresse invalide"); return; }
   const filePath = path.resolve(root, `.${relative}`);
   const fromRoot = path.relative(root, filePath);
   const publicPath = fromRoot === "index.html" || ["css", "js", "assets"].includes(fromRoot.split(path.sep)[0]);
@@ -88,14 +150,7 @@ const server = http.createServer((request, response) => {
     response.writeHead(403).end("Interdit");
     return;
   }
-  fs.readFile(filePath, (error, data) => {
-    if (error) {
-      response.writeHead(404).end("Introuvable");
-      return;
-    }
-    response.writeHead(200, { "Content-Type": mimeTypes[path.extname(filePath)] || "application/octet-stream", "Cache-Control": "no-cache" });
-    response.end(data);
-  });
+  serveFile(request,response,filePath);
 });
 
 server.on("upgrade", (request, socket) => {

@@ -66,7 +66,7 @@ E.Network.mode = "solo"; state.selectedVillage = { playerId: "blue", lane: 0 }; 
 assert.equal(ui.activate(find(t => t.action?.method === "build")), false); assert.match(feedback.at(-1).message, /adversaire/);
 state = E.Board.createState("classic"); state.phase = "running"; state.players.red.villages[0].resources.ble = 321; ui.render();
 assert.ok(painted.get("buildings").lines.some(line => line.includes("Blé : 321")), "La gestion relit le nouvel état réseau");
-assert.ok(painted.get("residents").rows[0][0][3].portrait.src.endsWith("characters-atlas.png"));
+assert.ok(painted.get("residents").rows[0][0][3].portrait.src.endsWith("characters-atlas.webp"));
 ui.toggle(); assert.equal(painted.get("jobs").visible, false); assert.equal(painted.get("gear").visible, true);
 // Les raccourcis fonctionnent sans viser une fenêtre et conservent le bon village.
 ui.toggle();

@@ -1,8 +1,8 @@
 # Cartes fantastiques — référence et compléments
 
-La planche `reference/planche.png` est l’image fournie par le concepteur le 13 octobre 2026. Les 31 cartes présentes sont extraites sans réinterpréter leurs illustrations ni leurs cadres. Les 8 cartes absentes sont des compléments créés avec l’outil intégré `image_gen`, avec cette planche comme référence de style. Leurs originaux PNG sont conservés dans ce dossier. Les fichiers WebP servent dans le jeu.
+La planche source `cards/fantasy/reference/planche.png` est l’image fournie par le concepteur le 13 octobre 2026. Les 31 cartes présentes sont extraites sans réinterpréter leurs illustrations ni leurs cadres. Les 8 cartes absentes sont des compléments créés avec l’outil intégré `image_gen`, avec cette planche comme référence de style. Les originaux PNG sont conservés dans la sauvegarde externe documentée dans `NETTOYAGE.md`. Ce dossier contient uniquement les fichiers WebP utilisés par le jeu, les prompts et les recadrages.
 
-Le script `npm run assets:cards-fantasy` prépare les recadrages de `manifest.json` et les copies WebP. Les descriptions imprimées dans la planche ne définissent pas les mécaniques : le rendu HTML et XR leur superpose les textes validés de `GAME_DESIGN.md`. Les titres des huit compléments sont également rendus par l’interface.
+Le script commun `npm run assets:cards -- "chemin/vers/sources"` prépare les recadrages de `manifest.json` et les copies WebP. Le dossier source contient `cards/fantasy/reference/planche.png` et les huit PNG de complément. Sans argument, il utilise `EREDITA_ASSET_SOURCES` ou `.asset-sources/`, qui est ignoré par Git. `npm run assets:prepare -- "chemin/vers/sources"` prépare aussi les neuf sprites et terrains, avec leurs dimensions d'origine. Les descriptions imprimées dans la planche ne définissent pas les mécaniques : le rendu HTML et XR leur superpose les textes validés de `GAME_DESIGN.md`. Les titres des huit compléments sont également rendus par l’interface.
 
 ## ÂNE — ane.png
 

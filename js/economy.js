@@ -109,10 +109,6 @@
     return ownerId === "red" ? 0 : E.Config.movement.columnLength;
   }
 
-  function assignedWorkers(village) {
-    return Object.values(village.jobs).reduce((total, count) => total + count, 0);
-  }
-
   function deployedResidents(state, playerId, lane) {
     return state.units.filter((unit) =>
       unit.ownerId === playerId &&

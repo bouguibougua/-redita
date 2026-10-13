@@ -134,16 +134,6 @@
     </div>`;
   }
 
-  function playCardSound() {
-    if (typeof Audio !== "function") return;
-    try {
-      const sound = new Audio("assets/audio/ui/card-open.mp3");
-      sound.volume = 0.32;
-      const promise = sound.play();
-      if (promise?.catch) promise.catch(() => {});
-    } catch (_) { /* Le visuel reste fonctionnel sans fichier audio. */ }
-  }
-
   function closeModal() {
     if (!state.popupCardId || !root) return;
     const backdrop = root.querySelector(".deck-modal-backdrop");
@@ -173,7 +163,7 @@
     const filterButton = event.target.closest("[data-filter]");
     if (filterButton) { state.filter = filterButton.dataset.filter; render(); return; }
     const openButton = event.target.closest("[data-open-card]");
-    if (openButton) { state.popupCardId = openButton.dataset.openCard; playCardSound(); render(); return; }
+    if (openButton) { state.popupCardId = openButton.dataset.openCard; E.Audio?.confirmInterface(); render(); return; }
     const close = event.target.closest("[data-close-modal]");
     if (close && (close === event.target || close.classList.contains("deck-modal-close"))) closeModal();
   }

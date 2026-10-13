@@ -6,6 +6,7 @@ async function run() {
   const browser = await createBrowser({ url: process.argv[2] });
   const { click, evaluate, waitFor, screenshot, send } = browser;
   try {
+    await waitFor("Eredita.Board3D.ready");
     await click('[data-menu-screen="decks"]');
     await waitFor("document.querySelectorAll('.deck-collection-card').length === 34");
     assert.equal(await evaluate("document.querySelectorAll('.deck-card-body img').length"), 39);

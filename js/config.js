@@ -38,8 +38,6 @@
       // TEMP_BALANCE_VALUE — placement des overlays, limites et vitesse de la charrette.
       trapLimit: 4, trapRange: 1.5, cartCapacity: 8,
       cartMountainMultiplier: 0.5, structurePositionByOwner: { red: 23, blue: 77 },
-      // TEMP_BALANCE_VALUE — les ressuscités attendent une place pour respecter le plafond.
-      resurrectionWaitForSpace: true,
       // TEMP_BALANCE_VALUE — decks prêts à jouer utilisés quand le deck choisi est vide.
       starterDecks: [
         { quantities: { "champ-ble": 4, chataignier: 2, bergerie: 3, artisanat: 3, boucherie: 2, agriculteur: 3, guerrier: 3, barque: 4, chevre: 2, "outil-bois": 2, riviere: 1, moulin: 1 }, mythological: ["u-mazzeru", "a-stregha", "squadra-arozza"] },

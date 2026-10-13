@@ -24,7 +24,7 @@ Cette procédure porte sur l’interface autour du plateau, en complément du pl
 
 ## Référence graphique et limites
 
-Les valeurs de référence proviennent de `css/style.css` : texte `#f4efe2`, texte secondaire `#aaa99f`, surface `#20231f`, surface élevée `#2a2e28`, or `#dfb85e`, Rouge `#c54f46` / `#702f2a`, Bleu `#4e87b8` / `#294d70`, erreur `#e36a5f`. Les portraits proviennent de `assets/generated/characters-atlas.png`, cadrés sur le haut du personnage selon son vrai métier. Les boutons utilisent une famille d'icônes monochromes dessinées par le composant. Les assets de bâtiments déjà présents et le rendu du plateau sont conservés.
+Les valeurs de référence proviennent de `css/style.css` : texte `#f4efe2`, texte secondaire `#aaa99f`, surface `#20231f`, surface élevée `#2a2e28`, or `#dfb85e`, Rouge `#c54f46` / `#702f2a`, Bleu `#4e87b8` / `#294d70`, erreur `#e36a5f`. Les portraits proviennent de `assets/generated/characters-atlas.webp`, cadrés sur le haut du personnage selon son vrai métier. Les boutons utilisent une famille d'icônes monochromes dessinées par le composant. Les assets de bâtiments déjà présents et le rendu du plateau sont conservés.
 
 Les réglages spatiaux et tailles de texte sont des valeurs de présentation provisoires, à valider avec le casque. La disposition de référence est celle de la révision du 7 octobre ci-dessus : villages, ors et chronomètre en haut ; Habitants et Tâches à gauche ; Métiers et Gestion du village à droite ; paramètres en haut à droite.
 
