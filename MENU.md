@@ -4,6 +4,12 @@ Refonte du 14 octobre 2026. Le site utilise toujours HTML, CSS et JavaScript,
 sans framework ni dépendance supplémentaire. Aucun coût, statistique, timer ou
 règle de jeu n'a été modifié.
 
+Une introduction artistique de sept secondes précède maintenant l’accueil :
+encres colorées, arabesques, grains dorés et révélation du PNG exact du logo.
+Clic/touche pour passer, F9 au menu pour rejouer. Le mode de mouvement réduit
+affiche brièvement le logo statique. Architecture, paramètres et tests :
+[INTRO.md](INTRO.md). Le menu et ses destinations conservent leur présentation.
+
 ## Structure et navigation examinées
 
 | Fichiers | Fonction |

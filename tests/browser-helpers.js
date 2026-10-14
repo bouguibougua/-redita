@@ -64,7 +64,9 @@ async function createBrowser({ url, serverPort = 8878, debugPort = 9446 } = {}) 
       fs.writeFileSync(path.join(folder, name), Buffer.from(result.data, "base64"));
     }
     await send("Runtime.enable"); await send("Network.enable"); await send("Page.enable");
-    await send("Page.navigate", { url: url || `http://127.0.0.1:${serverPort}/` });
+    const target = new URL(url || `http://127.0.0.1:${serverPort}/`);
+    target.searchParams.set('intro', '0');
+    await send("Page.navigate", { url: target.href });
     await waitFor("document.readyState === 'complete' && !!window.Eredita?.GameView?.getState()");
     return { evaluate, send, waitFor, click, screenshot, close, exceptions, imageErrors };
   } catch (error) { await close(); throw error; }

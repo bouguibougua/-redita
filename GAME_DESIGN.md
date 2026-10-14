@@ -2703,6 +2703,13 @@ La première sélection ultérieure d'une Montagne ou d'un Littoral déclenche u
 
 # 94. RÉALITÉ MIXTE — INTERFACE JOUABLE QUEST 3
 
+Une séquence visuelle d’environ sept secondes précède le menu principal :
+peinture et encres colorées, convergence dorée, révélation du logo PNG existant
+sans modification des lettres ou proportions. Elle peut être passée par clic,
+toucher ou touche ; le mouvement réduit affiche le logo statique. Elle ne
+modifie pas l’état de la partie. Elle est distincte de la future cinématique
+du tutoriel décrite en section 93.
+
 L’accueil conserve sa composition ; le drapeau reprend la tête noire avec le
 bandeau sur les yeux. Le décor avec sol est réservé au mode panorama et utilise
 une image distincte inspirée des remparts de Bonifacio : falaises et mer à

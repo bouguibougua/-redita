@@ -107,7 +107,7 @@ async function exportGif() {
   let browser;
   try {
     browser = await startBrowser();
-    await browser.page.send("Page.navigate", { url: staticSite.url });
+    await browser.page.send("Page.navigate", { url: `${staticSite.url}?intro=0` });
     await browser.page.waitFor("window.Eredita?.MenuScene?.diagnostics.ready && Eredita.MenuScene.diagnostics.textureLoaded && typeof Eredita.MenuScene.captureFrame === 'function'", 30000);
     const config = await browser.page.evaluate("({duration: Eredita.Config.menu.animationSeconds, fps: Eredita.Config.menu.gifFps || 12, width: Eredita.Config.menu.gifWidth || 960, height: Eredita.Config.menu.gifHeight || 480})");
     const { fps, width, height } = config;

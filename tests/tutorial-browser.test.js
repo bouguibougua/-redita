@@ -34,7 +34,7 @@ async function run() {
   async function dialogue(manual) { await click("#tutorial-dialog"); if (manual) await click("#tutorial-dialog"); else await delay(750); }
 
   await send("Page.enable");
-  await send("Page.navigate", { url: "http://127.0.0.1:8765/" });
+  await send("Page.navigate", { url: "http://127.0.0.1:8765/?intro=0" });
   await waitFor("document.readyState === 'complete'");
   await click('[data-menu-screen="tutorial"]');
   await waitFor("Eredita.Tutorial.dialogueActive");
@@ -92,7 +92,7 @@ async function run() {
   await waitFor("Eredita.Tutorial.stage === 'firstVillageDialogue'", 45000);
   await dialogue(true);
   await waitFor("Eredita.Tutorial.freePlay");
-  await send("Page.navigate", { url: "http://127.0.0.1:8765/" });
+  await send("Page.navigate", { url: "http://127.0.0.1:8765/?intro=0" });
   await waitFor("document.readyState === 'complete'");
   await click('[data-menu-screen="play"]');
   await click("#training-button");

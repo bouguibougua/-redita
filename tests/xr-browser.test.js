@@ -171,7 +171,7 @@ async function run() {
   assert.ok(pages?.length, "Le navigateur sans fenêtre n'a pas ouvert son port de débogage.");
   const host = await connection(pages.find((page) => page.type === "page"));
   const { evaluate, click, waitFor } = host;
-  await host.send("Page.navigate", { url: `http://127.0.0.1:${port}/` });
+  await host.send("Page.navigate", { url: `http://127.0.0.1:${port}/?intro=0` });
   await waitFor("window.Eredita?.Board3D?.ready");
   await click("#main-menu [data-open-xr]");
   await waitFor("document.querySelector('#xr-start').disabled && document.querySelector('#xr-status').textContent.includes('immersive-ar')");
@@ -186,7 +186,7 @@ async function run() {
   const room = await evaluate("Eredita.Network.roomCode");
   const newPage = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, { method: "PUT" }).then((r) => r.json());
   const guest = await connection(newPage);
-  await guest.send("Page.navigate", { url: `http://127.0.0.1:${port}/` });
+  await guest.send("Page.navigate", { url: `http://127.0.0.1:${port}/?intro=0` });
   await guest.waitFor("window.Eredita?.Board3D?.ready");
   await guest.click('[data-menu-screen="play"]'); await guest.click("#open-multiplayer");
   await guest.evaluate(`document.querySelector('#room-code').value = '${room}'`); await guest.click("#join-online");

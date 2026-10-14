@@ -13,7 +13,7 @@ async function run() {
     browser = await startBrowser();
     const page = browser.page;
     const loadMenu = async () => {
-      await page.send("Page.navigate", { url: staticSite.url });
+      await page.send("Page.navigate", { url: `${staticSite.url}?intro=0` });
       await page.waitFor("document.readyState === 'complete' && window.Eredita?.MenuScene?.diagnostics.ready && Eredita.MenuScene.diagnostics.textureLoaded");
     };
     await loadMenu();
@@ -124,7 +124,7 @@ async function run() {
     }
     const fallback = await startBrowser(["--disable-webgl", "--disable-webgl2"]);
     try {
-      await fallback.page.send("Page.navigate", { url: staticSite.url });
+      await fallback.page.send("Page.navigate", { url: `${staticSite.url}?intro=0` });
       await fallback.page.waitFor("document.readyState === 'complete' && !!window.Eredita?.MenuScene");
       await fallback.page.click('[data-menu-screen="play"]');
       await fallback.page.waitFor("!!document.querySelector('#training-button')");

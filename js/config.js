@@ -21,6 +21,15 @@
     },
     bulkTaskInterval: 0.5,
     network: { connectionTimeoutMs: 8000 },
+    // TEMP_BALANCE_VALUE — présentation de l’introduction, sans effet sur la simulation.
+    intro: {
+      duration: 7, birthAt: 1, convergeAt: 3, revealAt: 4.5, holdAt: 6,
+      transitionMs: 450, skipTransitionMs: 160, reducedDuration: 0.8,
+      logoLoadTimeoutMs: 4000, maxPixelRatio: 1.5, maxCanvasEdge: 1920,
+      desktopFps: 60, mobileFps: 30, mobileBreakpoint: 600,
+      dustCount: 94, mobileDustCount: 48,
+      palette: ['#087cdc', '#26d7ce', '#6337a8', '#bc214d', '#ef7026', '#edbf65']
+    },
     // TEMP_BALANCE_VALUE — présentation du menu uniquement, sans effet sur le jeu.
     menu: {
       panorama: "assets/menu-360.png", logo: "assets/eredita-logo.png",

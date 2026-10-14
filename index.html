@@ -11,10 +11,18 @@
   <link rel="stylesheet" href="css/cards.css">
   <link rel="stylesheet" href="css/menu.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/intro.css">
 </head>
 <body>
   <audio id="menu-music" src="assets/audio/menu/menu.mp3" preload="none" loop playsinline></audio>
   <audio id="game-music" src="assets/audio/game/combat.mp3" preload="none" loop playsinline></audio>
+  <section id="game-intro" class="game-intro" role="dialog" aria-modal="true" aria-labelledby="intro-title" tabindex="-1">
+    <h1 id="intro-title" class="intro-accessible">Introduction d’Eredità</h1>
+    <canvas id="intro-canvas" aria-hidden="true"></canvas>
+    <img id="intro-fallback" src="assets/eredita-logo.png" alt="Eredità" width="2172" height="724" hidden>
+    <button id="intro-skip" type="button">Passer l’introduction <span>· clic ou touche</span></button>
+  </section>
+  <noscript><style>.game-intro { display: none; }</style></noscript>
   <div class="app-shell connection-pending">
     <header class="masthead">
       <div class="masthead-status"><p id="session-status" class="session-status" hidden></p></div>
@@ -178,6 +186,8 @@
   </dialog>
 
   <script src="js/config.js"></script>
+  <script src="js/intro-paint.js"></script>
+  <script src="js/intro.js"></script>
   <script src="js/biomes.js"></script>
   <script src="js/crops.js"></script>
   <script src="js/livestock.js"></script>

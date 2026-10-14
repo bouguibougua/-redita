@@ -53,7 +53,7 @@ async function run() {
     return result.result.value;
   }
   await send("Runtime.enable");
-  await send("Page.navigate", { url: "http://localhost:8765/" });
+  await send("Page.navigate", { url: "http://localhost:8765/?intro=0" });
   for (let attempt = 0; attempt < 50; attempt += 1) {
     if (await evaluate("document.readyState === 'complete' && !!window.Eredita?.Network")) break;
     await delay(100);
@@ -76,7 +76,7 @@ async function run() {
   await evaluate("document.querySelector('#restart-game').click()");
   assert.equal(await evaluate("testState.phase === 'setup' && testState.players.blue.setupConfirmed"), true);
 
-  await send("Page.navigate", { url: "http://localhost:8765/" });
+  await send("Page.navigate", { url: "http://localhost:8765/?intro=0" });
   for (let attempt = 0; attempt < 50; attempt += 1) {
     if (await evaluate("document.readyState === 'complete' && !!window.Eredita?.Network && Eredita.Network.mode === 'pending'")) break;
     await delay(100);

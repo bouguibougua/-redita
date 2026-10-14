@@ -103,7 +103,8 @@ async function run() {
   await send("Runtime.enable");
   await send("Network.enable");
   await send("Page.enable");
-  await send("Page.navigate", { url: pageUrl });
+  const target = new URL(pageUrl); target.searchParams.set('intro', '0');
+  await send("Page.navigate", { url: target.href });
   await waitFor("document.readyState === 'complete' && !!document.querySelector('#play-local')");
   await realClick("#play-local");
   await waitFor("!!document.querySelector('[data-setup-action=keep]') && document.querySelector('#connection-screen').hidden");

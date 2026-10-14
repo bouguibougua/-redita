@@ -129,7 +129,7 @@
   }
 
   function syncVisibility() {
-    const shown = !E.XR?.active && (!menu.hidden || !$('#menu-subscreen').hidden || !$('#connection-screen').hidden);
+    const shown = (!E.Intro?.active || E.Intro?.closing) && !E.XR?.active && (!menu.hidden || !$('#menu-subscreen').hidden || !$('#connection-screen').hidden);
     setVisible(shown);
   }
 

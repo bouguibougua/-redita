@@ -54,7 +54,8 @@ async function run() {
 
   await send("Runtime.enable");
   await send("Page.enable");
-  await send("Page.navigate", { url: pageUrl });
+  const target = new URL(pageUrl); target.searchParams.set('intro', '0');
+  await send("Page.navigate", { url: target.href });
   await waitFor("document.readyState === 'complete' && !!document.querySelector('[data-menu-screen=decks]')");
   await click("[data-menu-screen=decks]");
   await waitFor("!!document.querySelector('.deck-builder')");
