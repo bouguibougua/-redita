@@ -1,5 +1,18 @@
 # Eredità sur Meta Quest 3
 
+## Accueil panoramique — 14 octobre 2026
+
+Le nouveau bouton **Menu en VR** ouvre l'accueil en `immersive-vr`, avec panorama,
+logo et navigation aux contrôleurs. **RÉALITÉ MIXTE · QUEST 3** conserve le plateau
+en `immersive-ar`. Quitter l'accueil VR avant d'entrer dans le plateau et confirmer
+le dialogue existant. Le tutoriel reste classique ; les fiches illustrées des decks
+et la saisie du code d'un salon restent accessibles dans Quest Browser.
+
+L'analyse de l'architecture, les nouveaux tests, l'export GIF et la **checklist
+physique de cet accueil** se trouvent dans [MENU.md](MENU.md). La couture arrière
+et les pôles de l'image fournie doivent être inspectés sur le casque. Aucun test
+physique Quest 3 n'a été réalisé pour cet accueil.
+
 ## Format simplifié et ergonomie — 8 octobre 2026
 
 Les boutons « 2 camps » (Simplifié, sélectionné par défaut) et « 4 camps » (Classique) sont proposés avant l’entraînement, le local ou la création d’un salon, et directement dans le casque. En Simplifié, les trois biomes sont présents sur le plateau initial, sans doublon par joueur ; un seul échange par camp est permis, contre un autre biome aléatoire. Le nouveau format conserve les règles de jeu et les durées existantes.

@@ -5,6 +5,8 @@
   "description": "Serveur multijoueur du prototype Eredità",
   "scripts": {
     "start": "node server.js",
+    "test:menu": "node tests/menu-browser.test.js && node tests/menu-vr.test.js",
+    "menu:gif": "node scripts/export-menu-gif.js",
     "test": "node tests/simplified.test.js && node tests/preparation.test.js && node tests/core.test.js && node tests/transport.test.js && node tests/cards-game.test.js && node tests/cards-network.test.js && node tests/cards-3d.test.js && node tests/server-assets.test.js && node tests/network-server.test.js && node tests/ai.test.js && node tests/livestock-shop.test.js && node tests/equipment.test.js && node tests/board3d-appearance.test.js && node tests/shop-network-commands.test.js && node tests/special-animals.test.js && node tests/donkey.test.js && node tests/board3d-animals.test.js && node tests/board3d-combat-animation.test.js && node tests/decks.test.js",
     "test:simplified": "node tests/simplified.test.js",
     "test:assets": "node tests/server-assets.test.js",

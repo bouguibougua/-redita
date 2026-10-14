@@ -21,6 +21,17 @@
     },
     bulkTaskInterval: 0.5,
     network: { connectionTimeoutMs: 8000 },
+    // TEMP_BALANCE_VALUE — présentation du menu uniquement, sans effet sur le jeu.
+    menu: {
+      panorama: "assets/menu-360.png", logo: "assets/eredita-logo.png",
+      desktopFov: 76, sphereRadius: 40, maxPixelRatio: 1.5,
+      desktopFps: 30, animationSeconds: 6, particleCount: 55,
+      gifFps: 12, gifWidth: 960, gifHeight: 480,
+      mouseSensitivity: 0.003, maxPitch: Math.PI * 0.44,
+      flagAmplitude: 0.0035, mistOpacity: 0.055, fireStrength: 0.13,
+      vrPanelDistance: 2.4, vrPanelWidth: 1.7, vrRowHeight: 0.18, vrFontSize: 48,
+      vrPageSize: 6, vrRefreshMs: 150, vrInputCooldownMs: 180, vrFramebufferScale: 0.85
+    },
     cardGame: {
       startingHand: 5, handMax: 15, drawInterval: 30,
       mythologicalUnlocks: [300, 600],

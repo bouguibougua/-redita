@@ -13,7 +13,7 @@ const rooms = new Map();
 const mimeTypes = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
-  ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml", ".mp3": "audio/mpeg"
+  ".png": "image/png", ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml", ".mp3": "audio/mpeg"
 };
 // Cache only text assets; large music files are streamed and images use browser caching.
 const textCache = new Map();

@@ -926,6 +926,8 @@
     onFrame?.(timestamp);
     E.XR?.update(timestamp, xrFrame);
     if ((!enabled && !E.XR?.active) || !renderer) return;
+    // L'horloge tourne toujours ; seul le dessin du plateau masqué est évité.
+    if (!E.XR?.active && (E.MenuVR?.active || container.getClientRects().length === 0)) return;
     const time = performance.now() / 1200;
     terrainGroup?.traverse((item) => {
       const smoke = item.userData?.smoke;

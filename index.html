@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/decks.css">
   <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/menu.css">
 </head>
 <body>
   <audio id="menu-music" src="assets/audio/menu/menu.mp3" preload="none" loop playsinline></audio>
@@ -73,19 +74,25 @@
     </section>
   </div>
 
-  <div id="main-menu" class="main-menu">
-    <div class="menu-atmosphere" aria-hidden="true"></div>
+  <div id="menu-environment" class="menu-environment" aria-hidden="true"></div>
+  <div id="main-menu" class="main-menu cinematic-menu">
+    <div class="menu-vignette" aria-hidden="true"></div>
     <section class="menu-panel" aria-labelledby="menu-title">
-      <p class="menu-kicker">Stratégie · mémoire · héritage</p>
-      <h1 id="menu-title">EREDITÀ</h1>
-      <p class="menu-subtitle">La terre se transmet. La victoire se mérite.</p>
+      <h1 id="menu-title"><img class="menu-logo" src="assets/eredita-logo.png" alt="Eredità" width="564" height="135" fetchpriority="high"></h1>
       <nav class="main-menu-actions" aria-label="Menu principal">
-        <button class="menu-button menu-button-primary" data-menu-screen="play" type="button">JOUER</button>
-        <button class="menu-button" data-menu-screen="decks" type="button">DECKS</button>
-        <button class="menu-button" data-menu-screen="tutorial" type="button">TUTORIEL</button>
-        <button class="menu-button" data-open-xr type="button">RÉALITÉ MIXTE · QUEST 3</button>
+        <button class="menu-button menu-button-primary" data-menu-screen="play" type="button"><span>JOUER</span><i aria-hidden="true"></i></button>
+        <button class="menu-button" data-menu-screen="decks" type="button"><span>DECKS</span><i aria-hidden="true"></i></button>
+        <button class="menu-button" data-menu-screen="tutorial" type="button"><span>TUTORIEL</span><i aria-hidden="true"></i></button>
+        <button class="menu-button menu-button-xr" data-open-xr type="button"><span>RÉALITÉ MIXTE · QUEST 3</span><i aria-hidden="true"></i></button>
       </nav>
     </section>
+    <div class="menu-tools" role="group" aria-label="Réglages du menu">
+      <button id="menu-look" type="button" aria-pressed="false">Explorer le panorama</button>
+      <button id="menu-motion" type="button" aria-pressed="false">Animations : actives</button>
+      <button id="menu-sound" type="button" aria-pressed="false">Son : actif</button>
+      <button id="menu-enter-vr" type="button" disabled>Menu en VR</button>
+    </div>
+    <p id="menu-status" class="menu-status" role="status">Glissez sur le décor pour regarder autour de vous.</p>
   </div>
 
   <div id="menu-subscreen" class="menu-subscreen" hidden>
@@ -202,6 +209,8 @@
   <script src="js/xr-ui.js"></script>
   <script src="js/xr-interactions.js"></script>
   <script src="js/xr.js"></script>
+  <script src="js/menu-scene.js"></script>
+  <script src="js/menu-vr.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>
