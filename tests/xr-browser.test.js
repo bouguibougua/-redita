@@ -198,6 +198,8 @@ async function run() {
   await waitFor("!document.querySelector('#start-game').disabled"); await click("#start-game");
   await guest.waitFor("Eredita.GameView.getState().phase === 'running'");
   await guest.waitFor("Eredita.GameView.getState().preparationRemaining > 0");
+  assert.equal(await evaluate("Eredita.Audio.currentTrack"), "game", "Musique de combat dès la préparation de l’hôte");
+  assert.equal(await guest.evaluate("Eredita.Audio.currentTrack"), "game", "Musique de combat dès la préparation de l’invité");
   assert.equal(await evaluate("Eredita.GameView.getState().elapsed"), 0, "Les 12:30 ne commencent pas pendant la préparation");
   assert.equal(await evaluate("document.querySelector('#phase-label').textContent"), "Préparation");
   assert.equal(await guest.evaluate("document.querySelector('#phase-label').textContent"), "Préparation");
@@ -216,6 +218,7 @@ async function run() {
   await waitFor("Eredita.XR.active && !document.querySelector('#xr-dialog').open");
   await evaluate("xrFixture.step()"); await delay(50); await evaluate("xrFixture.step()");
   assert.equal(await evaluate("Eredita.Board3D.getXRContext().scene.background"), null);
+  assert.equal(await evaluate("Eredita.XR.diagnostics.environment.visible"), false, "La pièce reste visible avant placement");
   assert.equal(await evaluate("xrFixture.requests.at(-1).activated"), true);
   assert.equal(await evaluate("xrFixture.requests.at(-1).mode"), "immersive-ar");
   assert.equal(await evaluate("xrFixture.placement.candidate !== null"), true);
@@ -229,6 +232,12 @@ async function run() {
   await evaluate("xrFixture.trigger(0)");
   assert.equal(await evaluate("Eredita.XR.diagnostics.placed"), true);
   assert.equal(await evaluate("Eredita.XR.diagnostics.width"), 0.8);
+  await waitFor("Eredita.XR.diagnostics.environment.loaded");
+  await evaluate("for(let i=0;i<30;i++)xrFixture.step()");
+  assert.equal(await evaluate("Eredita.XR.diagnostics.environment.visible && Eredita.XR.diagnostics.environment.opacity === 1"), true, "Le décor entoure le plateau dès la préparation");
+  assert.equal(await evaluate("!!Eredita.Board3D.getXRContext().scene.getObjectByName('xr-stone-ground')"), true, "Le sol existe sous les pieds");
+  assert.equal(await evaluate("Eredita.XR.diagnostics.environment.altarVisible"), true, "L’autel est visible sous le plateau en panorama");
+  assert.equal(await evaluate("Eredita.Config.xr.environment.panorama"), "assets/panorama-360.png");
   assert.equal(await evaluate("JSON.stringify({...Eredita.GameView.getState(),xrBoardWidth:null})"), originalState, "Placer le plateau ne modifie pas la simulation");
   await evaluate("xrFixture.step()"); await delay(20); await evaluate("xrFixture.step()");
   assert.equal(await evaluate("Eredita.XR.diagnostics.anchored"), true);
@@ -265,6 +274,11 @@ async function run() {
   await evaluate("xrFixture.sources[0].gamepad.buttons[5].pressed=true; xrFixture.step(); xrFixture.sources[0].gamepad.buttons[5].pressed=false; xrFixture.step(); xrFixture.button('settings'); xrFixture.button('grow',0,'a')");
   assert.ok(Math.abs(await evaluate("Eredita.XR.diagnostics.windowScale") - 1.08) < 1e-9);
   assert.equal(await evaluate("xrFixture.dashboard.getPanel('modal').pageCount"), 1, "Les paramètres tiennent sur un écran");
+  await evaluate("xrFixture.button('environment-toggle'); xrFixture.step()");
+  assert.equal(await evaluate("Eredita.XR.environmentEnabled"), false);
+  assert.equal(await evaluate("Eredita.XR.diagnostics.environment.visible"), false, "Voir ma pièce retire le décor");
+  await evaluate("xrFixture.button('environment-toggle'); for(let i=0;i<30;i++)xrFixture.step()");
+  assert.equal(await evaluate("Eredita.XR.diagnostics.environment.visible"), true, "Le décor peut être réactivé à la gâchette");
   assert.ok(Math.abs(await evaluate("xrFixture.dashboard.diagnostics.find(p=>p.id==='residents').width") - 0.60 * 1.08) < 1e-9, "Les fenêtres grandissent physiquement");
   if (process.env.EREDITA_XR_PREVIEW_DIR) {
     fs.mkdirSync(process.env.EREDITA_XR_PREVIEW_DIR, { recursive: true });

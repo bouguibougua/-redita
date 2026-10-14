@@ -68,8 +68,10 @@
 
   function setup() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x172019);
-    scene.fog = new THREE.Fog(0x172019, 19, 32);
+    const backdrop = typeof getComputedStyle === "function"
+      ? getComputedStyle(document.documentElement).getPropertyValue("--surface-deep").trim() || "#100e0b" : "#100e0b";
+    scene.background = new THREE.Color(backdrop);
+    scene.fog = new THREE.Fog(backdrop, 19, 32);
     camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
     renderer.xr.enabled = true;
@@ -983,6 +985,7 @@
 
   E.Board3D = {
     getBoardWidth: boardWidth, init, update, toggle, setMode, setXRPreview, resize,
-    getXRContext: () => ready ? { THREE, renderer, scene, camera, world, terrainGroup } : null,
+    getXRContext: () => ready ? { THREE, renderer, scene, camera, world, terrainGroup,
+      getBoardDimensions: () => ({ width: boardWidth(), depth: 11.05 }) } : null,
     get ready() { return ready; }, get enabled() { return enabled; }, get error() { return loadError; } };
 }());

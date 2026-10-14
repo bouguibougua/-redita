@@ -153,6 +153,8 @@ Une situation où les deux joueurs perdent leur dernier village simultanément p
 
 Après la confirmation des decks et biomes des deux camps et le lancement de la partie, une préparation commune de **60 secondes** permet de sélectionner les villages, construire, acheter, attribuer les tâches et les métiers et définir les préférences des futurs habitants. Les coûts, prérequis et restrictions de contrôle restent identiques.
 
+La musique de combat commence **dès le lancement de cette préparation**, sur ordinateur et dans le casque. L’invité réseau adopte cette musique dès la réception de l’état de préparation de l’hôte. Le passage au combat ne relance pas le morceau.
+
 Les ordres d’attaque et de défense peuvent être donnés pendant cette minute ; les troupes attendent la fin du compte à rebours avant tout déplacement ou combat. Les attributions groupées continuent à leur cadence habituelle de 0,5 seconde. L’IA prépare également ses villages.
 
 Le compte à rebours est visible sur écran et en réalité mixte. À zéro, le combat commence automatiquement. En réseau, seul l’hôte fait avancer ce compte à rebours et l’invité reçoit ses snapshots ; la pause de l’hôte suspend également la préparation. Un nouveau lancement n’est pas possible pendant une partie déjà commencée.
@@ -2701,7 +2703,18 @@ La première sélection ultérieure d'une Montagne ou d'un Littoral déclenche u
 
 # 94. RÉALITÉ MIXTE — INTERFACE JOUABLE QUEST 3
 
-La réalité mixte est une représentation supplémentaire de l'état existant, avec Three.js et une session WebXR **immersive-ar** sur fond transparent. Elle conserve les régions et villages du format choisi, les biomes, les emplacements et les littoraux orientés vers l'adversaire. Le menu HTML et les modes entraînement, local et salons sont conservés. Le mode entraînement ou local peut être choisi directement dans le casque ; le code du salon en ligne se saisit dans Quest Browser. La préparation et la partie peuvent ensuite être pilotées avec les contrôleurs sans revenir à l'interface classique. Les commandes XR appellent les mêmes fonctions métier que le desktop ; les règles et la simulation restent communes.
+L’accueil conserve sa composition ; le drapeau reprend la tête noire avec le
+bandeau sur les yeux. Le décor avec sol est réservé au mode panorama et utilise
+une image distincte inspirée des remparts de Bonifacio : falaises et mer à
+gauche, citadelle à droite. Un autel en pierre sert de
+support visuel au plateau : sa dalle reste alignée sur le dessous du socle lors
+des déplacements, rotations et redimensionnements. L’autel vide est visible
+pendant l’exploration panoramique. Il ne crée pas de bâtiment, n’intercepte pas
+les commandes et ne modifie aucune règle de jeu ; le passthrough le masque.
+
+La réalité mixte est une représentation supplémentaire de l'état existant, avec Three.js et une session WebXR **immersive-ar**. Le fond reste transparent pendant le placement ou replacement pour voir la vraie table. Dès le lancement de la préparation, un panorama corse et un sol pavé entourent le plateau, avec une apparition progressive. Les paramètres proposent « Voir ma pièce » et « Afficher le décor corse » pour basculer sans quitter la session. Le décor reste indépendant du plateau et ne change ni les unités logiques ni les règles. Si la texture ne peut pas charger, le fond reste transparent. Le sol utilise le repère `local-floor` lorsque disponible ; sa hauteur de repli est un réglage temporaire de présentation centralisé dans `Config.xr.environment`.
+
+Elle conserve les régions et villages du format choisi, les biomes, les emplacements et les littoraux orientés vers l'adversaire. Le menu HTML et les modes entraînement, local et salons sont conservés. Le mode entraînement ou local peut être choisi directement dans le casque ; le code du salon en ligne se saisit dans Quest Browser. La préparation et la partie peuvent ensuite être pilotées avec les contrôleurs sans revenir à l'interface classique. Les commandes XR appellent les mêmes fonctions métier que le desktop ; les règles et la simulation restent communes. Les interfaces web et casque partagent une palette de noir chaud, bronze et or ; Rouge et Bleu restent distinguables.
 
 Le joueur confirme lui-même le placement sur sa table avec la gâchette de l’un des deux contrôleurs ou A. Une surface détectée n'est pas automatiquement identifiée comme une table. Un aperçu transparent et un repère précèdent le placement ; si le hit-test n'est pas disponible, un plan manuel à hauteur réglable permet le même placement. La largeur initiale est d'environ **80 cm**, configurable. Le côté du joueur Rouge ou Bleu est orienté vers sa position initiale. Le socle et tous les éléments suivent un seul groupe de transformation.
 

@@ -1,5 +1,40 @@
 # Eredità sur Meta Quest 3
 
+## Accueil restauré et autel panoramique — 14 octobre 2026
+
+L’accueil conserve sa composition et utilise le nouveau logo fourni en
+2172 × 724. Le drapeau porte une tête noire tournée vers la gauche, avec le
+bandeau blanc sur les yeux. Le décor avec sol est une image distincte,
+`assets/panorama-360.png`, inspirée des remparts de Bonifacio, avec falaises
+calcaires et mer à gauche, citadelle à droite,
+réservée à l’exploration et au casque. Un autel vide est visible à l’exploration ;
+en partie, l’autel en pierre suit le dessous du plateau, y compris déplacement,
+rotation et taille. Voir ma pièce / replacement masque aussi l’autel.
+
+À vérifier au casque : netteté et proportions du logo, sol debout/assis,
+vue sur les falaises à gauche et la citadelle à droite, alignement de la dalle
+de l’autel après chaque manipulation du plateau, absence
+d’occlusion des boutons du menu, recentrage et retour au passthrough.
+
+## Décor en partie, sol et musique — 14 octobre 2026
+
+La musique de combat commence au lancement des 60 secondes de préparation,
+y compris pour l’invité réseau. Après placement, le nouveau panorama et le sol
+pavé apparaissent dès la préparation. Le placement/replacement montre toujours
+la vraie pièce. Les paramètres proposent **Voir ma pièce** puis **Afficher le
+décor corse** ; ces commandes ne changent pas la partie.
+
+Le sol utilise `local-floor` lorsqu’il est disponible. Sinon sa hauteur est
+calculée avec `Config.xr.environment.fallbackEyeHeight` (valeur temporaire de
+1,65 m). Le nouveau panorama et le sol sont aussi visibles dans le menu VR.
+La palette web et XR est centralisée dans `css/theme.css`.
+
+À tester physiquement : lancement depuis le casque et en tant qu’invité réseau,
+musique pendant la préparation, apparition du décor, vue sous les pieds debout
+et assis, raccord arrière, retour à la pièce et replacement du plateau, pertes
+de suivi puis retour, sorties/rentrées et fluidité. Ces contrôles n’ont pas pu
+être effectués avec un vrai Quest 3 ; les tests automatiques simulent WebXR.
+
 ## Accueil panoramique — 14 octobre 2026
 
 Le nouveau bouton **Menu en VR** ouvre l'accueil en `immersive-vr`, avec panorama,

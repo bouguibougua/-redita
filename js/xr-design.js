@@ -31,7 +31,7 @@
   function theme() {
     const css = typeof getComputedStyle === "function" ? getComputedStyle(document.documentElement) : null;
     const read = (name, fallback) => css?.getPropertyValue(name).trim() || fallback;
-    return { ink: read("--ink", "#f4efe2"), muted: read("--muted", "#aaa99f"), surface: read("--surface", "#20231f"), raised: read("--surface-raised", "#2a2e28"), gold: read("--gold", "#dfb85e"), red: read("--red", "#c54f46"), blue: read("--blue", "#4e87b8"), danger: read("--danger", "#e36a5f"), line: read("--line", "rgba(255,255,255,0.12)") };
+    return { ink: read("--ink", "#f3e5cd"), muted: read("--muted", "#b5a68c"), surface: read("--surface", "#1b1712"), raised: read("--surface-raised", "#2d251b"), gold: read("--gold", "#d8b774"), red: read("--red", "#c07861"), blue: read("--blue", "#839cab"), danger: read("--danger", "#e39173"), line: read("--line", "rgba(202,165,103,.24)"), selected: read("--selected-surface", "#4a3822"), goldBright: read("--gold-bright", "#ffe4aa") };
   }
   function rounded(c, x, y, w, h, radius) { c.beginPath(); c.roundRect(x, y, w, h, Math.min(radius, w / 2, h / 2)); }
   function wrap(c, value, width) {

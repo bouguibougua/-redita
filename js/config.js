@@ -24,11 +24,12 @@
     // TEMP_BALANCE_VALUE — présentation du menu uniquement, sans effet sur le jeu.
     menu: {
       panorama: "assets/menu-360.png", logo: "assets/eredita-logo.png",
+      explorationPanorama: "assets/panorama-360.png",
       desktopFov: 76, sphereRadius: 40, maxPixelRatio: 1.5,
       desktopFps: 30, animationSeconds: 6, particleCount: 55,
       gifFps: 12, gifWidth: 960, gifHeight: 480,
       mouseSensitivity: 0.003, maxPitch: Math.PI * 0.44,
-      flagAmplitude: 0.0035, mistOpacity: 0.055, fireStrength: 0.13,
+      flagAmplitude: 0.0035, mistOpacity: 0.055, fireStrength: 0.13, fireCenter: [0.934, 0.447],
       vrPanelDistance: 2.4, vrPanelWidth: 1.7, vrRowHeight: 0.18, vrFontSize: 48,
       vrPageSize: 6, vrRefreshMs: 150, vrInputCooldownMs: 180, vrFramebufferScale: 0.85
     },
@@ -58,6 +59,16 @@
     },
     xr: {
       // TEMP_BALANCE_VALUE — réglages de présentation/confort, sans effet sur les règles.
+      environment: {
+        enabledDuringMatch: true, panorama: "assets/panorama-360.png",
+        groundTexture: "assets/vr-stone-floor.png",
+        sphereRadius: 24, floorRadius: 3, floorEdgeStart: 0.4, fallbackEyeHeight: 1.65,
+        fadeSeconds: 1.1, floorTileMeters: 2.4, sphereSegments: 48,
+        groundColor: "#463522", groutColor: "#241d14", stoneColor: "#6f5740",
+        altar: { enabled: true, widthMargin: 0.14, depthMargin: 0.14, minHeight: 0.18,
+          stoneColor: "#a49179", sideColor: "#736451", bronzeColor: "#b5965c",
+          previewWidth: 0.95, previewDepth: 0.72, previewHeight: 0.72, previewDistance: 1.85 }
+      },
       initialWidth: 0.8, minWidth: 0.45, maxWidth: 1.4,
       boardWidth: 13.65, boardBottom: -0.56,
       minDistance: 0.4, maxDistance: 2.5, rayLength: 4,

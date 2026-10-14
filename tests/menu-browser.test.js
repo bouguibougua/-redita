@@ -19,12 +19,14 @@ async function run() {
     await loadMenu();
     assert.equal(await page.evaluate("location.pathname"), "/-redita/");
     assert.equal(await page.evaluate("Eredita.MenuScene.diagnostics.mode"), "cinematic");
+    assert.equal(await page.evaluate("Eredita.MenuScene.diagnostics.environmentAsset"), "assets/menu-360.png", "L’accueil conserve son illustration originale");
     assert.equal(await page.evaluate("Eredita.MenuScene.diagnostics.immersive"), false);
     assert.equal(await page.evaluate("Eredita.MenuScene.diagnostics.active"), true);
     await page.waitFor("document.querySelector('#menu-status').textContent.trim().length > 0");
     assert.equal(await page.evaluate("document.querySelector('#menu-enter-vr').disabled"), true, "Sans périphérique immersif, le menu VR reste indisponible");
     assert.deepEqual(await page.evaluate("Array.from(document.querySelectorAll('#main-menu .main-menu-actions button'), b=>b.textContent.trim())"), ["JOUER", "DECKS", "TUTORIEL", "RÉALITÉ MIXTE · QUEST 3"]);
     assert.equal(await page.evaluate("Array.from(document.querySelectorAll('#main-menu img')).some(i=>i.src.endsWith('/-redita/assets/eredita-logo.png') && i.complete && i.naturalWidth>0)"), true);
+    assert.ok(await page.evaluate("document.querySelector('.menu-logo').naturalWidth >= 2048"), "Le nouveau logo reste net à la taille du menu");
     const panorama = await fetch(new URL("assets/menu-360.png", staticSite.url));
     assert.equal(panorama.status, 200);
     const png = Buffer.from(await panorama.arrayBuffer());
@@ -46,17 +48,22 @@ async function run() {
     await page.waitFor("Eredita.MenuScene.diagnostics.mode === 'panorama'");
     await delay(150);
     const rotated = await page.evaluate("({...Eredita.MenuScene.diagnostics})");
+    assert.equal(rotated.environmentAsset, "assets/panorama-360.png", "Le décor avec sol est réservé au panorama");
+    assert.equal(rotated.altarVisible, true, "L’autel est présent dans l’exploration panoramique");
     assert.ok(Math.abs(rotated.yaw - initial.yaw) > 0.01 || Math.abs(rotated.pitch - initial.pitch) > 0.01, "La souris doit orienter le panorama");
     await page.click("#menu-look");
     await page.waitFor("Eredita.MenuScene.diagnostics.mode === 'cinematic'");
+    assert.equal(await page.evaluate("Eredita.MenuScene.diagnostics.environmentAsset"), "assets/menu-360.png");
+    await page.waitFor("!Eredita.MenuScene.diagnostics.altarVisible");
 
     await page.click('[data-menu-screen="decks"]');
     await page.waitFor("!!document.querySelector('.deck-builder')");
     assert.equal(await page.evaluate("document.querySelectorAll('.deck-collection-card').length"), 34);
     await page.click('[data-open-card="habitant"]');
     await page.waitFor("!!document.querySelector('.deck-modal-backdrop')");
+    await page.waitFor("document.querySelector('.deck-modal-backdrop').getAnimations({subtree:true}).every(animation => animation.playState === 'finished')");
     await page.click(".deck-modal-close");
-    await delay(180);
+    await page.waitFor("!document.querySelector('.deck-modal-backdrop')");
     await page.click("#menu-back");
     await page.waitFor("!document.querySelector('#main-menu').hidden");
 

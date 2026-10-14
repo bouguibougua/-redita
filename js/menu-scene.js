@@ -5,8 +5,9 @@
   const host = document.querySelector('#menu-environment');
   const menu = document.querySelector('#main-menu');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  let THREE, renderer, scene, camera, sphere, flat, material, texture;
+  let THREE, renderer, scene, camera, sphere, flat, material, texture, panoramaTexture;
   let flatParticles, worldParticles, particleTexture;
+  let panoramaGround;
   let ready = false, textureLoaded = false, active = false, immersive = false;
   let mode = 'cinematic', yaw = 0, pitch = 0, drag = null;
   let motionPaused = reducedMotion.matches, lastFrame = -Infinity, phase = 0, previousTime = null;
@@ -18,7 +19,7 @@
   const fragmentShader = `
     uniform sampler2D uMap;
     uniform float uTime, uFlag, uMist, uFire;
-    uniform vec2 uOffset;
+    uniform vec2 uOffset, uFireCenter;
     varying vec2 vUv;
     float band(float a, float b, float x) { return smoothstep(a, a + .018, x) * (1.0 - smoothstep(b - .018, b, x)); }
     void main() {
@@ -32,7 +33,7 @@
       vec4 base = texture2D(uMap, vec2(fract(uv.x), clamp(uv.y, .001, .999)));
       vec3 color = base.rgb;
       // Brasero à droite : lumière chaude sur la pierre et scintillement des flammes.
-      vec2 fireDelta = (vUv - vec2(.934, .447)) * vec2(1.0, 1.5);
+      vec2 fireDelta = (vUv - uFireCenter) * vec2(1.0, 1.5);
       float glow = exp(-dot(fireDelta, fireDelta) * 1800.0);
       float flicker = .6 + .22 * sin(uTime * 7.0) + .12 * sin(uTime * 13.0 + 1.0);
       color += vec3(1.0, .29, .025) * glow * flicker * uFire;
@@ -99,6 +100,11 @@
 
   function paint(seconds) {
     const cycle = seconds / cfg.animationSeconds * Math.PI * 2;
+    const exploring = immersive || mode === 'panorama';
+    material.uniforms.uMap.value = exploring ? panoramaTexture : texture;
+    material.uniforms.uFlag.value = exploring ? 0 : cfg.flagAmplitude;
+    material.uniforms.uFire.value = exploring ? 0 : cfg.fireStrength;
+    panoramaGround?.update(immersive ? null : { position: camera.position, quaternion: camera.quaternion }, exploring && !immersive, 0);
     material.uniforms.uTime.value = cycle;
     material.uniforms.uOffset.value.set(mode === 'cinematic' && !immersive ? viewOffset.x : 0, mode === 'cinematic' && !immersive ? viewOffset.y : 0);
     animateParticles(flatParticles, cycle); animateParticles(worldParticles, cycle);
@@ -123,12 +129,13 @@
   }
 
   function syncVisibility() {
-    const shown = !menu.hidden || !$('#menu-subscreen').hidden || !$('#connection-screen').hidden;
+    const shown = !E.XR?.active && (!menu.hidden || !$('#menu-subscreen').hidden || !$('#connection-screen').hidden);
     setVisible(shown);
   }
 
   function setImmersive(value) {
     immersive = Boolean(value);
+    panoramaGround?.reset();
     flat.visible = !immersive && mode === 'cinematic';
     flatParticles.visible = !immersive && mode === 'cinematic';
     worldParticles.visible = immersive || mode === 'panorama';
@@ -146,7 +153,7 @@
   }
 
   function explore() {
-    if (!ready || immersive) return;
+    if (!ready || immersive || mode === 'panorama') return;
     mode = 'panorama'; setImmersive(false);
     $('#menu-look').textContent = 'Recentrer le décor'; $('#menu-look').setAttribute('aria-pressed', 'true');
   }
@@ -214,14 +221,22 @@
         $('#menu-enter-vr').disabled = true;
       });
       host.append(renderer.domElement);
-      texture = await new THREE.TextureLoader().loadAsync(cfg.panorama);
+      const loader = new THREE.TextureLoader();
+      [texture, panoramaTexture] = await Promise.all([
+        loader.loadAsync(cfg.panorama),
+        loader.loadAsync(cfg.explorationPanorama).catch(() => loader.loadAsync(cfg.panorama))
+      ]);
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.wrapS = THREE.RepeatWrapping; texture.generateMipmaps = false;
       texture.minFilter = THREE.LinearFilter; texture.magFilter = THREE.LinearFilter;
+      panoramaTexture.colorSpace = THREE.SRGBColorSpace;
+      panoramaTexture.wrapS = THREE.RepeatWrapping; panoramaTexture.generateMipmaps = false;
+      panoramaTexture.minFilter = THREE.LinearFilter; panoramaTexture.magFilter = THREE.LinearFilter;
       textureLoaded = true;
       material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: {
         uMap: { value: texture }, uTime: { value: 0 }, uOffset: { value: new THREE.Vector2() },
-        uFlag: { value: cfg.flagAmplitude }, uMist: { value: cfg.mistOpacity }, uFire: { value: cfg.fireStrength }
+        uFlag: { value: cfg.flagAmplitude }, uMist: { value: cfg.mistOpacity }, uFire: { value: cfg.fireStrength },
+        uFireCenter: { value: new THREE.Vector2(...cfg.fireCenter) }
       } });
       const geometry = new THREE.SphereGeometry(cfg.sphereRadius, 48, 32);
       geometry.scale(-1, 1, 1);
@@ -233,6 +248,7 @@
       ctx.fillStyle = gradient; ctx.fillRect(0, 0, 32, 32); particleTexture = new THREE.CanvasTexture(sprite);
       flatParticles = particles(false); worldParticles = particles(true); worldParticles.visible = false;
       camera.add(flatParticles); scene.add(worldParticles);
+      panoramaGround = E.XREnvironment?.create({ THREE, scene, panorama: false, altarPreview: true });
       ready = true; resize(); setVisible(active); E.MenuVR?.checkSupport();
     } catch (error) {
       loadError = String(error.message || error); ready = false;
@@ -257,9 +273,11 @@
     return data;
   }
 
-  E.MenuScene = { recenter, setImmersive, setVisible, captureFrame,
+  E.MenuScene = { recenter, setImmersive, setVisible, captureFrame, refreshVisibility: syncVisibility,
     getContext: () => ready && !loadError ? { THREE, renderer, scene, camera } : null,
-    get diagnostics() { return { ready, textureLoaded, active, immersive, mode, yaw, pitch, motionPaused, error: loadError }; }
+    get diagnostics() { return { ready, textureLoaded, active, immersive, mode, yaw, pitch, motionPaused, error: loadError,
+      environmentAsset: immersive || mode === 'panorama' ? cfg.explorationPanorama : cfg.panorama,
+      altarVisible: panoramaGround?.diagnostics.altarVisible || false }; }
   };
   init();
 }());

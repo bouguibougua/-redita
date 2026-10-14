@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/decks.css">
   <link rel="stylesheet" href="css/cards.css">
   <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
   <audio id="menu-music" src="assets/audio/menu/menu.mp3" preload="none" loop playsinline></audio>
@@ -78,7 +79,7 @@
   <div id="main-menu" class="main-menu cinematic-menu">
     <div class="menu-vignette" aria-hidden="true"></div>
     <section class="menu-panel" aria-labelledby="menu-title">
-      <h1 id="menu-title"><img class="menu-logo" src="assets/eredita-logo.png" alt="Eredità" width="564" height="135" fetchpriority="high"></h1>
+      <h1 id="menu-title"><img class="menu-logo" src="assets/eredita-logo.png" alt="Eredità" width="2172" height="724" fetchpriority="high"></h1>
       <nav class="main-menu-actions" aria-label="Menu principal">
         <button class="menu-button menu-button-primary" data-menu-screen="play" type="button"><span>JOUER</span><i aria-hidden="true"></i></button>
         <button class="menu-button" data-menu-screen="decks" type="button"><span>DECKS</span><i aria-hidden="true"></i></button>
@@ -170,6 +171,7 @@
     <p>Placez le plateau avec vos contrôleurs, puis jouez et gérez vos villages depuis les panneaux en réalité mixte.</p>
     <p>Choisissez entraînement ou local dans le casque. Pour un salon en ligne, entrez d'abord son code dans Quest Browser. La préparation et la partie restent jouables en réalité mixte.</p>
     <p>Visez votre vraie table et confirmez le repère à la gâchette. Le placement manuel permet d’ajuster la hauteur si aucune surface n’est détectée.</p>
+    <p>Au lancement de la préparation, le décor corse entoure le plateau. Dans les paramètres du casque, « Voir ma pièce » rétablit la réalité mixte. Le placement conserve toujours la vue de votre pièce.</p>
     <label class="xr-fallback"><input id="xr-manual-only" type="checkbox"> Placement manuel simplifié (sans hit-test ni ancre)</label>
     <p id="xr-status" role="status" aria-live="polite">Vérification du navigateur…</p>
     <div class="dialog-actions"><button id="xr-start" class="button button-primary" type="button" disabled>Entrer en réalité mixte</button><button id="xr-close" class="button" type="button">Retour</button></div>
@@ -208,6 +210,7 @@
   <script src="js/xr-windows.js"></script>
   <script src="js/xr-ui.js"></script>
   <script src="js/xr-interactions.js"></script>
+  <script src="js/xr-environment.js"></script>
   <script src="js/xr.js"></script>
   <script src="js/menu-scene.js"></script>
   <script src="js/menu-vr.js"></script>

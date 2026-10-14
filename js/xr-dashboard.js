@@ -74,7 +74,7 @@
       const [label, action, enabled = true, meta = {}] = entry, c = p.context, { x, y, w, h } = rect;
       const active = meta.selected, hovered = p.hover.has(index), confirmed = p.confirmed === index && performance.now() < p.confirmUntil;
       const biomeColors = { littoral: ["#568c85", "#285d73"], plaine: ["#98aa56", "#445727"], montagne: ["#85817a", "#454641"] };
-      let fill = meta.primary ? "#65522b" : active ? "#514526" : C.raised;
+      let fill = meta.primary || active ? C.selected : C.raised;
       if (meta.biome) {
         const colors = biomeColors[meta.biome], gradient = c.createLinearGradient(x, y, x + w, y + h);
         gradient.addColorStop(0, colors[0]); gradient.addColorStop(0.48, colors[0]); gradient.addColorStop(0.51, colors[1]); gradient.addColorStop(1, colors[1]); fill = gradient;

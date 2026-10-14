@@ -156,6 +156,7 @@
             button("Taille du plateau", { type: "manipulate", mode: "size" }, host, { reason: "La taille du plateau est contrôlée par l’hôte." })),
           row(button(s.paused ? "Reprendre" : "Pause", command("togglePause"), s.phase === "running" && host, { reason: host ? "La partie n’est pas en cours." : "Seul l’hôte peut mettre la partie en pause." }),
             button(muted ? "Réactiver le son" : "Couper le son", { type: "audio" }), button(`Graphismes : ${quality}`, { type: "quality" })),
+          row(button(E.XR?.environmentEnabled === false ? "Afficher le décor corse" : "Voir ma pièce", { type: "environment-toggle" }, true, { centered: true })),
           row(button("Retour au salon", open("leave")))
         ], options: { variant: "settings", footer: [button("Retour", { type: "back" }, true, { centered: true }), button("Quitter le mode VR", { type: "exit" }, true, { centered: true })] } };
       } else if (name === "text-size") {
@@ -437,7 +438,7 @@
         if (ok) { if (action.method === "confirmBiomes" || action.method === "start") { if (state().phase === "running") setModal(null); } else if (s.phase === "running" && !["shop", "sell", "buy-resident", "store", "animals", "slot"].includes(modal?.name)) setModal(null); }
         return ok;
       }
-      if (["manipulate", "recenter", "leave", "exit", "panels-reset", "panels-recenter", "panels-scale", "panel-adjust"].includes(action.type)) return action;
+      if (["manipulate", "recenter", "leave", "exit", "panels-reset", "panels-recenter", "panels-scale", "panel-adjust", "environment-toggle"].includes(action.type)) return action;
       return false;
     }
     function activate(target) {

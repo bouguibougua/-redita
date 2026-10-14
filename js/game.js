@@ -60,8 +60,9 @@
       state.preparationRemaining = E.Network.mode === "tutorial" ? 0 : E.Config.preparation.duration;
       if (E.Network.mode !== "tutorial") E.CardGame?.start(state);
       previousTimestamp = performance.now();
+      E.Audio?.play("game");
       if (state.preparationRemaining > 0) addLog("Préparation : vous avez une minute pour organiser vos villages et attribuer les tâches.");
-      else { E.Audio?.play("game"); addLog("La partie commence. Tous les villages sont debout."); }
+      else addLog("La partie commence. Tous les villages sont debout.");
       E.UI.render(state);
     },
 
@@ -352,7 +353,6 @@
       if (E.Network.mode === "solo" && E.AI.update(state, preparationDelta)) E.UI.render(state);
       delta -= preparationDelta;
       if (state.preparationRemaining === 0) {
-        E.Audio?.play("game");
         addLog("La préparation est terminée. Le combat commence !");
         E.UI.render(state);
       }
@@ -505,6 +505,7 @@
       const guestView = viewState();
       state = snapshot;
       restoreView(guestView);
+      E.Audio?.play(state.phase === "setup" ? "menu" : "game");
       E.Board3D?.update(state);
       previousTimestamp = performance.now();
       E.UI.render(state);

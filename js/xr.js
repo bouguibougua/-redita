@@ -59,7 +59,7 @@
       // aucun chargement/await préalable ne consomme l'activation utilisateur.
       session = await navigator.xr.requestSession("immersive-ar", {
         requiredFeatures: ["local"],
-        optionalFeatures: manualOnly ? [] : ["hit-test", "anchors"]
+        optionalFeatures: manualOnly ? ["local-floor"] : ["local-floor", "hit-test", "anchors"]
       });
       const { THREE, renderer, scene, camera, world } = context;
       const saved = {
@@ -76,6 +76,9 @@
       camera.near = E.Config.xr.cameraNear; camera.far = E.Config.xr.cameraFar; camera.updateProjectionMatrix();
       current = { ...context, session, root, saved, selected: null, manipulation: null, message: "Visez votre table, puis confirmez le repère à la gâchette.", lastPanel: -Infinity, lastDashboard: -Infinity, lastTime: null, viewer: null, positioned: false, lastStick: 0, leaveAfterEnd: false };
       const runtime = current;
+      E.MenuScene?.refreshVisibility();
+      current.environmentEnabled = E.Config.xr.environment.enabledDuringMatch;
+      current.environment = E.XREnvironment?.create({ ...context, session });
       const status = (message) => { runtime.message = message; runtime.dashboard?.setFeedback(message, "info"); };
       session.addEventListener("end", cleanup, { once: true });
       current.panels = E.XRPanels.create(context);
@@ -97,7 +100,8 @@
       await renderer.xr.setSession(session);
       if (current !== runtime) return;
       current.space = renderer.xr.getReferenceSpace();
-      current.onReset = () => { runtime.windows.reset(); runtime.placement.resetReference(); runtime.manipulation = null; runtime.selected = null; runtime.positioned = false; runtime.input.reset(); };
+      current.environment?.setReferenceSpace(current.space);
+      current.onReset = () => { runtime.windows.reset(); runtime.placement.resetReference(); runtime.environment?.reset(); runtime.manipulation = null; runtime.selected = null; runtime.positioned = false; runtime.input.reset(); };
       current.space.addEventListener("reset", current.onReset);
       $("#xr-dialog").close();
     } catch (error) {
@@ -113,10 +117,11 @@
     const runtime = current;
     if (!runtime) return;
     current = null;
+    E.MenuScene?.refreshVisibility();
     const { scene, renderer, camera, world, saved, root, session } = runtime;
     session.removeEventListener("visibilitychange", runtime.visibilityChanged);
     runtime.space?.removeEventListener("reset", runtime.onReset);
-    runtime.windows?.dispose(); runtime.input?.dispose(); runtime.placement?.dispose(); runtime.interactions?.dispose(); runtime.panels?.dispose(); runtime.dashboard?.dispose();
+    runtime.windows?.dispose(); runtime.input?.dispose(); runtime.placement?.dispose(); runtime.interactions?.dispose(); runtime.panels?.dispose(); runtime.dashboard?.dispose(); runtime.environment?.dispose();
     E.Board3D.setXRPreview(false);
     scene.add(world); scene.remove(root);
     world.position.copy(saved.worldPosition); world.quaternion.copy(saved.worldQuaternion); world.scale.copy(saved.worldScale); world.visible = saved.worldVisible;
@@ -173,6 +178,11 @@
   }
   function applyUIAction(result) {
     const r = current;
+    if (result?.type === "environment-toggle") {
+      r.environmentEnabled = !r.environmentEnabled;
+      r.lastDashboard = -Infinity;
+      r.dashboard.setFeedback(r.environmentEnabled ? "Le décor corse s’affiche pendant la partie." : "Votre pièce est visible en réalité mixte.", "info");
+    }
     if (result?.type === "manipulate") { r.ui.close(); action(result.mode); }
     if (result?.type === "recenter") { r.ui.close(); action("recenter"); }
     if (result?.type === "panels-recenter" || result?.type === "panels-reset") {
@@ -271,15 +281,17 @@
     if (!r || !frame || !r.space) return;
     const dt = r.lastTime === null ? 0 : Math.min((timestamp - r.lastTime) / 1000, 0.05);
     r.lastTime = timestamp;
-    if (r.session.visibilityState !== "visible") { r.windows.reset(); r.input.reset(); return; }
+    if (r.session.visibilityState !== "visible") { r.environment?.update(null, false); r.windows.reset(); r.input.reset(); return; }
     const pose = frame.getViewerPose(r.space);
-    if (!pose) { r.root.visible = false; r.windows.reset(); r.input.reset(); return; }
+    if (!pose) { r.environment?.update(null, false); r.root.visible = false; r.windows.reset(); r.input.reset(); return; }
     r.viewer = { position: new r.THREE.Vector3().copy(pose.transform.position), quaternion: new r.THREE.Quaternion().copy(pose.transform.orientation) };
     if (!r.positioned) { r.panels.position(r.viewer); r.dashboard.resetLayout(r.viewer); r.positioned = true; }
     r.dashboard.setViewer(r.viewer);
     r.dashboard.position(r.viewer, true, dt);
     r.input.update(frame, r.space);
     r.placement.update(frame, r.space, r.input.records, r.viewer, timestamp);
+    const inMatch = E.GameView.getState().phase !== "setup" && E.Network.mode !== "pending";
+    r.environment?.update(r.viewer, r.environmentEnabled && inMatch && r.placement.placed && !r.manipulation, dt, frame);
     if (E.Network.mode === "guest" && E.GameView.getState().xrBoardWidth) r.placement.setWidth(E.GameView.getState().xrBoardWidth);
     if (r.placement.placed && !r.widthShared && E.Network.mode !== "guest") { E.GameView.setXRBoardWidth(r.placement.width); r.widthShared = true; }
     E.Board3D.setXRPreview(!r.placement.placed);
@@ -340,6 +352,7 @@
     if (timestamp - r.lastPanel >= E.Config.xr.panelUpdateMs) { panelContent(); r.lastPanel = timestamp; }
   }
   E.XR = { init, update, refreshAvailability, get active() { return Boolean(current); },
+    get environmentEnabled() { return current?.environmentEnabled ?? E.Config.xr.environment.enabledDuringMatch; },
     get diagnostics() {
       return current ? {
         mode: current.session.mode || "immersive-ar", visibility: current.session.visibilityState,
@@ -347,6 +360,7 @@
         placed: current.placement.placed, manual: current.placement.manual,
         width: current.placement.width, anchored: current.placement.anchorTracked,
         manipulation: current.manipulation, selected: current.selected,
+        environment: current.environment?.diagnostics, environmentEnabled: current.environmentEnabled,
         grabbedPanels: current.windows.diagnostics, textSize: current.dashboard.textSize, windowScale: current.dashboard.windowScale,
         controllers: current.input.records.filter((r) => r.source).map((r) => ({ hand: r.source.handedness, profiles: r.source.profiles, mapping: r.source.gamepad?.mapping, tracked: r.tracked }))
       } : { active: false, supported };

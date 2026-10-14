@@ -18,7 +18,7 @@
     "assets:cards-fantasy": "npm run assets:cards --",
     "test:cards-browser": "node tests/cards-browser.test.js",
     "test:decks-browser": "node tests/decks-browser.test.js",
-    "test:xr": "node tests/xr.test.js && node tests/xr-windows.test.js && node tests/xr-ui-premium.test.js && node tests/cards-xr.test.js",
+    "test:xr": "node tests/xr.test.js && node tests/xr-environment.test.js && node tests/xr-windows.test.js && node tests/xr-ui-premium.test.js && node tests/cards-xr.test.js",
     "test:xr-browser": "node tests/xr-browser.test.js"
   },
   "engines": {

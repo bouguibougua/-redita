@@ -49,16 +49,30 @@ Les performances natives restent à mesurer sur Quest.
 
 ## Sources et projection
 
-Les deux PNG fournis ont été copiés tels quels :
+Le menu conserve sa composition, avec un drapeau retouché selon la référence :
+tête noire tournée vers la gauche, bandeau blanc sur les yeux. L’exploration
+panoramique utilise un décor distinct de Bonifacio depuis les remparts,
+avec falaises calcaires et mer à gauche, citadelle à droite. Le logo fourni
+reste en haute résolution :
 
-- `assets/menu-360.png` : **1774 × 887**, panorama des ruines ;
-- `assets/eredita-logo.png` : **564 × 135**, logo avec transparence.
+- `assets/menu-360.png` : **1774 × 887**, accueil avec le drapeau corrigé ;
+- `assets/panorama-360.png` : **1774 × 887**, Bonifacio avec terrasse pavée ;
+- `assets/eredita-logo.png` : **2172 × 724**, nouveau logo fourni, détouré avec
+  imagegen et vérifié dans le rendu web.
 
 La texture n'est pas inversée : le drapeau est à gauche et le brasero à droite
 dans le cadrage initial. Le ratio est 2:1, adapté à une projection
 équirectangulaire, mais l'illustration ne garantit pas un relevé sphérique exact.
-La couture arrière reste perceptible et les pôles étirent les pierres/nuages.
-Le ciel et le sol ne sont pas reconstruits artificiellement. En VR, inspecter
+Le raccord arrière et l’étirement des pierres/nuages aux pôles doivent être
+inspectés au casque sur cette illustration générée.
+Un sol pavé 3D complète la texture sous les pieds **en mode panorama seulement**.
+La texture `assets/vr-stone-floor.png` apporte un pavage détaillé sur un disque
+de 3 m de rayon, avec un bord fondu pour conserver la vue sur la mer.
+Un autel en pierre avec corniche et ornements bronze est visible à l’exploration.
+En partie, sa dalle supérieure suit précisément le dessous du plateau, sa
+position, sa hauteur, sa rotation et sa taille. Il disparaît avec le décor en
+passthrough. Cet autel est visuel et ne crée aucun bâtiment ou règle de jeu.
+Le prompt et la provenance sont conservés dans `assets/menu-360-source.md`. En VR, inspecter
 le raccord derrière soi et les pôles ; une source 360° réellement raccordée
 pourra remplacer ce PNG sans modifier les commandes du jeu.
 
@@ -117,7 +131,23 @@ Validation effectuée : `npm test`, `npm run test:xr`,
 des scripts modifiés passent. Le navigateur utilise le vrai WebGL, avec un
 serveur statique sous `/-redita/` ; le cycle du menu VR utilise des sessions
 simulées. Le GIF a été vérifié : **72 images, 6 secondes, boucle infinie,
-960 × 480, environ 3,1 Mo**.
+960 × 480**, avec le drapeau corrigé de l’accueil.
+
+## Palette commune et ambiance en partie
+
+`css/theme.css` centralise le noir chaud, bronze, or et ivoire pour préparation,
+jeu, boutique, decks, fiches de carte, tutoriel, dialogues et réalité mixte.
+`XRDesign.theme()` lit ces mêmes variables pour les textures des fenêtres XR.
+Les couleurs sémantiques des camps et des biomes restent distinctes.
+
+La musique de combat commence dès le lancement de la préparation, y compris
+sur l’invité réseau ; la fin de la préparation ne la relance pas.
+`js/xr-environment.js` ajoute un décor indépendant du plateau. Le placement
+montre la pièce ; le panorama apparaît progressivement dès la préparation.
+**Voir ma pièce / Afficher le décor corse** permet de basculer en session.
+Le sol utilise `local-floor` ou une hauteur temporaire configurable, avec repli
+transparent si le chargement du panorama échoue. Ce décor n’ajoute ni lumière
+dynamique ni ombre ou post-traitement ; ses ressources sont libérées à la sortie.
 
 ## Validation physique Quest 3
 

@@ -43,6 +43,7 @@
     audio.addEventListener("error", () => { if (current === audio) current = null; }, { once: true });
   }
   E.Audio = { play, confirmInterface,
+    get currentTrack() { return desiredTrack; },
     get muted() { return muted; },
     setMuted(value) { muted = Boolean(value); if (current) current.volume = muted ? 0 : .38; if (muted) interfaceAudio?.suspend().catch(() => {}); },
     stop() { current?.pause(); current = null; }, playMenuOnInteraction() {

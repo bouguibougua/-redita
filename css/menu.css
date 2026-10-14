@@ -21,8 +21,9 @@
   background: transparent; box-shadow: none; transform: translateY(-1vh);
   animation: cinematic-reveal 1.4s ease both; cursor: auto; pointer-events: none;
 }
-.cinematic-menu .menu-panel h1 { margin: 0 0 clamp(30px, 5vh, 62px); line-height: 1; }
+.cinematic-menu .menu-panel h1 { position: relative; aspect-ratio: 564 / 135; margin: 0 0 clamp(30px, 5vh, 62px); line-height: 1; }
 .menu-logo {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   display: block; width: 100%; height: auto;
   filter: drop-shadow(0 8px 22px #000b) drop-shadow(0 0 16px #b3783026);
 }

@@ -66,7 +66,7 @@
     let active;
     try {
       // Cette demande reste dans le clic de l’utilisateur, avant tout await.
-      session = await navigator.xr.requestSession("immersive-vr", { requiredFeatures: ["local"] });
+      session = await navigator.xr.requestSession("immersive-vr", { requiredFeatures: ["local"], optionalFeatures: ["local-floor"] });
       const { THREE, renderer, scene, camera } = context;
       const group = new THREE.Group();
       group.name = "eredita-menu-vr";
@@ -79,6 +79,7 @@
         saved: { position: camera.position.clone(), quaternion: camera.quaternion.clone(), near: camera.near, far: camera.far }
       };
       runtime = active;
+      active.ground = E.XREnvironment?.create({ ...context, session, panorama: false, altarPreview: true });
       session.addEventListener("end", () => cleanup(active), { once: true });
       active.visibilityChanged = () => {
         clearTracking(active);
@@ -97,7 +98,8 @@
       await renderer.xr.setSession(session);
       if (runtime !== active) return;
       active.space = renderer.xr.getReferenceSpace();
-      active.spaceReset = () => { active.positioned = false; active.group.visible = false; };
+      active.ground?.setReferenceSpace(active.space);
+      active.spaceReset = () => { active.positioned = false; active.group.visible = false; active.ground?.reset(); };
       active.space?.addEventListener("reset", active.spaceReset);
       rebuild(active, true);
       supportMessage = "Menu VR actif · gâchettes ou A : choisir · B : revenir.";
@@ -177,16 +179,17 @@
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const disabled = button?.disabled;
+    const colors = E.XRDesign?.theme?.() || { surface: '#1b1712', selected: '#4a3822', line: 'rgba(202,165,103,.24)', gold: '#d8b774', muted: '#b5a68c', goldBright: '#ffe4aa', ink: '#f3e5cd' };
     const selected = button?.getAttribute("aria-selected") === "true" || button?.getAttribute("aria-pressed") === "true" || button?.classList.contains("selected");
     const gold = hovered || selected;
     if (button) {
-      ctx.fillStyle = hovered ? "rgba(42, 28, 17, .91)" : "rgba(12, 11, 10, .78)";
+      ctx.fillStyle = hovered ? colors.selected : colors.surface;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = gold ? "#edc57b" : "rgba(159, 136, 93, .42)";
+      ctx.strokeStyle = gold ? colors.gold : colors.line;
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
     }
-    ctx.fillStyle = disabled ? "#8b8475" : gold ? "#ffe4ac" : "#e4d5b6";
+    ctx.fillStyle = disabled ? colors.muted : gold ? colors.goldBright : colors.ink;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = `${fontSize}px Georgia, 'Times New Roman', serif`;
@@ -227,7 +230,7 @@
     active.pageCount = pageCount;
     const width = cfg.vrPanelWidth;
     const height = cfg.vrRowHeight;
-    const background = new active.THREE.Mesh(new active.THREE.PlaneGeometry(width + 0.16, 2.15), new active.THREE.MeshBasicMaterial({ color: 0x090908, transparent: true, opacity: 0.74, depthWrite: false }));
+    const background = new active.THREE.Mesh(new active.THREE.PlaneGeometry(width + 0.16, 2.15), new active.THREE.MeshBasicMaterial({ color: E.XRDesign?.theme?.().surface || '#1b1712', transparent: true, opacity: 0.74, depthWrite: false }));
     background.position.z = -0.02;
     active.group.add(background);
     const logoWidth = width * 0.84;
@@ -239,6 +242,10 @@
     new active.THREE.TextureLoader().load(logoUrl, (texture) => {
       if (runtime !== active || !logo.parent) { texture.dispose(); return; }
       texture.colorSpace = active.THREE.SRGBColorSpace;
+      if (texture.image?.width && texture.image?.height) {
+        logo.geometry.dispose();
+        logo.geometry = new active.THREE.PlaneGeometry(logoWidth, logoWidth * texture.image.height / texture.image.width);
+      }
       logo.material.map = texture;
       logo.material.needsUpdate = true;
       logo.visible = true;
@@ -359,6 +366,7 @@
   }
 
   function clearTracking(active) {
+    active.ground?.update(null, false);
     active.group.visible = false;
     active.controllers.forEach((record) => { record.tracked = false; record.hit = null; record.buttons = {}; record.ray.visible = false; });
     setHovered(active, new Set());
@@ -371,6 +379,7 @@
     const viewerPose = frame.getViewerPose(active.space);
     if (!viewerPose) { clearTracking(active); return; }
     active.viewer = viewerPose.transform;
+    active.ground?.update(active.viewer, true, 0, frame);
     if (!active.positioned) positionPanel(active);
     else active.group.visible = true;
     if (active.needsRefresh && timestamp - active.lastRefresh > E.Config.menu.vrRefreshMs) {
@@ -450,6 +459,7 @@
     });
     clearPanel(active);
     active.scene.remove(active.group);
+    active.ground?.dispose();
     active.camera.position.copy(active.saved.position);
     active.camera.quaternion.copy(active.saved.quaternion);
     active.camera.near = active.saved.near;
