@@ -192,6 +192,7 @@
     $('#menu-motion').addEventListener('click', () => setMotion(!motionPaused));
     $('#menu-sound').addEventListener('click', () => {
       E.Audio.setMuted(!E.Audio.muted);
+      E.Audio.playEffect('sword');
       $('#menu-sound').setAttribute('aria-pressed', String(E.Audio.muted));
       $('#menu-sound').textContent = `Son : ${E.Audio.muted ? 'coupé' : 'actif'}`;
     });

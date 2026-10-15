@@ -14,7 +14,7 @@ immédiatement le logo statique. Architecture, paramètres et tests :
 
 | Fichiers | Fonction |
 | --- | --- |
-| `index.html`, `css/style.css`, `css/cards.css`, `css/decks.css` | Interface, préparation, partie et decks |
+| `index.html`, `css/style.css`, `css/cards.css`, `css/decks.css`, `css/play.css` | Interface, préparation, partie, decks et choix de partie |
 | `js/network.js` | Menu, sous-menus, formats, entraînement, local et salons |
 | `js/game.js`, `js/game-view.js`, `js/ui.js` | Simulation, commandes partagées et interface |
 | `js/config.js` | Valeurs centralisées, section `menu` pour cette présentation |
@@ -40,6 +40,37 @@ recherche insensible aux accents et filtres par catégorie, dont Mythologie.
 Le défilement et le focus sont conservés pendant les modifications. Sur mobile,
 les panneaux s’empilent et les filtres restent tous visibles. Les trois decks,
 les limites de composition et la conservation pendant la session sont inchangés.
+
+L’onglet Jouer est habillé comme une armurerie, avec son propre fond optimisé
+`assets/play-armory.webp` et ses styles isolés dans `css/play.css`. Trois panneaux
+identiques présentent Format, Multijoueur et Entraînement, avec des libellés
+courts. Le format propose 2 camps puis 4 camps ; les deux cartes de mode sont
+entièrement cliquables. La sélection de format conserve son état et reste synchronisée
+avec l’écran multijoueur. Les panneaux s’empilent sur mobile et le contenu
+défile sur les petits écrans. Le fond, créé avec imagegen, est documenté dans
+[`assets/play-armory-source.md`](assets/play-armory-source.md). Les commandes
+de préparation, de local et de salons restent celles de `js/network.js`.
+L’écran multijoueur reprend le fond d’armurerie et se trouve au-dessus du décor
+du menu (z-index 130, contre 110 pour le décor). Retour ferme le salon et remet
+le réseau en attente pour permettre un autre choix. `npm run test:play` vérifie
+les dimensions des trois panneaux, les pixels visibles d’un bouton multijoueur,
+les clics réels, le clavier, le mobile, l’annulation d’un salon et une connexion
+hôte/invité sur le vrai serveur local.
+
+Les effets d’interface utilisent les WAV fournis par le concepteur dans
+`assets/audio/interface/` : page à l’ajout d’une carte normale ou mythologique,
+page inversée au retrait, épée sur les boutons du menu principal, de l’armurerie
+et du multijoueur. Les boutons Retour jouent l’épée inversée, avec priorité sur
+le son d’épée normal : un seul effet par activation. Les retours HTML sont
+repérés par `data-ui-back` ; les retours VR utilisent la même source sonore.
+Les refus de modification et les boutons désactivés restent
+silencieux. Le bouton Son arrête aussi les effets en cours. `Config.audio`
+centralise les sources, volumes et la limite de lectures simultanées.
+`npm run test:audio` vérifie les vrais fichiers audio dans le navigateur,
+la sourdine et le tactile ; il compare aussi les échantillons des deux sons inversés.
+Les textes du menu principal, des sous-menus et de la connexion ne se
+sélectionnent pas à la souris ou au toucher. Les champs de recherche et de code
+conservent la sélection du texte et l’édition.
 
 `css/menu.css` remplace uniquement la présentation de l'accueil. Le grand logo
 fourni reste une image transparente, avec des textes en Georgia, filets et

@@ -21,6 +21,16 @@
     },
     bulkTaskInterval: 0.5,
     network: { connectionTimeoutMs: 8000 },
+    // TEMP_BALANCE_VALUE — volumes et limite des effets sonores d’interface.
+    audio: {
+      musicVolume: 0.38, effectVolume: 0.5, maxEffectVoices: 4,
+      effects: {
+        pageAdd: "assets/audio/interface/page-turn.wav",
+        pageRemove: "assets/audio/interface/page-turn-reverse.wav",
+        sword: "assets/audio/interface/sword.wav",
+        swordReverse: "assets/audio/interface/sword-reverse.wav"
+      }
+    },
     // TEMP_BALANCE_VALUE — révélation du logo du menu, sans effet sur la simulation.
     intro: {
       duration: 1.5, revealAt: 0, holdAt: 1.5,

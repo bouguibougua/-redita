@@ -1,4 +1,10 @@
 /* L'accueil conserve les boutons et destinations de Network.init(). */
+.main-menu, .menu-subscreen, .connection-screen, .xr-dialog {
+  -webkit-user-select: none; user-select: none;
+}
+:is(.main-menu, .menu-subscreen, .connection-screen, .xr-dialog) :is(input, textarea, [contenteditable="true"]) {
+  -webkit-user-select: text; user-select: text;
+}
 .menu-environment {
   position: fixed; inset: 0; z-index: 110; overflow: hidden;
   background: #100e0c url('../assets/menu-360.png') center / cover no-repeat;

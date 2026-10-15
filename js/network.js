@@ -19,7 +19,34 @@
     return true;
   }
   function formatChoices() {
-    return `<div class="match-formats" role="group" aria-label="Nombre de camps par joueur">${Object.entries(E.Config.formats).map(([id, value]) => `<button class="button ${format === id ? "selected" : ""}" type="button" data-match-format="${id}" aria-pressed="${format === id}"><strong>${value.label}</strong><span>${value.regions} régions par joueur</span></button>`).join("")}</div>`;
+    return `<div class="match-formats" role="group" aria-label="Nombre de camps par joueur">${Object.entries(E.Config.formats).map(([id, value]) => `<button class="play-format ${format === id ? "selected" : ""}" type="button" data-match-format="${id}" aria-pressed="${format === id}">
+      <span class="play-format-map" aria-hidden="true"><i>${'<b></b>'.repeat(value.regions)}</i><i>${'<b></b>'.repeat(value.regions)}</i></span>
+      <span class="play-format-copy"><strong>${value.label}</strong><small>${value.regions} régions par joueur</small></span><span class="play-format-check" aria-hidden="true">✓</span>
+    </button>`).join("")}</div>`;
+  }
+  function playMenuHtml() {
+    return `<div class="play-lobby">
+      <div class="play-layout">
+        <section class="play-format-panel play-main-panel" aria-labelledby="play-format-title">
+          <span class="play-panel-index" aria-hidden="true">01</span>
+          <span class="play-mode-emblem" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="m8 13 16-6 16 6 16-6v44l-16 6-16-6-16 6V13ZM24 7v44M40 13v44"/></svg></span>
+          <h3 id="play-format-title">Format</h3><p class="play-mode-meta">Camps par joueur</p>
+          ${formatChoices()}
+        </section>
+            <button id="open-multiplayer" class="play-mode-card play-main-panel multiplayer" type="button">
+              <span class="play-panel-index" aria-hidden="true">02</span>
+              <span class="play-mode-emblem" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M13 8 45 40 40 45 8 13V8h5ZM51 8 19 40 24 45 56 13V8h-5ZM34 43l13-13M21 34l13-13M44 44l8 8M12 52l8-8M47 55l8-8M9 47l8 8"/></svg></span>
+              <strong>Multijoueur</strong><span class="play-mode-meta">Deux joueurs · local ou en ligne</span>
+              <span class="play-mode-action">Choisir une partie <span aria-hidden="true">↗</span></span>
+            </button>
+            <button id="training-button" class="play-mode-card play-main-panel training" type="button">
+              <span class="play-panel-index" aria-hidden="true">03</span>
+              <span class="play-mode-emblem" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="30" cy="34" r="21"/><circle cx="30" cy="34" r="13"/><circle cx="30" cy="34" r="5"/><path d="m30 34 23-23M46 18V9l9-5v10l5 4-9 5h-9"/></svg></span>
+              <strong>Entraînement</strong><span class="play-mode-meta">Un joueur · contre l’IA</span>
+              <span class="play-mode-action">Préparer la partie <span aria-hidden="true">↗</span></span>
+            </button>
+      </div>
+    </div>`;
   }
   function bindFormats(root) {
     root.querySelectorAll("[data-match-format]").forEach(button => button.addEventListener("click", () => selectFormat(button.dataset.matchFormat)));
@@ -119,10 +146,12 @@
       menu.hidden = true;
       sub.hidden = false;
       sub.classList.toggle("decks-screen", screen === "decks");
+      sub.classList.toggle("play-screen", screen === "play");
       sub.querySelector(".menu-subpanel")?.classList.toggle("decks-panel", screen === "decks");
+      sub.querySelector(".menu-subpanel")?.classList.toggle("play-panel", screen === "play");
       if (screen === "play") {
-        subTitle.textContent = "Choisissez votre voie";
-        subContent.innerHTML = formatChoices() + '<div class="menu-choice-grid"><button id="open-multiplayer" class="button button-red" type="button">MULTIJOUEUR</button><button id="training-button" class="button" type="button">ENTRAÎNEMENT</button></div><p class="menu-muted">Le mode entraînement réutilise la partie contre l’IA déjà présente dans le prototype.</p>';
+        subTitle.textContent = "L’armurerie";
+        subContent.innerHTML = playMenuHtml();
         bindFormats(subContent);
         document.querySelector("#open-multiplayer").addEventListener("click", () => { sub.hidden = true; document.querySelector("#connection-screen").hidden = false; selectFormat(format); });
         document.querySelector("#training-button").addEventListener("click", () => { startMode("solo"); setStatus("Mode entraînement · vous jouez Rouge contre l’IA"); });
@@ -145,15 +174,15 @@
       document.querySelector("#create-online")?.addEventListener("click", () => connect("create"));
       document.querySelector("#join-online")?.addEventListener("click", () => { const code = document.querySelector("#room-code").value.trim().toUpperCase(); if (code.length !== 5) return setStatus("Entre un code de salon à 5 caractères.", true); connect("join", code); });
       document.querySelector("#room-code")?.addEventListener("input", (event) => { event.target.value = event.target.value.toUpperCase().replace(/[^A-Z2-9]/g, "").slice(0, 5); });
-      document.querySelector("#connection-back")?.addEventListener("click", () => { document.querySelector("#connection-screen").hidden = true; menu.hidden = false; });
+      document.querySelector("#connection-back")?.addEventListener("click", leaveRoom);
     }
     bindConnectionControls(); bindFormats(document.querySelector("#connection-screen"));
     document.querySelectorAll("[data-menu-screen]").forEach((button) => button.addEventListener("click", () => openMenuScreen(button.dataset.menuScreen)));
     back.addEventListener("click", () => {
       E.Decks?.unmount();
       sub.hidden = true;
-      sub.classList.remove("decks-screen");
-      sub.querySelector(".menu-subpanel")?.classList.remove("decks-panel");
+      sub.classList.remove("decks-screen", "play-screen");
+      sub.querySelector(".menu-subpanel")?.classList.remove("decks-panel", "play-panel");
       menu.hidden = false;
       E.Audio?.play("menu");
     });

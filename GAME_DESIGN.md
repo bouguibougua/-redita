@@ -1687,6 +1687,11 @@ depuis les deux panneaux ; la sélection mythologique reste affichée dans le
 panneau du deck. Les Mythologiques conservent leur sélection distincte et ne
 comptent pas dans les 30 cartes normales. Sur mobile, les panneaux s’empilent.
 
+Un ajout effectif au deck joue le son de page qui tourne fourni par le
+concepteur ; un retrait joue ce même son à l’envers. Cela s’applique aux cartes
+normales et aux sélections mythologiques, depuis la collection, le deck ou une
+fiche. Un ajout ou retrait refusé ne déclenche pas de son.
+
 Chaque deck sélectionne également **3 cartes Mythologiques parmi 5**. Pour la partie, **2 de ces 3 cartes** sont tirées au sort et deviennent disponibles. TEMP_BALANCE_VALUE : une sélection incomplète est complétée avec les choix du deck de départ, en conservant les cartes déjà choisies.
 
 ---
@@ -2719,6 +2724,24 @@ boutons du menu restent accessibles pendant la révélation. Le mouvement rédui
 affiche immédiatement le logo statique. Cette animation ne modifie pas l’état
 de la partie et reste distincte de la future cinématique du tutoriel décrite en
 section 93.
+
+L’onglet Jouer se présente comme une armurerie, sur une illustration dédiée.
+Format, Multijoueur et Entraînement occupent trois panneaux de même largeur et
+de même hauteur, alignés sur ordinateur et empilés sur mobile. Seuls les libellés
+et informations de choix utiles sont affichés. Le format reste 2 camps ou
+4 camps par joueur. Ces accès conservent leurs destinations :
+choix local/salon pour le multijoueur, préparation contre l’IA pour l’entraînement.
+L’écran multijoueur s’affiche au-dessus du décor ; Retour ferme un éventuel
+salon en cours et rétablit le choix des modes.
+
+Les boutons actifs du menu principal, de l’armurerie et de l’écran multijoueur
+jouent le son d’épée fourni par le concepteur à chaque activation, par souris,
+clavier ou tactile. Tous les boutons Retour, y compris le retour au menu, la
+boutique et les interfaces VR, jouent uniquement ce son d’épée inversé.
+Le texte des menus ne peut pas être sélectionné ; les champs de recherche et
+de saisie de code restent éditables et sélectionnables.
+Le réglage Son coupe à la fois les musiques et les effets.
+Les volumes et la limite de sons simultanés sont centralisés dans `Config.audio`.
 
 L’accueil conserve sa composition ; le drapeau reprend la tête noire avec le
 bandeau sur les yeux. Le décor avec sol est réservé au mode panorama et utilise

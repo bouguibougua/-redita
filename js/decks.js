@@ -176,19 +176,23 @@
 
   function handleClick(event) {
     if (event.target.closest("[data-use-starter]") && E.Config?.cardGame) {
+      const previous = JSON.stringify(state.decks[state.activeDeck]);
       state.decks[state.activeDeck] = JSON.parse(JSON.stringify(E.Config.cardGame.starterDecks[state.activeDeck]));
+      if (previous !== JSON.stringify(state.decks[state.activeDeck])) E.Audio?.playEffect('pageAdd');
       render(); return;
     }
     const quantityButton = event.target.closest("[data-quantity]");
     if (quantityButton) {
       event.stopPropagation();
-      if (adjustQuantity(state, state.activeDeck, quantityButton.dataset.quantity, Number(quantityButton.dataset.delta))) render();
+      const delta = Number(quantityButton.dataset.delta);
+      if (adjustQuantity(state, state.activeDeck, quantityButton.dataset.quantity, delta)) { E.Audio?.playEffect(delta > 0 ? 'pageAdd' : 'pageRemove'); render(); }
       return;
     }
     const mythButton = event.target.closest("[data-toggle-myth]");
     if (mythButton) {
       event.stopPropagation();
-      if (toggleMythological(state, state.activeDeck, mythButton.dataset.toggleMyth)) render();
+      const wasSelected = state.decks[state.activeDeck].mythological.includes(mythButton.dataset.toggleMyth);
+      if (toggleMythological(state, state.activeDeck, mythButton.dataset.toggleMyth)) { E.Audio?.playEffect(wasSelected ? 'pageRemove' : 'pageAdd'); render(); }
       return;
     }
     const deckButton = event.target.closest("[data-deck-index]");

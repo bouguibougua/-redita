@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/menu.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/decks.css">
+  <link rel="stylesheet" href="css/play.css">
   <link rel="stylesheet" href="css/intro.css">
 </head>
 <body>
@@ -71,7 +72,7 @@
 
   <div id="shop-modal" class="shop-modal" hidden>
     <section class="shop-modal-panel" role="dialog" aria-modal="true" aria-labelledby="shop-modal-title">
-      <div class="shop-modal-head"><h2 id="shop-modal-title">Boutique</h2><button id="close-shop-modal" class="button button-red shop-return-button" type="button">← Retour</button></div>
+      <div class="shop-modal-head"><h2 id="shop-modal-title">Boutique</h2><button id="close-shop-modal" class="button button-red shop-return-button" type="button" data-ui-back>← Retour</button></div>
       <nav id="shop-village-nav" class="shop-village-nav" aria-label="Choisir un village"></nav>
       <div id="shop-modal-content"></div>
     </section>
@@ -103,7 +104,7 @@
 
   <div id="menu-subscreen" class="menu-subscreen" hidden>
     <section class="menu-subpanel" aria-live="polite">
-      <button id="menu-back" class="menu-back" type="button">← Menu principal</button>
+      <button id="menu-back" class="menu-back" type="button" data-ui-back>← Menu principal</button>
       <p class="menu-kicker">Eredità</p>
       <h2 id="menu-subtitle"></h2>
       <div id="menu-subcontent"></div>
@@ -112,9 +113,7 @@
 
   <div id="connection-screen" class="connection-screen" hidden>
     <section class="connection-card" aria-labelledby="connection-title">
-      <p class="step-label">Mode de jeu</p>
-      <h2 id="connection-title">Comment voulez-vous jouer ?</h2>
-      <p>Pour jouer sur deux ordinateurs, créez un salon puis transmettez son code au second joueur.</p>
+      <h2 id="connection-title">Choisir une partie</h2>
       <div class="match-formats" role="group" aria-label="Nombre de camps par joueur">
         <button class="button selected" type="button" data-match-format="simplified" aria-pressed="true"><strong>2 camps</strong><span>2 régions par joueur</span></button>
         <button class="button" type="button" data-match-format="classic" aria-pressed="false"><strong>4 camps</strong><span>4 régions par joueur</span></button>
@@ -135,7 +134,7 @@
         <button id="continue-online" class="button button-red" type="button">Continuer vers la partie</button>
       </div>
       <p id="online-status" class="online-status" aria-live="polite">Le créateur joue Rouge, le second joueur joue Bleu.</p>
-      <button id="connection-back" class="menu-back connection-back" type="button">← Retour</button>
+      <button id="connection-back" class="menu-back connection-back" type="button" data-ui-back>← Retour</button>
     </section>
   </div>
 
@@ -167,7 +166,7 @@
       <p class="step-label">Tutoriel terminé</p>
       <h2 id="tutorial-end-title">La relève est assurée</h2>
       <p>Tu connais maintenant les fondations d’Eredità.</p>
-      <button id="tutorial-return-menu" class="button button-primary" type="button">Retour au menu</button>
+      <button id="tutorial-return-menu" class="button button-primary" type="button" data-ui-back>Retour au menu</button>
     </section>
   </div>
 
@@ -179,7 +178,7 @@
     <p>Au lancement de la préparation, le décor corse entoure le plateau. Dans les paramètres du casque, « Voir ma pièce » rétablit la réalité mixte. Le placement conserve toujours la vue de votre pièce.</p>
     <label class="xr-fallback"><input id="xr-manual-only" type="checkbox"> Placement manuel simplifié (sans hit-test ni ancre)</label>
     <p id="xr-status" role="status" aria-live="polite">Vérification du navigateur…</p>
-    <div class="dialog-actions"><button id="xr-start" class="button button-primary" type="button" disabled>Entrer en réalité mixte</button><button id="xr-close" class="button" type="button">Retour</button></div>
+    <div class="dialog-actions"><button id="xr-start" class="button button-primary" type="button" disabled>Entrer en réalité mixte</button><button id="xr-close" class="button" type="button" data-ui-back>Retour</button></div>
   </dialog>
 
   <script src="js/config.js"></script>

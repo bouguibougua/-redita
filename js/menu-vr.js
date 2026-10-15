@@ -297,11 +297,12 @@
     if (!active || active.ending) return;
     const nav = readNavigation();
     if (nav.back && visible(nav.back)) {
+      if (nav.back.getAttribute("data-ui-back") === null) E.Audio?.playEffect?.("swordReverse");
       nav.back.click();
       active.needsRefresh = true;
       // La fermeture des fiches de cartes possède une transition HTML.
       rebuild(active, true);
-    } else end();
+    } else { E.Audio?.playEffect?.("swordReverse"); end(); }
   }
 
   function positionPanel(active) {

@@ -209,7 +209,10 @@
       r.input.flash(record, Boolean(result));
       r.dashboard.feedback(target, Boolean(result));
       if (result && target.action?.type === "select-village") r.selected = { ...E.GameView.getState().selectedVillage };
-      if (result) E.Audio?.confirmInterface?.();
+      if (result) {
+        if (/^Retour(?:\s|$)/i.test(target.label || "") || ["back", "setup-back"].includes(target.action?.type)) E.Audio?.playEffect?.("swordReverse");
+        else E.Audio?.confirmInterface?.();
+      }
       applyUIAction(result);
       return;
     }
