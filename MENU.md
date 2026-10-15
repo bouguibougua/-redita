@@ -4,10 +4,10 @@ Refonte du 14 octobre 2026. Le site utilise toujours HTML, CSS et JavaScript,
 sans framework ni dépendance supplémentaire. Aucun coût, statistique, timer ou
 règle de jeu n'a été modifié.
 
-Une introduction artistique de sept secondes précède maintenant l’accueil :
-encres colorées, arabesques, grains dorés et révélation du PNG exact du logo.
-Clic/touche pour passer, F9 au menu pour rejouer. Le mode de mouvement réduit
-affiche brièvement le logo statique. Architecture, paramètres et tests :
+Le logo de l’accueil se révèle directement à sa place de gauche à droite en
+1,5 seconde, sur le décor du menu. Les boutons restent utilisables pendant
+l’animation. F9 au menu permet de rejouer ; le mouvement réduit affiche
+immédiatement le logo statique. Architecture, paramètres et tests :
 [INTRO.md](INTRO.md). Le menu et ses destinations conservent leur présentation.
 
 ## Structure et navigation examinées
@@ -21,7 +21,7 @@ affiche brièvement le logo statique. Architecture, paramètres et tests :
 | `js/board3d.js`, `js/vendor/` | Plateau et copie locale de Three.js r186 |
 | `js/xr*.js` | Plateau en réalité mixte, contrôleurs, placement et fenêtres |
 | `js/audio.js` | Musiques existantes, coupure du son |
-| `js/decks.js`, `js/tutorial.js` | Decks sauvegardés et tutoriel scénarisé |
+| `js/decks.js`, `js/tutorial.js` | Decks conservés pendant la session et tutoriel scénarisé |
 | `server.js`, `tests/` | Serveur réseau et validation |
 
 Il n'y a pas de routeur : `Network.init()` conserve les handlers des boutons
@@ -30,6 +30,16 @@ Multijoueur/Entraînement ; DECKS ouvre le constructeur existant ; TUTORIEL lanc
 son parcours guidé ; RÉALITÉ MIXTE ouvre le dialogue du plateau existant.
 
 ## Présentation et animations
+
+L’écran des decks possède son propre fond de bibliothèque
+(`assets/deck-library.webp`, provenance et prompt dans
+[`assets/deck-library-source.md`](assets/deck-library-source.md)). Le deck actif
+occupe le panneau gauche, avec les quantités modifiables et trois emplacements
+mythologiques. Le panneau droit réunit les 39 cartes dans une collection avec
+recherche insensible aux accents et filtres par catégorie, dont Mythologie.
+Le défilement et le focus sont conservés pendant les modifications. Sur mobile,
+les panneaux s’empilent et les filtres restent tous visibles. Les trois decks,
+les limites de composition et la conservation pendant la session sont inchangés.
 
 `css/menu.css` remplace uniquement la présentation de l'accueil. Le grand logo
 fourni reste une image transparente, avec des textes en Georgia, filets et

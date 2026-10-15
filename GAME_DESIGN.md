@@ -1679,6 +1679,14 @@ Toutes les cartes normales définies peuvent être ajoutées au deck, quelle que
 
 Le constructeur propose trois decks indépendants. Dans le prototype actuel, leur contenu reste uniquement dans l'état JavaScript de la session et n'est pas sauvegardé après actualisation.
 
+L’écran des decks prend place sur un fond de bibliothèque. Sur ordinateur, la
+composition du deck actif se trouve à gauche et la collection à droite. La
+collection réunit visuellement les cartes normales et mythologiques, avec une
+recherche et des filtres par catégorie. Les quantités peuvent être modifiées
+depuis les deux panneaux ; la sélection mythologique reste affichée dans le
+panneau du deck. Les Mythologiques conservent leur sélection distincte et ne
+comptent pas dans les 30 cartes normales. Sur mobile, les panneaux s’empilent.
+
 Chaque deck sélectionne également **3 cartes Mythologiques parmi 5**. Pour la partie, **2 de ces 3 cartes** sont tirées au sort et deviennent disponibles. TEMP_BALANCE_VALUE : une sélection incomplète est complétée avec les choix du deck de départ, en conservant les cartes déjà choisies.
 
 ---
@@ -2703,12 +2711,14 @@ La première sélection ultérieure d'une Montagne ou d'un Littoral déclenche u
 
 # 94. RÉALITÉ MIXTE — INTERFACE JOUABLE QUEST 3
 
-Une séquence visuelle d’environ sept secondes précède le menu principal :
-peinture et encres colorées, convergence dorée, révélation du logo PNG existant
-sans modification des lettres ou proportions. Elle peut être passée par clic,
-toucher ou touche ; le mouvement réduit affiche le logo statique. Elle ne
-modifie pas l’état de la partie. Elle est distincte de la future cinématique
-du tutoriel décrite en section 93.
+À l’ouverture du menu principal, son logo PNG se révèle directement à sa place
+de gauche à droite pendant environ 1,5 seconde, sur le décor du menu, sans
+modification des lettres ou proportions. Il n’y a plus d’écran d’introduction
+séparé ni d’encres colorées ou de particules avant le logo. Le décor et les
+boutons du menu restent accessibles pendant la révélation. Le mouvement réduit
+affiche immédiatement le logo statique. Cette animation ne modifie pas l’état
+de la partie et reste distincte de la future cinématique du tutoriel décrite en
+section 93.
 
 L’accueil conserve sa composition ; le drapeau reprend la tête noire avec le
 bandeau sur les yeux. Le décor avec sol est réservé au mode panorama et utilise

@@ -127,7 +127,7 @@
         document.querySelector("#open-multiplayer").addEventListener("click", () => { sub.hidden = true; document.querySelector("#connection-screen").hidden = false; selectFormat(format); });
         document.querySelector("#training-button").addEventListener("click", () => { startMode("solo"); setStatus("Mode entraînement · vous jouez Rouge contre l’IA"); });
       } else if (screen === "decks") {
-        subTitle.textContent = "Construire vos decks";
+        subTitle.textContent = "La bibliothèque";
         E.Decks.mount(subContent);
       } else {
         mode = "tutorial";

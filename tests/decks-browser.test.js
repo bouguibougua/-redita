@@ -38,7 +38,7 @@ async function run() {
       const resolver = pending.get(message.id); pending.delete(message.id);
       return message.error ? resolver.reject(new Error(message.error.message)) : resolver.resolve(message.result);
     }
-    if (message.method === "Runtime.exceptionThrown") exceptions.push(message.params.exceptionDetails.text);
+    if (message.method === "Runtime.exceptionThrown") exceptions.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
   };
   const send = (method, params = {}) => new Promise((resolve, reject) => { const messageId = ++id; pending.set(messageId, { resolve, reject }); socket.send(JSON.stringify({ id: messageId, method, params })); });
   const evaluate = async (expression) => {
@@ -51,6 +51,12 @@ async function run() {
     throw new Error(`Condition non atteinte : ${expression}`);
   };
   const click = (selector) => evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`);
+  const screenshot = async name => {
+    if (!process.env.EREDITA_DECKS_PREVIEW_DIR) return;
+    fs.mkdirSync(process.env.EREDITA_DECKS_PREVIEW_DIR, { recursive: true });
+    const { data } = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(process.env.EREDITA_DECKS_PREVIEW_DIR, name + '.png'), Buffer.from(data, 'base64'));
+  };
 
   await send("Runtime.enable");
   await send("Page.enable");
@@ -61,6 +67,18 @@ async function run() {
   await waitFor("!!document.querySelector('.deck-builder')");
   assert.equal(await evaluate("document.querySelectorAll('.deck-collection-card').length"), 34);
   assert.equal(await evaluate("document.querySelectorAll('.deck-myth-card').length"), 5);
+  assert.equal(await evaluate("[...document.querySelectorAll('.deck-myth-card')].every(card=>!!card.closest('.deck-collection-grid'))"), true, 'La mythologie fait partie de la collection');
+  assert.equal(await evaluate("(()=>{const a=document.querySelector('.deck-current').getBoundingClientRect(),b=document.querySelector('.deck-collection').getBoundingClientRect();return a.right<b.left && Math.abs(a.top-b.top)<1;})()"), true, 'Deck à gauche et collection à droite');
+  await evaluate("(async()=>{const image=new Image();image.src='assets/deck-library.webp';await image.decode();return true;})()");
+  assert.ok(await evaluate("getComputedStyle(document.querySelector('.decks-screen')).backgroundImage.includes('deck-library.webp')"));
+  await evaluate("document.querySelector('#deck-search').focus()");
+  for (const text of ['pe', 'cheur']) await send('Input.insertText', { text });
+  assert.equal(await evaluate("document.activeElement.id==='deck-search' && document.querySelector('#deck-search').value==='pecheur'"), true, 'La recherche conserve son focus et le texte saisi');
+  assert.ok(await evaluate("!!document.querySelector('.deck-collection [data-open-card=pecheur]') && document.querySelectorAll('.deck-collection-card').length<34"), 'Recherche insensible aux accents');
+  await send('Input.insertText', { text: 'xyzabsent' });
+  assert.equal(await evaluate("!!document.querySelector('.deck-no-results')"), true);
+  await click('[data-reset-search]');
+  assert.equal(await evaluate("document.querySelectorAll('.deck-collection-card').length"), 34);
 
   await click('[data-quantity="habitant"][data-delta="1"]');
   assert.equal(await evaluate("Eredita.Decks.quantity('habitant')"), 1);
@@ -69,6 +87,11 @@ async function run() {
   assert.equal(await evaluate("document.querySelector('#deck-modal-title').textContent"), "Habitant");
   await click('.deck-modal-actions [data-delta="1"]');
   assert.equal(await evaluate("Eredita.Decks.quantity('habitant')"), 2);
+  const scrollBefore = await evaluate("const panel=document.querySelector('.deck-collection-scroll');panel.scrollTop=500;panel.scrollTop");
+  await click('.deck-current-entry [data-quantity="habitant"][data-delta="1"]');
+  assert.equal(await evaluate("Eredita.Decks.quantity('habitant')"), 3);
+  assert.equal(await evaluate("document.querySelector('.deck-collection-scroll').scrollTop"), scrollBefore, 'Modifier la quantité garde la position de la collection');
+  await click('.deck-current-entry [data-quantity="habitant"][data-delta="-1"]');
   await click(".deck-modal-close"); await delay(180);
   assert.equal(await evaluate("!!document.querySelector('.deck-modal-backdrop')"), false);
 
@@ -87,9 +110,39 @@ async function run() {
   assert.equal(await evaluate("Eredita.Decks.quantity('habitant')"), 2);
 
   const mythIds = await evaluate("Eredita.Cards.mythological.map(card => card.id)");
+  await click('.deck-filters [data-filter="Mythologique"]');
+  assert.equal(await evaluate("document.querySelectorAll('.deck-collection-card').length"), 0);
+  assert.equal(await evaluate("document.querySelectorAll('.deck-myth-card').length"), 5);
   for (const mythId of mythIds.slice(0, 3)) await click(`[data-toggle-myth="${mythId}"]`);
   assert.equal(await evaluate("Eredita.Decks.state.decks[0].mythological.length"), 3);
   assert.equal(await evaluate(`document.querySelector('[data-toggle-myth="${mythIds[3]}"]').disabled`), true);
+  assert.equal(await evaluate("document.querySelectorAll('.deck-myth-slot.filled').length"), 3, 'La sélection mythologique est visible dans le deck');
+  await click('.deck-myth-remove');
+  assert.equal(await evaluate("Eredita.Decks.state.decks[0].mythological.length"), 2);
+  assert.equal(await evaluate(`document.querySelector('[data-toggle-myth="${mythIds[3]}"]').disabled`), false);
+
+  await click('[data-use-starter]');
+  await click('.deck-filters [data-filter="Toutes"]');
+  await evaluate("Promise.all([...document.querySelectorAll('.deck-current img, .deck-collection img')].map(image=>image.decode().catch(()=>{})))");
+  await screenshot('decks-desktop');
+  await click('.deck-filters [data-filter="Mythologique"]');
+  await evaluate("Promise.all([...document.querySelectorAll('.deck-myth-card img')].map(image=>image.decode()))");
+  await screenshot('decks-mythologie');
+  await click('.deck-filters [data-filter="Toutes"]');
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  await delay(150);
+  assert.ok(await evaluate("document.documentElement.scrollWidth<=innerWidth"), 'Pas de débordement horizontal sur mobile');
+  assert.ok(await evaluate("const builder=document.querySelector('.deck-builder');builder.scrollHeight>builder.clientHeight"), 'La collection reste accessible par défilement sur mobile');
+  await screenshot('decks-mobile-composition');
+  const mobileScroll = await evaluate("const b=document.querySelector('.deck-builder');b.scrollTop=document.querySelector('.deck-collection').offsetTop-b.offsetTop; b.scrollTop");
+  await screenshot('decks-mobile-collection');
+  await evaluate("document.querySelector('#deck-search').focus({preventScroll:true})");
+  await send('Input.insertText', { text: 'berger' });
+  assert.equal(await evaluate("document.querySelector('.deck-builder').scrollTop"), mobileScroll, 'Rechercher sur mobile ne ramène pas en haut de la page');
+  assert.ok(await evaluate("!!document.querySelector('.deck-collection [data-open-card=berger]')"));
+  await click('.deck-filters [data-filter="Mythologique"]');
+  await send('Input.insertText', { text: 'aucun' });
+  await click('[data-reset-search]');
 
   await click("#menu-back");
   assert.equal(await evaluate("document.querySelector('#main-menu').hidden"), false);
