@@ -9,7 +9,10 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function createBrowser({ url, serverPort = 8878, debugPort = 9446 } = {}) {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "eredita-cards-"));
   const server = url ? null : spawn(process.execPath, ["server.js"], { cwd: path.join(__dirname, ".."), env: { ...process.env, PORT: String(serverPort) }, stdio: "ignore" });
-  const browser = spawn("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe", ["--headless=new", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--no-first-run", "--window-size=1440,1200", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
+  const executable = process.env.EREDITA_BROWSER_PATH || (process.platform === 'darwin'
+    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    : process.platform === 'win32' ? 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe' : 'chromium');
+  const browser = spawn(executable, ["--headless=new", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--no-first-run", "--window-size=1440,1200", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
   let socket;
   async function close() {
     socket?.close(); browser.kill(); server?.kill(); await delay(400);
@@ -23,7 +26,7 @@ async function createBrowser({ url, serverPort = 8878, debugPort = 9446 } = {}) 
       try { page = (await fetch(`http://127.0.0.1:${debugPort}/json/list`).then(r => r.json())).find(p => p.type === "page"); } catch (_) { /* Starting. */ }
       if (!page) await delay(100);
     }
-    assert.ok(page, "Edge headless starts");
+    assert.ok(page, "Chromium headless starts");
     socket = new WebSocket(page.webSocketDebuggerUrl);
     await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
     const pending = new Map(), exceptions = [], imageErrors = [];

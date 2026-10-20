@@ -145,14 +145,14 @@
     if (village.biome === "montagne") addMountains(group, village.lane);
     if (village.biome === "plaine") addPlainDetails(group, village.lane);
     if (village.biome === "littoral") addCoast(group, village);
-    addCardTerrain(group, village);
+    addMythologyTerrain(group, village);
     addSlots(group, village);
     addVillageAndBuildings(group, village);
-    const visible = E.CardEffects?.vision(latestState, cardViewer(latestState), village);
+    const visible = E.MythologyEffects?.vision(latestState, viewerId(latestState), village);
     if (visible && visible.fraction < 1) {
       const length = 4.85 * (1 - visible.fraction);
       const fog = mesh(new THREE.BoxGeometry(2.8 * terrainWidthScale(), 1.25, length), 0x253039, { castShadow: false });
-      fog.name = "card-fog"; fog.position.set(0, 0.56, owner === "red" ? -2.425 + length / 2 : 2.425 - length / 2);
+      fog.name = "mythology-fog"; fog.position.set(0, 0.56, owner === "red" ? -2.425 + length / 2 : 2.425 - length / 2);
       fog.material.transparent = true; fog.material.opacity = 0.94;
       group.add(fog);
     }
@@ -161,45 +161,23 @@
     terrainGroup.add(group);
   }
 
-  function cardViewer(state) {
+  function viewerId(state) {
     return E.Network?.mode === "local" ? state.selectedVillage.playerId : E.Network?.playerId || "red";
   }
 
-  function addCardTerrain(group, village) {
+  function addMythologyTerrain(group, village) {
     const t = village.terrain || {};
-    const facing = village.ownerId === "red" ? 1 : -1;
     if (t.river) {
       const river = mesh(new THREE.BoxGeometry(2.65, 0.025, 0.17), 0x49a4bf, { castShadow: false });
-      river.name = "card-river"; river.position.set(0, 0.055, 0); river.rotation.y = 0.13; group.add(river);
-    }
-    if (t.mill) {
-      const mill = buildingModel("artisanat", 1, village.ownerId); mill.scale.setScalar(0.55);
-      mill.name = "card-mill"; mill.position.set(-0.7, 0.13, 0.15);
-      const wheel = mesh(new THREE.TorusGeometry(0.2, 0.04, 5, 10), 0x8f6540);
-      wheel.position.set(-0.27, 0.23, 0); mill.add(wheel); group.add(mill);
-    }
-    if (t.tower) {
-      const tower = mesh(new THREE.CylinderGeometry(0.17, 0.22, 0.65, 10), 0xc8b899);
-      tower.name = "card-genoese-tower"; tower.position.set(0.87, 0.42, -facing * 0.25); group.add(tower);
-      const rim = mesh(new THREE.TorusGeometry(0.18, 0.045, 5, 10), 0xa49073);
-      rim.rotation.x = Math.PI / 2; rim.position.copy(tower.position); rim.position.y += 0.34; group.add(rim);
-    }
-    if (t.trail) {
-      const trail = mesh(new THREE.BoxGeometry(0.16, 0.025, 4), 0xc3a580, { castShadow: false });
-      trail.name = "card-trail"; trail.position.set(0.38, 0.055, 0); trail.rotation.y = 0.18; group.add(trail);
-    }
-    for (const [i, trap] of (t.traps || []).entries()) {
-      const snare = mesh(new THREE.TorusGeometry(0.12, 0.025, 4, 10), 0x856c41);
-      snare.name = "card-trap"; snare.rotation.x = Math.PI / 2;
-      snare.position.set(-0.25 + i * 0.22, 0.06, -4.35 + trap.position / 100 * 8.7 - group.position.z); group.add(snare);
+      river.name = "mythology-river"; river.position.set(0, 0.055, 0); river.rotation.y = 0.13; group.add(river);
     }
     if (village.burnUntil > latestState.elapsed) {
       const burned = mesh(new THREE.BoxGeometry(2.75, 0.035, 4.76), 0x3c2219, { castShadow: false });
-      burned.name = "card-burned-terrain"; burned.position.y = 0.07; group.add(burned);
+      burned.name = "mythology-burned-terrain"; burned.position.y = 0.07; group.add(burned);
     }
     if (village.curseUntil > latestState.elapsed) {
       const curse = mesh(new THREE.BoxGeometry(2.76, 0.02, 4.77), 0x745296, { castShadow: false });
-      curse.name = "card-cursed-terrain"; curse.position.y = 0.085; curse.material.transparent = true; curse.material.opacity = 0.3; group.add(curse);
+      curse.name = "mythology-cursed-terrain"; curse.position.y = 0.085; curse.material.transparent = true; curse.material.opacity = 0.3; group.add(curse);
     }
   }
 
@@ -418,15 +396,18 @@
     const deployedAnimals = new Set();
     state.units.forEach((unit) => {
       if (unit.hp <= 0) return;
-      if (E.CardEffects && !E.CardEffects.unitVisible(state, cardViewer(state), unit)) return;
+      if (E.MythologyEffects && !E.MythologyEffects.unitVisible(state, viewerId(state), unit)) return;
       const key = `unit-${unit.id}`;
       const resident = state.players[unit.ownerId]?.villages[unit.originLane]?.residents.find((entry) => entry.id === unit.residentId);
       const appearance = resident || unit;
       const swimming = (unit.animalType || unit.role) === "sanglier" && Boolean(unit.waterOwner);
-      const figure = unit.isCart ? cartModel(key, unit.ownerId) : unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
+      const figure = unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
       markSelected(figure, Boolean(unit.residentId && unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane));
       figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, -4.35 + (unit.position / 100) * 8.7);
       figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
+      if (unit.mythologyRetreating) figure.rotation.y += Math.PI;
+      figure.scale.setScalar(unit.mythologyScale || 1);
+      updateMythologyAura(figure, appearance, unit.ownerId, state);
       syncUnitVisualState(figure, unit);
       if (unit.residentId) deployedResidents.add(`${unit.ownerId}:${unit.residentId}`);
       if (unit.animalId != null) deployedAnimals.add(`${unit.ownerId}:${unit.animalId}`);
@@ -434,18 +415,19 @@
     });
     Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
       if (village.destroyed) return;
-      const known = E.CardEffects?.vision(state, cardViewer(state), village);
+      const known = E.MythologyEffects?.vision(state, viewerId(state), village);
       let localIndex = 0;
       let fisherIndex = 0;
       const facing = player.id === "red" ? 1 : -1;
       village.residents.forEach((resident, index) => {
-        if (known && !known.people) return;
+        if (known && !known.people && !E.MythologyEffects?.residentVisible(state, viewerId(state), village, resident)) return;
         if (resident.hp <= 0 || deployedResidents.has(`${player.id}:${resident.id}`) || resident.unitId) return;
         const key = `resident-${player.id}-${resident.id}`;
         const figure = unitModel(key, player.id, resident);
         markSelected(figure, resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane);
         const isWorker = ["agriculture", "elevage", "chasse"].includes(resident.mission) && Number.isFinite(resident.workPosition);
-        figure.scale.setScalar(isWorker ? 0.78 : 0.65);
+        figure.scale.setScalar((isWorker ? 0.78 : 0.65) * (resident.mythologyScale || 1));
+        updateMythologyAura(figure, resident, player.id, state);
         figure.rotation.y = facing === 1 ? 0 : Math.PI;
         if (isWorker) {
           const lateral = resident.mission === "chasse" ? (resident.workLaneOffset || 0) * 2.7 : (index % 2 ? 0.3 : -0.3);
@@ -577,22 +559,6 @@
     });
   }
 
-  function cartModel(key, owner) {
-    let figure = unitModels.get(key);
-    if (figure) return figure;
-    figure = new THREE.Group(); figure.name = "charrette";
-    const body = mesh(new THREE.BoxGeometry(0.5, 0.22, 0.7), 0x926c42);
-    body.position.y = 0.2; figure.add(body);
-    for (const x of [-0.3, 0.3]) for (const z of [-0.24, 0.24]) {
-      const wheel = mesh(new THREE.TorusGeometry(0.13, 0.035, 4, 10), 0x4f3b28);
-      wheel.rotation.y = Math.PI / 2; wheel.position.set(x, 0.13, z); figure.add(wheel);
-    }
-    const banner = mesh(new THREE.BoxGeometry(0.37, 0.03, 0.03), colors[owner]);
-    banner.position.set(0, 0.34, -0.33); figure.add(banner);
-    figure.userData = { visualSignature: `charrette:${owner}` };
-    unitModels.set(key, figure); unitGroup.add(figure); return figure;
-  }
-
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
     let figure = unitModels.get(key);
     const animalType = appearance.animalType || (["chien", "sanglier"].includes(appearance.role) ? appearance.role : null);
@@ -601,7 +567,7 @@
     const armor = appearance.armor || null;
     const donkey = !animalType && Boolean(appearance.donkey);
     if (animalType === "sanglier") waterTransport = null;
-    const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}`;
+    const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
       figure.removeFromParent();
@@ -612,6 +578,29 @@
     unitModels.set(key, figure);
     unitGroup.add(figure);
     return figure;
+  }
+
+  function updateMythologyAura(figure, appearance, owner, state) {
+    const magu = appearance.mythologyMagu;
+    const bianca = !appearance.isLegend && E.MythologyEffects?.protectionActive(state, owner);
+    let aura = figure.getObjectByName('mythology-aura');
+    if (!aura && (magu || bianca)) {
+      aura = new THREE.Group(); aura.name = 'mythology-aura';
+      for (const [radius, color] of [[.38, 0xb45ae0], [.46, 0xe0bc65]]) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, .012, 4, 20),
+          new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .65, depthWrite: false }));
+        ring.rotation.x = Math.PI / 2; ring.position.y = .2; aura.add(ring);
+      }
+      figure.add(aura);
+    }
+    if (aura) { aura.visible = Boolean(magu || bianca); aura.children[0].material.color.set(magu ? '#b45ae0' : '#69cb94'); }
+    const legend = E.Mythology?.get(appearance.mythologyLegendId);
+    if (legend && !figure.userData.mythologyTinted) {
+      figure.traverse(node => { if (node.isMesh && node.material?.color && !node.name.includes('halo')) {
+        node.material.color.lerp(new THREE.Color(legend.visuals.primaryColor), .55);
+      } });
+      figure.userData.mythologyTinted = true;
+    }
   }
 
   function markSelected(figure, selected) {
@@ -821,8 +810,8 @@
   function signature(state) {
     return Object.values(state.players).flatMap((player) => player.villages.map((village) => [
       village.id, village.biome, village.level, village.destroyed, village.damageSmoke > 0,
-      E.CardEffects?.terrainVisualKey(village) || "", village.burnUntil > state.elapsed, village.curseUntil > state.elapsed,
-      E.CardEffects?.vision(state, cardViewer(state), village)?.fraction ?? 1,
+      E.MythologyEffects?.terrainVisualKey(village) || "", village.burnUntil > state.elapsed, village.curseUntil > state.elapsed,
+      E.MythologyEffects?.vision(state, viewerId(state), village)?.fraction ?? 1,
       village.buildings.map((building) => `${building.type}${building.level}`).join(","),
       `${village.maritime?.barque || 0}:${village.maritime?.voilier || 0}:${village.maritime?.filet || 0}`,
       village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}:${slot.content.count || 1}` : "-").join(",")
@@ -848,6 +837,32 @@
       visualsChanged = true;
     }
     if (xrPreview && visualsChanged) setXRPreview(true, true);
+    updateMythologyTargets();
+  }
+
+  function updateMythologyTargets() {
+    const targeting = E.MythologySession?.getTargeting();
+    terrainGroup.children.forEach(group => {
+      const valid = Boolean(targeting && !latestState.paused && !targeting.pending &&
+        E.MythologySession.canTargetRegion(group.userData.playerId, group.userData.lane));
+      let overlay = group.getObjectByName('mythology-target');
+      if (valid && !overlay) {
+        overlay = new THREE.Group(); overlay.name = 'mythology-target';
+        const x = 1.39 * terrainWidthScale(), z = 2.38;
+        const points = [[-x, 0, -z], [x, 0, -z], [x, 0, z], [-x, 0, z]].map(p => new THREE.Vector3(...p));
+        const border = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0xffdd88, transparent: true, depthTest: false, depthWrite: false }));
+        const fill = new THREE.Mesh(new THREE.PlaneGeometry(x * 2, z * 2), new THREE.MeshBasicMaterial({ color: 0xefcf7d, transparent: true, opacity: .08, depthWrite: false, depthTest: false, side: THREE.DoubleSide }));
+        fill.rotation.x = -Math.PI / 2; fill.name = 'mythology-target-fill'; fill.renderOrder = 30; border.renderOrder = 31;
+        overlay.position.y = .11; overlay.add(fill, border); group.add(overlay);
+      }
+      if (overlay) {
+        overlay.visible = valid;
+        const hover = targeting?.hover;
+        const emphasized = hover && (targeting.mode === 'none' || hover.lane === group.userData.lane &&
+          (targeting.mode === 'column' || hover.playerId === group.userData.playerId));
+        overlay.getObjectByName('mythology-target-fill').material.opacity = emphasized ? .2 : .08;
+      }
+    });
   }
 
   function clearGroup(group) {
@@ -873,6 +888,10 @@
       canvas.setPointerCapture(event.pointerId);
     });
     canvas.addEventListener("pointermove", (event) => {
+      if (!pointer && E.MythologySession?.getTargeting()) {
+        const region = regionAt(event.clientX, event.clientY);
+        E.MythologySession.hoverRegion(region?.playerId, region?.lane);
+      }
       if (!pointer || pointer.id !== event.pointerId) return;
       const dx = event.clientX - pointer.x;
       const dy = event.clientY - pointer.y;
@@ -886,13 +905,15 @@
       if (!dragged) selectAt(event.clientX, event.clientY);
       pointer = null;
     });
+    canvas.addEventListener('pointercancel', () => { pointer = null; });
+    canvas.addEventListener('pointerleave', () => E.MythologySession?.hoverRegion(null));
     canvas.addEventListener("wheel", (event) => {
       event.preventDefault();
       orbit.distance = Math.max(11, Math.min(27, orbit.distance + event.deltaY * 0.012));
     }, { passive: false });
   }
 
-  function selectAt(clientX, clientY) {
+  function regionAt(clientX, clientY) {
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     const raycaster = new THREE.Raycaster();
@@ -905,10 +926,17 @@
       }
       return false;
     });
-    if (!hit) return;
+    if (!hit) return null;
     let object = hit.object.userData.selectionRoot || hit.object;
     while (object && object.userData?.playerId === undefined) object = object.parent;
-    if (object?.userData?.playerId !== undefined) onSelectVillage?.(object.userData.playerId, object.userData.lane);
+    return object?.userData?.playerId !== undefined ? { playerId: object.userData.playerId, lane: object.userData.lane } : null;
+  }
+
+  function selectAt(clientX, clientY) {
+    const region = regionAt(clientX, clientY);
+    if (!region) return;
+    if (E.MythologySession?.targetRegion(region.playerId, region.lane)) return;
+    onSelectVillage?.(region.playerId, region.lane);
   }
 
   function updateCamera() {

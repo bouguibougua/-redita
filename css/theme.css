@@ -1,4 +1,4 @@
-/* Palette commune au menu, au jeu, aux decks et aux textures d'interface XR.
+/* Palette commune au menu, au jeu, aux légendes et aux textures d'interface XR.
    Les camps et les biomes gardent leurs couleurs sémantiques distinctes. */
 :root {
   --ink: #f3e5cd;
@@ -30,28 +30,26 @@ body { background: radial-gradient(ellipse at 15% 0%, var(--gold-wash), transpar
 ::selection { color: var(--surface-deep); background: var(--gold); }
 input, select { accent-color: var(--gold); }
 .setup-player, .panel-card, .setup-footer, .board-clock, .connection-card,
-.dialog, .shop-modal-panel, .xr-dialog, .menu-subpanel,
-.menu-subscreen:not(.decks-screen) .menu-subpanel {
+.dialog, .shop-modal-panel, .xr-dialog, .menu-subpanel {
   color: var(--ink); background: var(--panel-gradient); border-color: var(--line);
   box-shadow: 0 16px 55px #0006, inset 0 1px 0 var(--gold-wash);
 }
 .setup-player.confirmed, .shop-item.equipped { border-color: var(--gold); }
-.button, .setup-deck-choice, .profession-button, .upgrade-button, .mission-button,
-.next-resident-button, .shop-resident-picker select, .card-target-controls select,
+.button, .profession-button, .upgrade-button, .mission-button,
+.next-resident-button, .shop-resident-picker select,
 .slaughter-card input, .join-room input, .resident-release-button,
 .placement-slot, .placement-option, .companion-orders button,
 .resident-purchase select, .upgrade-resource select, .slot-options {
   color: var(--ink); background: var(--surface-raised); border-color: var(--line);
 }
-.button-primary, .deck-tabs button.selected, .deck-modal-myth,
-.deck-quantity button:hover:not(:disabled) {
+.button-primary {
   color: var(--surface-deep); border-color: var(--gold);
   background: linear-gradient(120deg, var(--gold-bright), var(--gold-deep));
 }
 .button-red { background: var(--red-dark); border-color: var(--red); }
 .button-blue { background: var(--blue-dark); border-color: var(--blue); }
 .button-quiet { background: var(--surface-glass); }
-.setup-deck-choice.selected, .match-formats .button.selected,
+.match-formats .button.selected,
 .profession-button.selected, .mission-button.selected,
 .profession-all-button, .assign-all-button, .shop-item button,
 .next-resident-button.active, .placement-slot.selected, .placement-option.selected {
@@ -63,16 +61,14 @@ input, select { accent-color: var(--gold); }
 }
 .stat, .resource-list div, .herd-summary div, .shop-resource, .resident-card,
 .management-card, .shop-item, .shop-store, .shop-equipment-target,
-.equipment-preview, .setup-decks, .status-pill, .deck-modal-section {
+.equipment-preview, .status-pill {
   background: var(--surface-soft); border-color: var(--line);
 }
-.stat strong, .shop-item button small, .card-hand-counters b,
-.deck-builder h3, .deck-card-copy b, .deck-stats dd { color: var(--gold-bright); }
+.stat strong, .shop-item button small { color: var(--gold-bright); }
 .panel-heading h2, .connection-card h2, .xr-dialog h2, .inspector-section h3 { color: var(--gold-bright); }
-.shop-tier.unlocked h4, .card-quote.available { color: var(--success); }
-.shop-tier h4, .shop-item > p, .online-status, .card-hand-help,
-.card-empty-hand, .card-description small, .card-target-controls label { color: var(--muted); }
-.dialog-backdrop, .connection-screen, .deck-modal-backdrop, .shop-modal { background: var(--overlay); }
+.shop-tier.unlocked h4 { color: var(--success); }
+.shop-tier h4, .shop-item > p, .online-status { color: var(--muted); }
+.dialog-backdrop, .connection-screen, .shop-modal { background: var(--overlay); }
 .xr-dialog::backdrop { background: var(--overlay); }
 .menu-subscreen { background: var(--overlay); }
 .tutorial-dialog { color: var(--ink); background: var(--surface-glass); border-color: var(--gold); }
@@ -87,25 +83,3 @@ input, select { accent-color: var(--gold); }
 .village-select.selected { background: var(--selected-surface); border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
 .map-village-popup.red { border-color: var(--red); }
 .map-village-popup.blue { border-color: var(--blue); }
-.deck-builder { --deck-surface: var(--surface); --deck-surface-2: var(--surface-raised); --deck-line: var(--line); color: var(--ink); }
-.deck-current, .deck-collection, .deck-mythological, .deck-card-modal,
-.card-hand, .card-play-panel, .deck-modal-visual, .deck-card-placeholder {
-  color: var(--ink); border-color: var(--line); background: var(--panel-gradient);
-}
-.deck-collection-card, .deck-myth-card, .deck-mini-icon { background: var(--surface-deep); border-color: var(--line); }
-.deck-tabs button, .deck-filters button, .deck-current-row, .deck-myth-toggle { color: var(--ink); }
-.deck-filters button.selected, .deck-myth-card.selected .deck-myth-toggle { color: var(--surface-deep); background: var(--gold); border-color: var(--gold); }
-.deck-current-row:hover, .deck-modal-close { background: var(--selected-surface); border-color: var(--gold); }
-.deck-builder-top p, .deck-builder header span, .deck-collection-header > b,
-.deck-current-row small, .deck-empty, .deck-empty small, .deck-limit-help,
-.deck-card-copy small, .deck-mythological > p, .deck-modal-description,
-.deck-modal-section p, .deck-modal-section ul, .deck-stats dt, .deck-modal-actions small,
-.card-hand-counters { color: var(--muted); }
-.deck-total, .deck-mythological header > strong, .deck-current-row > strong,
-.deck-modal-category, .deck-modal-section h4, .card-eyebrow { color: var(--gold); border-color: var(--line); }
-.deck-modal-section.biome { border-color: var(--line); }
-.deck-current-list, .deck-collection-grid, .card-hand-scroll { scrollbar-color: var(--gold-deep) var(--surface-deep); }
-.play-card { background: var(--panel-gradient); color: var(--ink); }
-.play-card.category-mythologique { background: linear-gradient(145deg, #372b35, var(--surface-deep)); }
-.card-hand { --card-gold: var(--gold); }
-@media (max-width: 650px) { .deck-builder-top { background: var(--surface); } }

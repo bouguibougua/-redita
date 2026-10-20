@@ -5,6 +5,15 @@
   let commands;
   const resourceLabels = { ble: "Blé", chataigne: "Châtaigne", raisin: "Raisin", viande: "Viande", poisson: "Poisson", lait: "Lait" };
 
+  const allowed = new Set([
+    "toggleBiome", "confirmBiomes", "start", "togglePause",
+    "selectResident", "placeCrop", "placeLivestock", "slaughter", "build", "upgrade", "changeJob",
+    "setProfession", "assignProfessionToAll", "setNextResidentProfession",
+    "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "setNextResidentMission",
+    "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal",
+    "orderAnimal", "slaughterSpecialAnimal", "deploy", "chooseRedirect"
+  ]);
+
   // Adaptateur de vue : relit la référence courante, y compris après un snapshot réseau.
   function villageInfo(playerId, lane) {
     const state = readState();
@@ -21,27 +30,6 @@
     };
   }
 
-  // Point d'extension pour la future carte active. Aucun coût/effet/règle ici.
-  // Le futur adaptateur commun desktop/XR devra fournir les trois opérations métier.
-  function createCardTargeting(adapter) {
-    let activeCard = null;
-    return {
-      activate(cardId) {
-        if (!adapter?.canActivate?.(readState(), cardId)) return false;
-        activeCard = cardId;
-        return true;
-      },
-      getTargets() { return activeCard === null ? [] : adapter.getTargets(readState(), activeCard); },
-      confirm(target) {
-        if (activeCard === null) return false;
-        const result = adapter.play(commands, activeCard, target);
-        if (result) activeCard = null;
-        return result;
-      },
-      cancel() { activeCard = null; }
-    };
-  }
-
   E.GameView = {
     init({ getState, controller }) { readState = getState; commands = controller; },
     getState: () => readState(),
@@ -53,16 +41,8 @@
           : mode === "guest" ? playerId === "blue" : false;
     },
     command(method, ...args) {
-      const allowed = new Set([
-        "selectDeck", "toggleBiome", "confirmBiomes", "start", "togglePause", "playCard",
-        "selectResident", "placeCrop", "placeLivestock", "slaughter", "build", "upgrade", "changeJob",
-        "setProfession", "assignProfessionToAll", "setNextResidentProfession",
-        "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "setNextResidentMission",
-        "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal",
-        "orderAnimal", "slaughterSpecialAnimal", "deploy", "chooseRedirect"
-      ]);
       if (!allowed.has(method) || typeof commands[method] !== "function") return false;
-      if (["selectDeck", "toggleBiome", "confirmBiomes"].includes(method)) {
+      if (["toggleBiome", "confirmBiomes"].includes(method)) {
         if (!this.canControl(args[0])) return false;
       } else if (method === "start" || method === "togglePause") {
         if (E.Network.mode === "guest") return false;
@@ -88,7 +68,6 @@
       if (!readState().players[playerId]?.villages[lane]) return false;
       commands.selectVillage(playerId, lane);
       return true;
-    },
-    createCardTargeting
+    }
   };
 }());

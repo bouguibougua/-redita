@@ -5,30 +5,22 @@ const { createBrowser } = require("../tests/browser-helpers");
 const project = path.join(__dirname, "..");
 const args = process.argv.slice(2);
 const sources = path.resolve(args.find(arg => !arg.startsWith("--")) || process.env.EREDITA_ASSET_SOURCES || path.join(project, ".asset-sources"));
-const manifest = JSON.parse(fs.readFileSync(path.join(project, "assets/cards/fantasy/manifest.json"), "utf8"));
 const generated = ["buildings-atlas", "buildings-tier-atlas", "characters-atlas", "crops-atlas", "livestock-atlas", "terrain-littoral-bleu", "terrain-littoral-rouge", "terrain-montagne", "terrain-plaine"];
 
 async function run() {
-  const jobs = [
-    ...(!args.includes("--cards") ? generated.map(id => ({ source:`generated/${id}.png`, output:`assets/generated/${id}.webp` })) : []),
-    ...manifest.cards.map(({ id, rect }) => ({ source:`cards/fantasy/${manifest.reference}`, output:`assets/cards/fantasy/${id}.webp`, rect, maxEdge:768 })),
-    ...manifest.generated.map(id => ({ source:`cards/fantasy/${id}.png`, output:`assets/cards/fantasy/${id}.webp`, maxEdge:768 }))
-  ];
+  const jobs = generated.map(id => ({ source: `generated/${id}.png`, output: `assets/generated/${id}.webp` }));
   for (const job of jobs) if (!fs.existsSync(path.join(sources, job.source))) throw new Error(`Source manquante : ${path.join(sources, job.source)}. Indique le dossier des sources PNG en argument.`);
   const browser = await createBrowser({ serverPort:8879, debugPort:9447 });
-  const images = new Map();
   let bytes = 0;
   try {
     for (const job of jobs) {
-      if (!images.has(job.source)) images.set(job.source, `data:image/png;base64,${fs.readFileSync(path.join(sources,job.source)).toString("base64")}`);
+      const sourceUrl = `data:image/png;base64,${fs.readFileSync(path.join(sources, job.source)).toString("base64")}`;
       const result = await browser.send("Runtime.evaluate", {
         awaitPromise:true, returnByValue:true,
         expression:`(async () => {
-          const image=new Image(); image.src=${JSON.stringify(images.get(job.source))}; await image.decode();
-          const rect=${JSON.stringify(job.rect || null)} || { x:0, y:0, width:image.naturalWidth, height:image.naturalHeight };
-          const scale=Math.min(1,${job.maxEdge || Infinity}/Math.max(rect.width,rect.height));
-          const canvas=document.createElement('canvas'); canvas.width=Math.round(rect.width*scale); canvas.height=Math.round(rect.height*scale);
-          canvas.getContext('2d').drawImage(image,rect.x,rect.y,rect.width,rect.height,0,0,canvas.width,canvas.height);
+          const image=new Image(); image.src=${JSON.stringify(sourceUrl)}; await image.decode();
+          const canvas=document.createElement('canvas'); canvas.width=image.naturalWidth; canvas.height=image.naturalHeight;
+          canvas.getContext('2d').drawImage(image,0,0);
           return canvas.toDataURL('image/webp',0.92);
         })()`
       });

@@ -238,10 +238,8 @@
         title = "Préparer la partie";
         const id = E.Network.mode === "local" ? (data || setupPlayer()) : owner(), player = s.players[id];
         const otherId = id === "red" ? "blue" : "red";
-        lines = [`${player.name} · Deck ${player.selectedDeck + 1} · ${player.setupSelection.length}/${E.Board.getFormat(s).exchanges} biomes`,
-          player.setupConfirmed ? "Territoire confirmé · prêt à jouer" : "Choisissez votre deck et les biomes à échanger."];
-        const decks = [0, 1, 2].map((index) => button(`Deck ${index + 1}`, command("selectDeck", id, index), !player.setupConfirmed,
-          { centered: true, selected: player.selectedDeck === index, detail: player.selectedDeck === index ? "Sélectionné ✓" : "Choisir" }));
+        lines = [`${player.name} · ${player.setupSelection.length}/${E.Board.getFormat(s).exchanges} biomes`,
+          player.setupConfirmed ? "Territoire confirmé · prêt à jouer" : "Choisissez les biomes à échanger."];
         const biomes = player.villages.map((item, lane) => button(`${{ littoral: "≈", plaine: "≋", montagne: "▲" }[item.biome]} ${E.Biomes.labels[item.biome]}`, command("toggleBiome", id, lane),
           !player.setupConfirmed && (player.setupSelection.includes(lane) || E.Board.getFormat(s).exchanges === 1 || player.setupSelection.length < E.Board.getFormat(s).exchanges), {
             centered: true, biome: item.biome, lane, selected: player.setupSelection.includes(lane),
@@ -250,7 +248,7 @@
           }));
         const nextPlayer = E.Network.mode === "local" && !s.players[otherId].setupConfirmed;
         const launchLabel = nextPlayer ? `Préparer ${otherId === "red" ? "Rouge" : "Bleu"} →` : E.Network.mode === "guest" ? "Confirmer · prêt" : "Lancer la partie";
-        return { title, lines, rows: [decks, biomes.slice(0, 2), ...(biomes.length > 2 ? [biomes.slice(2)] : []),
+        return { title, lines, rows: [biomes.slice(0, 2), ...(biomes.length > 2 ? [biomes.slice(2)] : []),
           row(button(player.setupConfirmed ? "Tirage confirmé ✓" : "Échanger la sélection", command("confirmBiomes", id, "exchange"),
             !player.setupConfirmed && player.setupSelection.length > 0, { centered: true, reason: `Sélectionnez jusqu’à ${E.Board.getFormat(s).exchanges} biome(s) à échanger.` }), button("Réglages", open("settings"), true, { centered: true }))],
           options: { variant: "setup", footer: [
@@ -269,29 +267,7 @@
         title = `${p.name} · Village ${v.lane + 1}`;
         lines = [`${E.Biomes.labels[v.biome]} · T${v.level} · ${Math.ceil(v.hp)}/${v.maxHp} PV`, `${v.population}/${v.populationMax} habitants`, ...E.Config.resources.map((key) => `${labels[key]} : ${Math.floor(v.resources[key])}`), ...v.buildings.map((building) => `${building.type} T${building.level}`)];
         entries = [button("Gérer ce village", { type: "back" })];
-      } else if (name === "cards") {
-        title = "Cartes en main";
-        const playerId = E.Network.mode === "local" ? selection().playerId : owner();
-        const held = s.players[playerId].cards;
-        lines = held ? [`${held.hand.length}/${E.Config.cardGame.handMax} cartes · ${held.drawPile.length} dans le deck`] : ["Les cartes apparaissent au lancement d’une partie."];
-        entries = held ? [...held.hand, ...held.mythological].map(item => {
-          const card = E.Cards.get(item.cardId), unlocked = item.unlockAt === undefined || s.elapsed >= item.unlockAt;
-          return button(card.name, open("card-play", item.id), !item.used && unlocked, { icon: card.icon,
-            portrait: { src: card.image, columns: 1, rows: 1, index: 0 }, artwork: true,
-            fullCard: card.fullCard, cardName: card.name, shortEffect: card.shortEffect,
-            generatedTitle: card.generatedTitle, descriptionTop: card.descriptionTop, descriptionHeight: card.descriptionHeight,
-            profession: card.category, status: item.used ? "Jouée" : unlocked ? "Prête" : "Verrouillée", detail: item.used ? "Jouée" : !unlocked ? `Disponible à ${item.unlockAt / 60} min` : `${E.CardEffects.cost(card.id)} or · choisir une cible` });
-        }) : [];
-      } else if (name === "card-play") {
-        const playerId = E.Network.mode === "local" ? selection().playerId : owner();
-        const held = E.CardGame?.find(s, playerId, data), card = held && E.Cards.get(held.cardId);
-        title = card?.name || "Carte jouée";
-        lines = card ? [card.effect || card.description, "Choisissez une cible pour confirmer la carte."] : ["Cette carte n’est plus dans la main."];
-        entries = held ? E.CardEffects.targets(s, playerId, card.id).map(target => {
-          const quote = E.CardGame.quote(s, playerId, data, target);
-          return button(E.CardUI.targetLabel(s, playerId, target), { type: "play-card", playerId, instanceId: data, target }, quote.allowed,
-            { detail: quote.allowed ? `${quote.gold} or${quote.resourceAmount ? ` + ${quote.resourceAmount} ${quote.resource}` : ""}` : quote.reason, reason: quote.reason });
-        }) : [];
+
       }
       // La pagination appartient au composant spatial : une seule navigation,
       // calculée avec les dimensions des textes et des cibles, pour tous les menus.
@@ -353,7 +329,6 @@
       for (let i = 0; i < buildingCards.length; i += 2) buildingGrid.push(buildingCards.slice(i, i + 2));
       buildingGrid.push(row(button("Construire", open("build")), button("Parcelles", open("slots"))));
       buildingGrid.push(row(button("Boutique · Y", open("shop")), button("Vendre", open("sell"))));
-      if (s.cardGameStarted) buildingGrid.push(row(button("Cartes en main", open("cards"))));
       const stockLines = [];
       for (let i = 0; i < E.Config.resources.length; i += 2) stockLines.push(E.Config.resources.slice(i, i + 2).map((key) => `${labels[key]} : ${Math.floor(v.resources[key])}`).join(" · "));
       dashboard.paint("buildings", `Gestion · Village ${sel.lane + 1}`, [
@@ -419,13 +394,6 @@
       }
       if (action.type === "select-village") { return selectVillage(action.playerId, action.lane); }
       if (action.type === "select-resident") { E.GameView.command("selectResident", action.residentId); return true; }
-      if (action.type === "play-card") {
-        if (!E.GameView.canControl(action.playerId) || !E.CardGame.quote(s, action.playerId, action.instanceId, action.target).allowed) return false;
-        E.GameView.selectVillage(action.playerId, action.target.lane);
-        const result = E.GameView.command("playCard", action.instanceId, action.target);
-        if (result || E.Network.mode === "guest") { setModal("cards"); return true; }
-        return false;
-      }
       if (action.type === "audio") { muted = !muted; E.Audio?.setMuted(muted); return true; }
       if (action.type === "quality") {
         quality = quality === "normal" ? "léger" : "normal";

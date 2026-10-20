@@ -7,10 +7,8 @@
   <title>Eredità — Prototype jouable</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/cards.css">
   <link rel="stylesheet" href="css/menu.css">
   <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/decks.css">
   <link rel="stylesheet" href="css/play.css">
   <link rel="stylesheet" href="css/intro.css">
   <link rel="stylesheet" href="css/mythology.css">
@@ -28,8 +26,8 @@
       <section id="setup-screen" class="screen" aria-labelledby="setup-title">
         <div class="intro-panel">
           <p class="step-label">Étape 1 · Territoire</p>
-          <h2 id="setup-title">Choisissez votre deck et vos terres</h2>
-          <p>Choisissez l’un de vos trois decks, puis conservez votre tirage ou remplacez jusqu’à deux biomes.</p>
+          <h2 id="setup-title">Choisissez vos terres</h2>
+          <p>Conservez votre tirage ou remplacez les biomes proposés avant de préparer vos villages.</p>
         </div>
         <div id="setup-players" class="setup-players"></div>
         <div class="setup-footer">
@@ -59,12 +57,12 @@
           </section>
 
           <aside class="side-panel">
+            <section id="mythology-stock" class="panel-card mythology-stock" aria-label="Légendes obtenues" hidden></section>
             <section id="village-inspector" class="panel-card" aria-label="Informations et achats du village"></section>
             <button id="open-shop-modal" class="button button-primary shop-open-button" type="button">Ouvrir la boutique</button>
             <nav id="village-selector" class="village-selector" aria-label="Sélection rapide des villages"></nav>
             <section id="village-shop" class="panel-card shop-card" aria-label="Magasin du village sélectionné"></section>
           </aside>
-          <section id="card-hand" class="card-hand" aria-label="Cartes en main" hidden></section>
           <section id="residents-panel" class="panel-card residents-panel" aria-label="Gestion des habitants"></section>
         </div>
       </section>
@@ -89,7 +87,7 @@
       </h1>
       <nav class="main-menu-actions" aria-label="Menu principal">
         <button class="menu-button menu-button-primary" data-menu-screen="play" type="button"><span>JOUER</span><i aria-hidden="true"></i></button>
-        <button class="menu-button" data-menu-screen="decks" type="button"><span>DECKS</span><i aria-hidden="true"></i></button>
+        <button class="menu-button" data-menu-screen="legends" type="button"><span>LÉGENDES</span><i aria-hidden="true"></i></button>
         <button class="menu-button" data-menu-screen="tutorial" type="button"><span>TUTORIEL</span><i aria-hidden="true"></i></button>
         <button class="menu-button menu-button-xr" data-open-xr type="button"><span>RÉALITÉ MIXTE · QUEST 3</span><i aria-hidden="true"></i></button>
       </nav>
@@ -197,16 +195,12 @@
   <script src="js/board.js"></script>
   <script src="js/combat.js"></script>
   <script src="js/ai.js"></script>
-  <script src="js/cards.js"></script>
-  <script src="js/card-art.js"></script>
-  <script src="js/card-effects.js"></script>
-  <script src="js/card-game.js"></script>
   <script src="js/mythology-data.js"></script>
   <script src="js/mythology-effects.js"></script>
+  <script src="js/mythology-match.js"></script>
   <script src="js/mythology-crystal.js"></script>
   <script src="js/mythology-ui.js"></script>
-  <script src="js/decks.js"></script>
-  <script src="js/card-ui.js"></script>
+  <script src="js/mythology-session.js"></script>
   <script src="js/tutorial.js"></script>
   <script src="js/network.js"></script>
   <script src="js/audio.js"></script>

@@ -38,12 +38,7 @@ async function run() {
   await waitFor("document.readyState === 'complete'");
   await click('[data-menu-screen="tutorial"]');
   await waitFor("Eredita.Tutorial.dialogueActive");
-  await dialogue(false);
-  await dialogue(false);
-  await waitFor("Eredita.Tutorial.stage === 'chooseDeck'");
-  await click('[data-setup-deck="1"][data-player="red"]');
   for (let count = 0; count < 3; count += 1) await dialogue(true);
-  await dialogue(false);
   await waitFor("Eredita.Tutorial.stage === 'exchange'");
   await click('[data-biome-choice][data-player="red"][data-lane="1"]');
   await click('[data-biome-choice][data-player="red"][data-lane="2"]');

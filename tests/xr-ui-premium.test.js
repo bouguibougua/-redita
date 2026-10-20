@@ -95,9 +95,10 @@ assert.equal([...painted.values()].filter(p => p.visible && ["Habitants", "Méti
 state = E.Board.createState("classic"); E.Network.mode = "solo"; state.players.blue.setupConfirmed = true;
 ui.close(); ui.render();
 assert.equal(painted.get("modal").options.variant, "setup");
-assert.equal(painted.get("modal").rows[0].length, 3);
+assert.equal(painted.get("modal").rows.length, 3, 'Deux rangées de biomes puis les contrôles d’échange, sans decks');
+assert.equal(painted.get("modal").rows[0].length, 2);
 assert.equal(painted.get("modal").rows[1].length, 2);
-assert.equal(painted.get("modal").rows[2].length, 2);
+assert.equal(painted.get("modal").rows.flat().some(entry => entry[1]?.method === 'selectDeck'), false);
 assert.equal(painted.get("modal").options.footer[0][0], "Retour");
 assert.equal(painted.get("modal").options.footer[1][0], "Lancer la partie");
 assert.equal(painted.get("red0").visible, false);
@@ -146,7 +147,7 @@ console.log("UI XR : quatre fenêtres, commandes métier, permissions, stocks, j
 
 state = E.Board.createState("simplified"); E.Network.mode = "local"; ui.close();
 assert.equal(painted.get("modal").rows[1].length, 2);
-assert.equal(painted.get("modal").rows.length, 3, "Pas de ligne de biomes vide en format simplifié");
+assert.equal(painted.get("modal").rows.length, 2, "Une ligne de biomes et les réglages, sans ligne de decks en format simplifié");
 assert.match(painted.get("modal").lines[0], /0\/1 biomes/);
 state.phase = "running"; ui.close();
 assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 4);

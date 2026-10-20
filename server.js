@@ -6,6 +6,7 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const { gzipSync } = require("node:zlib");
 const { EventEmitter } = require("node:events");
+const mythology = require('./server-mythology');
 
 const port = Number(process.env.PORT) || 8765;
 const root = __dirname;
@@ -13,9 +14,10 @@ const rooms = new Map();
 const mimeTypes = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
-  ".png": "image/png", ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml", ".mp3": "audio/mpeg", ".wav": "audio/wav"
+  ".png": "image/png", ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml", ".mp3": "audio/mpeg", ".wav": "audio/wav",
+  ".mp4": "video/mp4", ".webm": "video/webm"
 };
-// Cache only text assets; large music files are streamed and images use browser caching.
+// Cache only text assets; audio/video files are streamed and images use browser caching.
 const textCache = new Map();
 const textCacheLimit = 4 * 1024 * 1024;
 let textCacheBytes = 0;
@@ -39,7 +41,7 @@ function serveFile(request, response, filename) {
     const headers = { "Content-Type":mimeTypes[ext] || "application/octet-stream", "Cache-Control":"no-cache", ETag:etag, "Last-Modified":stat.mtime.toUTCString() };
     if (compressible) headers.Vary = "Accept-Encoding";
     if ((request.headers["if-none-match"] || "").split(",").some(tag => tag.trim() === "*" || tag.trim().replace(/^W\//, "") === etag.slice(2))) return response.writeHead(304,headers).end();
-    if (ext === ".mp3") {
+    if ([".mp3", ".mp4", ".webm"].includes(ext)) {
       let start = 0, end = stat.size - 1, status = 200;
       headers["Accept-Ranges"] = "bytes";
       if (request.headers.range && !request.headers["if-range"]) {
@@ -165,10 +167,15 @@ function handleConnection(socket) {
   socket.on("message", (raw) => {
     let message;
     try { message = JSON.parse(raw.toString()); } catch (_) { return; }
+    if (!message || typeof message !== 'object' || Array.isArray(message)) return;
+    if (['create', 'join'].includes(message.type) && socket.roomCode) {
+      send(socket, { type: 'error', message: 'Cette connexion appartient déjà à un salon.' });
+      return;
+    }
 
     if (message.type === "create") {
       const code = roomCode();
-      rooms.set(code, { host: socket, guest: null });
+      rooms.set(code, { host: socket, guest: null, mythology: mythology.createAuthority() });
       socket.roomCode = code;
       socket.playerId = "red";
       send(socket, { type: "created", code, playerId: "red" });
@@ -186,6 +193,7 @@ function handleConnection(socket) {
       socket.roomCode = code;
       socket.playerId = "blue";
       send(socket, { type: "joined", code, playerId: "blue" });
+      send(socket, { type: 'mythology', view: room.mythology.view('blue') });
       send(room.host, { type: "peer", connected: true });
       send(room.host, { type: "state-request" });
       return;
@@ -193,10 +201,39 @@ function handleConnection(socket) {
 
     const room = rooms.get(socket.roomCode);
     if (!room) return;
+    // Le rôle vient de la connexion, jamais d’un identifiant fourni par le client.
+    if (message.type === 'mythology-select' && (socket === room.host || socket === room.guest)) {
+      const result = room.mythology.select(socket === room.host ? 'red' : 'blue', message);
+      send(socket, { type: 'mythology', ...result, view: room.mythology.view(socket === room.host ? 'red' : 'blue') });
+      return;
+    }
+    if (message.type === 'mythology-activate' && (socket === room.host || socket === room.guest)) {
+      const playerId = socket === room.host ? 'red' : 'blue';
+      const result = room.mythology.requestActivation(playerId, message);
+      send(socket, { type: 'mythology', activation: true, accepted: result.accepted, reason: result.reason,
+        view: room.mythology.view(playerId) });
+      // Seule cette route privée du relais autorise une exécution chez l’hôte.
+      // Le choix adverse n’est dévoilé qu’au moment de son utilisation.
+      if (result.accepted) send(room.host, { type: 'mythology-execute', execution: result.execution });
+      return;
+    }
+    if (message.type === 'mythology-result' && socket === room.host) {
+      const playerId = room.mythology.finishActivation(message.activationId, message.accepted === true, message.reason);
+      if (playerId) send(playerId === 'red' ? room.host : room.guest,
+        { type: 'mythology', activation: true, accepted: message.accepted === true, reason: message.reason,
+          view: room.mythology.view(playerId) });
+      return;
+    }
     if (message.type === "command" && socket === room.guest) {
       send(room.host, { ...message, playerId: "blue" });
     } else if (message.type === "state" && socket === room.host) {
       send(room.guest, message);
+      const before = room.mythology.view('red').revision;
+      room.mythology.sync(message.state);
+      if (room.mythology.view('red').revision !== before) {
+        send(room.host, { type: 'mythology', view: room.mythology.view('red') });
+        send(room.guest, { type: 'mythology', view: room.mythology.view('blue') });
+      }
     }
   });
 

@@ -1,57 +1,61 @@
-# Nettoyage du 13 octobre 2026
+# Nettoyage du système de cartes — 20 octobre 2026
 
-Le projet optimisé est le dépôt dans `C:/Users/20241234/Downloads/-redita/-redita`, celui qui contient les 39 cartes jouables. Le dossier parent est un autre checkout, avec son propre historique Git.
+Le jeu utilise désormais exclusivement les renforts mythologiques. L’ancien
+constructeur de decks, la main, la pioche et leurs déblocages n’étaient plus
+chargés, mais leurs fichiers et une partie de leur moteur restaient présents.
 
-| Mesure | Avant | Après |
-| --- | ---: | ---: |
-| Dossier du projet, hors `.git` | 276,6 Mo | 37,1 Mo |
-| Fichiers, avec les aperçus de contrôle | 349 | 144 |
-| Neuf images de terrain et sprites utilisés | 24,7 Mo | 6,7 Mo |
-| Noyau Three.js | 1,5 Mo | 0,4 Mo |
+## Fichiers retirés
 
-Le dossier actif est environ **87 % plus léger**. Les aperçus dans `output/cards/` représentent environ 5 Mo et sont ignorés par Git. Ces chiffres concernent le dossier actif ; les archives externes et l'historique Git sont comptés séparément.
+57 fichiers obsolètes, soit 2 167 813 octets (environ 2,1 Mo) :
 
-Le nettoyage comprend :
+- six modules : `cards.js`, `card-art.js`, `card-effects.js`, `card-game.js`,
+  `card-ui.js` et `decks.js` ;
+- les deux feuilles de styles des cartes et des decks ;
+- sept suites de tests visant ces fonctionnalités supprimées ;
+- les 39 illustrations de l’ancien catalogue, leur manifeste et leur documentation.
 
-- l'archivage de l'ancienne copie complète `-redita-main/`, des premiers visuels de cartes, des PNG sources et des métadonnées macOS ;
-- l'utilisation des 48 images WebP nécessaires au jeu, avec les dimensions des terrains et sprites conservées ;
-- le remplacement du noyau Three.js par sa variante minifiée de la même version, après comparaison des sources et en conservant sa licence ;
-- un script commun de préparation des images et un lanceur partagé pour les tests de navigateur ;
-- le retrait de deux fonctions jamais appelées, d'une option de configuration inutilisée et d'une requête vers un son de carte absent ;
-- la compression gzip des fichiers HTML/CSS/JS, la validation du cache par ETag et le streaming partiel des musiques ;
-- des mises à jour de texte uniquement lorsque sa valeur change, et la conservation des modèles de terrain lorsqu'un moulin ou une tour perd simplement des PV.
+Les anciens scripts npm et la génération d’images de cartes ont également été
+retirés. `assets:prepare` prépare les neuf atlas de terrain et sprites actifs,
+sans dépendre d’un manifeste de cartes absent. Les sources PNG restent externes
+et se choisissent par argument ou avec `EREDITA_ASSET_SOURCES`.
 
-## Sauvegarde et sources
+## Code actif conservé et simplifié
 
-Les fichiers archivés sont dans :
+- `mythology-effects.js` porte directement le terrain brûlé, la rivière et la
+  vision, sans passerelle vers le moteur supprimé.
+- `buildings.js` porte le bonus d’Artisanat : mêmes valeurs, aucun cumul,
+  blessures conservées, compatibilité U Magu et snapshots réseau.
+- Les branches inaccessibles de moulin, tour, piège, sentier et charrette
+  quittent la simulation, les rendus 2D/3D et la configuration.
+- Les commandes de vue réutilisent leur liste autorisée au lieu de la recréer
+  à chaque action. L’ancien adaptateur de ciblage de cartes est retiré.
+- Les sélecteurs CSS et la navigation VR propres aux decks sont retirés.
+- Les effets visuels actifs du plateau résident dans `mythology.css`.
 
-```text
-C:/Users/20241234/Downloads/Eredita-sauvegardes/nettoyage-2026-10-13/
-├── ancienne-copie/          ancienne version complète du jeu
-├── sources/cards/legacy/   première série d'illustrations
-├── sources/cards/fantasy/  planche et PNG des cartes actuelles
-├── sources/generated/     PNG des terrains et sprites
-├── vendor/                 noyau Three.js complet
-├── metadata/               métadonnées macOS
-├── retired/                originaux retirés du dossier publié
-├── inventaire-avant.json   chemins, tailles et empreintes initiales
-└── bilan.json              mesures du nettoyage
-```
-
-**213 fichiers archivés** ont été comparés à leur empreinte SHA-256 initiale. Les sources permettent de recréer les WebP sans ajouter les gros PNG au dépôt.
-
-Depuis le dossier du projet, préparer toutes les images avec :
-
-```powershell
-npm run assets:prepare -- "C:/Users/20241234/Downloads/Eredita-sauvegardes/nettoyage-2026-10-13/sources"
-```
-
-Pour préparer seulement les cartes, utiliser `npm run assets:cards -- "chemin/vers/sources"`. Sans argument, le script lit `EREDITA_ASSET_SOURCES` ou le dossier `.asset-sources/`, ignoré par Git. La préparation utilise Edge sur Windows. Les prompts et recadrages restent dans `assets/cards/fantasy/SOURCE.md` et `manifest.json`.
+Les seize illustrations actuelles, leurs animations, les cristaux, les choix
+FIFO et le stock LÉGENDES sont conservés. Le fond `deck-library.webp` est toujours
+utilisé par le grimoire : son nom historique n’en fait pas un fichier inutilisé.
+Les villages, banques, embarcations, tâches, boutiques et pouvoirs gardent leurs
+règles existantes. Aucune dépendance n’a été ajoutée.
 
 ## Vérification
 
-Les vérifications suivantes ont réussi après le nettoyage : `npm test`, `npm run test:xr`, `npm run test:cards-browser`, `npm run test:decks-browser`, `npm run test:transport-browser`, `npm run test:xr-browser` et `git diff --check`. Elles couvrent le jeu, les cartes, la 3D, le réseau, le cache HTTP, le streaming audio et les interfaces navigateur. Les tests XR utilisent un périphérique simulé.
+```sh
+npm test
+npm run test:menu
+npm run test:xr
+npm run test:mythology-browser
+npm run test:reinforcements-browser
+npm run test:powers-browser
+```
 
-## Prochain commit
+Les tests d’Artisanat sont maintenus indépendamment des anciennes cartes dans
+`tests/buildings.test.js`. Les assertions historiques du noyau et des équipements
+incluent maintenant ce bonus déjà actif dans le jeu complet.
+Les tests de navigateur utilisent le chemin `/-redita/`, un téléphone simulé,
+le vrai rendu Three.js et deux clients réseau. WebXR reste simulé ; le confort
+et les contrôleurs physiques nécessitent un essai sur Quest 3.
 
-Les fichiers du nettoyage sont modifiés localement. Des changements avaient déjà été indexés avant cette intervention. Pour inclure les nouvelles images, les modifications et les suppressions dans le prochain commit, vérifier les changements puis lancer `git add -A` depuis ce dépôt. Le nettoyage ne crée pas de commit et ne publie pas le site.
+Le nettoyage de sources ne constitue pas une mesure de gain de FPS : les modules
+historiques déjà non chargés pesaient sur le dépôt, pas sur le rendu en partie.
+Aucun commit ni déploiement n’a été effectué.

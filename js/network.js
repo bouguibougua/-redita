@@ -8,6 +8,7 @@
   let roomCode = null;
   let handlers = {};
   let format = E.Config.defaultFormat;
+  let legendCollection = null;
 
   function selectFormat(value) {
     if (mode !== "pending" || !E.Config.formats[value]) return false;
@@ -67,6 +68,7 @@
   }
 
   function showGame() {
+    legendCollection?.dispose(); legendCollection = null;
     document.querySelector("#connection-screen").hidden = true;
     document.querySelector("#main-menu").hidden = true;
     document.querySelector("#menu-subscreen").hidden = true;
@@ -125,6 +127,8 @@
         } else showGame();
         handlers.onReady?.({ mode, playerId, roomCode, format });
       } else if (message.type === "state") handlers.onState?.(message.state);
+      else if (message.type === 'mythology') handlers.onMythology?.(message);
+      else if (message.type === 'mythology-execute' && mode === 'host') handlers.onMythologyExecute?.(message.execution);
       else if (message.type === "command") handlers.onCommand?.(message);
       else if (message.type === "state-request") handlers.onStateRequest?.();
       else if (message.type === "peer") {
@@ -142,12 +146,12 @@
     const subContent = document.querySelector("#menu-subcontent");
     const back = document.querySelector("#menu-back");
     function openMenuScreen(screen) {
-      E.Decks?.unmount();
+      legendCollection?.dispose(); legendCollection = null;
       menu.hidden = true;
       sub.hidden = false;
-      sub.classList.toggle("decks-screen", screen === "decks");
+      sub.classList.toggle("legends-screen", screen === "legends");
       sub.classList.toggle("play-screen", screen === "play");
-      sub.querySelector(".menu-subpanel")?.classList.toggle("decks-panel", screen === "decks");
+      sub.querySelector(".menu-subpanel")?.classList.toggle("legends-panel", screen === "legends");
       sub.querySelector(".menu-subpanel")?.classList.toggle("play-panel", screen === "play");
       if (screen === "play") {
         subTitle.textContent = "L’armurerie";
@@ -155,9 +159,9 @@
         bindFormats(subContent);
         document.querySelector("#open-multiplayer").addEventListener("click", () => { sub.hidden = true; document.querySelector("#connection-screen").hidden = false; selectFormat(format); });
         document.querySelector("#training-button").addEventListener("click", () => { startMode("solo"); setStatus("Mode entraînement · vous jouez Rouge contre l’IA"); });
-      } else if (screen === "decks") {
-        subTitle.textContent = "La bibliothèque";
-        E.Decks.mount(subContent);
+      } else if (screen === "legends") {
+        subTitle.textContent = "Les légendes de Corse";
+        legendCollection = E.MythologyUI.mountCollection(subContent);
       } else {
         mode = "tutorial";
         playerId = "red";
@@ -179,10 +183,10 @@
     bindConnectionControls(); bindFormats(document.querySelector("#connection-screen"));
     document.querySelectorAll("[data-menu-screen]").forEach((button) => button.addEventListener("click", () => openMenuScreen(button.dataset.menuScreen)));
     back.addEventListener("click", () => {
-      E.Decks?.unmount();
+      legendCollection?.dispose(); legendCollection = null;
       sub.hidden = true;
-      sub.classList.remove("decks-screen", "play-screen");
-      sub.querySelector(".menu-subpanel")?.classList.remove("decks-panel", "play-panel");
+      sub.classList.remove("legends-screen", "play-screen");
+      sub.querySelector(".menu-subpanel")?.classList.remove("legends-panel", "play-panel");
       menu.hidden = false;
       E.Audio?.play("menu");
     });
@@ -197,6 +201,12 @@
 
   function sendCommand(method, args, view) {
     if (mode === "guest" && socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "command", method, args, view }));
+  }
+
+  function selectReinforcement(epoch, offerId, legendId) {
+    if (!['host', 'guest'].includes(mode) || socket?.readyState !== WebSocket.OPEN) return false;
+    socket.send(JSON.stringify({ type: 'mythology-select', epoch, offerId, legendId }));
+    return true;
   }
 
   function leaveRoom() {
@@ -214,5 +224,14 @@
     setStatus("Choisissez un mode de jeu.");
   }
 
-  E.Network = { init, sendState, sendCommand, startMode, selectFormat, leaveRoom, get format() { return format; }, get mode() { return mode; }, get playerId() { return playerId; }, get roomCode() { return roomCode; } };
+  function activateReinforcement(epoch, offerId, target) {
+    if (!['host', 'guest'].includes(mode) || socket?.readyState !== WebSocket.OPEN) return false;
+    socket.send(JSON.stringify({ type: 'mythology-activate', epoch, offerId, target })); return true;
+  }
+  function finishReinforcement(activationId, result) {
+    if (mode !== 'host' || socket?.readyState !== WebSocket.OPEN) return false;
+    socket.send(JSON.stringify({ type: 'mythology-result', activationId, accepted: result.accepted, reason: result.reason })); return true;
+  }
+
+  E.Network = { init, sendState, sendCommand, selectReinforcement, activateReinforcement, finishReinforcement, startMode, selectFormat, leaveRoom, get format() { return format; }, get mode() { return mode; }, get playerId() { return playerId; }, get roomCode() { return roomCode; } };
 }());

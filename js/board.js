@@ -33,7 +33,6 @@
       id,
       name,
       gold: E.Config.startingGold,
-      selectedDeck: 0,
       setupSelection: [],
       setupConfirmed: false,
       villages: []

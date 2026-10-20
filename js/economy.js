@@ -20,7 +20,7 @@
     const resident = getResident(state, playerId, lane, residentId);
     const definition = E.Config.professions[profession];
     return Boolean(state.phase === "running" && !state.paused && village && !village.destroyed &&
-      resident && !resident.unitId && definition && (!definition.requires || E.Buildings.has(village, definition.requires)));
+      resident && !resident.isLegend && !resident.unitId && definition && (!definition.requires || E.Buildings.has(village, definition.requires)));
   }
 
   function setProfession(state, playerId, lane, residentId, profession) {
@@ -87,7 +87,7 @@
     const resident = getResident(state, playerId, lane, residentId);
     if (state.phase !== "running" || state.paused || !village || village.destroyed || !resident ||
       resident.mission !== "disponible" || resident.unitId || !["attaque", "defense"].includes(mission)) return false;
-    if (E.CardEffects?.isBurned(state, village)) return false;
+    if (E.MythologyEffects?.isBurned(state, village)) return false;
     const role = isBoosted(resident, mission) ? resident.profession : "habitant";
     const unit = E.Units.create(playerId, lane, role, {
       residentId,
@@ -98,10 +98,11 @@
       donkey: resident.donkey
     });
     if (!unit) return false;
+    E.MythologyEffects?.decorateUnit(state, resident, unit);
     resident.mission = mission;
     resident.unitId = unit.id;
     state.units.push(unit);
-    E.CardEffects?.updateArtisanatBonuses(state);
+    E.Buildings.updateArtisanatBonuses(state);
     return true;
   }
 
@@ -115,6 +116,7 @@
       unit.originLane === lane &&
       unit.hp > 0 &&
       !unit.animalType &&
+      !unit.isLegend &&
       !unit.residentId
     ).length;
   }
@@ -270,8 +272,9 @@
       huntTargetLaneOffset: null
     };
     village.residents.push(resident);
-    village.population = village.residents.length;
+    village.population = village.residents.filter(person => !person.isLegend).length;
     if (state) {
+      if (E.MythologyEffects?.onResidentBorn(state, village, resident) === false) return resident;
       const mission = village.nextResidentMission || "disponible";
       const profession = village.nextResidentProfession || "habitant";
       if (profession !== "habitant") setProfession(state, village.ownerId, village.lane, resident.id, profession);
@@ -285,7 +288,7 @@
     const player = state.players[playerId];
     const village = player?.villages[lane];
     const cost = E.Config.residentPurchase;
-    return Boolean(state.phase === "running" && !state.paused && village && !village.destroyed && !E.CardEffects?.isBurned(state, village) &&
+    return Boolean(state.phase === "running" && !state.paused && village && !village.destroyed && !E.MythologyEffects?.isBurned(state, village) &&
       E.Config.resources.includes(resource) && village.population < village.populationMax &&
       player.gold >= cost.gold && village.resources[resource] >= cost.resourceAmount);
   }
@@ -307,11 +310,11 @@
     const index = village.residents.findIndex((resident) => resident.id === residentId);
     if (index < 0) return false;
     const [resident] = village.residents.splice(index, 1);
-    E.CardEffects?.recordDeath(state, village, resident);
+    E.MythologyEffects?.recordDeath(state, village, resident);
     if (economicMissions.includes(resident.mission)) {
       village.jobs[resident.mission] = Math.max(0, village.jobs[resident.mission] - 1);
     }
-    village.population = village.residents.length;
+    village.population = village.residents.filter(person => !person.isLegend).length;
     return true;
   }
 
@@ -323,7 +326,7 @@
       if (!interval) return;
 
       livingVillages.forEach((village) => {
-        if (E.CardEffects?.isBurned(state, village)) return;
+        if (E.MythologyEffects?.isBurned(state, village)) return;
         if (village.population >= village.populationMax) {
           village.populationTimer = 0;
           return;
@@ -392,7 +395,7 @@
     const field = config.agricultureFieldPositionByOwner[village.ownerId];
     const farming = resident.mission === "agriculture";
     const profession = E.Config.professions[resident.profession || "habitant"];
-    const movementSpeed = E.Config.movement.inhabitantSpeed * (1 + (isBoosted(resident, resident.mission) ? profession.speedBonus || 0 : 0)) * donkeyMultiplier(resident, "movementBonus") * (village.terrain?.trail ? 1 + E.Config.cardGame.trailSpeedBonus : 1);
+    const movementSpeed = E.Config.movement.inhabitantSpeed * (resident.mythologyStatMultiplier || 1) * (1 + (isBoosted(resident, resident.mission) ? profession.speedBonus || 0 : 0)) * donkeyMultiplier(resident, "movementBonus");
 
     // Une récolte déjà chargée reste livrée même si sa source disparaît.
     if (resident.workPhase === "toVillage") {
@@ -444,7 +447,7 @@
         resident.carrying = {
           resource: farming ? cropResources[target.slot.content.type] : "lait",
           amount: farming
-            ? cropCount(village, target.slot.content.type) * config.agricultureAmountPerTrip * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.terrain?.mill ? 1 + E.Config.cardGame.millProductionBonus : 1) * (village.productionMultiplier ?? 1)
+            ? cropCount(village, target.slot.content.type) * config.agricultureAmountPerTrip * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.productionMultiplier ?? 1)
             : dairyAnimalCount(village) * config.milkAmountPerAnimal * (1 + bonus + bergerieBonus(village)) * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.productionMultiplier ?? 1)
         };
         resident.workPhase = "toVillage";
@@ -466,7 +469,7 @@
     const interval = E.Config.temporaryProduction.fishingInterval;
     village.residents.filter((resident) => resident.mission === "peche").forEach((resident) => {
       const equipment = E.Equipment.bonuses(resident);
-      resident.workTimer += delta * (1 + equipment.productionSpeed);
+      resident.workTimer += delta * (1 + equipment.productionSpeed) * (village.fataFishingMultiplier || 1);
       const fisherYield = (1 + workBonus(village, resident, "peche")) * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus");
       while (resident.workTimer >= interval) {
         resident.workTimer -= interval;
@@ -516,7 +519,7 @@
       if (!Number.isFinite(resident.workLaneOffset)) resident.workLaneOffset = 0;
       if (!Number.isFinite(resident.huntTargetPosition) || !Number.isFinite(resident.huntTargetLaneOffset)) chooseHuntTarget(village, resident);
 
-      const movementSpeed = (isBoosted(resident, "chasse") ? E.Config.movement.hunterSpeed : E.Config.movement.inhabitantSpeed) * donkeyMultiplier(resident, "movementBonus") * (village.terrain?.trail ? 1 + E.Config.cardGame.trailSpeedBonus : 1);
+      const movementSpeed = (isBoosted(resident, "chasse") ? E.Config.movement.hunterSpeed : E.Config.movement.inhabitantSpeed) * (resident.mythologyStatMultiplier || 1) * donkeyMultiplier(resident, "movementBonus");
       const reachedPosition = moveWorker(resident, resident.huntTargetPosition, movementSpeed, delta);
       const lateralDistance = resident.huntTargetLaneOffset - resident.workLaneOffset;
       const lateralStep = config.huntingLateralSpeed * donkeyMultiplier(resident, "movementBonus") * delta;
@@ -537,7 +540,7 @@
   function updateProduction(state, delta) {
     Object.values(state.players).forEach((player) => {
       player.villages.filter((village) => !village.destroyed).forEach((village) => {
-        village.productionMultiplier = E.CardEffects?.productionMultiplier(state, village) ?? 1;
+        village.productionMultiplier = E.MythologyEffects?.productionMultiplier(state, village) ?? 1;
         E.Transport.maritimeState(village).productionMultiplier = village.productionMultiplier;
         updateWorkerTrips(village, delta);
         updateFishing(village, delta);

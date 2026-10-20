@@ -21,6 +21,33 @@
     },
     bulkTaskInterval: 0.5,
     network: { connectionTimeoutMs: 8000 },
+    reinforcements: {
+      intervalSeconds: 120,
+      // Toutes les propositions s’accumulent et sont consommées dans leur ordre d’arrivée.
+      pendingPolicy: 'fifo',
+      development: { includeUnconfigured: false, logs: true }
+    },
+    reinforcementPowers: {
+      stregaDuration: 120, stregaMultiplier: .5,
+      streguDuration: 120, streguMultiplier: 2,
+      fataFishingSpeed: 1.25,
+      orcuHp: 200, orcuDamage: 30,
+      maguStatMultiplier: 2, maguScale: 1.5, maguResidentsPerVillage: 1,
+      vampireHp: 25, vampireDamage: 5,
+      lupuHp: 60, lupuDamage: 20,
+      biancaDuration: 60, resurrectionWindow: 60,
+      animaHp: 1, animaDps: 1,
+      lacramantiHpPerDeath: 2, lacramantiDamagePerDeath: 1,
+      fullettuCount: 5, fullettuHp: 20, fullettuDamage: 0,
+      // TEMP_BALANCE_VALUE — vitesses qualitatives et cadence de vol non chiffrées
+      // par le concepteur ; seuls ces réglages sont provisoires.
+      orcuSpeed: .7, vampireSpeed: 8, fullettuSpeed: 12,
+      fullettuGatherInterval: 3, fullettuGatherAmount: 1,
+      // Le terrain brûlé conserve la durée écrite existante (GDD §69).
+      burnDuration: 120,
+      // TEMP_BALANCE_VALUE — emplacement d’une invocation dans une région choisie.
+      regionSpawnByOwner: { red: 20, blue: 80 }
+    },
     // TEMP_BALANCE_VALUE — volumes et limite des effets sonores d’interface.
     audio: {
       musicVolume: 0.38, effectVolume: 0.5, maxEffectVoices: 4,
@@ -49,30 +76,6 @@
       flagAmplitude: 0.0035, mistOpacity: 0.055, fireStrength: 0.13, fireCenter: [0.934, 0.447],
       vrPanelDistance: 2.4, vrPanelWidth: 1.7, vrRowHeight: 0.18, vrFontSize: 48,
       vrPageSize: 6, vrRefreshMs: 150, vrInputCooldownMs: 180, vrFramebufferScale: 0.85
-    },
-    cardGame: {
-      startingHand: 5, handMax: 15, drawInterval: 30,
-      mythologicalUnlocks: [300, 600],
-      effectDuration: 120, resurrectionWindow: 180, plainsResurrectionWindow: 300,
-      diavuluMountainDamage: 125,
-      // TEMP_BALANCE_VALUE — pas de pioche à la frontière 12:30 ni pendant l'Overtime.
-      drawDuringOvertime: false,
-      // TEMP_BALANCE_VALUE — les coûts non définis des cartes sont regroupés ici.
-      // Les autres cartes reprennent les coûts et prérequis de leur action existante.
-      terrainCosts: { riviere: 100, moulin: 250, "tour-genoise": 300, sentier: 75, piege: 100, charrette: 200 },
-      terrainHp: { moulin: 250, "tour-genoise": 300 },
-      millProductionBonus: 0.3, trailSpeedBonus: 0.2,
-      trapDamage: 50, trapSlowMultiplier: 0.5, trapSlowDuration: 3,
-      towerRevealFraction: 0.25, coastalTowerRevealFraction: 0.5,
-      // TEMP_BALANCE_VALUE — placement des overlays, limites et vitesse de la charrette.
-      trapLimit: 4, trapRange: 1.5, cartCapacity: 8,
-      cartMountainMultiplier: 0.5, structurePositionByOwner: { red: 23, blue: 77 },
-      // TEMP_BALANCE_VALUE — decks prêts à jouer utilisés quand le deck choisi est vide.
-      starterDecks: [
-        { quantities: { "champ-ble": 4, chataignier: 2, bergerie: 3, artisanat: 3, boucherie: 2, agriculteur: 3, guerrier: 3, barque: 4, chevre: 2, "outil-bois": 2, riviere: 1, moulin: 1 }, mythological: ["u-mazzeru", "a-stregha", "squadra-arozza"] },
-        { quantities: { chataignier: 4, vignoble: 2, bergerie: 3, artisanat: 2, boucherie: 2, berger: 3, guerrier: 3, barque: 3, chevre: 3, sentier: 2, "outil-bronze": 1, riviere: 1, moulin: 1 }, mythological: ["u-diavulu", "u-mazzeru", "squadra-arozza"] },
-        { quantities: { "champ-ble": 3, vignoble: 3, artisanat: 3, boucherie: 3, bergerie: 2, pecheur: 3, guerrier: 3, barque: 4, "filet-peche": 3, "tour-genoise": 1, vache: 2 }, mythological: ["oeil-sainte-lucie", "a-stregha", "u-diavulu"] }
-      ]
     },
     xr: {
       // TEMP_BALANCE_VALUE — réglages de présentation/confort, sans effet sur les règles.
@@ -322,8 +325,6 @@
       }
     },
     units: {
-      // PV fixés par le GDD ; TEMP_BALANCE_VALUE — vitesse de la Charrette.
-      charrette: { label: "Charrette", shortLabel: "🛞", hp: 150, damage: 0, speed: 8 },
       habitant: { label: "Habitant", shortLabel: "H", hp: 50, damage: 5, speed: 5 },
       guerrier: { label: "Guerrier", shortLabel: "G", hp: 70, damage: 10, speed: 5.5, requires: "artisanat" },
       // TEMP_BALANCE_VALUE — spécialisation du Ravageur contre les villages/bâtiments.
@@ -359,7 +360,6 @@
     // TEMP_BALANCE_VALUE — comportement provisoire de l'adversaire solo.
     ai: {
       // TEMP_BALANCE_VALUE — priorité des cartes et achats de transport de l'IA.
-      cardPriority: ["bergerie", "artisanat", "boucherie", "champ-ble", "chataignier", "vignoble", "barque", "riviere", "moulin", "guerrier", "agriculteur", "berger", "pecheur"],
       decisionInterval: 3,
       attackInterval: 9,
       reserveResidents: 2,

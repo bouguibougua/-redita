@@ -29,7 +29,7 @@ async function run() {
     await click('[data-buy-shop-item="barque"][data-shop-building="artisanat"]');
     assert.equal(await evaluate(`testState.players.red.villages[${lane}].maritime.barque`), 1);
     assert.equal(await evaluate("testState.players.red.gold"), gold - await evaluate("Eredita.Config.maritime.shop.barque.gold"));
-    assert.match(await evaluate("document.querySelector('#village-inspector [data-fleet-summary]').textContent"), /1\/4 barques.*2\/2 places libres/);
+    assert.equal(await evaluate("document.querySelector('#village-inspector [data-fleet-summary]')"), null, 'La réserve est consultable dans la boutique et ne remplit plus le panneau latéral');
     assert.match(await evaluate("document.querySelector('#village-shop [data-fleet-summary]').textContent"), /1\/4 barques.*2\/2 places libres/);
   }
   await click("#close-shop-modal");
@@ -44,11 +44,12 @@ async function run() {
     E.UI.renderFrame(s);
   })()`);
   assert.equal(await evaluate("testUnit.waterTransport"), "barque");
-  assert.match(await evaluate("document.querySelector('#village-inspector [data-fleet-summary]').textContent"), /1\/2 places libres/);
+  await click('#open-shop-modal');
+  assert.match(await evaluate("document.querySelector('#village-shop [data-fleet-summary]').textContent"), /1\/2 places libres/);
   assert.equal(await evaluate("document.querySelectorAll('.unit.on-water.transport-barque').length"), 1);
   await evaluate(`testUnit.position = Eredita.Config.maritime.waterRanges.blue.max + 1;
     Eredita.Transport.updateUnitWaterState(testState, testUnit); Eredita.UI.renderFrame(testState);`);
-  assert.match(await evaluate("document.querySelector('#village-inspector [data-fleet-summary]').textContent"), /2\/2 places libres/);
+  assert.match(await evaluate("document.querySelector('#village-shop [data-fleet-summary]').textContent"), /2\/2 places libres/);
   assert.equal(await evaluate("testState.players.red.villages[1].maritime.barque"), 1);
   assert.deepEqual(browser.exceptions, []);
   assert.deepEqual(browser.imageErrors, []);

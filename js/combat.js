@@ -56,7 +56,7 @@
   function moveLaterally(state, unit, targetLane, delta) {
     const distance = targetLane - unit.lanePosition;
     const donkeySpeed = unit.donkey ? 1 + E.Config.specialAnimals.ane.movementBonus : 1;
-    const step = E.Config.combat.redirectSpeed * donkeySpeed * E.Transport.movementMultiplier(unit) * (E.CardEffects?.movementMultiplier(state, unit) ?? 1) * delta;
+    const step = E.Config.combat.redirectSpeed * donkeySpeed * E.Transport.movementMultiplier(unit) * delta;
     if (Math.abs(distance) <= step) {
       unit.lanePosition = targetLane;
       unit.lane = targetLane;
@@ -130,7 +130,7 @@
 
   function moveToward(state, unit, target, delta) {
     const distance = target - unit.position;
-    const step = unit.speed * E.Transport.movementMultiplier(unit) * (E.CardEffects?.movementMultiplier(state, unit) ?? 1) * delta;
+    const step = unit.speed * E.Transport.movementMultiplier(unit) * delta;
     unit.position += Math.sign(distance) * Math.min(Math.abs(distance), step);
     E.Transport.updateUnitWaterState(state, unit);
   }
@@ -152,7 +152,7 @@
 
   function update(state, delta) {
     if (state.phase !== "running" || state.paused || state.preparationRemaining > 0 || !Number.isFinite(delta) || delta <= 0) return;
-    E.CardEffects?.updateArtisanatBonuses(state);
+    E.Buildings.updateArtisanatBonuses(state);
     const damageEvents = [];
     Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
       village.damageSmoke = Math.max(0, (village.damageSmoke || 0) - delta);
@@ -166,13 +166,15 @@
       unit.visualHitTimer = Math.max(0, (unit.visualHitTimer || 0) - delta);
       if (!E.Transport.updateUnitWaterState(state, unit)) return;
 
-      if (unit.isCart) {
-        const destination = unit.ownerId === "red" ? E.Config.movement.columnLength : 0;
-        const next = unit.position + Math.sign(destination - unit.position) * unit.speed * (E.CardEffects?.movementMultiplier(state, unit) ?? 1) * delta;
-        // Transport terrestre : débarquement avant l'eau, pour utiliser la réserve du village.
-        if (Math.abs(destination - unit.position) <= E.Config.combat.attackRange || E.Transport.waterOwnerAt(state, unit.lane, next)) E.CardEffects.releaseCart(state, unit);
-        else moveToward(state, unit, destination, delta);
+      if (unit.mythologyRetreating) {
+        const destination = unit.ownerId === 'red' ? 0 : E.Config.movement.columnLength;
+        moveToward(state, unit, destination, delta);
+        if (Math.abs(unit.position - destination) <= E.Config.combat.attackRange) unit.mythologyRetreating = false;
         return;
+      }
+      if (unit.mythologyLegendId === 'u-fullettu') {
+        moveToward(state, unit, unit.ownerId === 'red' ? E.Config.movement.columnLength : 0, delta);
+        return; // Le follet récolte ; ses 0 dégâts ne déclenchent aucune attaque.
       }
 
       const enemyUnit = nearestEnemyUnit(state, unit);
@@ -192,19 +194,7 @@
 
       const targetVillage = state.players[enemyId(unit.ownerId)].villages[targetLane];
       if (attackCrop(state, unit, targetVillage, damageEvents, delta)) return;
-      if (tryAttackUnit(unit, enemyUnit, damageEvents, delta)) return;
-      const structure = [targetVillage?.terrain?.mill, targetVillage?.terrain?.tower].find(item => item?.hp > 0);
-      if (structure) {
-        const position = E.Config.cardGame.structurePositionByOwner[targetVillage.ownerId];
-        if (Math.abs(unit.position - position) <= E.Config.combat.attackRange) {
-          if (unit.attackCooldown <= 0) {
-            triggerAttackVisual(unit);
-            damageEvents.push({ type: "terrain", target: structure, amount: unit.damage });
-            unit.attackCooldown = attackInterval(unit);
-          }
-        } else moveToward(state, unit, position, delta);
-        return;
-      }
+      if (!unit.structuresOnly && tryAttackUnit(unit, enemyUnit, damageEvents, delta)) return;
       if ((unit.animalType || unit.role) === "chien" && unit.animalMission === "perturber") {
         const herd = E.Animals.targetHerd(state, unit, targetVillage);
         if (herd) {
@@ -241,7 +231,6 @@
       village.slots.forEach((slot) => {
         if (slot.content?.category === "crop" && slot.content.hp <= 0) slot.content = null;
       });
-      for (const key of ["mill", "tower"]) if (village.terrain?.[key]?.hp <= 0) delete village.terrain[key];
     }));
 
     settleDeaths(state);
@@ -251,14 +240,15 @@
     state.units.filter((unit) => unit.hp <= 0).forEach((unit) => {
       const originVillage = state.players[unit.ownerId].villages[unit.originLane];
       if (!originVillage) return;
-      if (unit.isCart) { E.CardEffects?.releaseCart(state, unit); return; }
+      if (E.MythologyEffects?.preventDeath(state, unit)) return;
       queueDeathVisual(state, unit);
+      if (E.MythologyEffects?.onUnitDeath(state, unit)) return;
       if (unit.drowned) state.logs.unshift(`${unit.residentId ? "Un habitant" : "Une unité"} du village ${unit.originLane + 1} s’est noyé faute de place dans une embarcation.`);
       if (["chien", "sanglier"].includes(unit.animalType || unit.role)) E.Animals?.onUnitDeath(state, unit);
       else if (unit.residentId) {
-        if (!E.Economy.removeResident(state, unit.ownerId, unit.originLane, unit.residentId)) E.CardEffects?.recordDeath(state, originVillage, { ...unit, id: unit.residentId });
+        if (!E.Economy.removeResident(state, unit.ownerId, unit.originLane, unit.residentId)) E.MythologyEffects?.recordDeath(state, originVillage, { ...unit, id: unit.residentId });
       }
-      else originVillage.population = Math.max(0, originVillage.population - 1);
+      else if (!unit.isLegend) originVillage.population = Math.max(0, originVillage.population - 1);
     });
     state.units = state.units.filter((unit) => unit.hp > 0);
     markDestroyedVillages(state);
@@ -269,7 +259,7 @@
     Object.values(state.players).forEach((player) => {
       player.villages.forEach((village) => {
         if (!village.destroyed && village.hp <= 0) {
-          village.residents.filter(resident => !resident.unitId).forEach(resident => E.CardEffects?.recordDeath(state, village, resident));
+          village.residents.filter(resident => !resident.unitId).forEach(resident => E.MythologyEffects?.recordDeath(state, village, resident));
           E.Animals?.onVillageDestroyed(village);
           village.destroyed = true;
           village.population = 0;

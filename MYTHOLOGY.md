@@ -1,269 +1,259 @@
-# Catalogue des renforts mythologiques
+# Renforts mythologiques — Eredità
 
-Préparation des données du 20 octobre 2026. Aucun effet supplémentaire n’est
-activé et aucune dépendance n’est ajoutée.
+Les seize pouvoirs confirmés sont intégrés à la partie. Le catalogue existant,
+le cristal, les rayons, le délai de 500 ms et les deux choix symétriques sont
+réutilisés. L’ancien constructeur de decks, la main, la pioche et les anciens
+déblocages mythologiques à 5/10 minutes sont supprimés du dépôt.
 
-## Architecture examinée
+## Tester dans une vraie partie
 
-| Système existant | Fichiers et rôle |
-| --- | --- |
-| Joueurs, villages et état | `js/board.js` crée `state.players`, villages, habitants et banques locales |
-| Configuration | `js/config.js` centralise les valeurs existantes, dont `cardGame` |
-| Unités et équipements | `js/units.js`, `js/equipment.js`, `js/animals.js` |
-| Ressources et population | `js/economy.js`, `js/crops.js`, `js/livestock.js`, `js/buildings.js` |
-| Combat et horloge | `js/combat.js`, `js/game.js` |
-| Catalogue, decks, main | `js/cards.js`, `js/decks.js`, `js/card-game.js` |
-| Effets des cartes | `js/card-effects.js` : pouvoirs, vision, malédiction, terrain brûlé et résurrection |
-| Interface | `js/ui.js`, `js/card-ui.js`, `js/card-art.js`, `js/game-view.js` |
-| Rendu et réseau | `js/board3d.js`, `js/xr*.js`, `js/network.js`, `server.js` |
+1. Lancer `npm start`, puis ouvrir `http://localhost:8765/?intro=0`.
+2. Choisir **JOUER → ENTRAÎNEMENT** ou **MULTIJOUEUR → LOCAL**.
+   Confirmer les biomes et lancer la partie.
+3. Cliquer sur le cristal jaune centré en haut. Après les rayons et 500 ms,
+   les deux propositions se déploient. Choisir directement une illustration.
+4. Le choix obtenu apparaît immédiatement dans le panneau latéral **LÉGENDES**,
+   en image normale au format parallélogramme. Ce panneau remplace les blocs
+   **Banque locale** et **Réserve de barques**. Cliquer sur l’image puis sur
+   une région ou une colonne compatible du plateau 2D/3D. Pour un pouvoir
+   global, cliquer sur n’importe quelle région du terrain. Ni liste de cible
+   ni bouton « Utiliser ». La surbrillance dorée indique les cibles possibles.
+   Échap, Annuler ou un second clic sur l’image annulent la préparation.
+   Une cible invalide conserve le renfort ; après validation son image quitte
+   le stock, sans effacer l’historique privé. Les banques et barques conservent
+   leurs données ; les stocks restent consultables dans les villages/boutiques.
+5. La sélection et l’utilisation sont distinctes : choisir ne lance aucun
+   pouvoir. Le stock permet de conserver plusieurs exemplaires de la même
+   légende provenant de propositions différentes.
+6. Ne rien choisir jusqu’à 4:00 de combat pour obtenir trois propositions
+   (compte à rebours 8:30). Le compteur fait 3 → 2 → 1 → 0 à mesure des choix.
+   Le cristal suivant se réarme immédiatement mais exige toujours un nouveau
+   clic. Préparation et pauses ne comptent pas dans les échéances.
+7. Recommencer une partie : files, stock et effets repartent de zéro.
 
-Les règles de `GAME_DESIGN.md`, sections 59–73, restent la référence. Le catalogue
-prépare **16 légendes** ; les decks continuent de sélectionner **3 des 5 cartes
-jouables**, avec 2 tirées pour la partie et leurs déblocages existants. Les onze
-fiches supplémentaires ne sont pas enregistrées dans `E.Cards` ni dans la main.
+Pour le réseau, ouvrir deux navigateurs sur le relais, créer un salon côté
+Rouge, le rejoindre avec le code côté Bleu, confirmer puis lancer côté hôte.
+Chaque connexion ne reçoit que ses propositions et son stock. Une activation
+est validée par le relais, exécutée par l’hôte, puis confirmée au propriétaire.
+Le mode local sur un seul écran suit le camp sélectionné ; ce n’est pas une
+protection contre la personne qui partage physiquement cet écran.
 
-## Fichiers créés ou modifiés
+Pour consulter les illustrations sans démarrer : **LÉGENDES** au menu principal.
+Le grimoire présente une grande fiche et une galerie des seize légendes en
+parallélogrammes. Cliquer sur une miniature affiche son illustration et son
+pouvoir ; les filtres limitent la galerie à une catégorie. Le clavier permet
+également de parcourir les miniatures. Sur téléphone, l’image apparaît au-dessus
+du texte. Le fond réutilise `assets/deck-library.webp`. Chaque clic sur une
+légende (ou activation au clavier) joue le son de papier existant, une seule
+fois, en respectant la sourdine. L’ouverture du menu et les filtres restent
+silencieux. Les fiches développées précisent les cibles et limites confirmées
+depuis `gameplay.menuDescription`, dans le même catalogue `mythology-data.js`.
+U Diavule conserve sa description publique spéciale. Les résumés des choix
+en partie et les mécaniques restent inchangés. La consultation ne modifie
+pas la partie.
+
+Le cristal situé à droite de l’illustration utilise la palette de cette légende.
+Des particules magiques flottent en permanence autour du cristal. Au survol
+(ou au focus clavier), des éclairs parcourent ses arêtes, pointes et faces
+latérales en restant à sa surface. Ils s’arrêtent dès que le pointeur sort ;
+le focus laissé par un clic ne les maintient pas. Le rendu ambiant est limité
+à 30 images/s et suspendu hors écran, dans un onglet masqué ou en mouvement réduit.
+Cliquer **SON HISTOIRE** fait éclater ses facettes, glisser l’image à gauche
+et apparaître le récit à droite ; le cristal se reforme à gauche. Cliquer
+**SON POUVOIR** effectue le mouvement inverse. Entrée/Espace et le toucher
+activent le même bouton. Les clics pendant une transition sont ignorés et
+changer de légende annule la transition en cours. Avec mouvement réduit,
+la bascule est immédiate, sans éclatement ni glissement.
+
+Les seize textes fournis par le concepteur sont conservés dans `entry.lore`
+du catalogue existant, séparés des paramètres de gameplay. Les mentions de
+sources et les noms de sites du document ne sont pas affichés. Les récits
+longs défilent dans leur zone de lecture ; sur mobile, le texte est placé
+sous l’illustration et le cristal. Une seule instance du renderer existant
+est réutilisée pour toutes les fiches, puis libérée à la fermeture du menu.
+Les durées et le nombre d’effets du grimoire sont regroupés dans
+`Config.mythology.codex` ; les rayons et choix en partie gardent leur animation.
+
+**A Strega Bianca** possède également la vidéo fournie par le concepteur.
+Cliquer son cristal lance la préparation du MP4, puis révèle l’animation avec
+un léger flash blanc dans le parallélogramme au passage à **SON HISTOIRE**.
+Au retour à **SON POUVOIR**, le même flash accompagne le retour de l’image
+originale. La vidéo est muette, en boucle, et ne télécharge rien avant le clic.
+Elle attend une image décodée pour apparaître ; en cas de refus de lecture,
+l’image reste visible. La lecture s’arrête hors écran, dans un onglet masqué,
+au changement de légende ou à la fermeture du menu. Le mouvement réduit
+conserve l’illustration et supprime les flashs et la lecture automatique.
+
+Les clips facultatifs sont définis par `visuals.motion` dans le même catalogue,
+sans second catalogue. A Strega Bianca et U Diavule disposent actuellement
+d’une animation ; les autres fiches gardent leur illustration. Le MP4 de
+A Strega Bianca, H.264 à 30 images/s, est
+optimisé en boucle aller-retour avec ralentissement aux extrémités ; les
+caractéristiques de préparation sont dans `assets/mythology/MOTION.md`.
+
+**U Diavule** possède un GIF de quatre secondes avec une flamme peinte ancrée
+dans sa main, une lumière chaude et des braises. Le personnage et le décor
+proviennent de l’illustration originale intacte. Le menu lit la version MP4
+à 30 images/s avec exactement les mêmes flashs et le même retour à l’image.
+Le GIF téléchargeable reste dans `assets/mythology/u-diavulu-motion.gif`.
+La description publique spéciale et les effets de jeu sont conservés.
+
+En partie, le même chronomètre apparaît directement sous le cristal :
+préparation, combat, pause et Overtime suivent toujours l’horloge existante.
+Il reste entre les deux propositions lorsqu’elles s’ouvrent. Le panneau
+**Vos légendes** reprend les couleurs et les détails du grimoire, avec les
+illustrations et le ciblage existants.
+Pour l’animation seule : `http://localhost:8765/?intro=0&crystal=preview`, choisir
+deux légendes, cliquer le cristal, sélectionner puis rejouer. Cet aperçu ne
+déclenche aucun pouvoir et n’ajoute rien au stock de partie.
+
+L’hébergement statique utilise aussi les URL relatives sous `/-redita/`.
+GitHub Pages prend en charge les modes hors ligne ; le multijoueur a toujours
+besoin du relais WebSocket existant.
+
+## Architecture réutilisée
 
 | Fichier | Responsabilité |
 | --- | --- |
-| Nouveau `js/mythology-data.js` | Configuration des 16 fiches dans `Config.mythology` ; identité, visuels et gameplay séparés ; accès via `E.Mythology` ; résolution des palettes du cristal |
-| Nouveau `js/mythology-effects.js` | Registre descriptif des cinq effets existants, sans nouvelle méthode d’activation |
-| Nouveau `js/mythology-ui.js` | Composants de carte et de paire, aperçu du cristal sur demande, sans commande métier |
-| Nouveau `js/mythology-crystal.js` | Rendu Three.js du cristal bicolore, ouverture et particules ; aucune activation de pouvoir |
-| Nouveau `css/mythology.css` | Styles isolés ; miroir sur la fenêtre illustrée uniquement |
-| Nouveau `tests/mythology.test.js` | Données, fichiers réels, alias, paramètres, absence de mutation et comparaison des effets existants |
-| Nouveau `tests/mythology-browser.test.js` | Vrai navigateur, recadrage, miroir, mobile, decks et lancement d’une partie |
-| Nouveau `tests/crystal-browser.test.js` | Couleurs, ouverture, pause/relecture, pouvoirs absents, palette incomplète, mouvement réduit, mobile et libération des ressources |
-| Nouveau `MYTHOLOGY.md` | Analyse, inventaire, règles d’ajout et vérifications |
-| Modifié `index.html` | Chargement des modules après les systèmes de cartes existants et de leur CSS |
-| Modifié `package.json` | Commandes de validation du catalogue et du navigateur |
+| `js/mythology-data.js` | Unique catalogue : identités, alias, illustrations, couleurs, catégories, descriptions, paramètres, cibles et état. |
+| `js/mythology-effects.js` | Validation de cible, effets, morts, résurrections, vision, unicité d’exécution et mise à jour sur l’horloge du jeu. |
+| `js/mythology-crystal.js` | Rendu Three.js existant du cristal, rayons et éclairs ; indépendant des pouvoirs. |
+| `js/mythology-ui.js`, `css/mythology.css` | Choix, collection des seize légendes, stock et commandes d’utilisation. |
+| `js/mythology-match.js` | Autorité : tirage, FIFO privée, sélection, réservation et confirmation d’activation. |
+| `js/mythology-session.js` | Raccordement à une partie, compteur, choix et stock du joueur courant. |
+| `server-mythology.js`, `server.js`, `js/network.js` | Même catalogue/règles dans le relais, messages privés et exécution de l’hôte. |
+| `js/config.js` | Valeurs confirmées et valeurs temporaires regroupées dans `reinforcementPowers`. |
+| `js/economy.js`, `js/combat.js`, `js/board3d.js`, `js/ui.js` | Hooks dans les systèmes existants, sans moteur d’économie ou de combat parallèle. |
 
-Les fichiers de production des habitants, banques, villages, ressources, unités
-et combat ne sont pas modifiés. Les cinq fonctions d’effets existantes ne sont
-pas réécrites. Le registre indique la voie `CardGame.play → CardEffects.apply`,
-qui conserve ses validations de main, disponibilité, cible et coût.
+Les villages, ressources locales, or, achats, capacité d’habitants, métiers,
+tâches et combat gardent leurs systèmes. Les effets modifient seulement les
+entités ou calculs concernés par un pouvoir demandé.
+Les effets de terrain et la vision dépendent directement de `MythologyEffects`.
+Le bonus d’Artisanat dépend de `Buildings.updateArtisanatBonuses`, avec les mêmes
+statistiques, la conservation des blessures et sans cumul. L’ancien moteur de
+cartes, ses composants, styles, illustrations, paramètres et tests ont été retirés,
+ainsi que ses branches inaccessibles de moulin, tour, sentier, piège et charrette.
+Le fond de bibliothèque reste utilisé par le grimoire. Les embarcations et les
+achats de la boutique restent disponibles.
 
-## Inventaire des images et pouvoirs
+## Pouvoirs confirmés
 
-Recherche effectuée dans les images du dépôt, le manifeste et les références
-de cartes. Les sources trouvées sont dans `assets/cards/fantasy/`.
+| Légende | Effet |
+| --- | --- |
+| U Mazzeru | Vision des humains offensifs ennemis jusqu’à la fin ; pas les autres civils ni les légendes. |
+| A Strega | Rendement d’une région ennemie ×0,5 pendant 120 s. |
+| U Stregu | Rendement d’une région alliée ×2 pendant 120 s. |
+| A Fata | Rivière et vitesse de pêche +25 % dans la région choisie. |
+| Anima in Pena | Une âme par mort allié de la colonne, 1 PV / 1 DPS, tâches possibles mais métiers interdits. |
+| L’Orcu | Invocation de 200 PV / 30 dégâts, très lente. |
+| U Magu | Uniquement le prochain habitant de chaque village allié : statistiques ×2, taille ×1,5, aura violette et dorée. |
+| U Surpatore | Sanglier, puis vampire après sa mort : 25 PV / 5 dégâts, rapide. |
+| U Lupu Mannaru | Transforme un humain libre sans métier, sinon le prochain nouveau-né : 60 PV / 20 dégâts, structures seulement. |
+| U Diavule | Brûle les deux territoires de la colonne, cultures, élevages et habitants dehors. Bâtiments et habitants dans les villages épargnés. |
+| A Strega Bianca | Pendant les prochaines 60 s, sauve les humains qui devraient mourir : retour au début du terrain, pleine vie, tâche et équipement conservés, aura verte et dorée. Pas de timer affiché, pas de légendes ni de morts antérieures. |
+| A Squadra d’Arozza | Ressuscite les humains morts durant les dernières 60 s, sans double résurrection. |
+| A Mumma | Fait repartir les intrus ennemis des territoires alliés. |
+| I Lacramanti | Humains alliés de la colonne : +2 PV / +1 dégât par mort allié depuis le début, pas les légendes. |
+| U Fullettu | Cinq follets, 20 PV / 0 dégât, très rapides ; vol de ressources ennemies directement vers la banque locale alliée. |
+| Œil de Sainte-Lucie | Vision complète des régions littorales ennemies jusqu’à la fin. |
 
-| Légende demandée | Identifiant stable | Image normale trouvée | Pouvoir |
-| --- | --- | --- | --- |
-| U Mazzeru | `u-mazzeru` | `u-mazzeru.webp` | Vision des habitants, section 66 |
-| A Stregha | `a-stregha` | `a-stregha.webp` | Malédiction de production, section 67 |
-| U Stregu | `u-stregu` | Manquante | Non configuré |
-| A Fata | `a-fata` | Manquante | Non configuré |
-| Anima in Pena | `anima-in-pena` | Manquante | Non configuré |
-| L’Orcu | `l-orcu` | Manquante | Non configuré |
-| U Magu | `u-magu` | Manquante | Non configuré |
-| U Surpatore | `u-surpatore` | Manquante | Non configuré |
-| U Lupu Mannaru | `u-lupu-mannaru` | Manquante | Non configuré |
-| U Diavule | `u-diavulu` | `u-diavulu.webp` | Colonne brûlée, sections 68–71 |
-| A Stregha Bianca | `a-stregha-bianca` | Manquante | Non configuré |
-| A Squadra d’Arozza | `squadra-arozza` | `squadra-arozza.webp` | Résurrection, section 72 |
-| A Mumma | `a-mumma` | Manquante | Non configuré |
-| I Lacrimenti | `i-lacrimenti` | Manquante | Non configuré |
-| U Fullettu | `u-fullettu` | Manquante | Non configuré |
-| Ochju di Santa Lucia | `oeil-sainte-lucie` | `oeil-sainte-lucie.webp` | Vision des Littoraux, section 73 |
+La seule description affichée pour U Diavule est « Anéantit le village de
+votre adversaire. », conformément à la demande. Sa description mécanique
+complète reste dans le catalogue. Son terrain brûlé dure toujours 120 s ;
+le village d’origine doit être vivant. L’ancienne exception de dégâts aux
+bâtiments depuis une Montagne est retirée.
+A Squadra conserve le retour au village d’origine ou au plus proche survivant
+et l’attente si l’accueil est plein/brûlé, selon les règles existantes.
 
-**Aucune des 16 variantes inversées n’existe dans le dépôt.** Pour les cinq
-images disponibles, la carte de droite réutilise l’illustration normale avec
-un miroir CSS. Pour les onze autres, les deux côtés affichent « Illustration
-manquante », sans requête vers un fichier supposé.
+Les identifiants historiques `a-stregha`, `u-diavulu`, `i-lacrimenti` et
+`oeil-sainte-lucie` sont conservés ; les noms demandés sont résolus par alias.
+A Mazzera, visible dans la planche mais absente des seize pouvoirs fournis,
+n’est pas ajoutée.
 
-Les nouveaux noms demandés sont conservés dans le catalogue. Les identifiants
-`u-diavulu`, `squadra-arozza` et `oeil-sainte-lucie` restent ceux des commandes
-et decks actuels. Les alias `u-diavule`, `a-squadra-d-arozza` et
-`ochju-di-santa-lucia`, ainsi que les noms affichés, permettent les recherches.
-L’interface de cartes existante conserve ses libellés actuels.
+## Illustrations et couleurs
 
-### Recadrage et textes imprimés
+Les seize illustrations normales existent dans `assets/mythology/{id}.webp`,
+en 1536 × 1024, environ 112 à 213 Ko chacune.
+Elles ont été générées individuellement avec **image_gen intégré**, dans un
+traitement graphique sombre : silhouettes fortes, couleurs limitées et
+réalisme réduit à la demande du concepteur. Ce sont des interprétations,
+pas des découpes exactes de la planche absente du système de fichiers.
+Les prompts complets et fichiers finaux sont dans
+`assets/mythology/generation.json`.
 
-Les cinq fichiers trouvés sont des **cartes complètes**, de 172 à 195 pixels
-de large et 241 pixels de haut. Ils ne constituent pas des illustrations
-séparées en haute définition. Leur titre, description et icône sont imprimés
-dans l’image ; certains textes imprimés contredisent les règles écrites.
+Aucune illustration normale ne manque. Les seize variantes inversées distinctes
+sont absentes : le fallback CSS ne retourne que l’illustration à droite,
+jamais le texte, les icônes ou la géométrie.
+Les couleurs sont centralisées dans `mythology-data.js` et marquées
+`paletteStatus: 'provisional'`, d’après la référence ; ce ne sont pas des
+couleurs définitives inventées. Une couleur manquante est signalée par
+`getCrystalPalette` et dans l’aperçu.
 
-La fenêtre illustrée utilise un rectangle normalisé : `x = 0,06`, `y = 0,13`,
-`largeur = 0,88`, `hauteur = 0,46`. Il se situe sous le titre et au-dessus de la
-description. Le ratio réel du recadrage est conservé. Aucune image n’est
-réécrite : la découpe visuelle est réalisée avec une fenêtre CSS masquée.
+Les valeurs qualitatives non chiffrées par le concepteur restent explicitement
+temporaires dans `Config.reinforcementPowers` : vitesses d’Orcu, du vampire
+et des follets, cadence/quantité de vol, position d’invocation.
+Le sanglier de Surpatore réutilise l’archétype existant.
 
-Seule `.mythology-illustration-crop.is-mirrored` reçoit `scaleX(-1)`.
-Les textes HTML, statistiques, cadres et icônes sont hors de cette fenêtre.
-Une variante inversée fournie plus tard sera utilisée directement, sans miroir
-supplémentaire, avec son propre recadrage éventuel.
+## Réseau et événements
 
-## Configuration et limites de confirmation
+Le relais détermine le propriétaire depuis la connexion, conserve l’ordre FIFO,
+valide l’offre obtenue, interdit une sélection arbitraire et réserve l’activation.
+Le navigateur hôte valide la cible dans le monde courant puis exécute.
+Le journal public `state.mythology.executions` rend les réessais idempotents.
+Seul l’hôte peut confirmer le résultat au relais.
 
-Chaque fiche contient :
+L’hôte ne reçoit pas le stock privé Bleu ; il apprend la légende explicitement
+utilisée au moment de son exécution. Les effets publics sont diffusés avec la
+simulation. Le prototype conserve l’autorité de simulation du navigateur Rouge :
+ce chantier ne remplace pas le relais par un serveur de jeu entièrement autoritaire.
 
-- `id`, `name`, `aliases` ;
-- `visuals.normal`, `visuals.reversed`, couleurs principale/secondaire ;
-- `gameplay.category`, `description`, `parameters`, `status`, source écrite ;
-- `implementation.status`, `effectKey`, `cardId`.
+L’événement existant `eredita:mythology-select` reste celui du choix visuel.
+Après validation, `eredita:mythology-collected` annonce uniquement au propriétaire
+la légende obtenue. L’aperçu ne l’émet pas.
+`MythologySession.getObtainedLegends()` dérive le stock des confirmations privées.
 
-Les catégories possibles sont `invocation`, `enchantement`, `terrain` et
-`vision`. Les cinq pouvoirs connus sont classés d’après leurs effets existants.
-Cette classification documentaire n’ajoute pas d’unité ni de mécanique.
+`Config.reinforcements` conserve `intervalSeconds: 120`, `pendingPolicy: 'fifo'`
+et le mode développement. Les seize pouvoirs étant implémentés, aucune fiche
+ne reste « non configurée ». Si une future fiche est incomplète, son test visuel
+reste possible sans activation :
+`Eredita.Config.reinforcements.development.includeUnconfigured = true`
+avant une nouvelle partie locale ; en réseau, utiliser
+`EREDITA_MYTHOLOGY_DEVELOPMENT=1 npm start` côté relais.
 
-Pour les onze pouvoirs non confirmés, description, paramètres, catégorie et
-liaison d’effet sont **`null`**, avec `status: 'unconfigured'`. Le catalogue
-n’invente ni invocation, ni PV, dégâts, coût ou temps de recharge. Une catégorie
-doit être définie avec le pouvoir ; elle n’est pas déduite du seul nom.
-
-Les palettes sont indicatives et portent `paletteStatus: 'provisional'`.
-Les cinq palettes associées à une image s’accordent à celle-ci ; les autres utilisent le bronze
-de l’interface. Ce sont des choix visuels, sans bonus ou malus.
-
-Les durées et dégâts déjà configurables sont des références vers
-`Config.cardGame` : durée 120 s, fenêtres de résurrection 180/300 s, dégâts
-depuis la Montagne 125. `getGameplay()` résout ces références au moment de
-la lecture ; aucune copie de ces valeurs n’est utilisée par un nouveau moteur.
-Le facteur 0,5 de la malédiction est confirmé par la section 67 et décrit ici
-l’effet actuel, sans modifier `CardEffects.productionMultiplier`.
-
-La résurrection reprend la décision existante sur le village d’accueil,
-la capacité et la file d’attente. L’ancienne note de `cards.js` disant que le
-lieu de retour reste à définir n’est pas reprise : la section 72 fait foi.
-La politique temporaire de départage à distances égales est identifiée
-comme telle et reste exécutée uniquement par le moteur existant.
-
-## Ajouter une illustration ou compléter une légende
-
-Modifier sa fiche dans `js/mythology-data.js`, puis recharger la page.
-
-1. Ajouter le véritable fichier au projet avant de renseigner son chemin.
-2. Renseigner `normal` ou `reversed` avec `{ src, kind, width, height, crop }`.
-   Pour une illustration seule, utiliser `kind: 'illustration'` et `crop: null`.
-   Pour une carte complète, vérifier un recadrage excluant tout texte et icône.
-3. Après validation du pouvoir, renseigner catégorie, description, paramètres
-   et source, puis l’option `powerStatus: 'confirmed'` de la fiche. Tant que le
-   comportement n’est pas implémenté, conserver `implemented: false` et
-   `effectKey: null` : l’état d’implémentation reste `not-implemented`.
-4. Lors d’un futur chantier de gameplay autorisé, ajouter la liaison dans le
-   registre d’effets, puis `implemented: true`, et passer par le système de commandes existant. Changer
-   une fiche ne doit jamais suffire à contourner les règles de jeu.
-5. Relancer les validations des données et des images.
-
-Les identifiants sont stables. L’ajout d’un visuel ne nécessite pas de changer
-un pouvoir, et l’ajout de métadonnées ne rend pas une carte jouable.
-
-## Consulter et prévisualiser
-
-```js
-Eredita.Config.mythology.entries;
-Eredita.Mythology.get('U Diavule');
-Eredita.Mythology.getGameplay('u-mazzeru');
-Eredita.Mythology.getIllustration('u-mazzeru', 'right');
-Eredita.Mythology.report();
-Eredita.MythologyEffects.getBinding('u-mazzeru');
-```
-
-Sans paramètre d’aperçu, les composants n’ajoutent rien aux écrans actuels. Pour les
-inspecter depuis la console du menu, sans jouer de pouvoir :
-
-```js
-const preview = document.createElement('dialog');
-preview.style.cssText = 'max-width:90vw;max-height:90vh;overflow:auto;background:#15140f';
-preview.append(Eredita.MythologyUI.createPair('u-mazzeru'));
-document.body.append(preview);
-preview.showModal();
-// Fermer avec Échap, puis preview.remove().
-```
-
-## Tester visuellement le cristal
-
-Lancer le serveur avec `npm start`, puis ouvrir :
-
-**http://localhost:8765/?intro=0&crystal=preview&left=u-mazzeru&right=u-diavule**
-
-Sur GitHub Pages, ajouter la même requête après le chemin `/-redita/` :
-`/-redita/?intro=0&crystal=preview&left=u-mazzeru&right=u-diavule`.
-Tous les modules et assets sont chargés par chemins relatifs.
-
-Les deux listes permettent de choisir parmi les 16 fiches existantes. Le
-cristal prend la couleur principale de chaque côté ; les lignes de facettes
-reprennent la couleur secondaire lorsqu’elle existe. Il se charge, se sépare
-en deux, puis révèle les composants de cartes existants en environ 4,4 secondes.
-**Rejouer**, **Pause/Reprendre**, **Fermer** et **Échap** permettent de le tester.
-Choisir **U Stregu** et **A Fata** vérifie le fonctionnement sans pouvoir
-configuré et sans image : les états manquants restent indiqués sur les cartes.
-
-Les palettes actuelles sont toutes marquées **provisoires** dans le catalogue.
-L’aperçu le rappelle ; il n’ajoute aucune couleur de légende. Une couleur
-principale absente ou invalide bloque l’animation et affiche le renfort concerné.
-Une couleur secondaire absente, facultative, est signalée ; seules les teintes
-principales existantes sont alors utilisées. Une valeur fournie mais invalide
-est également signalée et bloque l’aperçu. Le résolveur accepte les couleurs
-hexadécimales à six chiffres, comme les palettes actuelles du catalogue.
-
-Accès depuis la console du navigateur, sans modifier l’URL :
-
-```js
-const preview = Eredita.MythologyUI.openCrystalPreview({
-  leftId: 'u-mazzeru', rightId: 'u-diavule'
-});
-await preview.crystal.ready;
-```
-
-Commandes à exécuter séparément, selon l’étape à inspecter :
-
-```js
-preview.crystal.pause();
-preview.crystal.seek(2.4); // inspecter une étape, en pause
-preview.crystal.play();  // rejouer depuis le début
-preview.close();
-```
-
-`createPair('u-mazzeru', { rightId: 'u-diavule' })` réutilise la même paire
-avec deux légendes différentes. L’inversion éventuelle reste limitée à
-l’illustration de droite ; aucun texte ou pictogramme n’est retourné.
-
-`Mythology.getCrystalPalette(leftId, rightId)` lit les visuels exclusivement
-dans `mythology-data.js`, sans consulter l’état des pouvoirs. Le rendu séparé
-`mythology-crystal.js` importe la copie locale de Three.js déjà utilisée par le
-projet, uniquement à l’ouverture d’un aperçu. L’interface reste dans
-`mythology-ui.js`, les styles dans `mythology.css`, le registre
-`mythology-effects.js` reste inchangé. Il n’y a pas de second catalogue.
-
-Les réglages de présentation sont centralisés dans `Config.mythology.crystal` :
-durées, 48 particules, définition limitée à 1,5 et cadence de 30 images/s sur
-petit écran, 60 sur ordinateur. La boucle s’arrête à la fin et quand l’onglet est
-masqué. Le mouvement réduit affiche immédiatement les cartes et un cristal
-fixe. La fermeture libère le contexte WebGL, les géométries et les écouteurs.
-L’aperçu ne joue aucune carte et ne change ni la main, ni les ressources,
-ni les règles. Il ne remplace aucun écran du jeu.
-
-## Vérification
+## Vérifications
 
 ```sh
-npm run test:mythology
-npm run test:mythology-browser
-npm run test:crystal
 npm test
+npm run test:crystal
+npm run test:mythology-browser
+npm run test:reinforcements-browser
+npm run test:powers-browser
+npm run test:menu
+npm run test:xr
 ```
 
-La suite de données compare notamment l’état complet de la partie après chacun
-des cinq effets existants, avec et sans chargement du catalogue. Les résultats
-doivent rester identiques. Elle contrôle aussi les chemins WebP et dimensions,
-les identifiants, les valeurs non configurées et le recours à une vraie variante
-inversée lorsqu’elle est fournie.
+Les tests métier couvrent les seize effets, les statistiques, la durée et les
+cibles, la conservation des ressources, les résurrections, la vision et
+l’unicité. Les tests navigateur couvrent le catalogue sous `/-redita/`,
+les images normales/inversées, le délai de 500 ms, la symétrie, le FIFO
+3 → 2 → 1 → 0, le réarmement manuel, la pause et la remise à zéro.
+Le parcours de pouvoirs vérifie l’ajout immédiat de l’image au panneau, le
+parallélogramme, U Magu par clic 3D sur un terrain, A Strega sur une région
+ennemie en 2D et I Lacramanti sur une colonne en mode tactile. Il couvre
+l’annulation, la pause et la conservation des cibles refusées, puis utilise
+deux clients du relais : activation invitée unique et stock adverse inaccessible.
+Le mobile est simulé à 390 × 844 ; les erreurs JS/console/HTTP sont contrôlées.
 
-La suite navigateur sert le jeu sous `/-redita/`, inspecte les transformations
-CSS, les recadrages, les états manquants et l’écran mobile 390 × 844, puis ouvre
-les decks existants et lance un entraînement. Les captures peuvent être gardées :
+Captures facultatives :
+`EREDITA_LEGENDS_PREVIEW_DIR=/tmp/eredita-legendes npm run test:powers-browser`.
 
-```sh
-EREDITA_MYTHOLOGY_PREVIEW_DIR=/tmp/eredita-mythology npm run test:mythology-browser
-EREDITA_CRYSTAL_PREVIEW_DIR=/tmp/eredita-crystal npm run test:crystal
-```
+## Limites connues
 
-Validation du 20 octobre 2026 : suite existante du jeu, huit tests du catalogue
-et parcours navigateur réussis. Les cinq illustrations ont été inspectées
-visuellement, ainsi que la paire gauche/droite et le rendu mobile. Aucun casque
-n’est nécessaire pour cette préparation de données et de composants web.
-L’aperçu du cristal a également été validé dans Chrome : fin naturelle de
-l’animation, pause, relecture, deux pouvoirs non configurés, couleur principale
-manquante, mouvement réduit, petit écran simulé et fermeture avec Échap.
+* Les figurines 3D réutilisent les archétypes existants, teintés et redimensionnés ;
+  elles ne sont pas encore des modèles sculptés propres aux seize légendes.
+* L’IA ne choisit ni n’utilise encore ses renforts. Le tutoriel ne reçoit pas
+  de propositions supplémentaires.
+* Le cristal et le stock sont HTML : utilisables dans la fenêtre 2D du navigateur,
+  pas encore dans les panneaux WebXR immersifs. Pas de validation matérielle Quest.
+* Les ressources et la visibilité du monde restent dans le snapshot partagé,
+  comme avant ; seules files et sélections sont privées côté relais.

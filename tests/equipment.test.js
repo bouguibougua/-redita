@@ -75,9 +75,9 @@ assert.equal(unit.role, "habitant", "Non-combat profession grants no combat spec
 assert.equal(unit.profession, "agriculteur", "Visual profession survives combat deployment");
 assert.equal(unit.tool, "fer");
 assert.equal(unit.armor, "fer");
-assert.equal(unit.hp, E.Config.units.habitant.hp + 50);
+assert.equal(unit.hp, E.Config.units.habitant.hp + 50 + E.Config.building.artisanatBonus.hp);
 assert.equal(unit.maxHp, unit.hp);
-assert.equal(unit.damage, E.Config.units.habitant.damage + 20);
+assert.equal(unit.damage, E.Config.units.habitant.damage + 20 + E.Config.building.artisanatBonus.damage);
 assert.equal(buy("armors", "cuir"), false, "Equipment cannot change during combat");
 const warrior = E.Units.create("red", 0, "guerrier", { tool: "bronze", armor: "maille" });
 assert.equal(warrior.hp, E.Config.units.guerrier.hp + 35);

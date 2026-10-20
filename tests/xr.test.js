@@ -28,10 +28,6 @@ async function run() {
   assert.equal(E.GameView.selectVillage("blue", 1), true);
   assert.equal(E.GameView.selectVillage("missing", 1), false);
   assert.deepEqual(calls, [["blue", 1]]);
-  const cards = E.GameView.createCardTargeting();
-  assert.equal(cards.activate("ble"), false, "Aucune règle de carte inventée");
-  assert.equal(cards.confirm({}), false);
-
   const source = (hand, profiles = ["meta-quest-touch-plus"], mapping = "xr-standard") => ({
     handedness: hand, profiles, targetRayMode: "tracked-pointer", targetRaySpace: {}, gripSpace: {},
     gamepad: { mapping, axes: [0, 0, 0, 0], buttons: Array.from({ length: 8 }, () => ({ pressed: false })) }

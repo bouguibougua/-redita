@@ -143,10 +143,8 @@
     const connection = $("#connection-screen");
     const menu = $("#main-menu");
     if (sub && !sub.hidden) {
-      const modal = sub.querySelector(".deck-modal-backdrop:not(.closing)");
-      const source = modal || $("#menu-subcontent") || sub;
-      const title = modal ? sub.querySelector("#deck-modal-title")?.textContent : $("#menu-subtitle")?.textContent;
-      return { scope: modal ? "deck-card" : sub.classList.contains("decks-screen") ? "decks" : "play", title: title || "Choisissez votre voie", buttons: [...source.querySelectorAll("button")].filter((button) => visible(button) && !button.closest(".deck-modal-backdrop.closing")), back: modal?.querySelector(".deck-modal-close, button[data-close-modal]") || $("#menu-back") };
+      const source = $("#menu-subcontent") || sub;
+      return { scope: sub.classList.contains("legends-screen") ? "legends" : "play", title: $("#menu-subtitle")?.textContent || "Choisissez votre voie", buttons: [...source.querySelectorAll("button")].filter(visible), back: $("#menu-back") };
     }
     if (connection && !connection.hidden) {
       return { scope: "connection", title: "Choisir une partie", buttons: [...connection.querySelectorAll("button")].filter((button) => visible(button) && button.id !== "connection-back"), back: $("#connection-back"), input: $("#room-code") };
@@ -268,9 +266,8 @@
       pageText.position.set(0, -0.81, 0);
       active.group.add(pageText);
     }
-    if (nav.scope === "decks" || nav.scope === "deck-card" || nav.input) {
-      const label = nav.input ? "Saisir le code du salon sur le site" : "Voir les cartes et éditer sur le site";
-      addButton(active, label, 0, -1.17, width, 0.13, () => end(() => nav.input?.focus()));
+    if (nav.input) {
+      addButton(active, "Saisir le code du salon sur le site", 0, -1.17, width, 0.13, () => end(() => nav.input.focus()));
     }
     active.controllers.forEach((record) => { record.hit = null; });
   }

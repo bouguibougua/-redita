@@ -13,7 +13,7 @@
     if (state.phase !== "running") return "Partie inactive";
     if (state.paused) return "Partie en pause";
     if (village.destroyed) return "Village détruit";
-    if (E.CardEffects?.isBurned(state, village)) return "Terrain brûlé";
+    if (E.MythologyEffects?.isBurned(state, village)) return "Terrain brûlé";
     return null;
   }
 

@@ -12,7 +12,7 @@
 
 ## 1.1 Concept général
 
-Eredità est le nom de travail d'un jeu vidéo de stratégie en temps réel et de cartes inspiré de la Corse, de son territoire, de son patrimoine, de son matrimoine, de ses pratiques, de ses croyances, de ses légendes et de ses traditions.
+Eredità est le nom de travail d'un jeu vidéo de stratégie en temps réel avec renforts mythologiques inspiré de la Corse, de son territoire, de son patrimoine, de son matrimoine, de ses pratiques, de ses croyances, de ses légendes et de ses traditions.
 
 Le jeu est développé dans le cadre d'un projet universitaire en BUT MMI.
 
@@ -20,14 +20,14 @@ Il s'agit d'un jeu :
 
 * 1 contre 1 ;
 * en temps réel ;
-* basé sur des cartes ;
+* avec des renforts mythologiques ;
 * avec gestion de ressources ;
 * avec développement de villages ;
 * avec agriculture et élevage ;
 * avec différentes régions/biomes ;
 * avec combat automatique ;
 * avec des éléments issus de la culture corse ;
-* avec des cartes mythologiques extrêmement puissantes.
+* avec des pouvoirs mythologiques extrêmement puissants.
 
 Le prototype doit d'abord être développé sous forme de jeu web 2D.
 
@@ -95,7 +95,7 @@ Le jeu oppose :
 * Joueur Rouge ;
 * Joueur Bleu.
 
-Le prototype propose un mode local à deux joueurs sur un même écran, un mode solo contre une IA et un mode réseau à deux ordinateurs. En solo, le joueur humain joue Rouge et l'IA joue Bleu ; elle confirme son tirage initial et utilise les mêmes actions et règles que le joueur humain. Le joueur peut consulter les villages bleus sans les commander. En réseau, le créateur du salon joue Rouge et héberge l'état autoritaire de la simulation ; le joueur qui rejoint avec le code du salon joue Bleu. Chaque joueur ne peut modifier que ses propres territoires. Le serveur relaie les commandes du joueur Bleu et les états du créateur afin de conserver une simulation commune.
+Le prototype propose un mode local à deux joueurs sur un même écran, un mode solo contre une IA et un mode réseau à deux ordinateurs. En solo, le joueur humain joue Rouge et l'IA joue Bleu ; elle confirme son tirage initial et utilise les mêmes actions et règles que le joueur humain. Le joueur peut consulter les villages bleus sans les commander. En réseau, le créateur du salon joue Rouge et héberge l'état autoritaire de la simulation ; le joueur qui rejoint avec le code du salon joue Bleu. Chaque joueur ne peut modifier que ses propres territoires. Le serveur relaie les commandes du joueur Bleu et les états du créateur afin de conserver une simulation commune. Les propositions de renforts constituent une exception privée : le relais conserve leurs tirages et sélections et ne transmet à chaque connexion que les siens, en suivant l’horloge de combat publiée par l’hôte.
 
 TEMP_BALANCE_VALUE : la stratégie de l'IA est provisoire. Elle plante une culture compatible, construit un Artisanat, affecte un habitant à l'agriculture, forme des Guerriers, attaque et défend les lignes menacées avec ses habitants disponibles. Sa cadence de décision, ses réserves et ses limites d'unités sont centralisées dans `config.js`. Elle ne dispose d'aucune ressource ou statistique supplémentaire.
 
@@ -131,7 +131,7 @@ Le format **Simplifié** est proposé sur écran et dans le casque pour l’entr
 
 Au tirage initial, chaque joueur reçoit deux biomes différents. L’ensemble des quatre régions contient obligatoirement au moins une Plaine, une Montagne et un Littoral. La répartition et l’ordre des régions sont aléatoires. Chaque joueur peut ensuite conserver son tirage ou échanger **une seule région**, une seule fois avant confirmation. Choisir une autre région déplace la sélection en un clic. Le nouveau biome est aléatoire parmi les autres types, même si le joueur possède déjà ce biome : les contraintes initiales ne sont pas réappliquées après échange.
 
-Le format reste dans l’état autoritaire et les snapshots réseau ; un redémarrage conserve le format choisi. Les coûts, ressources, métiers, tâches, decks, statistiques, minute de préparation, 12:30 de combat, Overtime et règles de génération par nombre de villages vivants restent identiques. La carte 2D/3D, les fiches et la navigation ne montrent que les villages existants. Les unités progressent sur deux lignes et sont redirigées vers l’autre village vivant suivant les règles existantes.
+Le format reste dans l’état autoritaire et les snapshots réseau ; un redémarrage conserve le format choisi. Les coûts, ressources, métiers, tâches, statistiques, minute de préparation, 12:30 de combat, Overtime et règles de génération par nombre de villages vivants restent identiques. La carte 2D/3D, les fiches et la navigation ne montrent que les villages existants. Les unités progressent sur deux lignes et sont redirigées vers l’autre village vivant suivant les règles existantes.
 
 TEMP_BALANCE_VALUE — présentation : en 3D et en réalité mixte, les terrains du format à deux camps sont élargis de 15 % pour équilibrer les proportions du plateau. Le socle, les bordures, le littoral et les positions des éléments suivent cette largeur, sans étirer les modèles. Cette valeur visuelle est centralisée dans `Config.board.simplifiedWidthScale` et ne change pas les distances logiques ou les règles de jeu.
 
@@ -151,7 +151,7 @@ Une situation où les deux joueurs perdent leur dernier village simultanément p
 
 ## 5.1 Préparation des villages — 1 minute
 
-Après la confirmation des decks et biomes des deux camps et le lancement de la partie, une préparation commune de **60 secondes** permet de sélectionner les villages, construire, acheter, attribuer les tâches et les métiers et définir les préférences des futurs habitants. Les coûts, prérequis et restrictions de contrôle restent identiques.
+Après la confirmation des biomes des deux camps et le lancement de la partie, une préparation commune de **60 secondes** permet de sélectionner les villages, construire, acheter, attribuer les tâches et les métiers et définir les préférences des futurs habitants. Les coûts, prérequis et restrictions de contrôle restent identiques.
 
 La musique de combat commence **dès le lancement de cette préparation**, sur ordinateur et dans le casque. L’invité réseau adopte cette musique dès la réception de l’état de préparation de l’hôte. Le passage au combat ne relance pas le morceau.
 
@@ -321,11 +321,11 @@ Une Plaine possède :
 
 Les 4 slots sont libres.
 
-Le joueur peut choisir ce qu'il souhaite mettre dedans selon les restrictions des cartes.
+Le joueur choisit les productions compatibles avec le type de slot.
 
 Il peut donc potentiellement spécialiser entièrement une région.
 
-Par exemple, si les règles des cartes l'autorisent, il peut utiliser plusieurs slots pour le même type d'élevage ou de production.
+Il peut utiliser plusieurs slots compatibles pour le même type d’élevage ou de production.
 
 ---
 
@@ -1229,7 +1229,7 @@ IMPORTANT :
 
 Les rivières ne sont PAS présentes automatiquement sur la carte.
 
-Une rivière apparaît seulement lorsqu'une carte ou une mécanique correspondante est utilisée.
+Une rivière apparaît avec le renfort A Fata ; elle n’est pas générée automatiquement.
 
 La Rivière peut être placée dans :
 
@@ -1255,6 +1255,9 @@ sans recréer toute la carte.
 ---
 
 # 43. MOULIN
+
+> Historique : mécanique liée aux anciennes cartes, retirée du prototype
+> actuel (section 59). Les valeurs ci-dessous restent une référence de conception.
 
 PV :
 
@@ -1470,12 +1473,7 @@ TEMP_BALANCE_VALUE : achat **120 or**, vitesse **5 unités/s**, **une attaque pa
 
 La Barque sert à traverser le Littoral.
 
-Lorsqu'elle est :
-
-* achetée ;
-* ou directement placée grâce à une carte ;
-
-elle rejoint la réserve de son village. Sur un Littoral, elle apparaît aussi physiquement sur le bord de l'eau.
+Lorsqu’elle est achetée, elle rejoint la réserve de son village. Sur un Littoral, elle apparaît aussi physiquement sur le bord de l'eau.
 
 Maximum :
 
@@ -1523,6 +1521,9 @@ TEMP_BALANCE_VALUE : en attendant la définition du prix, un Voilier coûte **35
 
 # 52. CHARRETTE
 
+> Historique : mécanique liée aux anciennes cartes, retirée du prototype
+> actuel (section 59). Les valeurs ci-dessous restent une référence de conception.
+
 PV :
 
 **150.**
@@ -1567,6 +1568,9 @@ Le Filet est acheté depuis le magasin du village Littoral et nécessite une Bou
 ---
 
 # 54. TOUR GÉNOISE
+
+> Historique : mécanique liée aux anciennes cartes, retirée du prototype
+> actuel (section 59). Les valeurs ci-dessous restent une référence de conception.
 
 PV :
 
@@ -1635,6 +1639,9 @@ Une armure peut être portée en même temps qu'un outil. L'achat équipe imméd
 
 # 57. SENTIER DE RANDONNÉE
 
+> Historique : mécanique liée aux anciennes cartes, retirée du prototype
+> actuel (section 59). Les valeurs ci-dessous restent une référence de conception.
+
 Utilisable :
 
 **uniquement en Montagne.**
@@ -1649,6 +1656,9 @@ Cette valeur est provisoire car le système de vitesse doit encore être équili
 
 # 58. PIÈGE
 
+> Historique : mécanique liée aux anciennes cartes, retirée du prototype
+> actuel (section 59). Les valeurs ci-dessous restent une référence de conception.
+
 Dégâts :
 
 **50.**
@@ -1659,309 +1669,243 @@ Lorsqu'un adversaire passe dessus :
 
 ---
 
-# 59. DECK
+# 59. RETRAIT DU SYSTÈME DE DECKS
 
-Chaque joueur prépare son deck :
+Décision du concepteur : le système de cartes normal est retiré. Il n’y a plus
+de constructeur de deck, de présélection mythologique, de main ni de pioche.
+La préparation porte uniquement sur les biomes. Les achats, tâches, métiers,
+bâtiments et combats conservent leurs voies directes existantes.
 
-**AVANT la partie.**
-
-Deck normal :
-
-**jusqu'à 30 cartes.**
-
-Un deck incomplet de 1 à 30 cartes est autorisé et utilisé tel quel en partie. Si le deck choisi est vide, un deck de départ de 30 cartes est proposé automatiquement ; les trois compositions temporaires se trouvent dans `Config.cardGame.starterDecks`. Le constructeur permet aussi de charger explicitement ce deck de départ pour le modifier.
-
-Maximum d'exemplaires d'une même carte :
-
-**4.**
-
-Toutes les cartes normales définies peuvent être ajoutées au deck, quelle que soit leur catégorie. Les cartes Mythologiques sont séparées du deck normal.
-
-Le constructeur propose trois decks indépendants. Dans le prototype actuel, leur contenu reste uniquement dans l'état JavaScript de la session et n'est pas sauvegardé après actualisation.
-
-L’écran des decks prend place sur un fond de bibliothèque. Sur ordinateur, la
-composition du deck actif se trouve à gauche et la collection à droite. La
-collection réunit visuellement les cartes normales et mythologiques, avec une
-recherche et des filtres par catégorie. Les quantités peuvent être modifiées
-depuis les deux panneaux ; la sélection mythologique reste affichée dans le
-panneau du deck. Les Mythologiques conservent leur sélection distincte et ne
-comptent pas dans les 30 cartes normales. Sur mobile, les panneaux s’empilent.
-
-Un ajout effectif au deck joue le son de page qui tourne fourni par le
-concepteur ; un retrait joue ce même son à l’envers. Cela s’applique aux cartes
-normales et aux sélections mythologiques, depuis la collection, le deck ou une
-fiche. Un ajout ou retrait refusé ne déclenche pas de son.
-
-Chaque deck sélectionne également **3 cartes Mythologiques parmi 5**. Pour la partie, **2 de ces 3 cartes** sont tirées au sort et deviennent disponibles. TEMP_BALANCE_VALUE : une sélection incomplète est complétée avec les choix du deck de départ, en conservant les cartes déjà choisies.
+Les fichiers, paramètres, styles, illustrations et tests de cet ancien système
+sont supprimés. Les fonctions encore actives sont conservées dans les modules
+de bâtiments et de renforts mythologiques.
+Le menu principal propose désormais **LÉGENDES**, catalogue des seize renforts.
+Il les présente dans un grimoire : grande fiche illustrée, galerie en
+parallélogrammes et filtres par catégorie. Ce menu de consultation utilise
+le catalogue existant, sans effet sur les stocks ou les pouvoirs en partie.
+Le fond de bibliothèque historique est réutilisé ; consulter une légende joue
+un bruit de page, selon le réglage sonore. Les fiches détaillent les effets
+et limites confirmés, sans modifier les règles ni les résumés des choix en jeu.
+Le cristal individuel du grimoire reprend la couleur de la légende. Des
+particules magiques flottent en permanence ; au survol, des éclairs longent
+ses arêtes et font le tour de sa surface. Au clic, il éclate puis se reforme
+de l’autre côté de l’illustration : l’image glisse à gauche pour révéler
+l’histoire à droite, puis à droite pour retrouver le pouvoir à gauche.
+Les seize récits fournis sont consultables sans leurs sources. Cette bascule
+fonctionne aussi au clavier et au toucher, avec un mode de mouvement réduit.
+Lorsqu’une vidéo propre à une légende est configurée, le passage à l’histoire
+remplace l’illustration par cette animation muette en boucle, avec un léger
+flash blanc limité à l’illustration. Le retour aux pouvoirs restaure l’image
+originale avec le même flash. **A Strega Bianca** utilise le clip fourni et
+**U Diavule** une animation de flamme dans sa main, également disponible en GIF.
+Les autres légendes restent illustrées par leur image. Le mouvement réduit
+conserve les images et supprime le flash et la lecture automatique.
 
 ---
 
-# 60. MAIN DE DÉPART
+# 60. OBTENTION DES RENFORTS
 
-Le joueur commence avec :
+Une proposition est disponible au lancement de la préparation. Une nouvelle
+est ajoutée toutes les **120 secondes de combat**, pour chaque joueur.
+Préparation, pause et fin de partie ne font pas avancer cette cadence.
 
-**5 cartes.**
-
-Ensuite :
-
-**1 nouvelle carte toutes les 30 secondes.**
-
-La phase normale dure 12:30.
-
-La distribution doit être conçue autour des 30 cartes du deck.
-
-Il faut faire attention au fait qu'une pioche à exactement 12:30 coïncide avec le début de l'Overtime.
-
-Ce comportement devra être défini précisément pendant le développement.
+Chaque proposition contient deux légendes différentes, tirées dans le catalogue
+central parmi les pouvoirs confirmés et implémentés. Le mode de développement
+peut inclure des fiches incomplètes, sans rendre leurs pouvoirs activables.
 
 ---
 
-# 61. LIMITE DE MAIN
+# 61. FILE FIFO PRIVÉE
 
-Maximum :
+Les propositions s’accumulent sans limite ni remplacement dans une file privée
+par joueur. Le cristal affiche uniquement la plus ancienne et un compteur :
+0:00 → 1 proposition, 2:00 → 2, 4:00 → 3 si aucun choix n’est fait.
 
-**15 cartes en main simultanément.**
-
-**Décision du concepteur : lorsque la main contient 15 cartes, la pioche est suspendue sans perdre de carte.** La prochaine carte reste dans le deck et arrive dès qu'une place se libère si l'intervalle est déjà écoulé. Une seule pioche peut attendre ; il n'y a pas d'accumulation de plusieurs cartes pendant ce blocage. Le prochain intervalle repart après cette pioche.
-
----
-
-# 62. CARTES MYTHOLOGIQUES
-
-Les cartes Mythologiques sont volontairement extrêmement puissantes.
-
-Le but est que leur existence provoque une tension permanente.
-
-Avant la partie, chaque joueur présélectionne :
-
-**3 cartes Mythologiques parmi les 5 existantes.**
-
-Pour la partie, le jeu tire ensuite au sort :
-
-**2 cartes parmi ces 3.**
-
-Elles sont séparées des 30 cartes normales.
+Choisir une légende retire uniquement la tête validée. Un double envoi ne peut
+pas consommer la suivante. Les échéances traversées entre deux snapshots sont
+toutes ajoutées une seule fois. Une nouvelle partie réinitialise les files,
+sélections, activations et effets.
 
 ---
 
-# 63. PREMIÈRE MYTHOLOGIQUE
+# 62. CRISTAL ET SÉLECTION
 
-Disponible après :
+Le cristal reste centré en haut de l’écran, même inactif. Il devient jaune,
+avec ses petits éclairs électriques, lorsqu’une proposition attend.
+Un clic déclenche les rayons bicolores existants et, après **500 ms**,
+le glissement des deux grandes cartes trapézoïdales symétriques.
+Leurs couleurs proviennent exclusivement de `mythology-data.js`.
 
-**5 minutes.**
+Le chronomètre de partie est placé directement sous le cristal, y compris
+pendant la préparation. Il conserve l’horloge existante et ses pauses ; aucune
+seconde horloge n’est créée. Il reste sous la gemme entre les deux choix
+lorsqu’ils sont ouverts, puis revient sous le petit cristal à leur fermeture.
 
-La première des deux cartes Mythologiques tirées au sort pour la partie devient disponible.
+Aucun choix ne s’ouvre automatiquement. Toute la surface de chaque proposition
+est cliquable ; le choix validé reçoit sa bordure dorée, puis les cartes se
+ferment. Fermer sans choisir conserve la proposition. La sélection n’est pas
+chronométrée et ne déclenche aucun pouvoir.
 
-Le tirage est effectué une seule fois au lancement, par la simulation autoritaire. Chaque Mythologique peut être jouée une fois ; la seconde se débloque à 10 minutes. Les Mythologiques ne prennent pas de place dans la main normale.
-
----
-
-# 64. DEUXIÈME MYTHOLOGIQUE
-
-Disponible après :
-
-**10 minutes.**
-
-La seconde carte Mythologique tirée au sort pour la partie devient disponible.
-
----
-
-# 65. CATÉGORIES DE CARTES
-
-Il existe actuellement 4 grandes catégories.
-
-Les cartes normales des catégories Action, Équipement et Antique peuvent toutes être présentes dans le deck normal. La catégorie Mythologique conserve sa sélection séparée.
-
-## ACTION
-
-Cartes présentes dans le deck et pouvant également être liées aux possibilités du village.
-
-## ÉQUIPEMENT
-
-Éléments principalement obtenus via les systèmes du village/bâtiments, mais désormais également autorisés dans le deck normal.
-
-## ANTIQUE
-
-Représente une :
-
-**invention physique de l'Homme.**
-
-Ces cartes sont dans le deck.
-
-Elles coûtent des ressources/or selon les règles qui seront définies.
-
-Leur nombre peut être limité.
-
-Exemples :
-
-* Rivière ;
-* Moulin ;
-* Tour génoise ;
-* éléments agricoles ;
-* Sentier ;
-* etc.
-
-## MYTHOLOGIQUE
-
-Représente une :
-
-**invention morale / imaginaire / croyance de l'Homme.**
-
-Ces cartes viennent notamment des légendes et croyances corses.
-
-Elles sont volontairement très puissantes.
+Si une autre proposition attend, le cristal se réarme immédiatement ; un
+nouveau clic est obligatoire. Les animations et la géométrie existantes restent
+inchangées. Les illustrations sont normales à gauche et inversées à droite ;
+en l’absence d’une variante distincte, seul l’élément image est retourné.
 
 ---
 
-# 66. U MAZZERU
+# 63. STOCK LÉGENDES ET ACTIVATION
 
-Carte Mythologique.
+Les renforts obtenus apparaissent immédiatement dans le panneau latéral
+**LÉGENDES**, à la place des blocs « Banque locale » et « Réserve de barques ».
+Chaque exemplaire est représenté par son illustration normale en
+**parallélogramme**, avec son nom lisible, dans l’ordre d’obtention.
+Les ressources restent consultables dans les fiches de villages et la boutique ;
+les réserves et achats de barques restent dans la boutique.
 
-Lorsqu'elle est utilisée :
+Le joueur clique sur l’image obtenue, puis directement sur le terrain :
+une région compatible pour un effet régional, une colonne pour un effet de
+colonne, ou n’importe quelle région du plateau pour un effet global. Il n’y a
+ni liste déroulante de cible ni bouton « Utiliser ». Le premier clic prépare
+le pouvoir sans le déclencher. Les cibles possibles sont soulignées en doré
+sur le plateau 2D/3D. Échap, le bouton Annuler ou un second clic sur l’image
+annulent cette préparation sans consommation.
 
-elle révèle :
+Chaque exemplaire est utilisable une seule fois. Après validation, son image
+disparaît du stock disponible ; l’historique privé reste conservé. Un clic
+incompatible ou pendant la pause ne consomme rien. La même validation réseau
+et la même protection contre les doubles envois s’appliquent.
+Les effets utilisent toujours le temps de combat, jamais un minuteur indépendant.
 
-* le nombre d'habitants adverses ;
-* leurs rôles ;
-
-dans :
-
-**toutes les colonnes adverses.**
-
-Durée :
-
-**120 secondes.**
-
----
-
-# 67. A STREGHA
-
-Carte Mythologique.
-
-Elle maudit une zone.
-
-Durée :
-
-**2 minutes.**
-
-Pendant la malédiction :
-
-**la production/rendement de la zone est divisée par 2.**
+L’inventaire est une vue des sélections privées, pas un deuxième stockage.
+Une sélection passe par `awaiting-activation`, `activation-pending`, puis
+`activated` après confirmation. Un identifiant d’activation garantit l’unicité.
 
 ---
 
-# 68. U DIAVULU
+# 64. AUTORITÉ MULTIJOUEUR
 
-Carte Mythologique extrêmement destructrice.
+Le relais conserve les files et sélections privées ; le navigateur hôte
+conserve la simulation autoritaire existante. Le propriétaire est déterminé par
+la connexion. Le relais vérifie le match, l’offre obtenue, son propriétaire,
+son état et la forme de la cible avant de réserver une activation.
 
-Lorsqu'U Diavulu est utilisé sur une colonne :
+Seule l’exécution explicitement demandée est envoyée à l’hôte. Celui-ci valide
+la cible contre le monde courant, applique une seule fois le pouvoir, publie
+ses effets et renvoie le résultat au relais. Un refus remet le renfort à
+disposition. Les tirages et stocks adverses ne sont jamais inclus dans les
+snapshots publics ; un pouvoir utilisé devient nécessairement connu de l’hôte.
 
-dans les DEUX territoires de cette colonne, donc :
-
-* territoire du joueur ;
-* territoire adverse ;
-
-tous les éléments suivants meurent instantanément :
-
-* habitants ;
-* cultures ;
-* élevages/bétail.
-
-Le joueur qui utilise U Diavulu subit donc également les conséquences.
-
----
-
-# 69. TERRAIN BRÛLÉ DE U DIAVULU
-
-Après son utilisation, les deux régions restent brûlées pendant :
-
-**120 secondes.**
-
-Pendant cette période :
-
-aucun nouvel élément ne peut être placé.
-
-Cela concerne notamment :
-
-* habitants ;
-* cultures ;
-* élevages ;
-* nouveaux bâtiments ;
-* autres placements concernés.
-
-Après 120 secondes :
-
-la région redevient utilisable.
+La confidentialité visuelle des habitants utilise le snapshot partagé : elle
+ne constitue pas une protection contre l’inspection technique du client.
+L’architecture reste un relais et un hôte navigateur, pas un serveur de jeu
+entièrement autoritaire.
 
 ---
 
-# 70. U DIAVULU ET LES VILLAGES
+# 65. CATÉGORIES ET CONFIGURATION
 
-Normalement :
+Les catégories des renforts sont **invocation**, **enchantement**, **terrain**
+et **vision**. Les seize fiches résident dans `mythology-data.js` :
+identifiants stables, alias, illustrations, couleurs, descriptions, cibles,
+paramètres et état d’implémentation. Les effets restent dans
+`mythology-effects.js`, l’interface dans `mythology-ui.js`.
 
-**les villages ne subissent pas directement les dégâts de U Diavulu.**
-
-Exception :
-
-si U Diavulu est lancé depuis une :
-
-**Montagne**
-
-il inflige :
-
-**125 dégâts**
-
-aux bâtiments/village adverses de la colonne selon la règle actuelle.
-
-Cette interaction devra être codée comme une exception explicite.
+Les valeurs confirmées et provisoires sont centralisées dans
+`Config.reinforcementPowers`. TEMP_BALANCE_VALUE : vitesses chiffrées
+d’« extrêmement lent », « rapide » et « très rapide », cadence et quantité de
+vol des follets, positions d’invocation. Les teintes échantillonnées d’après
+la planche restent provisoires, pas des couleurs définitivement validées.
 
 ---
 
-# 71. RESTRICTION DE U DIAVULU
+# 66. U MAZZERU — VISION
 
-U Diavulu ne peut PAS être utilisé depuis une région dont :
-
-**le village a déjà été détruit.**
-
----
-
-# 72. A SQUADRA D'AROZZA
-
-Carte Mythologique.
-
-Effet :
-
-ressuscite tous les habitants morts pendant les :
-
-**3 dernières minutes.**
-
-Si elle est utilisée depuis une Plaine :
-
-la fenêtre passe à :
-
-**5 minutes.**
-
-**Décision du concepteur : si le village d'origine est détruit, l'Habitant revient dans le village allié vivant le plus proche.** TEMP_BALANCE_VALUE : en cas d'égalité de distance, le village de plus petit numéro est choisi ; si le village d'accueil est plein ou brûlé, l'Habitant attend sa place dans une file de résurrection. Le plafond de population reste respecté. Il revient disponible, avec son métier, son outil et son armure ; son âne mort n'est pas ressuscité. Chaque décès est compté une seule fois et reçoit un nouvel identifiant au retour.
+Révèle les habitants adverses de catégorie offensive jusqu’à la fin de partie.
+Les autres civils et les légendes ne sont pas révélés par ce pouvoir.
+Dans le prototype, les humains Guerriers, Ravageurs ou en mission d’attaque
+constituent la catégorie offensive.
 
 ---
 
-# 73. ŒIL DE SAINTE-LUCIE
+# 67. ENCHANTEMENTS DE PRODUCTION
 
-Carte Mythologique.
+* **A Strega** : rendement d’une région ennemie divisé par deux, **120 s**.
+* **U Stregu** : rendement d’une région alliée multiplié par deux, **120 s**.
 
-Effet :
+Ces effets réutilisent les calculs existants de production.
 
-révèle entièrement les biomes Littoraux adverses.
+---
 
-Durée :
+# 68. U DIAVULE — TERRAIN
 
-**jusqu'à la fin de la partie.**
+Brûle les **deux territoires de la colonne**, allié et adverse :
+cultures, élevages et habitants présents sur le terrain sont détruits.
+Les habitants à l’intérieur des villages restent vivants.
 
-Condition :
+La description affichée lors du choix et de l’utilisation est uniquement :
+**« Anéantit le village de votre adversaire. »**
+La description mécanique complète reste dans les données.
 
-la carte ne peut être utilisée que depuis :
+---
 
-**un biome Littoral.**
+# 69. TERRAIN BRÛLÉ
+
+La règle existante est conservée : les deux régions sont brûlées pendant
+**120 secondes**, sans nouveaux placements pendant cette période.
+
+---
+
+# 70. U DIAVULE ET LES BÂTIMENTS
+
+Clarification du concepteur : villages et bâtiments sont épargnés.
+L’ancienne exception de **125 dégâts depuis une Montagne est supprimée**.
+
+---
+
+# 71. ORIGINE DE U DIAVULE
+
+La restriction existante est conservée : le village allié de la colonne
+d’origine doit être vivant au moment de l’activation.
+
+---
+
+# 72. RÉSURRECTIONS
+
+**A Squadra d’Arozza** ressuscite les habitants alliés morts dans la
+**dernière minute**, sans bonus de fenêtre depuis la Plaine.
+La destination existante reste le village d’origine ou, s’il est détruit,
+le village vivant le plus proche. TEMP_BALANCE_VALUE conservée : à égalité,
+plus petit numéro ; si l’accueil est plein ou brûlé, attente dans la file de
+résurrection. Métier et équipement sont restaurés, tâche disponible.
+Un décès ne peut pas être ressuscité deux fois.
+
+**A Strega Bianca** protège seulement les prochaines morts pendant **60 s**.
+Ce délai n’est pas affiché en jeu. Un humain qui devrait mourir est téléporté
+au début de son terrain, en pleine vie, avec les mêmes tâche et équipement.
+Elle ne ressuscite pas les morts antérieures et ne protège pas les légendes.
+La protection utilise une lueur verte et dorée.
+
+---
+
+# 73. AUTRES RENFORTS CONFIRMÉS
+
+| Renfort | Catégorie | Pouvoir |
+| --- | --- | --- |
+| A Fata | terrain | Place une rivière dans la région choisie ; vitesse de pêche +25 %. |
+| L’Orcu | invocation | 200 PV, 30 dégâts, extrêmement lent, dans la région choisie. |
+| U Magu | enchantement | Uniquement le prochain habitant de chaque village allié : statistiques ×2, taille +50 %, aura violette et dorée. |
+| U Surpatore | invocation | Sanglier qui, à sa mort, devient un vampire de 25 PV et 5 dégâts, rapide. |
+| U Lupu Mannaru | invocation | Transforme un habitant sans tâche ni métier, sinon le prochain nouveau-né ; 60 PV, 20 dégâts, propriétés du Ravageur, structures uniquement. |
+| Anima in Pena | invocation | Une âme par mort allié de la colonne ; 1 PV, 1 DPS, tâches possibles, métiers interdits. |
+| A Mumma | enchantement | Fait repartir les intrus ennemis présents dans tous les territoires alliés. |
+| I Lacramanti | enchantement | Humains alliés présents sur la colonne : +2 PV et +1 dégât par mort allié depuis le début sur cette colonne ; pas les légendes. |
+| U Fullettu | invocation | Cinq follets aléatoirement sur les terres alliées, 20 PV, 0 dégât, très rapides ; ressources ennemies transférées directement à la banque locale alliée. |
+| Œil de Sainte-Lucie | vision | Révèle intégralement les Littoraux adverses, personnages compris, jusqu’à la fin de partie, sans condition de Littoral d’origine. |
+
+Les invocations utilisent les unités et déplacements existants. Les vitesses
+non chiffrées par le concepteur restent temporaires dans la configuration.
+Les figurines 3D du prototype réutilisent les modèles existants teintés et
+redimensionnés ; elles ne constituent pas encore les modèles définitifs.
 
 ---
 
@@ -2072,11 +2016,10 @@ Le joueur ne doit pas connaître automatiquement toutes les informations adverse
 
 Les informations adverses peuvent être cachées.
 
-Certaines cartes/mécaniques servent spécifiquement à obtenir de l'information.
+Certains renforts servent spécifiquement à obtenir de l’information.
 
 Exemples :
 
-* Tour génoise ;
 * U Mazzeru ;
 * Œil de Sainte-Lucie.
 
@@ -2165,7 +2108,11 @@ Eredita/
 │
 ├── js/
 │   ├── config.js
-│   ├── cards.js
+│   ├── mythology-data.js
+│   ├── mythology-effects.js
+│   ├── mythology-match.js
+│   ├── mythology-session.js
+│   ├── mythology-ui.js
 │   ├── game.js
 │   ├── board.js
 │   ├── economy.js
@@ -2177,7 +2124,7 @@ Eredita/
 │
 └── assets/
     ├── biomes/
-    ├── cards/
+    ├── mythology/
     ├── buildings/
     ├── animals/
     ├── units/
@@ -2204,14 +2151,9 @@ const GAME_CONFIG = {
         interval: null
     },
 
-    cards: {
-        deckSize: 30,
-        startingHand: 5,
-        maxHand: 15,
-        maxCopies: 4,
-        drawInterval: 30,
-        firstMythic: 300,
-        secondMythic: 600
+    reinforcements: {
+        intervalSeconds: 120,
+        pendingPolicy: 'fifo'
     },
 
     village: {
@@ -2299,15 +2241,10 @@ Créer :
 * amélioration ;
 * PV.
 
-## ÉTAPE 4 — Deck
+## ÉTAPE 4 — Renforts mythologiques
 
-Créer :
-
-* deck de 30 ;
-* maximum 4 exemplaires ;
-* 5 cartes initiales ;
-* pioche toutes les 30 secondes ;
-* main maximum 15.
+Réutiliser le catalogue, le cristal et ses choix ; ajouter la file FIFO privée
+à 0/2/4 minutes puis l’activation manuelle unique des renforts obtenus.
 
 ## ÉTAPE 5 — Combat
 
@@ -2350,27 +2287,16 @@ Créer :
 * capacité ;
 * traversée.
 
-## ÉTAPE 9 — Cartes spéciales
+## ÉTAPE 9 — Équipements
 
-Créer :
+Les équipements sont accessibles directement dans la boutique existante.
+Les anciens aménagements accessibles uniquement par cartes sont retirés du prototype.
 
-* Antiquités ;
-* pièges ;
-* équipements ;
-* Tour génoise ;
-* etc.
+## ÉTAPE 10 — Pouvoirs mythologiques
 
-## ÉTAPE 10 — Mythologiques
-
-Créer :
-
-* choix à 5 min ;
-* choix à 10 min ;
-* U Mazzeru ;
-* A Stregha ;
-* U Diavulu ;
-* A Squadra d'Arozza ;
-* Œil de Sainte-Lucie.
+Les seize pouvoirs sont définis dans le catalogue central. Les propositions
+s’accumulent en FIFO dès le début, puis toutes les deux minutes de combat.
+La sélection et l’activation manuelle unique suivent les sections 60 à 73.
 
 ## ÉTAPE 11 — Overtime
 
@@ -2455,17 +2381,11 @@ Les éléments suivants doivent être considérés comme des règles actuelles :
 * T2 = 100 ressources + 200 or ;
 * T3 = 150 ressources + 300 or ;
 * génération population 45/35/25/15 secondes ;
-* deck normal = 30 cartes ;
-* maximum 4 cartes identiques ;
-* main initiale = 5 ;
-* pioche = 30 secondes ;
-* main maximum = 15 ;
-* 2 Mythologiques séparées ;
-* premier choix Mythologique à 5 min ;
-* deuxième à 10 min ;
-* 3 Mythologiques présélectionnées par deck, puis 2 tirées au sort pour la partie ;
-* chaque Mythologique tirée peut être jouée une seule fois ;
-* préparation des villages = 60 secondes après le choix des decks et biomes ;
+* aucun deck, main ni pioche ;
+* propositions privées de deux légendes, une au départ puis toutes les 120 secondes de combat ;
+* file FIFO sans remplacement, sélection par clic sur le cristal ;
+* renfort obtenu activable une seule fois depuis LÉGENDES ;
+* préparation des villages = 60 secondes après le choix des biomes ;
 * durée normale de combat = 12:30, après cette préparation ;
 * ensuite Overtime ;
 * combat automatique en temps réel ;
@@ -2490,9 +2410,11 @@ Ils devront être demandés au concepteur lorsque leur implémentation devient n
 * confirmation du fonctionnement exact de l'achat d'Habitants ;
 * confirmation de l'existence ou non du bois comme ressource économique.
 
-### Deck
+### Renforts
 
-* validation définitive de l'arrêt de la pioche à 12:30 (convention temporaire actuelle : aucune pioche à 12:30 ou pendant l'Overtime).
+* équilibrage des vitesses qualitatives des invocations et de la récolte des follets ;
+* stratégie d’utilisation des renforts par l’IA ;
+* modèles 3D définitifs et projection de l’interface dans WebXR.
 
 ### Combat
 
@@ -2522,8 +2444,7 @@ Ils devront être demandés au concepteur lorsque leur implémentation devient n
 ### Transport
 
 * vitesse Barque ;
-* vitesse Voilier ;
-* vitesse Charrette.
+* vitesse Voilier.
 
 ### Mythologiques
 
@@ -2694,7 +2615,7 @@ L'économie permet de développer les villages et les unités.
 
 Les décisions économiques influencent ensuite les capacités militaires.
 
-Les cartes culturelles et mythologiques peuvent bouleverser cet équilibre.
+Les renforts mythologiques peuvent bouleverser cet équilibre.
 
 Le but est que la Corse ne soit pas seulement le décor du jeu.
 
@@ -2706,7 +2627,7 @@ Le but est que la Corse ne soit pas seulement le décor du jeu.
 
 Le bouton Tutoriel lance une partie guidée distincte des modes normal, local et réseau. La future cinématique reste prévue mais n'est pas encore produite. Un narrateur temporaire guide le joueur au moyen d'une boîte de dialogue pleine largeur en bas de l'écran. Un clic termine instantanément l'affichage progressif d'une phrase sans valider simultanément le dialogue ; un second clic valide les phrases manuelles. Chaque réplique peut recevoir plus tard un fichier `tutoriel_xxxx.mp3` dans `assets/audio/tutorial/`, sans rendre l'audio obligatoire.
 
-Le tutoriel impose le deck Plaine et le territoire initial Plaine, Littoral, Montagne, Montagne. L'échange demandé transforme ensuite les régions 2 et 3 pour obtenir Plaine, Plaine, Littoral, Montagne. Le joueur doit réellement utiliser les mécaniques existantes : placer quatre champs de blé en Plaine 1, affecter un habitant à l'agriculture, construire une Bergerie, attribuer le métier Agriculteur, repousser une attaque équilibrée, construire un Artisanat, attribuer Guerrier aux trois habitants encore disponibles et lancer une attaque groupée. Les actions étrangères à l'étape courante sont verrouillées et l'action attendue est entourée d'une animation jaune.
+Le tutoriel impose le territoire initial Plaine, Littoral, Montagne, Montagne. L'échange demandé transforme ensuite les régions 2 et 3 pour obtenir Plaine, Plaine, Littoral, Montagne. Le joueur doit réellement utiliser les mécaniques existantes : placer quatre champs de blé en Plaine 1, affecter un habitant à l'agriculture, construire une Bergerie, attribuer le métier Agriculteur, repousser une attaque équilibrée, construire un Artisanat, attribuer Guerrier aux trois habitants encore disponibles et lancer une attaque groupée. Les actions étrangères à l'étape courante sont verrouillées et l'action attendue est entourée d'une animation jaune.
 
 Le village Rouge de la première région commence avec cinq habitants. La génération automatique des habitants rouges est suspendue jusqu'à la destruction du premier village adverse. Le tutoriel n'a ni limite de temps ni Overtime. Après le premier village adverse détruit, toutes les restrictions sont levées, la génération normale reprend et une IA volontairement facile poursuit son économie ; elle attend environ 60 secondes entre ses attaques et ne lance pas plus de trois offensives supplémentaires.
 
@@ -2760,41 +2681,48 @@ Le joueur confirme lui-même le placement sur sa table avec la gâchette de l’
 
 Un mode manipulation explicite, ouvert par les réglages, permet déplacement, rotation, taille et recentrage du plateau. En dehors de ce mode, les préhensions et joysticks ne déplacent pas le plateau. Une préhension déplace le plateau ; deux préhensions permettent rotation et redimensionnement. Sur les profils Touch reconnus, les deux gâchettes index et A ont exactement le même rôle : valider le placement, activer le bouton visé ou sélectionner le village visé ; B revient ou annule une saisie, X masque/affiche la gestion et Y ouvre/ferme la boutique. En partie, le joystick gauche vertical parcourt les habitants du village sélectionné (haut : précédent, bas : suivant), le joystick droit horizontal change de village dans le camp actuellement sélectionné (droite et gauche : village dans la direction physique correspondante sur le plateau, en tenant compte de son orientation Rouge/Bleu et de la rotation choisie). Ces raccourcis fonctionnent aussi dans la boutique. Dans les autres menus, les joysticks servent à la navigation. Les commandes système ne sont pas utilisées.
 
-Les quatre fenêtres de gestion sont Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite et Gestion du village en bas à droite. Cette dernière réunit les stocks locaux, les constructions, les améliorations et les accès aux parcelles, ventes et boutique. Toutes les fenêtres apparaissent par défaut dans un même plan vertical centré au-dessus du plateau, à hauteur du regard, parallèle au joueur. Elles ne sont ni inclinées vers la table, ni orientées en éventail. Les fenêtres de gestion, menus, fiches de village, ors, chronomètre, paramètres, notifications et panneau de placement/manipulation possèdent tous une poignée supérieure saisissable avec la préhension. Les poses personnalisées restent conservées pendant la session. La saisie d’une fenêtre de réglage neutralise la manipulation du plateau pendant le geste. La main déplace et oriente la fenêtre ; pendant la saisie, le joystick vertical ajuste sa distance et l’horizontal sa taille. B annule la pose en cours. Les clics sont neutralisés pendant la saisie et brièvement après relâchement. Les poses restent stables dans l’espace durant la session, sans suivi permanent de la tête. Les paramètres et X maintenu permettent de récupérer les fenêtres devant soi. Dès le menu « Choisir une partie », pendant le choix des decks/biomes, pendant la minute de préparation et en partie, les paramètres proposent « Agrandir les fenêtres », « Réduire les fenêtres » et « Replacer le plateau » sur un seul écran. L’échelle globale agrandit aussi les espacements pour préserver la disposition ; l’ajustement individuel inclut le menu et les paramètres. Réinitialiser restaure la taille et la disposition initiales. Le replacement demande une nouvelle validation ; B restaure la pose précédente. Ces réglages spatiaux n’altèrent pas la préparation ni le temps de combat, qui continuent selon l’état de pause existant. Le thème reprend les couleurs du site : surfaces sombres, accents dorés et cartes de biome colorées.
+Les quatre fenêtres de gestion sont Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite et Gestion du village en bas à droite. Cette dernière réunit les stocks locaux, les constructions, les améliorations et les accès aux parcelles, ventes et boutique. Toutes les fenêtres apparaissent par défaut dans un même plan vertical centré au-dessus du plateau, à hauteur du regard, parallèle au joueur. Elles ne sont ni inclinées vers la table, ni orientées en éventail. Les fenêtres de gestion, menus, fiches de village, ors, chronomètre, paramètres, notifications et panneau de placement/manipulation possèdent tous une poignée supérieure saisissable avec la préhension. Les poses personnalisées restent conservées pendant la session. La saisie d’une fenêtre de réglage neutralise la manipulation du plateau pendant le geste. La main déplace et oriente la fenêtre ; pendant la saisie, le joystick vertical ajuste sa distance et l’horizontal sa taille. B annule la pose en cours. Les clics sont neutralisés pendant la saisie et brièvement après relâchement. Les poses restent stables dans l’espace durant la session, sans suivi permanent de la tête. Les paramètres et X maintenu permettent de récupérer les fenêtres devant soi. Dès le menu « Choisir une partie », pendant le choix des biomes, pendant la minute de préparation et en partie, les paramètres proposent « Agrandir les fenêtres », « Réduire les fenêtres » et « Replacer le plateau » sur un seul écran. L’échelle globale agrandit aussi les espacements pour préserver la disposition ; l’ajustement individuel inclut le menu et les paramètres. Réinitialiser restaure la taille et la disposition initiales. Le replacement demande une nouvelle validation ; B restaure la pose précédente. Ces réglages spatiaux n’altèrent pas la préparation ni le temps de combat, qui continuent selon l’état de pause existant. Le thème reprend les couleurs du site : surfaces sombres, accents dorés et cartes de biome colorées.
 
-Un clic à la gâchette directement sur un village ou sa fiche le sélectionne et affiche les quatre fenêtres de gestion, avec les scores et le chronomètre en haut. Les menus XR donnent accès aux missions individuelles et collectives, métiers, constructions et améliorations, cultures, élevages, ventes, achats et compagnons, sous réserve des mêmes conditions que sur desktop. Après placement, le menu « Choisir une partie » propose de grands boutons centrés et « Quitter le mode VR ». Le menu propose les boutons « 2 camps » et « 4 camps », avec « 2 camps » sélectionné par défaut. L’entraînement ouvre un seul écran de préparation avec trois decks et deux ou quatre cartes de biome selon le format, « Retour » en bas à gauche et « Lancer la partie » en bas à droite. Lancer confirme le tirage conservé ou applique les échanges sélectionnés, puis démarre lorsque les deux camps sont prêts. Le local prépare chaque joueur successivement ; l’invité réseau confirme son tirage et attend le lancement de l’hôte. Le bouton d’échange permet aussi de consulter le tirage final avant lancement. Ces actions utilisent les commandes existantes et conservent toutes les restrictions de préparation. Les données se mettent à jour depuis la même simulation ou les mêmes snapshots réseau que le desktop. La position et l'orientation spatiales restent propres à chaque casque ; la largeur choisie par l'hôte est communiquée à l'invité sans modifier les unités logiques du jeu. L'invité peut placer localement son plateau mais ne peut pas le redimensionner ni entrer dans sa manipulation.
+Un clic à la gâchette directement sur un village ou sa fiche le sélectionne et affiche les quatre fenêtres de gestion, avec les scores et le chronomètre en haut. Les menus XR donnent accès aux missions individuelles et collectives, métiers, constructions et améliorations, cultures, élevages, ventes, achats et compagnons, sous réserve des mêmes conditions que sur desktop. Après placement, le menu « Choisir une partie » propose de grands boutons centrés et « Quitter le mode VR ». Le menu propose les boutons « 2 camps » et « 4 camps », avec « 2 camps » sélectionné par défaut. L’entraînement ouvre un seul écran de préparation avec deux ou quatre cartes de biome selon le format, « Retour » en bas à gauche et « Lancer la partie » en bas à droite. Lancer confirme le tirage conservé ou applique les échanges sélectionnés, puis démarre lorsque les deux camps sont prêts. Le local prépare chaque joueur successivement ; l’invité réseau confirme son tirage et attend le lancement de l’hôte. Le bouton d’échange permet aussi de consulter le tirage final avant lancement. Ces actions utilisent les commandes existantes et conservent toutes les restrictions de préparation. Les données se mettent à jour depuis la même simulation ou les mêmes snapshots réseau que le desktop. La position et l'orientation spatiales restent propres à chaque casque ; la largeur choisie par l'hôte est communiquée à l'invité sans modifier les unités logiques du jeu. L'invité peut placer localement son plateau mais ne peut pas le redimensionner ni entrer dans sa manipulation.
 
 Une ancre non persistante est utilisée si disponible. Sans ancre, le plateau reste dans le repère de la session ; un changement d'origine impose un nouveau placement. Aucune restauration spatiale entre sessions n'est promise. Les valeurs de confort et les limites provisoires sont centralisées dans `Config.xr` avec la mention `TEMP_BALANCE_VALUE`.
 
-Les cartes suivent sélection → carte active → cibles autorisées → confirmation, via les mêmes commandes métier sur écran, en réseau et dans le casque. La gestion du village donne accès à la main ; choisir une carte ouvre ses cibles et leur coût, puis choisir une cible confirme l'effet. Y reste réservé à la boutique. Le tutoriel scénarisé conserve ses étapes et n'active pas le système de main. Les tests matériels à effectuer sont détaillés dans `QUEST3.md`.
+L’ancien accès XR à la main et aux decks a été retiré avec le système de cartes. Les commandes de village et la boutique restent disponibles. Le nouveau cristal et le stock LÉGENDES sont pour l’instant une interface HTML distincte, non projetée dans WebXR. Les tests matériels existants restent détaillés dans `QUEST3.md`.
 
 ---
 
-# 95. CARTES JOUABLES ET ILLUSTRATIONS
+# 95. ILLUSTRATIONS ET LIMITES DU PROTOTYPE
 
-Les **34 cartes normales et 5 Mythologiques** utilisent le style fantastique validé par le concepteur : cadres ornés dorés, illustrations corses et panneau de texte sombre. Les **31 cartes de la planche fournie** sont extraites dans `assets/cards/fantasy/` en conservant leurs illustrations et cadres. Les **8 cartes absentes** (Âne, Voilier, Champ de blé, Vignoble, Châtaignier, Bergerie, Artisanat et Boucherie) disposent d'illustrations assorties générées avec cette planche comme référence. Les PNG originaux et l'ancienne série sont conservés hors du projet dans une sauvegarde externe documentée dans `NETTOYAGE.md` ; seules les copies WebP optimisées sont publiées avec le jeu. La provenance, les recadrages et les prompts des compléments sont conservés dans `assets/cards/fantasy/SOURCE.md` et `manifest.json`. `scripts/prepare-assets.js` prépare les images à partir des sources externes, sans changer les règles ni le nombre de slots.
+Les seize renforts disposent d’illustrations individuelles dans
+`assets/mythology/`, générées avec l’outil intégré image_gen d’après la planche
+du concepteur. À sa demande, le traitement privilégie les silhouettes graphiques,
+les palettes limitées et les ombres franches, avec moins de réalisme et de détails.
+Les prompts et chemins finaux sont dans `assets/mythology/generation.json`.
+Ce sont des interprétations de la référence, pas des extractions de son fichier.
+Aucune variante inversée distincte n’est fournie ; seul l’art est retourné en CSS
+à droite. La planche contient aussi A Mazzera, absente de la liste des seize :
+aucun pouvoir ni dix-septième renfort n’a été inventé.
 
-La planche constitue une référence visuelle. Ses descriptions imprimées ne remplacent pas les règles écrites : le rendu HTML et XR affiche les textes validés par le Game Design sur le panneau sombre de chaque carte, notamment pour les Mythologiques, les animaux et le Piège. Les titres des huit compléments, les catégories, prix et états restent rendus par l'interface. Les fiches affichent les conditions et statistiques complètes. Les cadres complets sont visibles dans la collection, la main, les fiches et en XR. Les figures mythologiques sont des interprétations graphiques pour le prototype, sans prétention de restitution historique.
+L’ancien moteur de cartes, son constructeur, la main, la pioche et les
+déblocages à 5/10 minutes sont supprimés du dépôt, avec leurs styles, paramètres,
+illustrations et tests obsolètes. Les données des villages, les achats, les métiers,
+l’économie, les banques, la production et le combat existants sont réutilisés ;
+les hooks ajoutent uniquement les effets mythologiques explicitement demandés.
 
-La composition du deck choisi est copiée dans l'état de chaque joueur à la confirmation de sa préparation. L'hôte valide les identifiants, les quantités, les 30 cartes maximum, les 4 copies maximum et les choix mythologiques de l'invité. Il mélange les deux decks une seule fois au lancement et distribue **5 cartes**, ou toutes les cartes si le deck en contient moins. Les cartes restantes sont piochées toutes les **30 secondes de combat**, sans recyclage des cartes jouées. La pause et la minute de préparation suspendent la pioche. TEMP_BALANCE_VALUE : aucune pioche à exactement 12:30 ou pendant l'Overtime (`Config.cardGame.drawDuringOvertime`).
+Les effets actifs de rivière, de terrain brûlé, de malédiction et de vision
+restent disponibles dans les modules mythologiques et les rendus 2D/3D.
+Les anciennes branches de moulin, tour, piège, sentier et charrette, sans moyen
+de création depuis le retrait des cartes, sont supprimées. Le bonus d’Artisanat
+appartient désormais à `buildings.js` ; ses valeurs et son comportement restent
+identiques. L’eau et les embarcations conservent leur système de transport.
 
-Sur écran, la main appartient au joueur contrôlé ; en local, elle suit le camp sélectionné. Une carte est d'abord sélectionnée, puis le joueur choisit son village, son habitant ou son slot compatible et confirme. Le coût et les conditions sont affichés avant le jeu. Une action refusée ne dépense rien et conserve la carte. Une action réussie ne débite son coût qu'une fois et retire uniquement cet exemplaire de la main. Les boutiques, tâches et placements directs existants restent des voies complémentaires de développement.
+Le cristal, le choix et le stock LÉGENDES utilisent une interface HTML pour
+souris, clavier et tactile. Ils fonctionnent dans la fenêtre 2D de Quest Browser,
+mais ne sont pas encore projetés dans les panneaux WebXR immersifs.
+Aucun casque physique n’a été utilisé pour cette intégration.
+L’IA reçoit ses propositions mais ne choisit ni n’active encore ses renforts ;
+le tutoriel scénarisé reste sans tirage supplémentaire.
 
-Les cartes Habitant, métiers, bâtiments, animaux, cultures, embarcations et équipements réutilisent les règles existantes. L'Habitant coûte toujours **50 or et 50 ressources locales** ; les métiers ciblent un habitant local hors combat et conservent leurs prérequis de bâtiments. Une carte d'animal d'élevage place un animal dans le slot choisi ou en ajoute un à un troupeau de même espèce, sans écraser une culture. Les cartes Chien, Sanglier et Âne suivent les tiers de Bergerie et les prix du magasin ; les cartes d'équipement suivent les tiers d'Artisanat. La Barque fonctionne avec la réserve de tous les villages. Les cultures et premiers animaux suivent les coûts temporaires de placement direct déjà centralisés.
-
-Les aménagements de terrain sont des overlays sans modifier le nombre de slots du biome :
-
-* **Rivière** : Plaine ou Montagne, ouvre la pêche personnelle ;
-* **Moulin** : exige une Rivière, **250 PV**, **+30 % rendement agricole** ;
-* **Tour génoise** : **300 PV**, révèle les **25 %** de la région adverse proches de la frontière, ou **50 %** si la tour est construite sur un Littoral ;
-* **Sentier** : Montagne, **+20 % déplacement** des unités et travailleurs alliés ;
-* **Piège** : terrestre, déclenché une fois par un ennemi à proximité, **50 dégâts** et **−50 % déplacement pendant 3 secondes** ;
-* **Charrette** : **150 PV**, jusqu'à **8 habitants disponibles** de son village, libérés à l'arrivée ou à sa destruction. Les passagers gardent leur métier et équipement et ne sont pas supprimés avec la Charrette. En Montagne sa vitesse est divisée par deux. TEMP_BALANCE_VALUE : vitesse **8 unités/s** et débarquement avant l'eau pour laisser les unités utiliser les barques.
-
-TEMP_BALANCE_VALUE : un exemplaire par village pour Rivière, Moulin, Tour et Sentier, **4 Pièges maximum** ; prix respectifs **100 / 250 / 300 / 75 / 100 / 200 or** pour Rivière, Moulin, Tour, Sentier, Piège et Charrette. Les positions et portées temporaires sont dans `Config.cardGame`. Le Moulin et la Tour ont leurs propres PV ; les assaillants peuvent les détruire avant de poursuivre vers le village.
-
-U Mazzeru révèle les effectifs et métiers humains adverses pendant **120 secondes**. A Stregha divise les rendements de la région adverse choisie et sa vitesse de reproduction par **2 pendant 120 secondes**, sans ralentir les déplacements. U Diavulu tue les habitants, cultures et animaux des deux camps de la colonne choisie, bloque les nouveaux placements pendant **120 secondes**, et inflige **125 dégâts** au réservoir commun du village/bâtiments adverse lorsqu'il est lancé depuis une Montagne. A Squadra d'Arozza suit la fenêtre de **3 minutes**, ou **5 depuis une Plaine**, et la destination de résurrection décidée plus haut. L'Œil de Sainte-Lucie exige un Littoral d'origine et révèle tous les Littoraux ennemis jusqu'à la fin de la partie.
-
-Les informations économiques et les forces présentes dans la partie non révélée du territoire adverse sont masquées à l'écran et en 3D. Les PV des villages et les biomes restent lisibles. TEMP_BALANCE_VALUE : la visibilité est une présentation du snapshot partagé ; ce prototype ne protège pas les données adverses contre l'inspection technique du client.
-
-TEMP_BALANCE_VALUE : l'IA joue les cartes ayant une cible compatible et utilise les mêmes coûts ; sa priorité est centralisée dans `Config.ai.cardPriority`. Elle achète également des Barques avant une attaque sur une ligne contenant de l'eau. Elle n'utilise pas encore U Diavulu pour sacrifier une de ses régions.
+Les vérifications et le parcours de test réel sont documentés dans
+`MYTHOLOGY.md`. Les modes hors ligne restent compatibles avec le chemin
+`/-redita/` sur GitHub Pages ; le multijoueur exige le relais WebSocket existant.

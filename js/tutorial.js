@@ -5,15 +5,11 @@
   const AUDIO_ROOT = "assets/audio/tutorial/";
   const TUTORIAL_BIOMES = ["plaine", "littoral", "montagne", "montagne"];
   const FINAL_BIOMES = ["plaine", "plaine", "littoral", "montagne"];
-  const PLAINS_DECK_INDEX = 1;
 
   const dialogues = {
-    choixDeck: ["tutoriel_choix_deck.mp3", "Bien, maintenant, avant de commencer, il faudrait choisir ton deck. Les trois decks disponibles sont : spécial montagne, spécial plaine et spécial littoral.", false],
-    deckPlaine: ["tutoriel_deck_plaine.mp3", "Commence par choisir le deck plaine. C'est le plus évident pour commencer.", false],
     choixTerritoire: ["tutoriel_choix_territoire.mp3", "Ensuite, tu dois décider de ton territoire.", true],
     territoireExplication: ["tutoriel_territoire_explication.mp3", "Comme tu peux le voir, tu commences obligatoirement avec au moins deux terrains différents, et l'un d'entre eux en double.", true],
     echangeTerrain: ["tutoriel_echange_terrain.mp3", "Si tu veux, tu peux échanger jusqu'à deux terrains contre de nouveaux terrains aléatoires.", true],
-    optimiserPlaine: ["tutoriel_optimiser_plaine.mp3", "Pour optimiser le deck que tu as choisi, je te conseille d'essayer d'avoir un maximum de terrains de plaine.", false],
     territoireValide: ["tutoriel_territoire_valide.mp3", "C'est déjà mieux comme ça. Maintenant, on peut jouer.", false],
     plateau: ["tutoriel_plateau.mp3", "Voilà comment ça se présente.", false],
     quatreVillages: ["tutoriel_quatre_villages.mp3", "Tu as quatre villages.", true],
@@ -150,20 +146,15 @@
     state.tutorial = { populationLocked: true, freePlay: false, noTimer: true, finished: false };
     setBiomes(state.players.red, TUTORIAL_BIOMES);
     setBiomes(state.players.blue, TUTORIAL_BIOMES);
-    state.players.red.selectedDeck = 0;
     state.players.red.setupConfirmed = false;
     state.players.red.setupSelection = [];
     state.players.blue.name = "Apprenti adverse";
     state.players.blue.setupConfirmed = true;
-    state.players.blue.selectedDeck = PLAINS_DECK_INDEX;
     const firstVillage = state.players.red.villages[0];
     firstVillage.residents = firstVillage.residents.slice(0, 5);
     firstVillage.population = 5;
     document.body.classList.add("tutorial-mode", "tutorial-guided");
-    showDialogue("choixDeck", () => showDialogue("deckPlaine", () => {
-      stage = "chooseDeck";
-      render(state);
-    }));
+    beginTerritoryDialogues();
     E.UI.render(state);
   }
 
@@ -171,7 +162,6 @@
     if (!active || state.tutorial?.freePlay) return true;
     if (dialogueActive) return false;
     const selectedResident = state.selectedResidentId;
-    if (stage === "chooseDeck") return method === "selectDeck" && args[0] === "red" && args[1] === PLAINS_DECK_INDEX;
     if (stage === "exchange") {
       if (method === "toggleBiome") return args[0] === "red" && [1, 2].includes(args[1]);
       if (method === "confirmBiomes") return args[0] === "red" && args[1] === "exchange" && [1, 2].every((lane) => state.players.red.setupSelection.includes(lane)) && state.players.red.setupSelection.length === 2;
@@ -197,10 +187,10 @@
   }
 
   function beginTerritoryDialogues() {
-    showDialogue("choixTerritoire", () => showDialogue("territoireExplication", () => showDialogue("echangeTerrain", () => showDialogue("optimiserPlaine", () => {
+    showDialogue("choixTerritoire", () => showDialogue("territoireExplication", () => showDialogue("echangeTerrain", () => {
       stage = "exchange";
       render(stateRef);
-    }))));
+    })));
   }
 
   function beginBoardDialogues() {
@@ -213,9 +203,7 @@
   function afterAction(method, args, state) {
     if (!active) return;
     stateRef = state;
-    if (stage === "chooseDeck" && method === "selectDeck") {
-      beginTerritoryDialogues();
-    } else if (stage === "exchange" && method === "confirmBiomes") {
+    if (stage === "exchange" && method === "confirmBiomes") {
       setBiomes(state.players.red, FINAL_BIOMES);
       state.players.red.setupConfirmed = true;
       showDialogue("territoireValide", () => { stage = "launch"; render(state); });
@@ -324,8 +312,7 @@
     if (dialogueActive) return;
     if (renderedStage === stage && document.querySelector(".tutorial-highlight")) return;
     clearHighlights();
-    if (stage === "chooseDeck") highlight('[data-setup-deck="1"][data-player="red"]');
-    else if (stage === "exchange") { highlight('[data-biome-choice][data-player="red"][data-lane="1"]'); highlight('[data-biome-choice][data-player="red"][data-lane="2"]'); highlight('[data-setup-action="exchange"][data-player="red"]'); }
+    if (stage === "exchange") { highlight('[data-biome-choice][data-player="red"][data-lane="1"]'); highlight('[data-biome-choice][data-player="red"][data-lane="2"]'); highlight('[data-setup-action="exchange"][data-player="red"]'); }
     else if (stage === "launch") highlight("#start-game");
     else if (stage === "fields") {
       if (document.querySelector("#battlefield")?.classList.contains("three-mode")) E.Board3D?.toggle();
@@ -384,7 +371,6 @@
     get dialogueActive() { return dialogueActive; },
     get debug() { return stateRef ? { stage, paused: stateRef.paused, units: stateRef.units.map((unit) => ({ ownerId: unit.ownerId, residentId: unit.residentId, hp: unit.hp, position: unit.position })), redResidents: stateRef.players.red.villages[0].residents.map((resident) => ({ id: resident.id, mission: resident.mission })), blueResidents: stateRef.players.blue.villages[0].residents.map((resident) => ({ id: resident.id, mission: resident.mission })) } : null; },
     get freePlay() { return Boolean(stateRef?.tutorial?.freePlay); },
-    get deckLabels() { return ["Spécial Montagne", "Spécial Plaine", "Spécial Littoral"]; },
     dialogues
   };
 }());

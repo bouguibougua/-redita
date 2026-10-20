@@ -10,7 +10,7 @@ const root = path.resolve(__dirname, "..");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function startStaticServer() {
-  const mime = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif", ".svg": "image/svg+xml", ".mp3": "audio/mpeg", ".wav": "audio/wav", ".json": "application/json" };
+  const mime = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif", ".svg": "image/svg+xml", ".mp3": "audio/mpeg", ".wav": "audio/wav", ".json": "application/json", ".mp4": "video/mp4", ".webm": "video/webm" };
   const server = http.createServer((request, response) => {
     let relative;
     try {

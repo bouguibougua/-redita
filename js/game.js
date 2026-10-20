@@ -8,7 +8,7 @@
   let previousDesktopRender = 0;
   let pendingBulkTasks = [];
   const localViewMethods = new Set(["selectVillage", "selectResident"]);
-  const guestCommands = new Set(["selectDeck", "toggleBiome", "confirmBiomes", "playCard", "placeCrop", "placeLivestock", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
+  const guestCommands = new Set(["toggleBiome", "confirmBiomes", "placeCrop", "placeLivestock", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
 
   function addLog(message) {
     state.logs.unshift(message);
@@ -16,15 +16,6 @@
   }
 
   const controller = {
-    selectDeck(playerId, deckIndex, deckInput) {
-      const player = state.players[playerId];
-      if (state.phase !== "setup" || !player || player.setupConfirmed || ![0, 1, 2].includes(deckIndex)) return;
-      if (deckInput && E.CardGame && !E.CardGame.validateDeck(deckInput)) return false;
-      player.selectedDeck = deckIndex;
-      if (E.CardGame) player.matchDeck = E.CardGame.matchDeck(deckIndex, deckInput || E.Decks?.exportDeck(deckIndex));
-      E.UI.render(state);
-    },
-
     toggleBiome(playerId, lane) {
       const player = state.players[playerId];
       if (state.phase !== "setup" || !player || player.setupConfirmed || !Number.isInteger(lane) || !player.villages[lane]) return false;
@@ -35,11 +26,9 @@
       E.UI.render(state);
     },
 
-    confirmBiomes(playerId, action, deckInput) {
+    confirmBiomes(playerId, action) {
       const player = state.players[playerId];
       if (state.phase !== "setup" || !player || player.setupConfirmed) return;
-      if (deckInput && E.CardGame && !E.CardGame.validateDeck(deckInput)) return false;
-      if (E.CardGame) player.matchDeck = E.CardGame.matchDeck(player.selectedDeck, deckInput || player.matchDeck || E.Decks?.exportDeck(player.selectedDeck));
       if (action === "exchange") {
         if (!player.setupSelection.length || player.setupSelection.length > E.Board.getFormat(state).exchanges || player.setupSelection.some(lane => !Number.isInteger(lane) || !player.villages[lane])) return false;
         player.setupSelection.forEach((lane) => {
@@ -58,7 +47,8 @@
       state.phase = "running";
       state.elapsed = 0;
       state.preparationRemaining = E.Network.mode === "tutorial" ? 0 : E.Config.preparation.duration;
-      if (E.Network.mode !== "tutorial") E.CardGame?.start(state);
+      if (E.Network.mode !== "tutorial") E.MythologyEffects?.init(state);
+      if (E.Network.mode !== 'tutorial') E.MythologySession?.start(state);
       previousTimestamp = performance.now();
       E.Audio?.play("game");
       if (state.preparationRemaining > 0) addLog("Préparation : vous avez une minute pour organiser vos villages et attribuer les tâches.");
@@ -71,12 +61,6 @@
       state.paused = !state.paused;
       previousTimestamp = performance.now();
       E.UI.render(state);
-    },
-
-    playCard(instanceId, target) {
-      const result = E.CardGame?.play(state, state.selectedVillage.playerId, instanceId, target);
-      E.UI.render(state);
-      return result;
     },
 
     selectVillage(playerId, lane) {
@@ -309,6 +293,7 @@
       E.Audio?.play("menu");
       pendingBulkTasks = [];
       state = E.Board.createState(state.format);
+      E.MythologySession?.reset();
       if (E.Network.mode === "solo") E.AI.prepareSetup(state);
       previousTimestamp = performance.now();
       E.UI.render(state);
@@ -359,8 +344,8 @@
       if (delta <= 0) return;
     }
     state.elapsed += delta;
-    E.CardGame?.update(state, delta);
-    E.CardEffects?.update(state, delta);
+    E.MythologySession?.update(state);
+    E.MythologyEffects?.update(state, delta);
     processBulkTasks();
     E.Economy.update(state, delta);
     E.Combat.update(state, delta);
@@ -400,7 +385,7 @@
 
   function onlineAllowed(method, args, playerId, view) {
     if (!guestCommands.has(method)) return false;
-    if (["selectDeck", "toggleBiome", "confirmBiomes"].includes(method)) return args[0] === playerId;
+    if (["toggleBiome", "confirmBiomes"].includes(method)) return args[0] === playerId;
     if (method === "chooseRedirect") return String(args[0] || "").startsWith(`${playerId}-`);
     return view?.selectedVillage?.playerId === playerId;
   }
@@ -420,10 +405,6 @@
     get(target, method) {
       if (typeof target[method] !== "function") return target[method];
       return (...args) => {
-        if (E.Decks && args.length < 3 && ["selectDeck", "confirmBiomes"].includes(method)) {
-          const deckIndex = method === "selectDeck" ? args[1] : state.players[args[0]]?.selectedDeck;
-          if (Number.isInteger(deckIndex)) args.push(E.Decks.exportDeck(deckIndex));
-        }
         if (E.Network.mode === "local" || E.Network.mode === "pending") return target[method](...args);
         if (E.Network.mode === "tutorial") {
           if (!E.Tutorial?.allow(method, args, state)) return;
@@ -436,13 +417,13 @@
           return result;
         }
         if (E.Network.mode === "solo") {
-          if (["selectDeck", "toggleBiome", "confirmBiomes"].includes(method) && args[0] !== "red") return;
+          if (["toggleBiome", "confirmBiomes"].includes(method) && args[0] !== "red") return;
           if (method === "chooseRedirect" && !String(args[0] || "").startsWith("red-")) return;
-          if (!localViewMethods.has(method) && !["selectDeck", "toggleBiome", "confirmBiomes", "start", "togglePause", "restart", "chooseRedirect"].includes(method) && state.selectedVillage?.playerId !== "red") return;
+          if (!localViewMethods.has(method) && !["toggleBiome", "confirmBiomes", "start", "togglePause", "restart", "chooseRedirect"].includes(method) && state.selectedVillage?.playerId !== "red") return;
           return target[method](...args);
         }
         if (localViewMethods.has(method)) return target[method](...args);
-        if (["selectDeck", "toggleBiome", "confirmBiomes"].includes(method)) {
+        if (["toggleBiome", "confirmBiomes"].includes(method)) {
           if (args[0] !== E.Network.playerId) return;
         } else if (["start", "togglePause", "restart"].includes(method)) {
           if (E.Network.mode !== "host") return;
@@ -469,6 +450,7 @@
     }
     E.Tutorial?.render(state);
     E.Board3D?.update(state);
+    E.MythologySession?.render(state);
     if (E.Network.mode === "host") {
       networkAccumulator += rawDelta;
       if (networkAccumulator >= 0.1) {
@@ -489,6 +471,7 @@
     onReady(session) {
       pendingBulkTasks = [];
       state = E.Board.createState(session.mode === "tutorial" ? "classic" : session.format || E.Config.defaultFormat);
+      E.MythologySession?.reset();
       previousTimestamp = performance.now();
       if (session.mode === "solo") E.AI.prepareSetup(state);
       if (session.mode === "tutorial") E.Tutorial.start(state);
@@ -509,12 +492,19 @@
       E.Board3D?.update(state);
       previousTimestamp = performance.now();
       E.UI.render(state);
+      E.MythologySession?.render(state);
     },
     onCommand: applyRemoteCommand,
+    onMythology(packet) { E.MythologySession?.receive(packet); },
+    onMythologyExecute(execution) {
+      if (E.Network.mode !== 'host') return;
+      const result = E.MythologyEffects.activate(state, execution);
+      E.Network.finishReinforcement(execution.activationId, result);
+      E.UI.render(state); E.Network.sendState(state);
+    },
     onStateRequest() { E.Network.sendState(state); }
   });
   E.UI.init(onlineController);
-  E.CardUI?.init(onlineController);
   E.Tutorial?.init({ controller: onlineController });
   E.GameView?.init({ getState: () => state, controller: onlineController });
   E.Board3D?.init({ container: document.querySelector("#battlefield-3d"), onFrame: frame });

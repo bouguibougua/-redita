@@ -1,0 +1,16 @@
+{
+  "method": "image_gen built-in",
+  "role": "transparent flame atlas, composed over the intact illustration",
+  "styleReference": "u-diavulu.webp",
+  "file": "u-diavulu-flames.png",
+  "prompt": "Use case: stylized-concept. Asset type: transparent 4 by 4 sprite atlas for a hand-held magical flame animation in the Eredità game. The supplied demon illustration is a STYLE REFERENCE only: match its bold angular hand-painted brushwork, restrained detail and graphic fantasy illustration. Do not depict the demon or any background. Generate ONE square 1024x1024 image containing EXACTLY SIXTEEN separate small upright flame sprites on a genuinely transparent background, evenly spaced in a perfectly regular 4x4 grid with equal 256x256 cells, no gutters, no labels or borders. Each cell: a single elegant living flame, small cream-gold core, luminous golden yellow and orange tongues, dark orange-red outer wisps, brush-painted silhouette, no photorealistic fire or smoke. The same flame evolves gradually left-to-right then top-to-bottom: tips bend, fork and curl, height and width vary slightly, last sprite naturally returns to first. Every flame has an identical fixed origin at x=128, y=232 within its cell, is fully contained between x=40..216 and y=24..232, with transparent empty margin all around. Do not let any flame cross a cell boundary. Keep the base anchored and make the upper tongues change naturally. Preserve a stylized game illustration appearance rather than extreme realism. Alpha must be truly transparent, not an opaque black or checkerboard backdrop.",
+  "actualSize": [
+    1254,
+    1254
+  ],
+  "grid": [
+    4,
+    4
+  ],
+  "animationScript": "scripts/export-diavule-animation.js"
+}

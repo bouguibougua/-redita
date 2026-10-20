@@ -40,7 +40,7 @@ de suivi puis retour, sorties/rentrées et fluidité. Ces contrôles n’ont pas
 Le nouveau bouton **Menu en VR** ouvre l'accueil en `immersive-vr`, avec panorama,
 logo et navigation aux contrôleurs. **RÉALITÉ MIXTE · QUEST 3** conserve le plateau
 en `immersive-ar`. Quitter l'accueil VR avant d'entrer dans le plateau et confirmer
-le dialogue existant. Le tutoriel reste classique ; les fiches illustrées des decks
+le dialogue existant. Le tutoriel reste classique ; le grimoire des légendes
 et la saisie du code d'un salon restent accessibles dans Quest Browser.
 
 L'analyse de l'architecture, les nouveaux tests, l'export GIF et la **checklist
@@ -59,13 +59,13 @@ Toutes les fenêtres, y compris placement, manipulation, paramètres, réglages 
 
 ## Réglages de taille et replacement
 
-Les paramètres restent accessibles dès « Choisir une partie », depuis le choix des decks et biomes, pendant la minute de préparation et pendant le combat. Un seul écran regroupe Agrandir/Réduire les fenêtres, Replacer le plateau, la taille du texte, les réglages individuels et les commandes existantes. Agrandir conserve les espaces entre fenêtres. Les limites restent dans Config.xr ; Réinitialiser restaure taille et disposition. Le menu lui-même peut être ajusté dans « Ajuster une fenêtre ».
+Les paramètres restent accessibles dès « Choisir une partie », depuis le choix des biomes, pendant la minute de préparation et pendant le combat. Un seul écran regroupe Agrandir/Réduire les fenêtres, Replacer le plateau, la taille du texte, les réglages individuels et les commandes existantes. Agrandir conserve les espaces entre fenêtres. Les limites restent dans Config.xr ; Réinitialiser restaure taille et disposition. Le menu lui-même peut être ajusté dans « Ajuster une fenêtre ».
 
 Une gâchette gauche, une gâchette droite et A effectuent la même sélection au rayon. B annule un replacement en restaurant la pose précédente. Le temps de jeu garde son état : mettre en pause si souhaité avant de régler le plateau.
 
 ## Ergonomie VR — 7 octobre 2026
 
-Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation reprend les trois decks et la grille de deux ou quatre biomes colorés selon le format du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
+Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation présente la grille de deux ou quatre biomes colorés selon le format du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
 
 En partie, quatre fenêtres : Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite, Gestion du village en bas à droite (stocks, bâtiments, parcelles et ventes). Un clic sur un village les affiche. Les fiches de PV, les ors et le chronomètre ont des coins arrondis et une poignée de déplacement. Toutes les fenêtres sont parallèles au joueur, dans un même plan vertical au-dessus du plateau. Les fenêtres de gestion et le menu sont également déplaçables.
 
@@ -100,7 +100,7 @@ Ouvrir dans Quest Browser l'adresse **HTTPS** d'un déploiement du projet comple
 
 ### Aperçu ou partie en cours
 
-- **Depuis le menu** : le casque propose entraînement ou local, puis la préparation des decks et biomes. Aucun choix n'est validé automatiquement.
+- **Depuis le menu** : le casque propose entraînement ou local, puis la préparation des biomes. Aucun choix n'est validé automatiquement.
 - **Pour suivre une partie** : préparer et lancer normalement l'entraînement, le local ou le salon, puis cliquer sur **Réalité mixte** au-dessus du plateau. Les mêmes unités, bâtiments et productions sont affichés. La simulation continue pendant le placement et les réglages ; mettre en pause avant l'entrée si souhaité et si le mode l'autorise.
 - **En réseau** : créer/rejoindre le salon comme d'habitude. Rouge reste l'hôte autoritaire, Bleu reste l'invité. Chacun peut choisir sa représentation. Le placement physique reste local au casque ; il n'est pas envoyé à l'autre joueur.
 - **Tutoriel** : le parcours guidé nécessite encore les contrôles HTML ; l'entrée AR y est désactivée. Revenir au menu à sa fin pour utiliser l'AR.

@@ -91,18 +91,6 @@
           D.centered(c, String(meta.lane + 1), x + w - 64, y + 20, 46, F.detail, C.ink, 600, 1);
           if (active) D.centered(c, "✓", x + 14, y + 19, 38, F.body, C.gold, 700, 1);
         }
-      } else if (meta.fullCard && meta.portrait) {
-        const photo = imageFor(meta.portrait.src);
-        const aspect = photo.naturalWidth && photo.naturalHeight ? photo.naturalWidth / photo.naturalHeight : 0.8;
-        const pw = Math.min(w - 24, Math.min(h - 90, 150) * aspect), ph = pw / aspect, px = x + (w - pw) / 2, py = y + 10;
-        if (photo.complete && photo.naturalWidth) c.drawImage(photo, px, py, pw, ph);
-        const top = (meta.descriptionTop || 72) / 100, height = (meta.descriptionHeight || 17) / 100;
-        c.fillStyle = "#080705"; c.fillRect(px + pw * 0.08, py + ph * top, pw * 0.84, ph * height);
-        const size = Math.max(7, pw * 0.06);
-        D.centered(c, meta.shortEffect, px + pw * 0.11, py + ph * top + 2, pw * 0.78, size, "#fff4dc", 500, 4);
-        if (meta.generatedTitle) D.centered(c, meta.cardName.toUpperCase(), px + pw * 0.09, py + ph * 0.64, pw * 0.82, Math.max(8, pw * 0.07), "#fff4dc", 600, 1);
-        drawText(c, label, x + 12, py + ph + 6, w - 24, F.detail, C.ink, 700, 1);
-        drawText(c, `${meta.detail || ""} · ${meta.status || ""}`, x + 12, py + ph + 40, w - 24, F.detail, C.muted, 500, 2);
       } else if (meta.portrait) {
         const photo = imageFor(meta.portrait.src), side = Math.min(100, h * 0.36), px = x + (w - side) / 2, py = y + 12;
         c.save(); D.rounded(c, px, py, side, side, T.radius.portrait); c.clip();
@@ -141,7 +129,7 @@
       const { rows, options } = p.data, M = T.menu, w = p.canvas.width, h = p.canvas.height, entries = [];
       let y = startY;
       rows.forEach((row, rowIndex) => {
-        const height = options.variant === "settings" ? S.row : options.variant === "mode" ? row.some(entry => entry[3]?.large) ? M.modeRow : M.actionRow : rowIndex === 0 ? M.deckRow : row.some(entry => entry[3]?.biome) ? M.biomeRow : M.actionRow;
+        const height = options.variant === "settings" ? S.row : options.variant === "mode" ? row.some(entry => entry[3]?.large) ? M.modeRow : M.actionRow : rowIndex === 0 ? M.formatRow : row.some(entry => entry[3]?.biome) ? M.biomeRow : M.actionRow;
         const bw = (w - 2 * S.inset - S.gap * (row.length - 1)) / row.length;
         row.forEach((entry, col) => {
           const rect = { x: S.inset + col * (bw + S.gap), y, w: bw, h: height };

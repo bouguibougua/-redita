@@ -253,7 +253,7 @@ state.units.push(attacker);
 const blueVillage = state.players.blue.villages[0];
 const hpBefore = blueVillage.hp;
 E.Combat.update(state, 0.1);
-assert.equal(blueVillage.hp, hpBefore - 5);
+assert.equal(blueVillage.hp, hpBefore - attacker.damage);
 assert.equal(blueVillage.damageSmoke, E.Config.visualEffects.structureSmokeDuration);
 assert.equal(E.Economy.getAvailableResidents(state, "red", 0), redVillage.population - 1);
 const populationBeforeDeath = redVillage.population;
@@ -336,13 +336,13 @@ const raider = roleVillage.residents[4];
 assert.equal(E.Economy.setProfession(roleState, "red", 0, fighter.id, "guerrier"), false);
 assert.equal(E.Economy.setProfession(roleState, "red", 0, warrior.id, "guerrier"), true);
 assert.equal(E.Economy.deployResident(roleState, "red", 0, warrior.id, "defense"), true);
-assert.equal(roleState.units[1].hp, 70);
-assert.equal(roleState.units[1].damage, 10);
+assert.equal(roleState.units[1].hp, E.Config.units.guerrier.hp + E.Config.building.artisanatBonus.hp);
+assert.equal(roleState.units[1].damage, E.Config.units.guerrier.damage + E.Config.building.artisanatBonus.damage);
 assert.equal(E.Economy.setProfession(roleState, "red", 0, raider.id, "ravageur"), true);
 assert.equal(E.Economy.deployResident(roleState, "red", 0, raider.id, "attaque"), true);
 roleState.units[2].position = 97;
 E.Combat.update(roleState, 0.1);
-assert.equal(roleState.players.blue.villages[0].hp, 200 - 7 - 5);
+assert.equal(roleState.players.blue.villages[0].hp, 200 - roleState.units[2].damage - E.Config.units.ravageur.villageDamageBonus);
 
 // Vente : banque locale, lot borné, bonus, stock fractionnaire, aucune duplication.
 const tradeState = E.Board.createState("classic");

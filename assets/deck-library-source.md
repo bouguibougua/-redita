@@ -1,4 +1,4 @@
-# Fond de la bibliothèque des decks
+# Fond de la bibliothèque des légendes
 
 Créé le 15 octobre 2026 avec l’outil intégré **imagegen**, pour la refonte
 visuelle demandée par le concepteur. Aucun appel CLI/API ni dépendance ajoutée.
@@ -10,7 +10,7 @@ de composition ni agrandissement. L’image représente une bibliothèque fictiv
 d’inspiration méditerranéenne, sans prétention de restitution historique.
 
 Les panneaux, textes, boutons et cartes sont rendus en HTML/CSS par le jeu.
-Ils ne font pas partie de l’image. Source intégrée dans `css/decks.css`.
+Ils ne font pas partie de l’image. Source réutilisée dans `css/mythology.css`. Le prompt historique ci-dessous est conservé tel quel.
 
 ## Prompt final
 

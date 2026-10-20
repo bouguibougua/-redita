@@ -11,7 +11,7 @@ Toutes les fenêtres, y compris placement, manipulation, paramètres, réglages 
 
 ## Ergonomie VR — 7 octobre 2026
 
-Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation reprend les trois decks et la grille de deux ou quatre biomes colorés selon le format du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
+Après placement, les menus sont droits face au regard. Choisir une partie utilise de grands boutons centrés et un accès « Quitter le mode VR ». La préparation présente la grille de deux ou quatre biomes colorés selon le format du site sur un seul écran. « Retour » est en bas à gauche ; « Lancer la partie » est en bas à droite et confirme aussi le tirage (conservation ou échanges sélectionnés). En local, chaque camp se prépare successivement ; en réseau, l’invité confirme et attend l’hôte.
 
 En partie, quatre fenêtres : Habitants en haut à gauche, Tâches en bas à gauche, Métiers en haut à droite, Gestion du village en bas à droite (stocks, bâtiments, parcelles et ventes). Un clic sur un village les affiche. Les fiches de PV, les ors et le chronomètre ont des coins arrondis et une poignée de déplacement. Toutes les fenêtres sont parallèles au joueur, dans un même plan vertical au-dessus du plateau. Les fenêtres de gestion et le menu sont également déplaçables.
 
@@ -42,7 +42,7 @@ Les CanvasTexture ont au plus 2 048 pixels par axe, utilisent les couleurs CSS e
 
 - `npm.cmd run test:xr` : géométrie réelle Three.js, profils Touch Plus, A séparé, garde index/préhension, X long ; déplacements indépendants à deux mains, rotation, taille, limites, annulation et perte de suivi ; UI branchée aux vraies professions/coûts, revalidation de disponibilité, droits adverses et remplacement d'état.
 - `npm.cmd run test:xr-browser` : Edge headless avec WebGL réel et périphérique XR simulé ; réseau hôte/invité, entrée/refus/sortie, préparation et construction, quatre fenêtres de gestion et poignées de score, stabilité après mouvement de tête, manipulation d'une fenêtre sans déplacement du plateau, A et gâchettes équivalents, tailles, réinitialisation et cache de texture. Capture de contrôle possible avec la variable `EREDITA_XR_SCREENSHOT` contenant un chemin PNG. `EREDITA_XR_PREVIEW_DIR` exporte les aperçus `vr-menu.png`, `vr-preparation.png` et `vr-gestion.png`. Les suites XR et navigateur ont été exécutées avec succès après la révision du 7 octobre 2026, incluant les axes gauche/droit, Y, le lancement en une action, les quatre fenêtres, les fiches de score déplaçables et la priorité du village visible devant une fenêtre.
-- `node tests/decks-browser.test.js` : menus desktop, contrôles, filtres, modales et sélections réussis ; le test XR vérifie aussi le retour aux vues 2D/3D et la simulation réseau.
+- `npm run test:mythology-browser` : grimoire, contrôles, filtres, récits et illustrations animées ; le test XR vérifie aussi le retour aux vues 2D/3D et la simulation réseau.
 - `npm.cmd test` : noyau, IA, élevages, équipements, apparence 3D et commandes réseau réussis, puis les **deux échecs préexistants** de `tests/special-animals.test.js` (attente de dégâts de sanglier continus contre impacts par seconde). Les suites suivantes (âne, animaux 3D, animations de combat, decks) ont été exécutées séparément et réussissent. Aucune règle de combat n'a été modifiée pour faire passer ces assertions.
 - L'ancien `tests/browser-smoke.test.js` échoue déjà avant la partie parce qu'il clique le bouton local sans ouvrir le menu actuel. Le parcours navigateur à jour est couvert ci-dessus ; cet ancien script n'a pas été réécrit dans cette mission.
 
@@ -68,7 +68,7 @@ Ne pas conclure à la lisibilité à partir des pixels du canvas. Pour une haute
 
 ## Taille et replacement depuis les paramètres
 
-- [ ] Dès le menu initial, puis au choix des decks/biomes et pendant la minute de préparation, ouvrir Paramètres et Replacer le plateau sans changer de page. Confirmer avec A puis chacune des deux gâchettes ; B doit restaurer l’ancienne pose.
+- [ ] Dès le menu initial, puis au choix des biomes et pendant la minute de préparation, ouvrir Paramètres et Replacer le plateau sans changer de page. Confirmer avec A puis chacune des deux gâchettes ; B doit restaurer l’ancienne pose.
 - [ ] Agrandir/Réduire les fenêtres : vérifier la croissance des fenêtres et des espacements, le maintien des proportions, les limites et l’absence de transformation du plateau. Réinitialiser doit restaurer la taille d’origine.
 - [ ] Ajuster individuellement « Menu et paramètres » avant la partie puis chaque fenêtre en jeu ; vérifier la persistance entre les menus et le confort avec les trois tailles de texte.
 - [ ] En réseau invité, vérifier que le replacement et la taille des fenêtres restent locaux au casque et accessibles, avec la largeur du plateau toujours contrôlée par l’hôte.

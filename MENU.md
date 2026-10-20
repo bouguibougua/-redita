@@ -14,32 +14,30 @@ immédiatement le logo statique. Architecture, paramètres et tests :
 
 | Fichiers | Fonction |
 | --- | --- |
-| `index.html`, `css/style.css`, `css/cards.css`, `css/decks.css`, `css/play.css` | Interface, préparation, partie, decks et choix de partie |
+| `index.html`, `css/style.css`, `css/mythology.css`, `css/play.css` | Interface, préparation, partie, légendes et choix de partie |
 | `js/network.js` | Menu, sous-menus, formats, entraînement, local et salons |
 | `js/game.js`, `js/game-view.js`, `js/ui.js` | Simulation, commandes partagées et interface |
 | `js/config.js` | Valeurs centralisées, section `menu` pour cette présentation |
 | `js/board3d.js`, `js/vendor/` | Plateau et copie locale de Three.js r186 |
 | `js/xr*.js` | Plateau en réalité mixte, contrôleurs, placement et fenêtres |
 | `js/audio.js` | Musiques existantes, coupure du son |
-| `js/decks.js`, `js/tutorial.js` | Decks conservés pendant la session et tutoriel scénarisé |
+| `js/mythology-ui.js`, `js/tutorial.js` | Grimoire des légendes et tutoriel scénarisé |
 | `server.js`, `tests/` | Serveur réseau et validation |
 
 Il n'y a pas de routeur : `Network.init()` conserve les handlers des boutons
 `data-menu-screen` et `data-open-xr`. JOUER ouvre les formats et le choix
-Multijoueur/Entraînement ; DECKS ouvre le constructeur existant ; TUTORIEL lance
+Multijoueur/Entraînement ; LÉGENDES ouvre le grimoire ; TUTORIEL lance
 son parcours guidé ; RÉALITÉ MIXTE ouvre le dialogue du plateau existant.
 
 ## Présentation et animations
 
-L’écran des decks possède son propre fond de bibliothèque
+Le grimoire des légendes réutilise le fond de bibliothèque
 (`assets/deck-library.webp`, provenance et prompt dans
-[`assets/deck-library-source.md`](assets/deck-library-source.md)). Le deck actif
-occupe le panneau gauche, avec les quantités modifiables et trois emplacements
-mythologiques. Le panneau droit réunit les 39 cartes dans une collection avec
-recherche insensible aux accents et filtres par catégorie, dont Mythologie.
-Le défilement et le focus sont conservés pendant les modifications. Sur mobile,
-les panneaux s’empilent et les filtres restent tous visibles. Les trois decks,
-les limites de composition et la conservation pendant la session sont inchangés.
+[`assets/deck-library-source.md`](assets/deck-library-source.md)). Il présente
+les seize légendes, leurs pouvoirs et leurs histoires depuis le catalogue unique.
+Les cristaux permettent de basculer entre récit et pouvoir, avec les animations
+facultatives et le mode de mouvement réduit décrits dans [MYTHOLOGY.md](MYTHOLOGY.md).
+L’ancien constructeur de decks et ses fichiers sont supprimés.
 
 L’onglet Jouer est habillé comme une armurerie, avec son propre fond optimisé
 `assets/play-armory.webp` et ses styles isolés dans `css/play.css`. Trois panneaux
@@ -58,13 +56,12 @@ les clics réels, le clavier, le mobile, l’annulation d’un salon et une conn
 hôte/invité sur le vrai serveur local.
 
 Les effets d’interface utilisent les WAV fournis par le concepteur dans
-`assets/audio/interface/` : page à l’ajout d’une carte normale ou mythologique,
-page inversée au retrait, épée sur les boutons du menu principal, de l’armurerie
+`assets/audio/interface/` : page lors de la consultation d’une légende,
+épée sur les boutons du menu principal, de l’armurerie
 et du multijoueur. Les boutons Retour jouent l’épée inversée, avec priorité sur
 le son d’épée normal : un seul effet par activation. Les retours HTML sont
 repérés par `data-ui-back` ; les retours VR utilisent la même source sonore.
-Les refus de modification et les boutons désactivés restent
-silencieux. Le bouton Son arrête aussi les effets en cours. `Config.audio`
+Les boutons désactivés restent silencieux. Le bouton Son arrête aussi les effets en cours. `Config.audio`
 centralise les sources, volumes et la limite de lectures simultanées.
 `npm run test:audio` vérifie les vrais fichiers audio dans le navigateur,
 la sourdine et le tactile ; il compare aussi les échantillons des deux sons inversés.
@@ -136,8 +133,8 @@ possèdent un rayon ; survol doré et gâchette pour sélectionner. A/B sont
 reconnus uniquement pour les profils Touch compatibles. Les listes longues
 sont paginées et le panneau possède Retour, Recentrer et Quitter VR.
 
-Les decks peuvent être parcourus au casque ; les illustrations détaillées et
-la saisie avancée restent dans le constructeur web. Le code d'un salon se
+Le grimoire et les renforts en partie restent dans l’interface HTML de
+Quest Browser ; ils ne sont pas projetés dans les panneaux immersifs. Le code d'un salon se
 saisit dans Quest Browser. L'entraînement, le local, le tutoriel et le passage
 au plateau terminent le menu VR avant d'activer leur destination existante.
 Le tutoriel conserve son interface classique conformément au Game Design.
@@ -169,7 +166,7 @@ peut indiquer le chemin d'un Chromium pour les nouveaux tests du menu.
 Les chemins d'assets, de feuilles CSS et d'imports sont relatifs. Le nouveau
 test navigateur sert le dépôt sous **`/-redita/`**, comme GitHub Pages,
 et vérifie les ressources et les interactions. GitHub Pages peut héberger
-l'accueil, les decks, le tutoriel, le solo, le local et WebXR en HTTPS.
+l'accueil, les légendes, le tutoriel, le solo, le local et WebXR en HTTPS.
 Les salons nécessitent toujours le serveur WebSocket Node existant : Pages
 seul ne fournit pas de serveur réseau. Aucune publication n'a été effectuée.
 
@@ -183,7 +180,7 @@ simulées. Le GIF a été vérifié : **72 images, 6 secondes, boucle infinie,
 ## Palette commune et ambiance en partie
 
 `css/theme.css` centralise le noir chaud, bronze, or et ivoire pour préparation,
-jeu, boutique, decks, fiches de carte, tutoriel, dialogues et réalité mixte.
+jeu, boutique, grimoire, tutoriel, dialogues et réalité mixte.
 `XRDesign.theme()` lit ces mêmes variables pour les textures des fenêtres XR.
 Les couleurs sémantiques des camps et des biomes restent distinctes.
 
@@ -204,14 +201,14 @@ Meta Quest Browser, sur l'adresse HTTPS du site :
 - tourner la tête sur 360°, regarder en haut/en bas, inspecter orientation,
   couture arrière, netteté du logo et absence de translation inconfortable ;
 - viser chaque entrée avec chaque contrôleur, vérifier survol et gâchettes,
-  puis A/B, Retour, pagination des decks et Recentrer ;
+  puis A/B, Retour, pagination des menus et Recentrer ;
 - refuser la permission VR puis réessayer ; quitter par le menu puis par le
   système et rentrer plusieurs fois sans rayon ou panneau dupliqué ;
 - vérifier pause des animations, perte/rétablissement du suivi et
   déconnexion/reconnexion des contrôleurs, sans sélection fantôme ;
 - quitter le menu VR, ouvrir le plateau en réalité mixte, vérifier passthrough,
   placement et préparation sans changer la simulation ;
-- vérifier le tutoriel classique, la saisie d'un salon et le retour aux decks ;
+- vérifier le tutoriel classique, la saisie d'un salon et le retour au grimoire ;
 - mesurer la fluidité et le confort pendant plusieurs minutes, idéalement avec
   les outils de performance Quest. Ajuster `Config.menu` si nécessaire.
 

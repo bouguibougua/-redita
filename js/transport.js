@@ -32,7 +32,7 @@
     if (state.phase !== "running") reason = "Partie inactive";
     else if (state.paused) reason = "Partie en pause";
     else if (village.destroyed) reason = "Village détruit";
-    else if (E.CardEffects?.isBurned(state, village)) reason = "Terrain brûlé";
+    else if (E.MythologyEffects?.isBurned(state, village)) reason = "Terrain brûlé";
     else if (item.biome && village.biome !== item.biome) reason = "Littoral requis";
     else reason = unlockReason(village, item);
     if (!reason && item.max !== null && count >= item.max) reason = "Limite atteinte";

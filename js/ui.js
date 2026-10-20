@@ -15,20 +15,7 @@
   let currentState = null;
   let selectedSlot = null;
   const viewerId = state => E.Network.mode === "local" ? state.selectedVillage.playerId : E.Network.playerId || "red";
-  const vision = (state, village) => E.CardEffects?.vision(state, viewerId(state), village) || { fraction: 1, all: true, people: true };
-
-  function cardEffectsText(state, village) {
-    const values = [];
-    if (village.burnUntil > state.elapsed) values.push(`Terrain brûlé : ${Math.ceil(village.burnUntil - state.elapsed)} s`);
-    if (village.curseUntil > state.elapsed) values.push(`Malédiction : rendement ÷2 · ${Math.ceil(village.curseUntil - state.elapsed)} s`);
-    if (village.terrain?.river) values.push("Rivière · pêche disponible");
-    if (village.terrain?.mill) values.push(`Moulin · +30 % agriculture · ${Math.ceil(village.terrain.mill.hp)} PV`);
-    if (village.terrain?.tower) values.push(`Tour génoise · vision ${village.biome === "littoral" ? 50 : 25} % · ${Math.ceil(village.terrain.tower.hp)} PV`);
-    if (village.terrain?.trail) values.push("Sentier · +20 % déplacement");
-    if (village.terrain?.traps?.length) values.push(`${village.terrain.traps.length} piège(s)`);
-    if (E.Buildings.has(village, "artisanat")) values.push(`Artisanat · +${E.Config.building.artisanatBonus.damage} dégâts / +${E.Config.building.artisanatBonus.hp} PV par habitant allié de la colonne`);
-    return values.join(" · ");
-  }
+  const vision = (state, village) => E.MythologyEffects?.vision(state, viewerId(state), village) || { fraction: 1, all: true, people: true };
 
   function init(gameController) {
     controller = gameController;
@@ -65,8 +52,6 @@
 
   function bindEvents() {
     elements.setupPlayers.addEventListener("click", (event) => {
-      const deckButton = event.target.closest("[data-setup-deck]");
-      if (deckButton) controller.selectDeck(deckButton.dataset.player, Number(deckButton.dataset.setupDeck));
       const biomeButton = event.target.closest("[data-biome-choice]");
       if (biomeButton) controller.toggleBiome(biomeButton.dataset.player, Number(biomeButton.dataset.lane));
       const setupAction = event.target.closest("[data-setup-action]");
@@ -198,6 +183,8 @@
     if (setup) selectedSlot = null;
     elements.setupScreen.hidden = !setup;
     elements.gameScreen.hidden = setup;
+    // La fin de la partie précédente ne doit pas masquer la préparation suivante.
+    if (setup) renderResult(state);
     if (setup) renderSetup(state);
     else renderGame(state);
   }
@@ -215,7 +202,6 @@
     updateInspectorState(state);
     updateShopState(state);
     syncShopModal(state);
-    E.CardUI?.render(state);
     renderRedirect(state, false);
     renderResult(state);
   }
@@ -236,17 +222,8 @@
       return `<article class="setup-player ${player.setupConfirmed ? "confirmed" : ""}">
         <div class="setup-player-head">
           <h3>${player.name}</h3>
-          <span class="status-pill">${player.setupConfirmed ? `Deck ${player.selectedDeck + 1} · confirmé` : `Deck ${player.selectedDeck + 1} · ${player.setupSelection.length}/${E.Board.getFormat(state).exchanges} biomes`}</span>
+          <span class="status-pill">${player.setupConfirmed ? `Territoire confirmé` : `${player.setupSelection.length}/${E.Board.getFormat(state).exchanges} biomes`}</span>
         </div>
-        <section class="setup-decks" aria-label="Choix du deck de ${player.name}">
-          <h4>Deck pour cette partie</h4>
-          <div>${[0, 1, 2].map((deckIndex) => {
-            const deck = E.CardGame?.matchDeck(deckIndex, player.selectedDeck === deckIndex && player.matchDeck ? player.matchDeck : E.Decks?.exportDeck(deckIndex));
-            const count = deck ? Object.values(deck.quantities).reduce((sum, quantity) => sum + quantity, 0) : 0;
-            const detail = E.Network.mode !== "tutorial" && deck ? `${count} cartes · ${deck.mythological.length} Mythologiques` : player.selectedDeck === deckIndex ? "Sélectionné ✓" : "Choisir";
-            return `<button type="button" class="setup-deck-choice ${player.selectedDeck === deckIndex ? "selected" : ""}" data-setup-deck="${deckIndex}" data-player="${player.id}" aria-pressed="${player.selectedDeck === deckIndex}" ${player.setupConfirmed || (E.Network.mode === "tutorial" && (player.id !== "red" || deckIndex !== 1)) ? "disabled" : ""}>${E.Network.mode === "tutorial" ? E.Tutorial.deckLabels[deckIndex] : `Deck ${deckIndex + 1}`}<small>${detail}</small></button>`;
-          }).join("")}</div>
-        </section>
         <div class="biome-choice-grid">${cards}</div>
         <div class="setup-actions">
           <button class="button ${player.id === "red" ? "button-red" : "button-blue"}" type="button"
@@ -285,7 +262,6 @@
     [elements.inspector, elements.residents, elements.shop].forEach((panel) => panel.classList.toggle("opponent-readonly", readonly));
     renderRedirect(state, true);
     renderResult(state);
-    E.CardUI?.render(state);
   }
 
   function openShopModal() {
@@ -327,6 +303,8 @@
     elements.phase.textContent = overtime ? "Overtime" : "Temps normal";
     }
     elements.clock.closest(".board-clock")?.setAttribute("aria-label", state.preparationRemaining > 0 ? "Préparation : attribuez vos tâches avant le combat" : "Temps restant");
+    const clock = elements.clock.closest('.board-clock');
+    if (clock) clock.dataset.paused = String(state.paused);
     elements.pause.textContent = state.paused ? "Reprendre" : "Pause";
   }
 
@@ -402,7 +380,7 @@
     elements.columns.innerHTML = state.players.red.villages.map((_, lane) => {
       const redVillage = state.players.red.villages[lane];
       const blueVillage = state.players.blue.villages[lane];
-      return `<article class="lane">
+      return `<article class="lane" data-mythology-lane="${lane}">
         <span class="lane-label">${lane + 1}</span>
         ${villageButton(redVillage, state.selectedVillage)}
         ${regionMarkup(state, redVillage, "red")}
@@ -425,7 +403,7 @@
 
   function regionMarkup(state, village, playerId) {
     const known = vision(state, village);
-    const overlays = `<div class="terrain-card-overlays">${village.terrain?.river ? '<span class="terrain-card-overlay river" title="Rivière"></span>' : ""}${village.terrain?.mill ? '<span class="terrain-card-overlay mill">⚙ Moulin</span>' : ""}${village.terrain?.tower ? '<span class="terrain-card-overlay tower">♜ Tour</span>' : ""}${village.terrain?.trail ? '<span class="terrain-card-overlay trail">〽 Sentier</span>' : ""}${village.terrain?.traps?.length && playerId === viewerId(state) ? `<span class="terrain-card-overlay trap">🪤 ×${village.terrain.traps.length}</span>` : ""}</div>`;
+    const overlays = village.terrain?.river ? '<div class="mythology-terrain-overlays"><span class="mythology-terrain-river" title="Rivière"></span></div>' : "";
     const slots = village.slots.map((slot, index) => {
       const crop = slot.content && slot.content.category === "crop" ? E.Crops.get(slot.content.type) : null;
       const herd = slot.content && slot.content.category === "livestock" ? E.Livestock.get(slot.content.type) : null;
@@ -454,33 +432,35 @@
       <span class="fleet-group fleet-filet" data-terrain-fleet="filet"><span class="terrain-net">🕸</span><b>${maritime.filet}</b></span>
       <span class="fleet-group fleet-barque" data-terrain-fleet="barque">${boatIcons("barque")}<b>${maritime.barque}/4</b></span>
     </div>` : "";
-    return `<div class="region ${village.biome} ${playerId} ${village.burnUntil > state.elapsed ? "card-burned" : ""} ${village.curseUntil > state.elapsed ? "card-cursed" : ""}">
+    return `<div class="region ${village.biome} ${playerId} ${village.burnUntil > state.elapsed ? "mythology-burned" : ""} ${village.curseUntil > state.elapsed ? "mythology-cursed" : ""}" data-mythology-region data-player="${playerId}" data-lane="${village.lane}">
       <div class="region-name"><span>${E.Biomes.labels[village.biome]}</span><span data-region-population>${village.population}/${village.populationMax} hab.</span></div>
       <div class="terrain-building-layer ${village.destroyed ? "destroyed" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""}" aria-label="Village et bâtiments visibles sur le terrain">${terrainBuildings}</div>
       ${maritimeLayer}
       ${overlays}
-      ${known.fraction < 1 ? `<div class="terrain-card-fog" style="height:${(1 - known.fraction) * 100}%" aria-label="Zone non révélée"></div>` : ""}
+      ${known.fraction < 1 ? `<div class="mythology-terrain-fog" style="height:${(1 - known.fraction) * 100}%" aria-label="Zone non révélée"></div>` : ""}
       <div class="slot-grid">${slots}</div>
     </div>`;
   }
 
   function renderUnits(state) {
     const regionCount = state.players.red.villages.length;
-    const combatUnits = state.units.filter(unit => !E.CardEffects || E.CardEffects.unitVisible(state, viewerId(state), unit)).map((unit) => {
+    const combatUnits = state.units.filter(unit => !E.MythologyEffects || E.MythologyEffects.unitVisible(state, viewerId(state), unit)).map((unit) => {
       const stats = E.Config.units[unit.role];
       const left = ((unit.lanePosition + 0.5) / regionCount) * 100;
       const top = Math.max(1.2, Math.min(98.8, unit.position));
       const vessel = unit.waterTransport ? `<span class="unit-vessel" title="Transporté par ${E.Config.maritime.shop[unit.waterTransport].label.toLowerCase()}">${E.Config.maritime.shop[unit.waterTransport].icon}</span>` : "";
       const selected = unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane;
-      return `<div class="unit ${unit.ownerId} role-${unit.role} ${selected ? "selected-resident" : ""} ${unit.waitingForRedirect ? "waiting" : ""} ${unit.waterTransport ? `on-water transport-${unit.waterTransport}` : ""}" style="left:${left}%;top:${top}%" title="${stats.label} · ${Math.ceil(unit.hp)} PV${unit.waterTransport ? ` · ${E.Config.maritime.shop[unit.waterTransport].label}` : ""}">
-        ${unit.isCart ? '<span class="unit-body" aria-hidden="true">🛞</span>' : unit.animalType ? animalAppearance(unit.animalType, "unit-body") : residentAppearance(unit, "unit-body")}
+      const label = E.Mythology?.get(unit.mythologyLegendId)?.name || stats.label;
+      return `<div class="unit ${unit.ownerId} role-${unit.role} ${selected ? "selected-resident" : ""} ${unit.waitingForRedirect ? "waiting" : ""} ${unit.waterTransport ? `on-water transport-${unit.waterTransport}` : ""}" style="left:${left}%;top:${top}%" title="${label} · ${Math.ceil(unit.hp)} PV${unit.waterTransport ? ` · ${E.Config.maritime.shop[unit.waterTransport].label}` : ""}">
+        ${unit.animalType ? animalAppearance(unit.animalType, "unit-body") : residentAppearance(unit, "unit-body")}
         ${vessel}
         <span class="hp-track"><i style="width:${Math.max(0, unit.hp / unit.maxHp) * 100}%"></i></span>
       </div>`;
     }).join("");
     const workers = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
       village.residents
-        .filter((resident) => vision(state, village).people && ["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null)
+        .filter((resident) => (E.MythologyEffects ? E.MythologyEffects.residentVisible(state, viewerId(state), village, resident) : vision(state, village).people)
+          && ["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null)
         .map((resident) => {
           const laneOffset = resident.mission === "chasse" ? 0.5 + (resident.workLaneOffset || 0) : resident.mission === "elevage" ? 0.62 : 0.45;
           const left = ((village.lane + laneOffset) / regionCount) * 100;
@@ -493,11 +473,11 @@
         })
     )).join("");
     const locals = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
-      village.destroyed || !vision(state, village).people ? [] : (() => {
+      village.destroyed || !vision(state, village).people && !vision(state, village).offensive ? [] : (() => {
         const visible = village.residents.filter((resident) => !resident.unitId && !["attaque", "defense"].includes(resident.mission)
           && !(["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null));
         let fisherIndex = 0;
-        return visible.map((resident, index) => {
+        return visible.filter(resident => !E.MythologyEffects || E.MythologyEffects.residentVisible(state, viewerId(state), village, resident)).map((resident, index) => {
           const fishing = resident.mission === "peche";
           const narrow = window.innerWidth < 720;
           const fisherColumns = narrow ? 4 : 7;
@@ -523,7 +503,7 @@
   }
 
   function terrainSignature(state) {
-    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${E.CardEffects?.terrainVisualKey(village) || ""}:${village.burnUntil > state.elapsed}:${village.curseUntil > state.elapsed}:${vision(state, village).fraction}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}` : "-").join(",")}`)).join("|");
+    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${E.MythologyEffects?.terrainVisualKey(village) || ""}:${village.burnUntil > state.elapsed}:${village.curseUntil > state.elapsed}:${vision(state, village).fraction}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}` : "-").join(",")}`)).join("|");
   }
 
   function animalAppearance(type, className) {
@@ -589,12 +569,11 @@
     elements.inspector.dataset.herdSignature = herdSignature(village);
     const known = vision(state, village);
     if (!known.all && player.id !== viewerId(state)) {
-      elements.inspector.innerHTML = `<h3>Village adverse · informations cachées</h3><p class="section-help">Une Tour génoise révèle une partie de la région. U Mazzeru révèle les habitants ; l’Œil de Sainte-Lucie révèle les Littoraux.</p>${known.people ? `<p>${village.population} habitants · ${village.residents.map(person => E.Config.professions[person.profession || "habitant"].label).join(", ")}</p>` : ""}`;
+      elements.inspector.innerHTML = `<h3>Village adverse · informations cachées</h3><p class="section-help">Une Tour génoise révèle une partie de la région. U Mazzeru révèle les habitants offensifs ; l’Œil de Sainte-Lucie révèle les Littoraux.</p>${known.people || known.offensive ? `<p>${village.residents.filter(person => E.MythologyEffects.residentVisible(state, viewerId(state), village, person)).map(person => E.Config.professions[person.profession || "habitant"].label).join(", ") || "Aucun habitant révélé"}</p>` : ""}`;
       elements.residents.innerHTML = "";
-      elements.inspector.dataset.vision = `${known.people}:${known.all}`;
+      elements.inspector.dataset.vision = `${known.people}:${known.all}:${known.offensive}`;
       return;
     }
-    const resources = E.Config.resources.map((key) => `<div class="resource-row"><dt>${resourceLabels[key]}</dt><dd data-resource="${key}">${formatNumber(village.resources[key])}</dd></div>`).join("");
     const noSlot = village.buildings.length >= E.Config.building.slots;
     const cannotBuy = player.gold < E.Config.building.T1.gold || noSlot || village.destroyed || state.phase !== "running" || state.paused;
     const availableResidents = E.Economy.getAvailableResidents(state, player.id, village.lane);
@@ -627,18 +606,7 @@
     }).join("") : '<p class="section-help">Aucun habitant sélectionné.</p>';
     const buildings = village.buildings.map((building, index) => `<div class="management-card building-card building-${building.type}"><strong>${buildingLabels[building.type]} T${building.level}</strong><small>+${building.hpBonus} PV</small>${upgradeButton(state, player, village, index)}</div>`).join("");
 
-    elements.inspector.innerHTML = `
-    ${!(E.Network.mode === "solo" && player.id === "blue") ? `<section class="inspector-section">
-      <h3>Banque locale</h3>
-      <p class="section-help">Ressources disponibles dans ce village.</p>
-      <dl class="resource-list">${resources}</dl>
-    </section><section class="inspector-section" aria-label="Réserve de barques du village">
-      <h3>Réserve de barques</h3>
-      <p data-fleet-summary>${fleetSummary(state, village)}</p>
-      <p class="card-effects-status" data-card-effects-status>${cardEffectsText(state, village)}</p>
-      <p class="section-help">Embarquement automatique depuis ce village, même sur l’eau adverse. Les places se libèrent sur terre. Sans place libre, l’unité se noie.</p>
-    </section>` : ""}
-    ${slots}`;
+    elements.inspector.innerHTML = slots;
 
     elements.residents.innerHTML = `<details ${expanded ? "open" : ""}>
       <summary><strong>Gestion · Village ${village.lane + 1} · ${player.id === "red" ? "Rouge" : "Bleu"}</strong><span><b data-residents-available>${availableResidents}</b> disponibles · ${selectedResident ? selectedResident.name : "Aucun habitant"} sélectionné · cliquer pour replier</span></summary>
@@ -742,8 +710,8 @@
     const village = player && player.villages[selection.lane];
     if (!village) return;
     const known = vision(state, village);
-    if (state.cardGameStarted && player.id !== viewerId(state)) {
-      const visibility = `${known.people}:${known.all}`;
+    if (state.mythology && player.id !== viewerId(state)) {
+      const visibility = `${known.people}:${known.all}:${known.offensive}`;
       if (elements.inspector.dataset.vision !== visibility) { elements.inspector.dataset.vision = visibility; renderInspector(state); }
       if (!known.all) return;
     }
@@ -759,7 +727,6 @@
     setText("[data-inspector-gold]", formatNumber(player.gold));
     setText("[data-inspector-birth]", nextPopulationText(state, player, village));
     setText("[data-fleet-summary]", fleetSummary(state, village));
-    setText("[data-card-effects-status]", cardEffectsText(state, village));
     E.Config.resources.forEach((resource) => {
       const target = elements.inspector.querySelector(`[data-resource="${resource}"]`);
       if (target) target.textContent = formatNumber(village.resources[resource]);

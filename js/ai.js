@@ -76,7 +76,7 @@
       E.Economy.getAvailableResidents(state, "blue", lane) <= E.Config.ai.reserveResidents) return false;
     const resident = availableResident(state, lane);
     if (!resident) return false;
-    const needsBoat = state.cardGameStarted && (village.biome === "littoral" || state.players.red.villages[lane].biome === "littoral");
+    const needsBoat = state.mythology && (village.biome === "littoral" || state.players.red.villages[lane].biome === "littoral");
     if (needsBoat && E.Transport.fleetCapacity(village) <= attackers) {
       if (E.Transport.buy(state, "blue", lane, "barque")) return true;
       if (!E.Transport.fleetCapacity(village)) return false;
@@ -98,20 +98,6 @@
     return changed;
   }
 
-  function playCard(state, village) {
-    if (!state.cardGameStarted || !state.players.blue.cards || village.destroyed) return false;
-    const cards = state.players.blue.cards;
-    const priority = E.Config.ai.cardPriority;
-    const held = [...cards.hand, ...cards.mythological.filter(card => !card.used && card.unlockAt <= state.elapsed)]
-      .sort((a, b) => (priority.indexOf(a.cardId) < 0 ? priority.length : priority.indexOf(a.cardId)) - (priority.indexOf(b.cardId) < 0 ? priority.length : priority.indexOf(b.cardId)));
-    for (const card of held) {
-      if (card.cardId === "u-diavulu") continue; // TEMP_BALANCE_VALUE — l'IA ne sacrifie pas encore ses régions.
-      const target = E.CardGame.targets(state, "blue", card.id).find(target => target.lane === village.lane);
-      if (target && E.CardGame.play(state, "blue", card.id, target)) return true;
-    }
-    return false;
-  }
-
   function update(state, delta) {
     if (state.phase !== "running" || state.paused) return false;
     let changed = chooseRedirects(state);
@@ -119,7 +105,7 @@
     if (decisionTimer < E.Config.ai.decisionInterval) return changed;
     decisionTimer -= E.Config.ai.decisionInterval;
     for (const village of state.players.blue.villages) {
-      changed = (playCard(state, village) || manageVillage(state, village)) || changed;
+      changed = manageVillage(state, village) || changed;
     }
     return changed;
   }

@@ -9,7 +9,7 @@
     const config = E.Config.building;
 
     if (state.phase !== "running" || state.paused || !village || village.destroyed) return false;
-    if (E.CardEffects?.isBurned(state, village)) return false;
+    if (E.MythologyEffects?.isBurned(state, village)) return false;
     if (!config.types.includes(type) || village.buildings.length >= config.slots) return false;
     if (player.gold < config.T1.gold) return false;
 
@@ -17,7 +17,7 @@
     village.buildings.push({ type, level: 1, hpBonus: config.T1.hp });
     village.maxHp += config.T1.hp;
     village.hp += config.T1.hp;
-    E.CardEffects?.updateArtisanatBonuses(state);
+    updateArtisanatBonuses(state);
     return true;
   }
 
@@ -65,5 +65,27 @@
     return true;
   }
 
-  E.Buildings = { buildT1, has, upgradeQuote, upgrade };
+  // Le bonus appartient aux bâtiments ; il reste indépendant des renforts.
+  function updateArtisanatBonuses(state) {
+    const bonus = E.Config.building.artisanatBonus;
+    for (const unit of state.units) {
+      if (unit.hp <= 0 || unit.isLegend || unit.animalType || ["chien", "sanglier"].includes(unit.role)) continue;
+      const village = state.players[unit.ownerId]?.villages[unit.lane];
+      const active = village && !village.destroyed && has(village, "artisanat");
+      const multiplier = unit.mythologyStatMultiplier || 1;
+      const hpBonus = active ? bonus.hp * multiplier : 0;
+      const damageBonus = active ? bonus.damage * multiplier : 0;
+      const difference = hpBonus - (unit.artisanatHpBonus || 0);
+      const damageDifference = damageBonus - (unit.artisanatDamageBonus || 0);
+      if (!difference && !damageDifference) continue;
+      // Conserver les dégâts déjà subis lors de l'entrée/sortie de la colonne.
+      unit.maxHp += difference;
+      unit.hp = Math.max(0, Math.min(unit.maxHp, unit.hp + difference));
+      unit.damage += damageDifference;
+      unit.artisanatHpBonus = hpBonus;
+      unit.artisanatDamageBonus = damageBonus;
+    }
+  }
+
+  E.Buildings = { buildT1, has, upgradeQuote, upgrade, updateArtisanatBonuses };
 }());

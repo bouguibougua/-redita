@@ -29,7 +29,6 @@ async function run() {
       closest(selector) {
         for (let current = this; current; current = current.parent) {
           if (selector === "[hidden]" && current.hidden) return current;
-          if (selector === ".deck-modal-backdrop.closing" && current.classes.has("deck-modal-backdrop") && current.classes.has("closing")) return current;
         }
         return null;
       }
@@ -53,12 +52,12 @@ async function run() {
     elements["menu-back"].parent = sub;
     elements["connection-back"].parent = connection;
     elements["room-code"].parent = connection;
-    const showMain = () => { main.hidden = false; sub.hidden = true; connection.hidden = true; sub.classes.delete("decks-screen"); };
+    const showMain = () => { main.hidden = false; sub.hidden = true; connection.hidden = true; sub.classes.delete("legends-screen"); };
     elements["menu-back"].handlers.click = showMain;
     elements["connection-back"].handlers.click = showMain;
     main.buttons = [
       new Element("jouer", "JOUER", main, { "data-menu-screen": "play" }),
-      new Element("decks", "DECKS", main, { "data-menu-screen": "decks" }),
+      new Element("legends", "LÉGENDES", main, { "data-menu-screen": "legends" }),
       new Element("tutorial", "TUTORIEL", main, { "data-menu-screen": "tutorial" }),
       new Element("mr", "RÉALITÉ MIXTE · QUEST 3", main, { "data-open-xr": "" })
     ];
@@ -69,11 +68,11 @@ async function run() {
       elements["menu-subtitle"].textContent = "Choisissez votre voie";
       elements["menu-subcontent"].buttons = [training];
     };
-    const deckButtons = Array.from({ length: 9 }, (_, index) => new Element(`deck-${index}`, `Carte ${index + 1}`, elements["menu-subcontent"]));
+    const legendButtons = Array.from({ length: 9 }, (_, index) => new Element(`legend-${index}`, `Légende ${index + 1}`, elements["menu-subcontent"]));
     main.buttons[1].handlers.click = () => {
-      main.hidden = true; sub.hidden = false; sub.classes.add("decks-screen");
-      elements["menu-subtitle"].textContent = "Construire vos decks";
-      elements["menu-subcontent"].buttons = deckButtons;
+      main.hidden = true; sub.hidden = false; sub.classes.add("legends-screen");
+      elements["menu-subtitle"].textContent = "Les légendes de Corse";
+      elements["menu-subcontent"].buttons = legendButtons;
     };
     const document = {
       baseURI: "https://example.test/-redita/",
@@ -129,7 +128,7 @@ async function run() {
     };
     const step = (milliseconds = 250) => { time += milliseconds; E.MenuVR.update(time, frame); };
     const select = (text, index = 0) => { aim(text, index); step(); nodes[index].dispatchEvent({ type: "select" }); };
-    return { E, stats, elements, main, sub, training, deckButtons, scene, camera, nodes, sources, frame, group, row, connect, aim, step, select, repaint, referenceSpace, textures, setViewer: (value) => { viewer = value; } };
+    return { E, stats, elements, main, sub, training, legendButtons, scene, camera, nodes, sources, frame, group, row, connect, aim, step, select, repaint, referenceSpace, textures, setViewer: (value) => { viewer = value; } };
   }
 
   const f = fixture();
@@ -163,12 +162,12 @@ async function run() {
 
   f.elements["menu-back"].click();
   await f.E.MenuVR.start(); f.connect(); f.step();
-  f.select("DECKS");
+  f.select("LÉGENDES");
   assert.equal(f.E.MenuVR.diagnostics.pages, 2);
   f.select("→");
   assert.equal(f.E.MenuVR.diagnostics.page, 2);
-  f.select("Carte 7");
-  assert.equal(f.stats.clicks.at(-1), "deck-6", "Deck button invokes its own HTML handler");
+  f.select("Légende 7");
+  assert.equal(f.stats.clicks.at(-1), "legend-6", "Legend button invokes its own HTML handler");
   f.select("Retour");
   f.aim("JOUER"); f.step();
   const firstRow = f.row("JOUER");
@@ -184,15 +183,15 @@ async function run() {
   assert.equal(f.stats.clicks.length, clicksBefore, "Missing head tracking rejects stale selection");
   f.setViewer({ position: new core.Vector3(0, 1.6, 0), orientation: new core.Quaternion() }); f.step();
   assert.equal(f.group().visible, true);
-  f.select("DECKS");
-  f.aim("Carte 1"); f.step();
+  f.select("LÉGENDES");
+  f.aim("Légende 1"); f.step();
   const beforeDuplicate = f.stats.clicks.length;
   f.nodes[0].dispatchEvent({ type: "select" });
   f.sources[0].gamepad.buttons[4].pressed = true; f.step(1);
   assert.equal(f.stats.clicks.length, beforeDuplicate + 1, "Select and simultaneous A produce one action");
   await f.E.MenuVR.end();
   assert.equal(f.stats.sessions.filter((item) => item.ended).length, 2, "Repeated sessions end cleanly");
-  assert.equal(f.stats.visible, true, "Leaving VR from decks keeps the menu scene active for the visible HTML submenu");
+  assert.equal(f.stats.visible, true, "Leaving VR from legends keeps the menu scene active for the visible HTML submenu");
 
   f.stats.denied = true;
   await f.E.MenuVR.start();

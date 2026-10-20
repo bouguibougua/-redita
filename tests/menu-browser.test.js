@@ -24,7 +24,7 @@ async function run() {
     assert.equal(await page.evaluate("Eredita.MenuScene.diagnostics.active"), true);
     await page.waitFor("document.querySelector('#menu-status').textContent.trim().length > 0");
     assert.equal(await page.evaluate("document.querySelector('#menu-enter-vr').disabled"), true, "Sans périphérique immersif, le menu VR reste indisponible");
-    assert.deepEqual(await page.evaluate("Array.from(document.querySelectorAll('#main-menu .main-menu-actions button'), b=>b.textContent.trim())"), ["JOUER", "DECKS", "TUTORIEL", "RÉALITÉ MIXTE · QUEST 3"]);
+    assert.deepEqual(await page.evaluate("Array.from(document.querySelectorAll('#main-menu .main-menu-actions button'), b=>b.textContent.trim())"), ["JOUER", "LÉGENDES", "TUTORIEL", "RÉALITÉ MIXTE · QUEST 3"]);
     assert.equal(await page.evaluate("Array.from(document.querySelectorAll('#main-menu img')).some(i=>i.src.endsWith('/-redita/assets/eredita-logo.png') && i.complete && i.naturalWidth>0)"), true);
     assert.ok(await page.evaluate("document.querySelector('.menu-logo').naturalWidth >= 2048"), "Le nouveau logo reste net à la taille du menu");
     const panorama = await fetch(new URL("assets/menu-360.png", staticSite.url));
@@ -56,14 +56,10 @@ async function run() {
     assert.equal(await page.evaluate("Eredita.MenuScene.diagnostics.environmentAsset"), "assets/menu-360.png");
     await page.waitFor("!Eredita.MenuScene.diagnostics.altarVisible");
 
-    await page.click('[data-menu-screen="decks"]');
-    await page.waitFor("!!document.querySelector('.deck-builder')");
-    assert.equal(await page.evaluate("document.querySelectorAll('.deck-collection-card').length"), 34);
-    await page.click('[data-open-card="habitant"]');
-    await page.waitFor("!!document.querySelector('.deck-modal-backdrop')");
-    await page.waitFor("document.querySelector('.deck-modal-backdrop').getAnimations({subtree:true}).every(animation => animation.playState === 'finished')");
-    await page.click(".deck-modal-close");
-    await page.waitFor("!document.querySelector('.deck-modal-backdrop')");
+    await page.click('[data-menu-screen="legends"]');
+    await page.waitFor("!!document.querySelector('.mythology-collection')");
+    assert.equal(await page.evaluate("document.querySelectorAll('.mythology-collection .mythology-card').length"), 16);
+    assert.equal(await page.evaluate('Eredita.CardGame'), undefined);
     await page.click("#menu-back");
     await page.waitFor("!document.querySelector('#main-menu').hidden");
 

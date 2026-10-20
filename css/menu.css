@@ -76,7 +76,7 @@
   font-size: 10px; color: #a99c86; line-height: 1.4; cursor: auto; pointer-events: none; }
 body:has(#main-menu:not([hidden])) { overflow: hidden; }
 .menu-subscreen { background: #0d0d0be3; backdrop-filter: blur(8px); }
-.menu-subscreen:not(.decks-screen) .menu-subpanel {
+.menu-subscreen .menu-subpanel {
   background: linear-gradient(145deg, #1d1b15ee, #10110fee); border-color: #b79a5354;
   border-radius: 3px; box-shadow: 0 30px 100px #000b;
 }

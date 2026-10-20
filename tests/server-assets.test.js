@@ -40,8 +40,17 @@ async function run() {
     const suffix=await request("/assets/audio/game/combat.mp3",{ Range:"bytes=-512" }); assert.deepEqual(suffix.body,audio.subarray(-512));
     const invalid=await request("/assets/audio/game/combat.mp3",{ Range:`bytes=${audio.length}-` }); assert.equal(invalid.status,416);
     const head=await request("/assets/audio/game/combat.mp3",{},"HEAD"); assert.equal(head.body.length,0); assert.equal(Number(head.headers["content-length"]),audio.length);
+    const videoPath = '/assets/mythology/a-stregha-bianca-motion.mp4';
+    const video = fs.readFileSync(path.join(project,'assets/mythology/a-stregha-bianca-motion.mp4'));
+    const videoHead = await request(videoPath, {}, 'HEAD');
+    assert.equal(videoHead.headers['content-type'], 'video/mp4'); assert.equal(videoHead.body.length, 0);
+    assert.equal(Number(videoHead.headers['content-length']), video.length);
+    const videoRange = await request(videoPath, {Range:'bytes=0-1023'});
+    assert.equal(videoRange.status, 206); assert.equal(videoRange.headers['accept-ranges'], 'bytes');
+    assert.deepEqual(videoRange.body, video.subarray(0,1024));
+    assert.equal((await request(videoPath, {Range:`bytes=${video.length}-`})).status, 416);
     assert.equal((await request("/.env")).status,403); assert.equal((await request("/assets/missing.webp")).status,404);
-    console.log("Fichiers HTTP : gzip, validation du cache, actualisation, WebP et streaming audio partiel validés.");
+    console.log("Fichiers HTTP : gzip, cache, WebP, streaming audio et MP4 partiel validés.");
   } finally { server.kill(); if(fs.existsSync(temporary))fs.unlinkSync(temporary); }
 }
 run().catch(error => { console.error(error); process.exitCode=1; });

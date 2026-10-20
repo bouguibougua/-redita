@@ -7,7 +7,7 @@
     type: { title: 40, body: 32, detail: 27, value: 46 },
     spacing: { inset: 26, gap: 12, header: 108, line: 45, row: 105, detailRow: 132, footer: 94 },
     radius: { panel: 48, button: 24, portrait: 20 },
-    menu: { modeHeight: 0.76, setupHeight: 0.76, modeRow: 230, deckRow: 145, biomeRow: 220, actionRow: 110, footer: 122 },
+    menu: { modeHeight: 0.76, setupHeight: 0.76, modeRow: 230, formatRow: 145, biomeRow: 220, actionRow: 110, footer: 122 },
     border: { normal: 1.5, selected: 3, hover: 2.5 },
     feedbackMs: 4000, confirmationMs: 320, transitionMs: 140,
     textScales: { normal: 1, large: 1.16, xlarge: 1.32 },
