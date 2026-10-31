@@ -1695,9 +1695,11 @@ Les seize récits fournis sont consultables sans leurs sources. Cette bascule
 fonctionne aussi au clavier et au toucher, avec un mode de mouvement réduit.
 Lorsqu’une vidéo propre à une légende est configurée, le passage à l’histoire
 remplace l’illustration par cette animation muette en boucle, avec un léger
-flash blanc limité à l’illustration. Le retour aux pouvoirs restaure l’image
-originale avec le même flash. **A Strega Bianca** utilise le clip fourni et
-**U Diavule** une animation de flamme dans sa main, également disponible en GIF.
+flash blanc limité à l’illustration, **vert pour A Strega**. Le retour aux
+pouvoirs restaure l’image originale avec le même flash. **A Strega Bianca** et
+**A Strega** utilisent les **3,75 premières secondes** de leurs clips fournis,
+en boucle avec un court fondu de raccord en fin de clip. **U Diavule** utilise
+une animation de flamme dans sa main, également disponible en GIF.
 Les autres légendes restent illustrées par leur image. Le mouvement réduit
 conserve les images et supprime le flash et la lecture automatique.
 

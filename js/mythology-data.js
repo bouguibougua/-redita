@@ -43,7 +43,10 @@
     entry('a-stregha', 'A Strega', 'enchantement',
       'Maudit une région ennemie pendant 2 minutes : son rendement est divisé par deux.',
       { durationSeconds: param('stregaDuration'), productionMultiplier: param('stregaMultiplier') }, '#42b58a',
-      { aliases: ['A Stregha'], targetMode: 'enemy-region', lore: { subtitle: "La sorcière corse", paragraphs: [
+      { aliases: ['A Stregha'], targetMode: 'enemy-region',
+        motion: { src: 'assets/mythology/a-stregha-motion.mp4', type: 'video/mp4', width: 1280, height: 720, frameRate: 24,
+          flashColor: '#42b58a' },
+        lore: { subtitle: "La sorcière corse", paragraphs: [
           "A Stregha est une figure féminine associée à la sorcellerie dans les traditions corses. Elle incarne les craintes liées aux maléfices, aux maladies inexpliquées et aux influences surnaturelles.",
           "Dans les croyances populaires, la sorcière peut être soupçonnée d'agir sur le destin d'autrui par des pratiques magiques. Elle est notamment associée à la crainte du mauvais œil, même si cette croyance dépasse largement la seule figure de la Stregha.",
           "Son personnage témoigne de l'importance des croyances magiques dans les sociétés rurales, où certains malheurs pouvaient être interprétés comme le résultat d'une intervention surnaturelle.",

@@ -447,6 +447,7 @@
       headingTemplate = card.querySelector('.mythology-heading'); parametersTemplate = card.querySelector('.mythology-parameters');
       currentArt = card.querySelector('.mythology-illustration'); currentCopy = createCopy();
       flashLayer = element('span', 'mythology-codex-media-flash'); flashLayer.setAttribute('aria-hidden', 'true'); currentArt.append(flashLayer);
+      flashLayer.style.backgroundColor = legend.visuals.motion?.flashColor || '';
       illustrationMotion = attachIllustrationMotion(currentArt, legend, { motion, flash: flashIllustration });
       updateControl(); card.replaceChildren(currentCopy, currentArt, crystalButton);
       feature.style.setProperty('--mythology-primary', legend.visuals.primaryColor);
