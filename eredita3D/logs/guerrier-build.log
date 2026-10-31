@@ -1,0 +1,39 @@
+ETAPE build_materials
+ETAPE build_pbr_textures
+TEXTURES_PBR_PRETES
+ETAPE build_body
+ETAPE build_head
+ETAPE build_clothing
+ETAPE build_hair
+ETAPE build_accessories
+ETAPE build_sword
+EXPORT_GLB
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+13:04:15 | INFO: Starting glTF 2.0 export
+13:04:15 | INFO: Extracting primitive: Lame_droite
+13:04:15 | INFO: Primitives created: 4
+13:04:15 | INFO: Extracting primitive: Corps_base.001
+13:04:15 | INFO: Primitives created: 17
+13:04:15 | INFO: Finished glTF 2.0 export in 0.08891105651855469 s
+
+13:04:15 | INFO: Data are loaded, start creating Blender stuff
+13:04:15 | INFO: Blender create Mesh node Lame_droite
+13:04:15 | INFO: Blender create Mesh node Corps_base.001
+13:04:15 | INFO: glTF import finished in 0.04s
+GLB_VALIDE {"triangles": 33330, "vertices_gltf": 28452, "mesh_count": 2, "material_count": 19, "primitive_count": 21, "glb_bytes": 3310432, "has_animations": false, "has_armature": false, "embedded_images": 12, "texture_resolution": 512, "reference": "illustration du guerrier fournie dans la conversation", "note": "V2 procédurale guidée par la référence, à examiner ; performances Quest 3 non mesurées.", "roundtrip_height_m": 1.8311965884640813, "roundtrip_import_ok": true}
+Info: Saved as "guerrier.blend"
+RENDU_FRONT
+00:05.422  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/guerrier_front.png'
+RENDU_SIDE
+00:08.495  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/guerrier_side.png'
+RENDU_BACK
+00:12.305  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/guerrier_back.png'
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/models/guerrier.blend (2731272 octets)
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/exports/guerrier.glb (3310432 octets)
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/guerrier_front.png (1282555 octets)
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/guerrier_side.png (1251564 octets)
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/guerrier_back.png (1263842 octets)
+EREDITA_GUERRIER_OK
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

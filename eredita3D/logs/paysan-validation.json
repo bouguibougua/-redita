@@ -1,0 +1,36 @@
+{
+  "version": "V1 à valider",
+  "reference": "Illustration du paysan fournie dans la conversation",
+  "triangles": 40730,
+  "vertices_gltf": 34597,
+  "meshes": 10,
+  "materials": 27,
+  "primitives": 38,
+  "glb_bytes": 4489024,
+  "embedded_images": 17,
+  "texture_size": 512,
+  "accessories": [
+    "Chapeau_Paille",
+    "Fourche_4_Dents",
+    "Panier_Osier",
+    "Foin_Panier",
+    "Gourde_Ceinture",
+    "Sacoche_Cuir",
+    "Cordes_Ceinture",
+    "Serpette_Ceinture",
+    "Piquet_Bois"
+  ],
+  "fork_tines": 4,
+  "animations": false,
+  "armature": false,
+  "character_height_with_hat_m": 1.75,
+  "limitations": [
+    "Visage, cheveux et plis encore stylisés ; aucune reproduction photoréaliste garantie.",
+    "Éléments en T-pose, non pondérés ; topologie à retoucher pour les déformations du futur rig.",
+    "LOD et atlas à étudier pour de nombreuses instances ; performances sur Quest 3 non mesurées."
+  ],
+  "roundtrip_height_m": 1.7500001192092896,
+  "roundtrip_import_ok": true,
+  "source_scale_factor": 0.910983840888069,
+  "fork_height_m": 1.8401981592178345
+}

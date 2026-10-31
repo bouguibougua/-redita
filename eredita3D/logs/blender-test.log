@@ -1,0 +1,22 @@
+/Users/robin/-redita/-redita/eredita3D/scripts/create_test_scene.py:26: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  result.use_nodes = True
+/Users/robin/-redita/-redita/eredita3D/scripts/create_test_scene.py:95: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  world.use_nodes = True
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+12:31:23 | INFO: Starting glTF 2.0 export
+12:31:23 | INFO: Extracting primitive: Cube
+12:31:23 | INFO: Primitives created: 1
+12:31:23 | INFO: Extracting primitive: Plane
+12:31:23 | INFO: Primitives created: 1
+12:31:23 | INFO: Finished glTF 2.0 export in 0.00819087028503418 s
+00:04.262  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/test.png'
+00:04.262  blend            | Read blend: "/Users/robin/-redita/-redita/eredita3D/models/test.blend"
+
+Info: Saved as "test.blend"
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/models/test.blend (91961 octets)
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/exports/test.glb (23176 octets)
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/test.png (702804 octets)
+EREDITA3D_TEST_OK
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

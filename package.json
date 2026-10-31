@@ -8,6 +8,7 @@
     "test:menu": "node tests/menu-browser.test.js && node tests/menu-vr.test.js",
     "test:play": "node tests/play-browser.test.js",
     "test:audio": "node tests/audio-browser.test.js",
+    "test:warrior": "node tests/warrior-browser.test.js",
     "test:intro": "node tests/intro-browser.test.js",
     "test:mythology": "node tests/mythology.test.js",
     "test:mythology-browser": "node tests/mythology-browser.test.js",

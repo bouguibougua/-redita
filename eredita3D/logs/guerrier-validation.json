@@ -1,0 +1,16 @@
+{
+  "triangles": 33330,
+  "vertices_gltf": 28452,
+  "mesh_count": 2,
+  "material_count": 19,
+  "primitive_count": 21,
+  "glb_bytes": 3310432,
+  "has_animations": false,
+  "has_armature": false,
+  "embedded_images": 12,
+  "texture_resolution": 512,
+  "reference": "illustration du guerrier fournie dans la conversation",
+  "note": "V2 procédurale guidée par la référence, à examiner ; performances Quest 3 non mesurées.",
+  "roundtrip_height_m": 1.8311965884640813,
+  "roundtrip_import_ok": true
+}

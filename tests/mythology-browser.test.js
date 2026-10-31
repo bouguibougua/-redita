@@ -141,6 +141,7 @@ async function run() {
     assert.deepEqual(await page.evaluate('({muted:cinemaVideo.muted,loop:cinemaVideo.loop,inline:cinemaVideo.playsInline,width:cinemaVideo.videoWidth,height:cinemaVideo.videoHeight})'),
       {muted:true,loop:true,inline:true,width:1024,height:586});
     assert.equal(await page.evaluate('cinemaVideo.duration'), 3.75, 'La boucle de Bianca s’arrête exactement à 3,75 secondes');
+    assert.equal(await page.evaluate('cinemaVideo.playbackRate'), 1, 'Bianca se lit en boucle dans le sens normal');
     assert.equal(await page.evaluate("getComputedStyle(document.querySelector('.mythology-codex-media-flash')).backgroundColor"), 'rgb(255, 255, 255)');
     assert.match(await page.evaluate('cinemaVideo.currentSrc'), /\/-redita\/assets\/mythology\/a-stregha-bianca-motion\.mp4$/);
     assert.ok(await page.evaluate('flashPeak>0 && flashPeak<=.29'), 'Un flash blanc léger accompagne la révélation de la vidéo');
@@ -168,13 +169,15 @@ async function run() {
         if(performance.now()<stregaFlashUntil)requestAnimationFrame(sample);});`);
     await page.click(control);
     await page.waitFor(`document.querySelector('.mythology-codex-feature').dataset.view==='story' && document.querySelector('.mythology-illustration.has-motion') && !stregaVideo.paused && stregaVideo.readyState>=2 && document.querySelector('${control}').getAttribute('aria-disabled')==='false'`);
-    assert.deepEqual(await page.evaluate('({duration:stregaVideo.duration,width:stregaVideo.videoWidth,height:stregaVideo.videoHeight,loop:stregaVideo.loop,muted:stregaVideo.muted,inline:stregaVideo.playsInline})'),
-      {duration:3.75,width:1280,height:720,loop:true,muted:true,inline:true});
+    assert.deepEqual(await page.evaluate('({width:stregaVideo.videoWidth,height:stregaVideo.videoHeight,loop:stregaVideo.loop,muted:stregaVideo.muted,inline:stregaVideo.playsInline,playbackRate:stregaVideo.playbackRate})'),
+      {width:1280,height:720,loop:true,muted:true,inline:true,playbackRate:1});
+    // La piste audio du fichier original peut porter la durée exposée par Chrome à 10,005 s.
+    assert.ok(await page.evaluate('stregaVideo.duration>=10 && stregaVideo.duration<10.01'), 'A Strega utilise toute la vidéo en lecture normale');
     assert.match(await page.evaluate('stregaVideo.currentSrc'), /\/-redita\/assets\/mythology\/a-stregha-motion\.mp4$/);
     assert.equal(await page.evaluate("getComputedStyle(document.querySelector('.mythology-codex-media-flash')).backgroundColor"), 'rgb(66, 181, 138)', 'Le flash de A Strega est vert');
     assert.ok(await page.evaluate('stregaFlashPeak>0 && stregaFlashPeak<=.29'), 'Le flash vert accompagne la révélation de la vidéo');
-    await page.evaluate('window.stregaFrames=stregaVideo.getVideoPlaybackQuality().totalVideoFrames');
-    await page.waitFor('stregaVideo.getVideoPlaybackQuality().totalVideoFrames>stregaFrames+2');
+    await page.evaluate('window.stregaAt=stregaVideo.currentTime;window.stregaFrames=stregaVideo.getVideoPlaybackQuality().totalVideoFrames');
+    await page.waitFor('stregaVideo.currentTime>stregaAt+.2 && stregaVideo.getVideoPlaybackQuality().totalVideoFrames>stregaFrames+2');
     await screenshot(page, 'strega-video-desktop');
     await page.evaluate('stregaVideo.currentTime=stregaVideo.duration-.15');
     await page.waitFor('stregaVideo.currentTime<1 && !stregaVideo.paused');
@@ -275,7 +278,7 @@ async function run() {
     assert.match(await page.evaluate("document.querySelector('.mythology-codex-story').textContent"), /Rizzanese/);
     assert.ok(await page.evaluate("document.querySelector('.legends-panel').scrollWidth<=document.querySelector('.legends-panel').clientWidth"), 'Le récit et le cristal restent dans l’écran mobile');
     await screenshot(page, 'grimoire-histoire-mobile');
-    for (const [legendId, name] of [['a-stregha-bianca', 'bianca'], ['a-stregha', 'strega']]) {
+    for (const [legendId, name, duration] of [['a-stregha-bianca', 'bianca', 3.75], ['a-stregha', 'strega', 10]]) {
       await page.click(`.mythology-roster-card[data-legend-id="${legendId}"]`);
       await page.evaluate(`document.querySelector('${control}').scrollIntoView({block:'center',behavior:'instant'})`);
       const movieTouch = await page.evaluate(`(() => {const r=document.querySelector('${control}').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
@@ -283,7 +286,8 @@ async function run() {
       await page.send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
       await page.waitFor(`document.querySelector('.mythology-illustration.has-motion') && !document.querySelector('.mythology-codex-video').paused && document.querySelector('${control}').getAttribute('aria-disabled')==='false'`);
       assert.equal(await page.evaluate('document.querySelector(".mythology-codex-video").playsInline && document.querySelector(".mythology-codex-video").muted'), true);
-      assert.equal(await page.evaluate('document.querySelector(".mythology-codex-video").duration'), 3.75);
+      assert.ok(Math.abs(await page.evaluate('document.querySelector(".mythology-codex-video").duration') - duration) < .01);
+      assert.equal(await page.evaluate('document.querySelector(".mythology-codex-video").playbackRate'), 1);
       assert.ok(await page.evaluate("document.querySelector('.legends-panel').scrollWidth<=document.querySelector('.legends-panel').clientWidth"), 'La vidéo conserve le parallélogramme sans débordement mobile');
       await screenshot(page, name + '-video-mobile');
     }

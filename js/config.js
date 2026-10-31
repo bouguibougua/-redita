@@ -368,6 +368,16 @@
       threatDistance: 25,
       cropPriority: ["ble", "chataignier", "vignoble"]
     },
+    // TEMP_BALANCE_VALUE — échelle et transitions visuelles du modèle animé.
+    // Les dégâts, la portée et la cadence restent ceux du moteur de combat.
+    characterModels: {
+      warrior: {
+        src: "assets/models/guerrier.glb", scale: 0.31,
+        attackDuration: 0.72, crossFade: 0.08, maxFrameDelta: 0.05,
+        movementEpsilon: 0.0001,
+        clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Droit", "Revers"] }
+      }
+    },
     visualEffects: {
       structureSmokeDuration: 2.4,
       // TEMP_BALANCE_VALUE — durées et amplitudes purement visuelles des unités 3D.

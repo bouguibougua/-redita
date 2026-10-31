@@ -1,0 +1,14 @@
+{
+  "triangles": 25878,
+  "vertices_gltf": 15474,
+  "mesh_count": 2,
+  "material_count": 19,
+  "primitive_count": 22,
+  "glb_bytes": 671220,
+  "has_animations": false,
+  "has_armature": false,
+  "reference": "description utilisateur ; image de référence en attente",
+  "note": "V1 procédurale à examiner ; performances sur Quest 3 non mesurées.",
+  "roundtrip_height_m": 1.8217550935223699,
+  "roundtrip_import_ok": true
+}

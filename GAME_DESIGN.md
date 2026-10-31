@@ -1696,10 +1696,12 @@ fonctionne aussi au clavier et au toucher, avec un mode de mouvement réduit.
 Lorsqu’une vidéo propre à une légende est configurée, le passage à l’histoire
 remplace l’illustration par cette animation muette en boucle, avec un léger
 flash blanc limité à l’illustration, **vert pour A Strega**. Le retour aux
-pouvoirs restaure l’image originale avec le même flash. **A Strega Bianca** et
-**A Strega** utilisent les **3,75 premières secondes** de leurs clips fournis,
-en boucle avec un court fondu de raccord en fin de clip. **U Diavule** utilise
-une animation de flamme dans sa main, également disponible en GIF.
+pouvoirs restaure l’image originale avec le même flash. **A Strega** utilise
+son clip fourni **en entier (10 secondes)** ; **A Strega Bianca** conserve les
+**3,75 premières secondes** de son clip. Les deux vidéos se lisent dans le sens
+normal, puis reprennent directement au début, sans fondu de raccord ni séquence
+ajoutée en marche arrière. **U Diavule** utilise une animation de flamme dans sa
+main, également disponible en GIF.
 Les autres légendes restent illustrées par leur image. Le mouvement réduit
 conserve les images et supprime le flash et la lecture automatique.
 
@@ -2061,13 +2063,22 @@ Le joueur peut aussi acheter immédiatement un nouvel habitant dans le village s
 
 Le plateau emploie désormais des illustrations dédiées pour les trois terrains, les cultures, les élevages, les habitants et les bâtiments. Ces visuels servent à identifier plus vite les éléments ; les libellés, états et infobulles restent la référence fonctionnelle.
 
-Chaque habitant possède une apparence liée à son **métier réel**, indépendamment de sa tâche : tunique et sac (sans métier), chapeau de paille et fourche (agriculteur), cape et houlette (berger), chapeau et canne (pêcheur), capuche et arc (chasseur), casque à crête et épée/bouclier (guerrier), bandeau et hache (ravageur). Les modèles 3D combinent cette silhouette avec le matériau de l'outil et l'armure portés ; les portraits et la vue 2D montrent aussi les équipements. Les habitants disponibles et les pêcheurs restent visibles, sans doublonner les unités militaires. Le magasin de l'Artisanat affiche l'habitant ciblé et son équipement actuel ; les objets déjà équipés sont encadrés en jaune.
+Chaque habitant possède une apparence liée à son **métier réel**, indépendamment de sa tâche : tunique et sac (sans métier), chapeau de paille et fourche (agriculteur), cape et houlette (berger), chapeau et canne (pêcheur), capuche et arc (chasseur), guerrier corse à bandeau blanc, chemise de lin, gilet de cuir et épée (modèle 3D du guerrier), bandeau et hache (ravageur). Les modèles 3D combinent cette silhouette avec le matériau de l'outil et l'armure portés ; les portraits et la vue 2D montrent aussi les équipements. Les habitants disponibles et les pêcheurs restent visibles, sans doublonner les unités militaires. Le magasin de l'Artisanat affiche l'habitant ciblé et son équipement actuel ; les objets déjà équipés sont encadrés en jaune.
+
+Le Guerrier 3D utilise le personnage créé dans Blender à partir de la référence
+du concepteur. Son squelette anime le corps et l’épée tenue en main. Chaque
+frappe effective alterne entre un **coup droit** et un **revers** ; ces deux
+animations sont purement visuelles et suivent le signal de frappe du moteur.
+Le personnage possède aussi une pose de garde et une marche pour son déplacement.
+La pause fige ces animations. La couleur d’équipe, l’équipement, les transports,
+les impacts et la mort restent représentés. Le fichier GLB est partagé entre
+les instances, avec un squelette et des matériaux propres à chaque guerrier.
 
 Le village et ses bâtiments construits sont visibles directement sur leur région, au bord extérieur du terrain près du village propriétaire. Le village apparaît dès le début de la partie. Bergerie, Artisanat et Boucherie apparaissent immédiatement après leur construction. Chaque famille possède une apparence propre pour T1, T2 et T3 ; son sprite est remplacé dès que le niveau change. Ces éléments visuels ne créent pas de nouveaux slots et ne modifient pas leurs règles de ciblage.
 
 TEMP_BALANCE_VALUE visuelle : lorsqu’un village reçoit un coup, une fumée animée sort pendant **2,4 secondes** du village et de chaque bâtiment construit dans sa région. Les bâtiments contribuant actuellement à un unique total de PV du village, cet effet représente les dégâts subis par l’ensemble structurel ; il n’ajoute aucun dégât et ne crée pas encore de ciblage individuel des bâtiments.
 
-TEMP_BALANCE_VALUE visuelle : en 3D, une unité bascule légèrement vers l'avant lorsqu'elle porte un coup et clignote une fois en rouge lorsqu'elle reçoit l'impact appliqué chaque seconde. À sa mort, sa figurine reste brièvement visible, prend une teinte rouge à **70 %**, tombe sur le côté, puis sa disparition produit une petite fumée. Les durées, le nombre de particules et les angles sont centralisés dans `config.js`. Ces animations n'affectent ni les dégâts, ni le moment où l'unité est retirée de la simulation.
+TEMP_BALANCE_VALUE visuelle : en 3D, une unité bascule légèrement vers l'avant lorsqu'elle porte un coup (le Guerrier joue ses attaques à l'épée) et clignote une fois en rouge lorsqu'elle reçoit l'impact appliqué chaque seconde. À sa mort, sa figurine reste brièvement visible, prend une teinte rouge à **70 %**, tombe sur le côté, puis sa disparition produit une petite fumée. Les durées, le nombre de particules et les angles sont centralisés dans `config.js`. Ces animations n'affectent ni les dégâts, ni le moment où l'unité est retirée de la simulation.
 
 Le plateau principal possède désormais un rendu **Three.js 3D** qui représente les régions du format choisi, leurs biomes, villages, bâtiments T1/T2/T3, cultures, élevages, habitants et unités. Les chasseurs itinérants et la fumée des structures attaquées sont visibles dans les deux rendus. La caméra peut tourner et zoomer ; la sélection du village passe par la barre de boutons hors carte afin que les vues 2D et 3D partagent exactement la même navigation. La simulation, l'économie, le combat et le multijoueur restent indépendants du rendu : l'état JavaScript actuel demeure la source de vérité. Une vue 2D reste accessible comme solution de repli et pour l'accessibilité. Cette séparation doit permettre d'ajouter WebXR/AR ultérieurement sans réécrire les règles du jeu.
 

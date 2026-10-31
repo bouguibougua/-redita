@@ -1,0 +1,11 @@
+{
+  "animations": [
+    "Coup_Droit",
+    "Marche",
+    "Repos",
+    "Revers"
+  ],
+  "bones": 20,
+  "bytes": 3933028,
+  "meshes": 2
+}

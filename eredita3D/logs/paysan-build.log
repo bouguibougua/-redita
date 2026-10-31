@@ -1,0 +1,62 @@
+PAYSAN_ETAPE scene et base humaine
+PAYSAN_ETAPE chapeau tresse
+PAYSAN_ETAPE panier et foin
+PAYSAN_ETAPE fourche et accessoires
+PAYSAN_ETAPE materiaux PBR
+PAYSAN_ETAPE normales, UV et échelle métrique
+PAYSAN_ETAPE export GLB avec accessoires indépendants
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+14:36:53 | INFO: Starting glTF 2.0 export
+14:36:53 | INFO: Extracting primitive: Manche_fourche
+14:36:53 | INFO: Primitives created: 3
+14:36:53 | INFO: Extracting primitive: Chapeau_bord_souple
+14:36:53 | INFO: Primitives created: 3
+14:36:53 | INFO: Extracting primitive: Corde_enroulee
+14:36:53 | INFO: Primitives created: 1
+14:36:53 | INFO: Extracting primitive: Gourde_corps
+14:36:53 | INFO: Primitives created: 4
+14:36:53 | INFO: Extracting primitive: Panier_paroi_ouverte
+14:36:53 | INFO: Primitives created: 2
+14:36:53 | INFO: Extracting primitive: Sphere.060
+14:36:53 | INFO: Primitives created: 2
+14:36:53 | INFO: Extracting primitive: Corps_base.001
+14:36:53 | INFO: Primitives created: 17
+14:36:53 | INFO: Extracting primitive: Piquet_a_semer
+14:36:53 | INFO: Primitives created: 1
+14:36:53 | INFO: Extracting primitive: Sacoche_corps
+14:36:53 | INFO: Primitives created: 3
+14:36:53 | INFO: Extracting primitive: Manche_serpette
+14:36:53 | INFO: Primitives created: 2
+14:36:53 | INFO: Finished glTF 2.0 export in 0.11281275749206543 s
+
+14:36:53 | INFO: Data are loaded, start creating Blender stuff
+14:36:53 | INFO: Blender create Mesh node Manche_fourche
+14:36:53 | INFO: Blender create Mesh node Chapeau_bord_souple
+14:36:53 | INFO: Blender create Mesh node Corde_enroulee
+14:36:53 | INFO: Blender create Mesh node Gourde_corps
+14:36:53 | INFO: Blender create Mesh node Panier_paroi_ouverte
+14:36:53 | INFO: Blender create Mesh node Sphere.060
+14:36:53 | INFO: Blender create Mesh node Corps_base.001
+14:36:53 | INFO: Blender create Mesh node Piquet_a_semer
+14:36:53 | INFO: Blender create Mesh node Sacoche_corps
+14:36:53 | INFO: Blender create Mesh node Manche_serpette
+14:36:53 | INFO: glTF import finished in 0.06s
+Info: Saved as "paysan.blend"
+PAYSAN_ETAPE rendu front
+00:07.525  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/paysan_front.png'
+PAYSAN_ETAPE rendu side
+00:12.228  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/paysan_side.png'
+PAYSAN_ETAPE rendu back
+00:17.520  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/paysan_back.png'
+PAYSAN_ETAPE rendu three_quarter
+00:29.681  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/paysan_three_quarter.png'
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/models/paysan.blend 3961156
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/exports/paysan.glb 4489024
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/paysan_front.png 1534313
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/paysan_side.png 1542974
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/paysan_back.png 1554515
+FICHIER_VALIDE /Users/robin/-redita/-redita/eredita3D/previews/paysan_three_quarter.png 1538110
+PAYSAN_V1_OK {"version": "V1 à valider", "reference": "Illustration du paysan fournie dans la conversation", "triangles": 40730, "vertices_gltf": 34597, "meshes": 10, "materials": 27, "primitives": 38, "glb_bytes": 4489024, "embedded_images": 17, "texture_size": 512, "accessories": ["Chapeau_Paille", "Fourche_4_Dents", "Panier_Osier", "Foin_Panier", "Gourde_Ceinture", "Sacoche_Cuir", "Cordes_Ceinture", "Serpette_Ceinture", "Piquet_Bois"], "fork_tines": 4, "animations": false, "armature": false, "character_height_with_hat_m": 1.75, "limitations": ["Visage, cheveux et plis encore stylisés ; aucune reproduction photoréaliste garantie.", "Éléments en T-pose, non pondérés ; topologie à retoucher pour les déformations du futur rig.", "LOD et atlas à étudier pour de nombreuses instances ; performances sur Quest 3 non mesurées."], "roundtrip_height_m": 1.7500001192092896, "roundtrip_import_ok": true, "source_scale_factor": 0.910983840888069, "fork_height_m": 1.8401981592178345}
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

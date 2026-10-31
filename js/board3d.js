@@ -22,6 +22,7 @@
   let dragged = false;
   let lastUnitUpdate = 0;
   let loadError = null;
+  let lastWarriorFrame = null;
   const unitModels = new Map();
   const handledDeathEffects = new Set();
 
@@ -52,6 +53,7 @@
       THREE = module;
       setup();
       ready = true;
+      E.WarriorModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.XR?.refreshAvailability();
       setMode(enabled);
       if (latestState) update(latestState, true);
@@ -402,6 +404,10 @@
       const appearance = resident || unit;
       const swimming = (unit.animalType || unit.role) === "sanglier" && Boolean(unit.waterOwner);
       const figure = unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
+      const previousPosition = figure.userData.previousUnitPosition;
+      figure.userData.warrior?.setMoving(!unit.waterTransport && previousPosition !== undefined &&
+        Math.abs(unit.position - previousPosition) > E.Config.characterModels.warrior.movementEpsilon);
+      figure.userData.previousUnitPosition = unit.position;
       markSelected(figure, Boolean(unit.residentId && unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane));
       figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, -4.35 + (unit.position / 100) * 8.7);
       figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
@@ -426,6 +432,9 @@
         const figure = unitModel(key, player.id, resident);
         markSelected(figure, resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane);
         const isWorker = ["agriculture", "elevage", "chasse"].includes(resident.mission) && Number.isFinite(resident.workPosition);
+        figure.userData.warrior?.setMoving(isWorker && figure.userData.previousWorkPosition !== undefined &&
+          Math.abs(resident.workPosition - figure.userData.previousWorkPosition) > E.Config.characterModels.warrior.movementEpsilon);
+        figure.userData.previousWorkPosition = resident.workPosition;
         figure.scale.setScalar((isWorker ? 0.78 : 0.65) * (resident.mythologyScale || 1));
         updateMythologyAura(figure, resident, player.id, state);
         figure.rotation.y = facing === 1 ? 0 : Math.PI;
@@ -479,6 +488,7 @@
     if ((unit.visualAttackTimer || 0) > 0 && figure.userData.attackSequence !== attackSequence) {
       figure.userData.attackSequence = attackSequence;
       figure.userData.attackStartedAt = now;
+      figure.userData.warrior?.attack(attackSequence);
     }
     if ((unit.visualHitTimer || 0) > 0 && figure.userData.hitSequence !== hitSequence) {
       figure.userData.hitSequence = hitSequence;
@@ -528,7 +538,11 @@
 
   function animateUnitEffects(now = effectClock()) {
     const effects = E.Config.visualEffects;
+    const delta = lastWarriorFrame === null ? 0 : Math.max(0, (now - lastWarriorFrame) / 1000);
+    lastWarriorFrame = now;
+    const paused = Boolean(latestState?.paused || latestState?.phase && latestState.phase !== 'running');
     unitModels.forEach((figure, key) => {
+      figure.userData.warrior?.tick(delta, paused, figure.userData.dying);
       if (figure.userData.dying) {
         const progress = Math.min(1, (now - figure.userData.deathStartedAt) / (effects.unitDeathDuration * 1000));
         const fall = Math.min(1, progress / 0.55);
@@ -547,7 +561,7 @@
 
       const attackProgress = figure.userData.attackStartedAt === undefined ? 1 :
         (now - figure.userData.attackStartedAt) / (effects.unitAttackDuration * 1000);
-      figure.rotation.x = attackProgress >= 0 && attackProgress < 1 ? Math.sin(attackProgress * Math.PI) * effects.unitAttackTilt : 0;
+      figure.rotation.x = !figure.userData.warrior && attackProgress >= 0 && attackProgress < 1 ? Math.sin(attackProgress * Math.PI) * effects.unitAttackTilt : 0;
       figure.rotation.z = 0;
 
       const hitProgress = figure.userData.hitStartedAt === undefined ? 1 :
@@ -567,14 +581,15 @@
     const armor = appearance.armor || null;
     const donkey = !animalType && Boolean(appearance.donkey);
     if (animalType === "sanglier") waterTransport = null;
-    const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}`;
+    const asset = profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : 'procedural';
+    const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
       figure.removeFromParent();
       disposeObject(figure);
     }
     figure = animalType ? animalModel(owner, animalType, waterTransport, swimming) : personModel(owner, profession, tool, armor, waterTransport, donkey);
-    figure.userData = { visualSignature, profession: animalType ? null : profession, animalType, tool, armor, waterTransport, donkey, swimming };
+    Object.assign(figure.userData, { visualSignature, profession: animalType ? null : profession, animalType, tool, armor, waterTransport, donkey, swimming });
     unitModels.set(key, figure);
     unitGroup.add(figure);
     return figure;
@@ -693,6 +708,10 @@
   }
 
   function personModel(owner, profession, tool = null, armor = null, waterTransport = null, donkey = false) {
+    if (profession === 'guerrier') {
+      const imported = E.WarriorModel?.create(owner, tool, armor);
+      if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
+    }
     const group = new THREE.Group();
     const teamColor = owner === "red" ? colors.red : colors.blue;
     const clothColor = {
@@ -788,6 +807,10 @@
     }
     // The owner's scarf stays visible even with plate armor and profession clothing.
     box("echarpe-equipe", [0.21, 0.035, 0.14], teamColor, 0, 0.391, 0.01);
+    return addHumanTransport(group, owner, waterTransport, donkey);
+  }
+
+  function addHumanTransport(group, owner, waterTransport, donkey) {
     if (donkey) {
       const companion = animalModel(owner, "ane");
       companion.position.set(-0.31, 0, -0.07);
@@ -873,8 +896,9 @@
   }
 
   function disposeObject(object) {
+    object.userData.warrior?.dispose();
     object.traverse((item) => {
-      item.geometry?.dispose?.();
+      if (!item.userData.sharedGeometry) item.geometry?.dispose?.();
       if (Array.isArray(item.material)) item.material.forEach((entry) => entry.dispose?.());
       else item.material?.dispose?.();
     });

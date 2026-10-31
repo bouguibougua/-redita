@@ -49,6 +49,10 @@ async function run() {
     assert.equal(videoRange.status, 206); assert.equal(videoRange.headers['accept-ranges'], 'bytes');
     assert.deepEqual(videoRange.body, video.subarray(0,1024));
     assert.equal((await request(videoPath, {Range:`bytes=${video.length}-`})).status, 416);
+    const model = await request('/assets/models/guerrier.glb');
+    assert.equal(model.status, 200);
+    assert.equal(model.headers['content-type'], 'model/gltf-binary');
+    assert.equal(model.body.subarray(0,4).toString(), 'glTF');
     assert.equal((await request("/.env")).status,403); assert.equal((await request("/assets/missing.webp")).status,404);
     console.log("Fichiers HTTP : gzip, cache, WebP, streaming audio et MP4 partiel validés.");
   } finally { server.kill(); if(fs.existsSync(temporary))fs.unlinkSync(temporary); }
