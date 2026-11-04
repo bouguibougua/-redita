@@ -363,6 +363,11 @@
     return village.slots.filter((slot) => slot.content?.category === "crop" && slot.content.type === type && slot.content.hp > 0).length;
   }
 
+  function cropYield(village, type) {
+    return village.slots.reduce((sum, slot) => slot.content?.category === "crop" &&
+      slot.content.type === type && slot.content.hp > 0 ? sum + E.Crops.yieldOf(slot.content) : sum, 0);
+  }
+
   function animalCounts(village) {
     const counts = Object.fromEntries(Object.keys(E.Config.livestock).map((type) => [type, 0]));
     village.slots.forEach((slot) => {
@@ -447,7 +452,7 @@
         resident.carrying = {
           resource: farming ? cropResources[target.slot.content.type] : "lait",
           amount: farming
-            ? cropCount(village, target.slot.content.type) * config.agricultureAmountPerTrip * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.productionMultiplier ?? 1)
+            ? cropYield(village, target.slot.content.type) * config.agricultureAmountPerTrip * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.productionMultiplier ?? 1)
             : dairyAnimalCount(village) * config.milkAmountPerAnimal * (1 + bonus + bergerieBonus(village)) * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus") * (village.productionMultiplier ?? 1)
         };
         resident.workPhase = "toVillage";
@@ -561,7 +566,7 @@
   }
 
   E.Economy = {
-    cropCount, animalCounts, dairyAnimalCount,
+    cropCount, cropYield, animalCounts, dairyAnimalCount,
     isBoosted, workBonus, canSetProfession, setProfession, assignProfessionToAll,
     setNextResidentMission, setNextResidentProfession, saleQuote, sell, deployResident,
     update,

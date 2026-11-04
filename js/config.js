@@ -14,6 +14,70 @@
     },
     // TEMP_BALANCE_VALUE — dimensions visuelles du plateau, sans effet sur les distances logiques.
     board: { laneSpacing: 3, simplifiedWidthScale: 1.15, baseMargin: 1.3, rimMargin: 1.65 },
+    // Présentation 3D uniquement : aucune incidence sur les règles ou les déplacements.
+    terrainModels: {
+      plaine: { src: "assets/models/plaine.glb?v=1" },
+      montagne: { src: "assets/models/montagne.glb?v=1" },
+      littoral_rouge: { src: "assets/models/littoral_rouge.glb?v=1" },
+      littoral_bleu: { src: "assets/models/littoral_bleu.glb?v=1" }
+    },
+    // TEMP_BALANCE_VALUE — hauteur visuelle sur le marqueur du slot ; aucune règle de récolte.
+    cropModels: {
+      ble: { src: "assets/models/ble.glb?v=1", elevation: 0.13 },
+      chataignier: {
+        elevation: 0.13,
+        // Le modèle représente le niveau de la culture dans ce slot.
+        variants: [
+          { id: "petit", label: "Châtaigneraie · Niveau 1", level: 1, src: "assets/models/chataignier_petit.glb?v=1" },
+          { id: "moyen", label: "Châtaigneraie · Niveau 2", level: 2, src: "assets/models/chataignier_moyen.glb?v=1" },
+          { id: "grand", label: "Châtaigneraie · Niveau 3", level: 3, src: "assets/models/chataignier_grand.glb?v=1" }
+        ]
+      },
+      vignoble: {
+        elevation: 0.13,
+        variants: [
+          { id: "petit", label: "Vignoble · Niveau 1", level: 1, src: "assets/models/vignoble_petit.glb?v=1" },
+          { id: "moyen", label: "Vignoble · Niveau 2", level: 2, src: "assets/models/vignoble_moyen.glb?v=1" },
+          { id: "grand", label: "Vignoble · Niveau 3", level: 3, src: "assets/models/vignoble_grand.glb?v=1" }
+        ]
+      }
+    },
+    // TEMP_BALANCE_VALUE — présentation de l'enclos uniquement, sans effet sur l'élevage.
+    livestockModels: {
+      chevre: {
+        elevation: 0.13, maxVisualAnimals: 6,
+        variants: [
+          { id: "petit", minAnimals: 1, src: "assets/models/elevage_chevre_petit.glb?v=1",
+            positions: [[-.085, .035, .15], [.085, -.035, 3.0]] },
+          { id: "moyen", minAnimals: 3, src: "assets/models/elevage_chevre_moyen.glb?v=1",
+            positions: [[-.12, .12, .15], [.12, .12, 2.9], [0, -.01, -.1], [-.13, -.04, .4], [.13, -.04, 2.7]] },
+          { id: "grand", minAnimals: 6, src: "assets/models/elevage_chevre_grand.glb?v=1",
+            positions: [[-.14, .13, .1], [0, .14, 2.9], [.14, .13, 3.2], [-.14, -.005, .15], [0, -.01, 2.8], [.14, -.005, 3.1]] }
+        ]
+      },
+      cochon: {
+        elevation: 0.13, maxVisualAnimals: 6,
+        variants: [
+          { id: "petit", minAnimals: 1, src: "assets/models/elevage_cochon_petit.glb?v=1",
+            positions: [[-.085, .035, .15], [.085, -.035, 3.0]] },
+          { id: "moyen", minAnimals: 3, src: "assets/models/elevage_cochon_moyen.glb?v=1",
+            positions: [[-.12, .12, .15], [.12, .12, 2.9], [0, -.01, -.1], [-.13, -.04, .4], [.13, -.04, 2.7]] },
+          { id: "grand", minAnimals: 6, src: "assets/models/elevage_cochon_grand.glb?v=1",
+            positions: [[-.14, .13, .1], [0, .14, 2.9], [.14, .13, 3.2], [-.14, -.005, .15], [0, -.01, 2.8], [.14, -.005, 3.1]] }
+        ]
+      },
+      vache: {
+        elevation: 0.13, maxVisualAnimals: 6,
+        variants: [
+          { id: "petit", minAnimals: 1, src: "assets/models/elevage_vache_petit.glb?v=1",
+            positions: [[-.09, 0, 1.57], [.09, 0, -1.57]] },
+          { id: "moyen", minAnimals: 3, src: "assets/models/elevage_vache_moyen.glb?v=1",
+            positions: [[-.145, .12, 1.57], [.145, .12, 1.57], [0, -.10, -1.57], [-.145, -.10, -1.57], [.145, -.10, -1.57]] },
+          { id: "grand", minAnimals: 6, src: "assets/models/elevage_vache_grand.glb?v=1",
+            positions: [[-.145, .12, 1.57], [0, .12, 1.57], [.145, .12, 1.57], [-.145, -.10, -1.57], [0, -.10, -1.57], [.145, -.10, -1.57]] }
+        ]
+      }
+    },
     preparation: {
       duration: 60,
       // TEMP_BALANCE_VALUE — production pendant la préparation non encore validée.
@@ -33,7 +97,7 @@
       fataFishingSpeed: 1.25,
       orcuHp: 200, orcuDamage: 30,
       maguStatMultiplier: 2, maguScale: 1.5, maguResidentsPerVillage: 1,
-      vampireHp: 25, vampireDamage: 5,
+      vampireHp: 40, vampireDamage: 11,
       lupuHp: 60, lupuDamage: 20,
       biancaDuration: 60, resurrectionWindow: 60,
       animaHp: 1, animaDps: 1,
@@ -239,9 +303,11 @@
         productionInterval: null
       }
     },
-    // TEMP_BALANCE_VALUE — le moyen et le coût de placement sont encore TBD.
-    // Le prototype autorise donc un placement direct sans dépense.
-    cropPlacementCost: 0,
+    cropLevels: {
+      1: { gold: 75, yield: 1 },
+      2: { gold: 150, yield: 2 },
+      3: { gold: 300, yield: 3 }
+    },
     livestock: {
       chevre: {
         label: "Élevage de chèvres",
@@ -371,11 +437,40 @@
     // TEMP_BALANCE_VALUE — échelle et transitions visuelles du modèle animé.
     // Les dégâts, la portée et la cadence restent ceux du moteur de combat.
     characterModels: {
+      // TEMP_BALANCE_VALUE — échelle visuelle du GLB fourni pour les sans métier.
+      villager: { src: "assets/models/habitant.glb?v=1-151656a63b68", scale: 0.31 },
       warrior: {
-        src: "assets/models/guerrier.glb", scale: 0.31,
+        src: "assets/models/guerrier.glb?v=final-cd44bcb24b67", scale: 0.31,
         attackDuration: 0.72, crossFade: 0.08, maxFrameDelta: 0.05,
         movementEpsilon: 0.0001,
-        clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Droit", "Revers"] }
+        clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Droit", "Revers"], death: "Mort" }
+      },
+      // TEMP_BALANCE_VALUE — échelle et rythme d'animation purement visuels.
+      orcu: {
+        src: "assets/models/orcu.glb?v=1-9b79e8bc4d1e", scale: 0.31,
+        attackDuration: 0.9, walkTimeScale: 0.35, crossFade: 0.08,
+        maxFrameDelta: 0.05, movementEpsilon: 0.0001,
+        clips: { idle: "Repos", walk: "Marche", attacks: ["Frappe_Droite", "Frappe_Gauche"], death: "Mort" }
+      },
+      // TEMP_BALANCE_VALUE — échelle et transitions visuelles ; cadence du vol inchangée.
+      fullettu: {
+        src: "assets/models/fullettu.glb?v=1-edbe8329a6c5", scale: 0.31,
+        crossFade: 0.08, maxFrameDelta: 0.05,
+        clips: { idle: "Repos", walk: "Bonds", harvest: "Recolte", death: "Mort" }
+      },
+      // TEMP_BALANCE_VALUE — rythme visuel des griffes ; dégâts et cadence du combat inchangés.
+      lupu: {
+        src: "assets/models/lupu_mannaru.glb?v=1-f708c7a3a231", scale: 0.31,
+        attackDuration: 0.9, walkTimeScale: 1, crossFade: 0.08,
+        maxFrameDelta: 0.05,
+        clips: { idle: "Repos", walk: "Quatre_Pattes", attacks: ["Griffes_Croisees"], death: "Mort" }
+      },
+      // TEMP_BALANCE_VALUE — rendu de la forme vampire ; statistiques dans reinforcementPowers.
+      surpatore: {
+        src: "assets/models/surpatore_vampire.glb?v=1-73ad1f83d37a", scale: 0.31,
+        attackDuration: 0.9, walkTimeScale: 1, crossFade: 0.08,
+        maxFrameDelta: 0.05, movementEpsilon: 0.0001,
+        clips: { idle: "Repos", walk: "Marche", attacks: ["Griffe"], death: "Mort" }
       }
     },
     visualEffects: {

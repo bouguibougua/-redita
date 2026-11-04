@@ -1,0 +1,10 @@
+
+> eredita-multiplayer@1.0.0 test:plaine
+> node tests/plain-terrain-browser.test.js
+
+Plaine browser tests passed: {"ready":true,"error":null,"batches":3,"triangles":10414,"cachedWidths":[1,1.15]}
+
+> eredita-multiplayer@1.0.0 test:littoral
+> node tests/coast-terrain-browser.test.js
+
+Littoral browser tests passed: {"red":{"ready":true,"error":null,"batches":5,"triangles":9384,"cachedWidths":[1,1.15]},"blue":{"ready":true,"error":null,"batches":5,"triangles":9384,"cachedWidths":[1,1.15]}}

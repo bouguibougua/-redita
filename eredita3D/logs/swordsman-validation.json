@@ -1,0 +1,40 @@
+{
+  "source": "/Users/robin/Downloads/medieval swordsman 3d model.glb",
+  "source_sha256": "cd44bcb24b67db2c1185bbfb0745ec3f30f35f156b1e726bd94d6c4df05f724e",
+  "source_triangles": 1932310,
+  "triangles": 36000,
+  "bytes": 3645576,
+  "animations": [
+    "Coup_Droit",
+    "Marche",
+    "Mort",
+    "Repos",
+    "Revers"
+  ],
+  "bones": 20,
+  "meshes": 2,
+  "materials": 3,
+  "textures": [
+    [
+      "medieval_swordsman_3d_model_basecolor.jpg",
+      [
+        2048,
+        2048
+      ]
+    ],
+    [
+      "medieval_swordsman_3d_model_normal.png",
+      [
+        1024,
+        1024
+      ]
+    ],
+    [
+      "medieval_swordsman_3d_model_rm.jpg",
+      [
+        1024,
+        1024
+      ]
+    ]
+  ]
+}

@@ -1,0 +1,46 @@
+/Users/robin/-redita/-redita/eredita3D/scripts/create_vignes.py:106: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat=bpy.data.materials.new(name);mat.use_nodes=True
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+15:42:39 | INFO: Starting glTF 2.0 export
+15:42:39 | INFO: Extracting primitive: Sous_bois
+15:42:39 | INFO: Primitives created: 1
+15:42:39 | INFO: Extracting primitive: Ceps_et_palissage
+15:42:39 | INFO: Primitives created: 1
+15:42:39 | INFO: Extracting primitive: Feuilles_et_grappes
+15:42:39 | INFO: Primitives created: 1
+15:42:39 | INFO: Finished glTF 2.0 export in 0.009788990020751953 s
+00:06.963  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vignoble_petit_three_quarter.png'
+00:08.352  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vignoble_petit_sprite.png'
+
+Info: Saved as "vignoble_petit.blend"
+15:42:47 | INFO: Starting glTF 2.0 export
+15:42:47 | INFO: Extracting primitive: Sous_bois
+15:42:47 | INFO: Primitives created: 1
+15:42:47 | INFO: Extracting primitive: Ceps_et_palissage
+15:42:47 | INFO: Primitives created: 1
+15:42:47 | INFO: Extracting primitive: Feuilles_et_grappes
+15:42:47 | INFO: Primitives created: 1
+15:42:47 | INFO: Finished glTF 2.0 export in 0.017325878143310547 s
+00:15.303  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vignoble_moyen_three_quarter.png'
+00:16.609  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vignoble_moyen_sprite.png'
+
+Info: Saved as "vignoble_moyen.blend"
+15:42:55 | INFO: Starting glTF 2.0 export
+15:42:55 | INFO: Extracting primitive: Sous_bois
+15:42:55 | INFO: Primitives created: 1
+15:42:55 | INFO: Extracting primitive: Ceps_et_palissage
+15:42:55 | INFO: Primitives created: 1
+15:42:55 | INFO: Extracting primitive: Feuilles_et_grappes
+15:42:55 | INFO: Primitives created: 1
+15:42:55 | INFO: Finished glTF 2.0 export in 0.00950312614440918 s
+00:23.960  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vignoble_grand_three_quarter.png'
+00:25.529  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vignoble_grand_sprite.png'
+/Users/robin/-redita/-redita/eredita3D/scripts/create_vignes.py:186: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  ink=bpy.data.materials.new('Titre_sombre');ink.use_nodes=True
+00:35.774  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vignes_comparatif.png'
+
+Info: Saved as "vignoble_grand.blend"
+VIGNES_VALIDATION [{"variant": "petit", "rows": 1, "plants": 3, "triangles": 3096, "bytes": 337856, "materials": 2, "dimensions_three": [0.5, 0.29404741525650024, 0.5], "runtime_batches": 2}, {"variant": "moyen", "rows": 2, "plants": 6, "triangles": 5368, "bytes": 581756, "materials": 2, "dimensions_three": [0.5, 0.29404741525650024, 0.5], "runtime_batches": 2}, {"variant": "grand", "rows": 3, "plants": 9, "triangles": 7640, "bytes": 825644, "materials": 2, "dimensions_three": [0.5, 0.29404741525650024, 0.5], "runtime_batches": 2}]
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

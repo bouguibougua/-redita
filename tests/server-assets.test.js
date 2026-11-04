@@ -53,6 +53,16 @@ async function run() {
     assert.equal(model.status, 200);
     assert.equal(model.headers['content-type'], 'model/gltf-binary');
     assert.equal(model.body.subarray(0,4).toString(), 'glTF');
+    for(const biome of ['habitant','plaine','montagne','littoral_rouge','littoral_bleu','ble','chataignier_petit','chataignier_moyen','chataignier_grand','vignoble_petit','vignoble_moyen','vignoble_grand','orcu','fullettu','lupu_mannaru','surpatore_vampire','elevage_chevre_petit','elevage_chevre_moyen','elevage_chevre_grand','elevage_cochon_petit','elevage_cochon_moyen','elevage_cochon_grand','elevage_vache_petit','elevage_vache_moyen','elevage_vache_grand']) {
+      const terrain=await request(`/assets/models/${biome}.glb?v=1`);
+      assert.equal(terrain.headers['content-type'],'model/gltf-binary');
+      assert.deepEqual(terrain.body,fs.readFileSync(path.join(project,`assets/models/${biome}.glb`)));
+    }
+    for(const name of ['habitant-v1','terrain-plaine-v1','terrain-plaine-card-v1','terrain-montagne-v1','terrain-montagne-card-v1','terrain-littoral_rouge-v1','terrain-littoral_bleu-v1','terrain-littoral_rouge-card-v1','terrain-littoral_bleu-card-v1','crop-ble-v1','crop-chataignier-petit-v1','crop-chataignier-moyen-v1','crop-chataignier-grand-v1','crop-vignoble-petit-v1','crop-vignoble-moyen-v1','crop-vignoble-grand-v1','herd-chevre-petit-v1','herd-chevre-moyen-v1','herd-chevre-grand-v1','herd-cochon-petit-v1','herd-cochon-moyen-v1','herd-cochon-grand-v1','herd-vache-petit-v1','herd-vache-moyen-v1','herd-vache-grand-v1']) {
+      const texture=await request(`/assets/generated/${name}.webp`);
+      assert.equal(texture.status,200);assert.equal(texture.headers['content-type'],'image/webp');
+      assert.equal(texture.body.subarray(8,12).toString(),'WEBP');
+    }
     assert.equal((await request("/.env")).status,403); assert.equal((await request("/assets/missing.webp")).status,404);
     console.log("Fichiers HTTP : gzip, cache, WebP, streaming audio et MP4 partiel validés.");
   } finally { server.kill(); if(fs.existsSync(temporary))fs.unlinkSync(temporary); }

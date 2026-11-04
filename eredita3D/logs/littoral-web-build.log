@@ -1,0 +1,22 @@
+
+> eredita-multiplayer@1.0.0 assets:littoral
+> node scripts/export-plaine-web.js littoral_rouge && node scripts/export-plaine-web.js littoral_bleu
+
+00:00.228  blend            | Read blend: "/Users/robin/-redita/-redita/eredita3D/models/littoral_rouge.blend"
+00:06.327  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/littoral_rouge_web_top.png'
+00:08.153  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/littoral_rouge_web_card.png'
+LITTORAL_ROUGE_WEB: deux rendus prêts pour conversion WebP.
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit
+assets/generated/terrain-littoral_rouge-v1.webp : 61 Kio
+assets/generated/terrain-littoral_rouge-card-v1.webp : 16 Kio
+00:00.215  blend            | Read blend: "/Users/robin/-redita/-redita/eredita3D/models/littoral_bleu.blend"
+00:06.324  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/littoral_bleu_web_top.png'
+00:08.141  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/littoral_bleu_web_card.png'
+LITTORAL_BLEU_WEB: deux rendus prêts pour conversion WebP.
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit
+assets/generated/terrain-littoral_bleu-v1.webp : 61 Kio
+assets/generated/terrain-littoral_bleu-card-v1.webp : 16 Kio

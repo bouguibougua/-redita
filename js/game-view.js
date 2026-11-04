@@ -7,7 +7,7 @@
 
   const allowed = new Set([
     "toggleBiome", "confirmBiomes", "start", "togglePause",
-    "selectResident", "placeCrop", "placeLivestock", "slaughter", "build", "upgrade", "changeJob",
+    "selectResident", "placeCrop", "placeLivestock", "upgradeCrop", "removeSlot", "slaughter", "build", "upgrade", "changeJob",
     "setProfession", "assignProfessionToAll", "setNextResidentProfession",
     "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "setNextResidentMission",
     "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal",

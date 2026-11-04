@@ -173,7 +173,8 @@ async function run() {
       {width:1280,height:720,loop:true,muted:true,inline:true,playbackRate:1});
     // La piste audio du fichier original peut porter la durée exposée par Chrome à 10,005 s.
     assert.ok(await page.evaluate('stregaVideo.duration>=10 && stregaVideo.duration<10.01'), 'A Strega utilise toute la vidéo en lecture normale');
-    assert.match(await page.evaluate('stregaVideo.currentSrc'), /\/-redita\/assets\/mythology\/a-stregha-motion\.mp4$/);
+    assert.match(await page.evaluate('new URL(stregaVideo.currentSrc).pathname'), /\/-redita\/assets\/mythology\/a-stregha-motion\.mp4$/);
+    assert.equal(await page.evaluate("new URL(stregaVideo.currentSrc).searchParams.get('v')"), '8cb577fb', 'Le clip fourni est chargé avec sa nouvelle version');
     assert.equal(await page.evaluate("getComputedStyle(document.querySelector('.mythology-codex-media-flash')).backgroundColor"), 'rgb(66, 181, 138)', 'Le flash de A Strega est vert');
     assert.ok(await page.evaluate('stregaFlashPeak>0 && stregaFlashPeak<=.29'), 'Le flash vert accompagne la révélation de la vidéo');
     await page.evaluate('window.stregaAt=stregaVideo.currentTime;window.stregaFrames=stregaVideo.getVideoPlaybackQuality().totalVideoFrames');
@@ -186,7 +187,29 @@ async function run() {
     await page.waitFor(`document.querySelector('.mythology-codex-feature').dataset.view==='power' && document.querySelector('${control}').getAttribute('aria-disabled')==='false'`);
     assert.equal(await page.evaluate("stregaVideo.paused && !document.querySelector('.mythology-illustration.has-motion') && document.querySelector('.mythology-codex-feature img')===stregaImage"), true, 'Le retour restaure l’illustration de A Strega et arrête sa vidéo');
     assert.ok(await page.evaluate('stregaFlashPeak>0 && stregaFlashPeak<=.29'), 'Le retour à l’illustration utilise aussi le flash vert');
+    await page.click('.mythology-roster-card[data-legend-id="l-orcu"]');
+    assert.equal(await page.evaluate("document.querySelector('.mythology-codex-video').getAttribute('src')"), null, 'Le clip de l’Orcu attend le clic sur son cristal');
+    await page.evaluate(`window.orcuVideo=document.querySelector('.mythology-codex-video');window.orcuImage=document.querySelector('.mythology-codex-feature img');
+      window.orcuPlayback={loops:0,max:0,last:0};
+      orcuVideo.addEventListener('timeupdate',()=>{const t=orcuVideo.currentTime;
+        if(orcuPlayback.last>orcuVideo.duration-1 && t<1)orcuPlayback.loops++;
+        orcuPlayback.max=Math.max(orcuPlayback.max,t);orcuPlayback.last=t;});`);
+    await page.click(control);
+    await page.waitFor(`document.querySelector('.mythology-illustration.has-motion') && !orcuVideo.paused && orcuVideo.readyState>=2 && document.querySelector('${control}').getAttribute('aria-disabled')==='false'`);
+    assert.deepEqual(await page.evaluate('({width:orcuVideo.videoWidth,height:orcuVideo.videoHeight,loop:orcuVideo.loop,muted:orcuVideo.muted,inline:orcuVideo.playsInline,rate:orcuVideo.playbackRate})'),
+      {width:1280,height:720,loop:true,muted:true,inline:true,rate:1});
+    // Chrome inclut 26,667 ms supplémentaires de la piste audio du MP4 fourni.
+    assert.ok(await page.evaluate('orcuVideo.duration>=10 && orcuVideo.duration<10.03'), 'Le clip de l’Orcu est conservé en entier');
+    assert.match(await page.evaluate('orcuVideo.currentSrc'), /\/-redita\/assets\/mythology\/l-orcu-motion\.mp4$/);
+    assert.equal(await page.evaluate("getComputedStyle(document.querySelector('.mythology-codex-media-flash')).backgroundColor"), 'rgb(255, 255, 255)');
+    await screenshot(page, 'orcu-video-desktop');
+    await page.waitFor('orcuPlayback.loops>=2 && !orcuVideo.paused && orcuVideo.getVideoPlaybackQuality().totalVideoFrames>240', 25000);
+    assert.ok(await page.evaluate('orcuPlayback.max>9.5'), 'Deux lectures complètes reprennent naturellement au début');
+    await page.click(control);
+    await page.waitFor(`document.querySelector('.mythology-codex-feature').dataset.view==='power' && document.querySelector('${control}').getAttribute('aria-disabled')==='false'`);
+    assert.equal(await page.evaluate("orcuVideo.paused && !document.querySelector('.mythology-illustration.has-motion') && document.querySelector('.mythology-codex-feature img')===orcuImage"), true, 'Le second clic restaure l’image de l’Orcu et arrête sa vidéo');
     await page.click('.mythology-roster-card[data-legend-id="u-diavulu"]');
+    assert.equal(await page.evaluate("orcuVideo.paused && !orcuVideo.hasAttribute('src')"), true, 'Changer de légende libère le clip de l’Orcu');
     assert.equal(await page.evaluate("getComputedStyle(document.querySelector('.mythology-codex-media-flash')).backgroundColor"), 'rgb(255, 255, 255)', 'La couleur verte ne se propage pas aux autres légendes');
     assert.equal(await page.evaluate("stregaVideo.paused && !stregaVideo.hasAttribute('src')"), true, 'Changer de légende libère le clip de A Strega');
     assert.equal(await page.evaluate("document.querySelector('.mythology-codex-description').textContent"), 'Anéantit le village de votre adversaire.');
@@ -278,7 +301,7 @@ async function run() {
     assert.match(await page.evaluate("document.querySelector('.mythology-codex-story').textContent"), /Rizzanese/);
     assert.ok(await page.evaluate("document.querySelector('.legends-panel').scrollWidth<=document.querySelector('.legends-panel').clientWidth"), 'Le récit et le cristal restent dans l’écran mobile');
     await screenshot(page, 'grimoire-histoire-mobile');
-    for (const [legendId, name, duration] of [['a-stregha-bianca', 'bianca', 3.75], ['a-stregha', 'strega', 10]]) {
+    for (const [legendId, name, duration, tolerance = .01] of [['a-stregha-bianca', 'bianca', 3.75], ['a-stregha', 'strega', 10], ['l-orcu', 'orcu', 10, .03]]) {
       await page.click(`.mythology-roster-card[data-legend-id="${legendId}"]`);
       await page.evaluate(`document.querySelector('${control}').scrollIntoView({block:'center',behavior:'instant'})`);
       const movieTouch = await page.evaluate(`(() => {const r=document.querySelector('${control}').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
@@ -286,7 +309,7 @@ async function run() {
       await page.send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
       await page.waitFor(`document.querySelector('.mythology-illustration.has-motion') && !document.querySelector('.mythology-codex-video').paused && document.querySelector('${control}').getAttribute('aria-disabled')==='false'`);
       assert.equal(await page.evaluate('document.querySelector(".mythology-codex-video").playsInline && document.querySelector(".mythology-codex-video").muted'), true);
-      assert.ok(Math.abs(await page.evaluate('document.querySelector(".mythology-codex-video").duration') - duration) < .01);
+      assert.ok(Math.abs(await page.evaluate('document.querySelector(".mythology-codex-video").duration') - duration) < tolerance);
       assert.equal(await page.evaluate('document.querySelector(".mythology-codex-video").playbackRate'), 1);
       assert.ok(await page.evaluate("document.querySelector('.legends-panel').scrollWidth<=document.querySelector('.legends-panel').clientWidth"), 'La vidéo conserve le parallélogramme sans débordement mobile');
       await screenshot(page, name + '-video-mobile');

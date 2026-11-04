@@ -1,0 +1,14 @@
+{
+  "triangles": 4420,
+  "plants": 35,
+  "materials": 2,
+  "textures": 0,
+  "bytes": 480500,
+  "dimensions_three": [
+    0.47999998927116394,
+    0.30896615982055664,
+    0.47999998927116394
+  ],
+  "runtime_batches": 2,
+  "note": "Repr\u00e9sentation m\u00fbre statique, sans modification des r\u00e9coltes ; performances Quest physique \u00e0 mesurer."
+}

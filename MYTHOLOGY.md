@@ -147,7 +147,7 @@ achats de la boutique restent disponibles.
 | Anima in Pena | Une âme par mort allié de la colonne, 1 PV / 1 DPS, tâches possibles mais métiers interdits. |
 | L’Orcu | Invocation de 200 PV / 30 dégâts, très lente. |
 | U Magu | Uniquement le prochain habitant de chaque village allié : statistiques ×2, taille ×1,5, aura violette et dorée. |
-| U Surpatore | Sanglier, puis vampire après sa mort : 25 PV / 5 dégâts, rapide. |
+| U Surpatore | Sanglier, puis vampire après sa mort : 40 PV / 11 dégâts, rapide. |
 | U Lupu Mannaru | Transforme un humain libre sans métier, sinon le prochain nouveau-né : 60 PV / 20 dégâts, structures seulement. |
 | U Diavule | Brûle les deux territoires de la colonne, cultures, élevages et habitants dehors. Bâtiments et habitants dans les villages épargnés. |
 | A Strega Bianca | Pendant les prochaines 60 s, sauve les humains qui devraient mourir : retour au début du terrain, pleine vie, tâche et équipement conservés, aura verte et dorée. Pas de timer affiché, pas de légendes ni de morts antérieures. |

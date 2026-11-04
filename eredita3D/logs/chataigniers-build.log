@@ -1,0 +1,46 @@
+/Users/robin/-redita/-redita/eredita3D/scripts/create_chataigniers.py:111: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat=bpy.data.materials.new(name);mat.use_nodes=True
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+10:16:25 | INFO: Starting glTF 2.0 export
+10:16:25 | INFO: Extracting primitive: Sous_bois
+10:16:25 | INFO: Primitives created: 1
+10:16:25 | INFO: Extracting primitive: Troncs_et_ramures
+10:16:25 | INFO: Primitives created: 1
+10:16:25 | INFO: Extracting primitive: Feuilles_et_chataignes
+10:16:25 | INFO: Primitives created: 1
+10:16:25 | INFO: Finished glTF 2.0 export in 0.008419036865234375 s
+00:05.628  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/chataignier_petit_three_quarter.png'
+00:06.596  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/chataignier_petit_sprite.png'
+
+Info: Saved as "chataignier_petit.blend"
+10:16:31 | INFO: Starting glTF 2.0 export
+10:16:31 | INFO: Extracting primitive: Sous_bois
+10:16:31 | INFO: Primitives created: 1
+10:16:31 | INFO: Extracting primitive: Troncs_et_ramures
+10:16:31 | INFO: Primitives created: 1
+10:16:31 | INFO: Extracting primitive: Feuilles_et_chataignes
+10:16:31 | INFO: Primitives created: 1
+10:16:31 | INFO: Finished glTF 2.0 export in 0.007383108139038086 s
+00:12.493  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/chataignier_moyen_three_quarter.png'
+00:13.483  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/chataignier_moyen_sprite.png'
+
+Info: Saved as "chataignier_moyen.blend"
+10:16:38 | INFO: Starting glTF 2.0 export
+10:16:38 | INFO: Extracting primitive: Sous_bois
+10:16:38 | INFO: Primitives created: 1
+10:16:38 | INFO: Extracting primitive: Troncs_et_ramures
+10:16:38 | INFO: Primitives created: 1
+10:16:38 | INFO: Extracting primitive: Feuilles_et_chataignes
+10:16:38 | INFO: Primitives created: 1
+10:16:38 | INFO: Finished glTF 2.0 export in 0.008109092712402344 s
+00:19.394  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/chataignier_grand_three_quarter.png'
+00:20.526  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/chataignier_grand_sprite.png'
+/Users/robin/-redita/-redita/eredita3D/scripts/create_chataigniers.py:200: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  ink=bpy.data.materials.new('Titre_sombre');ink.use_nodes=True
+00:30.348  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/chataigniers_comparatif.png'
+
+Info: Saved as "chataignier_grand.blend"
+CHATAIGNIERS_VALIDATION [{"variant": "petit", "trees": 1, "triangles": 3484, "bytes": 370868, "materials": 2, "dimensions_three": [0.5, 0.4519999921321869, 0.5], "runtime_batches": 2}, {"variant": "moyen", "trees": 2, "triangles": 5512, "bytes": 579608, "materials": 2, "dimensions_three": [0.5, 0.5820000171661377, 0.5], "runtime_batches": 2}, {"variant": "grand", "trees": 3, "triangles": 7540, "bytes": 788336, "materials": 2, "dimensions_three": [0.5, 0.7020000219345093, 0.509559839963913], "runtime_batches": 2}]
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

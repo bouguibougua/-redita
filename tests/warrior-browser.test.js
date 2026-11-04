@@ -9,9 +9,9 @@ async function run() {
     browser = await startBrowser(); const page = browser.page;
     await page.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await page.send('Page.navigate', { url: site.url + '?intro=0' });
-    await page.waitFor('window.Eredita?.GameView?.getState() && Eredita.Board3D?.ready && Eredita.MenuScene?.diagnostics.ready');
+    await page.waitFor("document.readyState==='complete' && window.Eredita?.MenuScene?.diagnostics.ready && Eredita.Board3D?.ready && Eredita.GameView?.getState()");
     await page.waitFor('Eredita.WarriorModel?.ready', 25000);
-    assert.deepEqual((await page.evaluate('Eredita.WarriorModel.diagnostics.clips')).sort(), ['Coup_Droit', 'Marche', 'Repos', 'Revers']);
+    assert.deepEqual((await page.evaluate('Eredita.WarriorModel.diagnostics.clips')).sort(), ['Coup_Droit', 'Marche', 'Mort', 'Repos', 'Revers']);
     await page.click('[data-menu-screen="play"]');
     await page.click('#training-button');
     await page.waitFor("Eredita.Network.mode==='solo'");
@@ -108,8 +108,22 @@ async function run() {
       const dead=wState.units.shift();wState.players.red.villages[0].residents[0].hp=0;
       wState.unitDeathEffects=[{...dead,id:771,unitId:dead.id}];
       Eredita.Board3D.update(wState,true);
+      window.wDead=wFigures().find(f=>f.userData.dying);
+      window.wHeadHeight=()=>{const T=Eredita.Board3D.getXRContext().THREE;wDead.updateMatrixWorld(true);return wMesh(wDead).skeleton.bones.find(b=>b.name==='head').getWorldPosition(new T.Vector3()).y;};
     })()`);
+    assert.equal(await page.evaluate('wDead.userData.warrior.action'), 'Mort', 'La mort utilise le squelette du nouveau modèle');
+    const deathAt = await page.evaluate('wDead.userData.warrior.time');
+    const standingHead = await page.evaluate('wHeadHeight()');
+    await delay(250);
+    assert.equal(await page.evaluate('wDead.userData.warrior.time'), deathAt, 'La pause fige aussi la mort et conserve le corps');
+    await page.evaluate('wAdvance(wDead,37)');
+    const fallingHead = await page.evaluate('wHeadHeight()');
+    assert.ok(fallingHead < standingHead-.08, `Le squelette du guerrier tombe vers le sol : ${standingHead} → ${fallingHead}`);
+    assert.equal(await page.evaluate('wDead.rotation.z'), 0, 'La chute du squelette ne se cumule pas avec une seconde bascule de la figurine');
+    await screenshot(page, 'mort');
+    await page.evaluate('wState.paused=false');
     await page.waitFor('Eredita.WarriorModel.diagnostics.instances===1', 6000);
+    await page.evaluate('wState.paused=true');
     assert.equal(await page.evaluate('wSharedDisposed'), 0, 'La mort ne détruit pas la géométrie de l’autre guerrier');
     await page.evaluate(`(() => {
       wState.units=[];wState.unitDeathEffects=[];
@@ -120,7 +134,7 @@ async function run() {
     assert.equal(page.errors.length, 0, JSON.stringify(page.errors));
     assert.equal(page.consoleErrors.length, 0, JSON.stringify(page.consoleErrors));
     assert.equal(page.badResponses.filter(url=>/\/(assets|js)\//.test(url)).length, 0, JSON.stringify(page.badResponses));
-    console.log('Guerrier GLB : vrai chargement sous /-redita/, squelette par unité, frappes opposées, dégâts inchangés, pause, équipement, bateau, âne, marche, mobile et nettoyage validés.');
+    console.log('Nouveau guerrier GLB : squelette par unité, frappes opposées, dégâts inchangés, pause, équipement, bateau, âne, marche, mort animée, mobile et nettoyage validés.');
   } finally { await browser?.close(); await new Promise(resolve => site.server.close(resolve)); }
 }
 

@@ -1,0 +1,25 @@
+{
+  "source": "/Users/robin/Downloads/orc barbarian 3d model.glb",
+  "source_sha256": "9b79e8bc4d1ebad9e85cdb7f45556c3decc848120781636c8d819d17173e0ffa",
+  "triangles": 10501,
+  "bytes": 2236360,
+  "materials": 1,
+  "textures": [
+    [
+      "Orcu_BaseColor_2048",
+      [
+        2048,
+        2048
+      ]
+    ]
+  ],
+  "clips": [
+    "Frappe_Droite",
+    "Frappe_Gauche",
+    "Marche",
+    "Mort",
+    "Repos"
+  ],
+  "canonical_height": 1.8,
+  "note": "Animations simples créées sur le squelette fourni ; aucune règle de combat modifiée."
+}

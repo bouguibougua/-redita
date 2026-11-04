@@ -1,0 +1,60 @@
+{
+  "source": "/Users/robin/Downloads/fantasy vampire 3d model.glb",
+  "source_sha256": "73ad1f83d37afaf31a717a3d0c9a605ed02a6c8e2755207e35451f515c42aabc",
+  "triangles": 8156,
+  "bytes": 1910776,
+  "meshes": 1,
+  "materials": 1,
+  "texture_size": 2048,
+  "clips": [
+    "Repos",
+    "Marche",
+    "Griffe",
+    "Mort"
+  ],
+  "canonical_height": 1.8,
+  "jaw_vertices": 420,
+  "jaw_open_angle": 0.46,
+  "poses": {
+    "repos": {
+      "hand": [
+        -0.4004806876182556,
+        0.15310217440128326,
+        0.9942142367362976
+      ],
+      "jaw_angle": 0.0
+    },
+    "marche": {
+      "hand": [
+        -0.4089941084384918,
+        0.2065654844045639,
+        1.0347269773483276
+      ],
+      "jaw_angle": 0.0
+    },
+    "griffe_haute": {
+      "hand": [
+        -0.35999998450279236,
+        -0.14000003039836884,
+        1.690000295639038
+      ],
+      "jaw_angle": 0.4345182180404663
+    },
+    "attaque": {
+      "hand": [
+        0.03999997675418854,
+        -0.28999993205070496,
+        1.2500001192092896
+      ],
+      "jaw_angle": 0.4599991738796234
+    },
+    "mort": {
+      "hand": [
+        -0.4004806876182556,
+        -0.21776942908763885,
+        0.5460638403892517
+      ],
+      "jaw_angle": 0.0
+    }
+  }
+}

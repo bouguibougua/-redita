@@ -14,6 +14,9 @@ E.GameView.init({ getState: () => state, controller: {
   selectResident(id) { state.selectedResidentId = id; },
   setProfession(id, profession) { const { playerId, lane } = state.selectedVillage; return E.Economy.setProfession(state, playerId, lane, id, profession); },
   build(type) { const { playerId, lane } = state.selectedVillage; return E.Buildings.buildT1(state, playerId, lane, type); },
+  upgradeCrop(index) { const { playerId, lane } = state.selectedVillage; return E.Crops.upgrade(state, playerId, lane, index); },
+  removeSlot(index) { const { playerId, lane } = state.selectedVillage; const rules = state.players[playerId].villages[lane].slots[index]?.content?.category === "crop" ? E.Crops : E.Livestock; return rules.remove(state, playerId, lane, index); },
+  slaughter(index, quantity) { const { playerId, lane } = state.selectedVillage; return E.Livestock.slaughter(state, playerId, lane, index, quantity); },
   selectVillage(playerId, lane) { state.selectedVillage = { playerId, lane }; state.selectedResidentId = state.players[playerId].villages[lane].residents[0]?.id || null; },
   confirmBiomes(playerId, action) {
     const player = state.players[playerId]; if (player.setupConfirmed) return false;
@@ -155,3 +158,27 @@ assert.equal(painted.get("red2").visible, false);
 ui.execute({type:"open", name:"panel-layout"}); ui.render();
 assert.equal(find(t => t.action?.data === "red2"), undefined);
 console.log("UI simplifiée : deux biomes, un échange, quatre fiches et fenêtres existantes uniquement.");
+
+state = E.Board.createState("simplified"); state.phase = "running"; state.preparationRemaining = 60;
+const cropVillage = state.players.red.villages[0]; cropVillage.biome = "plaine"; cropVillage.slots = E.Biomes.createSlots("plaine");
+E.Crops.place(state, "red", 0, 0, "ble"); ui.execute({ type: "open", name: "slot", data: 0 }); ui.render();
+assert.deepEqual(Array.from(painted.get("modal").rows[0], entry => entry[0]), ["Vendre le terrain", "Améliorer → N2"]);
+const oldRemove = find(t => t.action?.method === "removeSlot");
+assert.equal(ui.activate(find(t => t.action?.method === "upgradeCrop")), true);
+assert.equal(cropVillage.slots[0].content.level, 2);
+state.preparationRemaining = 0; ui.render();
+assert.deepEqual(Array.from(painted.get("modal").rows[0], entry => entry[0]), ["Améliorer → N3"]);
+const goldAfterPrep = state.players.red.gold;
+assert.equal(ui.activate(oldRemove), false, "Une cible XR périmée ne permet pas de vendre après préparation");
+assert.equal(state.players.red.gold, goldAfterPrep);
+assert.equal(ui.activate(find(t => t.action?.method === "upgradeCrop")), true);
+assert.equal(cropVillage.slots[0].content.level, 3);
+assert.equal(find(t => t.action?.method === "upgradeCrop").enabled, false);
+state.preparationRemaining = 60; E.Livestock.place(state, "red", 0, 1, "chevre");
+ui.execute({ type: "open", name: "slot", data: 1 }); ui.render();
+assert.deepEqual(Array.from(painted.get("modal").rows[0], entry => entry[0]), ["Retirer l’élevage", "Abattre 1", "Tout abattre"]);
+state.preparationRemaining = 0; ui.render();
+assert.deepEqual(Array.from(painted.get("modal").rows[0], entry => entry[0]), ["Abattre 1", "Tout abattre"]);
+assert.equal(ui.activate(find(t => t.action?.method === "slaughter" && t.label === "Tout abattre")), true);
+assert.equal(cropVillage.slots[1].content, null);
+console.log("Cultures XR : amélioration, ordre des boutons, fin de préparation et abattage total validés.");

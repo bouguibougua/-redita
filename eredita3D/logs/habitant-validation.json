@@ -1,0 +1,75 @@
+{
+  "source": "/Users/robin/Downloads/medieval warrior 3d model.glb",
+  "source_bytes": 63833656,
+  "source_triangles": 1886668,
+  "output": "/Users/robin/-redita/-redita/assets/models/habitant.glb",
+  "output_bytes": 1679936,
+  "vertices": 13364,
+  "triangles": 15999,
+  "mesh_count": 1,
+  "material_count": 1,
+  "texture_size": [
+    1024,
+    1024
+  ],
+  "bounds_blender_min": [
+    -0.45441141724586487,
+    -0.21295274794101715,
+    0.0
+  ],
+  "bounds_blender_max": [
+    0.4549284279346466,
+    0.21295274794101715,
+    1.8000000715255737
+  ],
+  "standing_height_m": 1.8000000715255737,
+  "feet_blender_z": 0.0,
+  "gltf_forward": "+Z",
+  "rigged": false,
+  "animations": 0,
+  "notes": [
+    "Source design and UVs retained with collapse simplification.",
+    "Arms lowered 71 degrees with blended shoulder deformation from the source T-pose.",
+    "Opaque base color; no source skeleton or animation."
+  ],
+  "gltf_vertices": 13165,
+  "gltf_triangles": 15999,
+  "gltf_bounds_min": [
+    -0.45441141724586487,
+    0,
+    -0.21295274794101715
+  ],
+  "gltf_bounds_max": [
+    0.4549284279346466,
+    1.8000000715255737,
+    0.21295274794101715
+  ],
+  "gltf_images": [
+    {
+      "name": "normal",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 788823
+    },
+    {
+      "name": "basecolor",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 220716
+    },
+    {
+      "name": "roughness_metallic",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "bytes": 151414
+    }
+  ],
+  "gltf_alpha_mode": "OPAQUE",
+  "verified": true
+}

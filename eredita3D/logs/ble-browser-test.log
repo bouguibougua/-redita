@@ -1,0 +1,5 @@
+
+> eredita-multiplayer@1.0.0 test:ble
+> node tests/wheat-browser.test.js
+
+Blé : plantation, GLB, sprite, cache, remplacement et repli validés. {"errors":{},"models":{"ble":{"batches":2,"triangles":4420}}}

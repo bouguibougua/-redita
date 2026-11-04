@@ -1,0 +1,41 @@
+[
+  {
+    "variant": "petit",
+    "trees": 1,
+    "triangles": 3484,
+    "bytes": 370868,
+    "materials": 2,
+    "dimensions_three": [
+      0.5,
+      0.4519999921321869,
+      0.5
+    ],
+    "runtime_batches": 2
+  },
+  {
+    "variant": "moyen",
+    "trees": 2,
+    "triangles": 5512,
+    "bytes": 579608,
+    "materials": 2,
+    "dimensions_three": [
+      0.5,
+      0.5820000171661377,
+      0.5
+    ],
+    "runtime_batches": 2
+  },
+  {
+    "variant": "grand",
+    "trees": 3,
+    "triangles": 7540,
+    "bytes": 788336,
+    "materials": 2,
+    "dimensions_three": [
+      0.5,
+      0.7020000219345093,
+      0.509559839963913
+    ],
+    "runtime_batches": 2
+  }
+]

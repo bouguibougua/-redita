@@ -1,0 +1,16 @@
+
+> eredita-multiplayer@1.0.0 test:assets
+> node tests/server-assets.test.js
+
+Fichiers HTTP : gzip, cache, WebP, streaming audio et MP4 partiel validés.
+
+> eredita-multiplayer@1.0.0 test:chataigniers
+> node tests/chestnut-browser.test.js
+
+Châtaigniers : modèles N1/N2/N3 par slot, améliorations, retrait, 2D/3D, cache et biomes validés. {"errors":{},"models":{"chataignier:petit":{"batches":2,"triangles":3484},"ble":{"batches":2,"triangles":4420},"vignoble:petit":{"batches":2,"triangles":3096},"chataignier:grand":{"batches":2,"triangles":7540},"chataignier:moyen":{"batches":2,"triangles":5512},"vignoble:moyen":{"batches":2,"triangles":5368},"vignoble:grand":{"batches":2,"triangles":7640}}}
+
+> eredita-multiplayer@1.0.0 test:cultures
+> node tests/crop-levels.test.js && node tests/crop-management-browser.test.js
+
+Cultures : coûts 75/150/300, niveaux et récoltes cumulées, remboursement intégral, préparation et élevages validés.
+Gestion des cultures : 75/150/300 or, niveaux, remboursement, fin de préparation, disposition et abattage total validés.

@@ -127,3 +127,27 @@ remote("buyShopItem", ["barque"], "red");
 assert.equal(JSON.stringify(state), boatState, "La réserve adverse reste protégée");
 
 console.log("Shop network command tests passed.");
+
+// Les cultures invitées paient les prix de l’hôte ; ni le propriétaire ni la phase ne sont falsifiables.
+blueVillage.biome = "plaine"; blueVillage.slots = E.Biomes.createSlots("plaine");
+state.preparationRemaining = 30; state.paused = false; state.players.blue.gold = 1000;
+remote("placeCrop", ["ble", 0]);
+assert.equal(state.players.blue.gold, 925);
+remote("upgradeCrop", [0, 99, -999]);
+assert.equal(blueVillage.slots[0].content.level, 2); assert.equal(state.players.blue.gold, 775);
+remote("upgradeCrop", [0]);
+assert.equal(blueVillage.slots[0].content.level, 3); assert.equal(state.players.blue.gold, 475);
+const protectedCrops = JSON.stringify(state);
+remote("removeSlot", [0], "red"); remote("upgradeCrop", [0], "red");
+assert.equal(JSON.stringify(state), protectedCrops);
+remote("removeSlot", [0]);
+assert.equal(blueVillage.slots[0].content, null); assert.equal(state.players.blue.gold, 1000);
+remote("placeCrop", ["ble", 0]); state.preparationRemaining = 0;
+const afterPreparation = JSON.stringify(state);
+handlers.onCommand({ method: "removeSlot", args: [0], playerId: "blue", view: {
+  selectedVillage: { playerId: "blue", lane: 0 }, preparationRemaining: 60
+} });
+assert.equal(JSON.stringify(state), afterPreparation);
+remote("upgradeCrop", [0]); assert.equal(blueVillage.slots[0].content.level, 2);
+assert.equal(state.players.blue.gold, 775);
+console.log("Cultures réseau : prix autoritaires, niveaux, remboursement et fin de préparation validés.");

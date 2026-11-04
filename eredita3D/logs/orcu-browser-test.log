@@ -1,0 +1,5 @@
+
+> eredita-multiplayer@1.0.0 test:orcu
+> node tests/orcu-browser.test.js
+
+Orcu : modèle fourni, texture, invocation, deux équipes, marche, frappes, mort, pause, cache et repli validés. {"count":2,"triangles":10501,"shared":true,"texturesShared":true,"separateMaterials":true,"separateBones":true,"texture":[2048,2048],"originalColor":16777215,"height":1.004399683559424,"teams":[10371129,4158104],"stats":[{"hp":200,"damage":30,"speed":0.7},{"hp":200,"damage":30,"speed":0.7}],"expectedSpeed":0.7}

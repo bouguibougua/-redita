@@ -1,0 +1,13 @@
+17:11:35 | INFO: Data are loaded, start creating Blender stuff
+17:11:35 | INFO: Blender create Mesh node tripo_64f2cad4_4fa0_4a49_86bd_ef30f84d6d9c
+17:11:35 | INFO: glTF import finished in 0.05s
+SOURCE fullettu bounds [-0.4606931805610657, -0.26586905121803284, 1.3209188409746275e-08] [0.46069347858428955, 0.26586905121803284, 0.9995119571685791]
+00:02.151  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/fullettu_source.png'
+17:11:37 | INFO: Data are loaded, start creating Blender stuff
+17:11:37 | INFO: Blender create Mesh node tripo_1260ad3b_681e_40ea_8854_f15efbd4714a
+17:11:37 | INFO: glTF import finished in 0.01s
+SOURCE lanterne_fullettu bounds [-0.2829569876194, -0.2868659198284149, 0.0] [0.2829569876194, 0.2868659198284149, 0.9995312690734863]
+00:03.698  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/lanterne_fullettu_source.png'
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

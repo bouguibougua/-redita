@@ -131,7 +131,7 @@
       const s = state(), v = village(), p = s.players[selection().playerId], own = controllable();
       if (!modal) return null;
       const name = modal.name, data = modal.data;
-      let title = "", lines = [], entries = [];
+      let title = "", lines = [], entries = [], explicitRows = null;
       if (name === "mode") {
         title = "Choisir une partie";
         lines = ["EREDITÀ · Choisissez votre aventure"];
@@ -231,9 +231,28 @@
         entries = v.slots.flatMap((slot, index) => [button(`Emplacement ${index + 1} · ${slot.content?.type || "vide"}`, open("slot", index))]);
       } else if (name === "slot") {
         title = `Emplacement ${data + 1}`;
-        entries = [...Object.entries(E.Config.crops).map(([key, crop]) => button(crop.label, command("placeCrop", key, data), own && E.Crops.canPlace(s, p.id, v.lane, data, key))),
-          ...Object.entries(E.Config.livestock).map(([key, animal]) => button(animal.label, command("placeLivestock", key, data), own && E.Livestock.canPlace(s, p.id, v.lane, data, key)))];
-        if (v.slots[data]?.content?.category === "livestock") entries.push(button("Abattre 1", command("slaughter", data, 1), own));
+        const slot = v.slots[data], content = slot?.content, preparing = s.preparationRemaining > 0;
+        if (content?.category === "crop") {
+          const quote = E.Crops.upgradeQuote(s, p.id, v.lane, data), removal = E.Crops.removalQuote(s, p.id, v.lane, data);
+          lines = [`${E.Crops.get(content.type).label} · N${E.Crops.levelOf(content)} · Rendement ×${E.Crops.yieldOf(content)}`, `Or : ${Math.floor(p.gold)}`];
+          const actions = [];
+          if (preparing) actions.push(button("Vendre le terrain", command("removeSlot", data), own && removal.allowed, { detail: `+${removal.refund} or` }));
+          actions.push(button(E.Config.cropLevels[quote.nextLevel] ? `Améliorer → N${quote.nextLevel}` : "Niveau maximum", command("upgradeCrop", data), own && quote.allowed, { detail: `${quote.gold} or`, reason: quote.reason }));
+          explicitRows = [row(...actions)];
+          Object.entries(E.Config.crops).filter(([key]) => key !== content.type && E.Crops.isAllowedInBiome(key, v.biome)).forEach(([key, crop]) => {
+            explicitRows.push(row(button(`Replanter ${crop.shortLabel}`, command("placeCrop", key, data), own && E.Crops.canPlace(s, p.id, v.lane, data, key), { detail: `${E.Config.cropLevels[1].gold} or · niveau 1 · sans remboursement` })));
+          });
+        } else if (content?.category === "livestock") {
+          lines = [`${E.Livestock.get(content.type).shortLabel} · ${content.count} animaux`];
+          const actions = [], active = own && s.phase === "running" && !s.paused && !v.destroyed;
+          if (preparing) actions.push(button("Retirer l’élevage", command("removeSlot", data), own && E.Livestock.removalQuote(s, p.id, v.lane, data).allowed, { detail: "Gratuit · sans viande" }));
+          actions.push(button("Abattre 1", command("slaughter", data, 1), active));
+          actions.push(button("Tout abattre", command("slaughter", data, content.count), active));
+          explicitRows = [row(...actions)];
+        } else if (slot) {
+          entries = [...Object.entries(E.Config.crops).filter(([key]) => slot.type === "free" && E.Crops.isAllowedInBiome(key, v.biome)).map(([key, crop]) => button(crop.label, command("placeCrop", key, data), own && E.Crops.canPlace(s, p.id, v.lane, data, key), { detail: `${E.Config.cropLevels[1].gold} or · niveau 1` })),
+            ...Object.entries(E.Config.livestock).map(([key, animal]) => button(animal.label, command("placeLivestock", key, data), own && E.Livestock.canPlace(s, p.id, v.lane, data, key)))];
+        }
       } else if (name === "setup") {
         title = "Préparer la partie";
         const id = E.Network.mode === "local" ? (data || setupPlayer()) : owner(), player = s.players[id];
@@ -271,7 +290,7 @@
       }
       // La pagination appartient au composant spatial : une seule navigation,
       // calculée avec les dimensions des textes et des cibles, pour tous les menus.
-      const rows = entries.map((entry) => row(entry));
+      const rows = explicitRows || entries.map((entry) => row(entry));
       rows.push(row(button("Retour", { type: "back" })));
       return { title, lines, rows };
     }

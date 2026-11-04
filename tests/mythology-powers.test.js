@@ -43,7 +43,7 @@ test('L’Orcu and U Surpatore have the specified stats; the boar becomes one va
   const orcu=s.units[0];assert.equal(orcu.hp,200);assert.equal(orcu.damage,30);assert.ok(orcu.speed<E.Config.units.habitant.speed);
   const pop=s.players.red.villages[0].population;cast('u-surpatore',{playerId:'red',lane:0});const u=s.units[1];
   assert.equal(u.role,'sanglier');u.hp=0;E.Combat.settleDeaths(s);
-  assert.equal(u.mythologyForm,'vampire');assert.equal(u.hp,25);assert.equal(u.damage,5);assert.equal(u.animalType,null);
+  assert.equal(u.mythologyForm,'vampire');assert.equal(u.hp,40);assert.equal(u.maxHp,40);assert.equal(u.damage,11);assert.equal(u.animalType,null);
   assert.equal(s.players.red.villages[0].population,pop);u.hp=0;E.Combat.settleDeaths(s);assert.ok(!s.units.includes(u));
   assert.equal(s.mythology.deaths.filter(d=>d.identity.includes(String(u.id)+':')).length,2);
 });

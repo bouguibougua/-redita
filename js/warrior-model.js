@@ -11,7 +11,7 @@
       .then(async ([loader, skeleton]) => {
         cloneSkeleton = skeleton.clone;
         const asset = await new loader.GLTFLoader().loadAsync(new URL(config().src, document.baseURI).href);
-        const names = [config().clips.idle, config().clips.walk, ...config().clips.attacks];
+        const names = [config().clips.idle, config().clips.walk, ...config().clips.attacks, config().clips.death];
         if (!names.every(name => asset.animations.some(clip => clip.name === name))) throw new Error('Animations du guerrier manquantes');
         template = asset.scene; clips = asset.animations;
         return true;
@@ -73,8 +73,8 @@
 
     const mixer = new THREE.AnimationMixer(model);
     const actions = new Map(clips.map(clip => [clip.name, mixer.clipAction(clip)]));
-    let active = null, moving = false, disposed = false, attackSequence = 0;
-    function change(name, attack = false) {
+    let active = null, moving = false, disposed = false, dying = false, attackSequence = 0;
+    function change(name, attack = false, duration = config().attackDuration) {
       if (active?.getClip().name === name && !attack) return;
       const next = actions.get(name);
       if (!next) return;
@@ -83,27 +83,34 @@
       next.reset().setEffectiveWeight(1).setEffectiveTimeScale(1);
       next.clampWhenFinished = attack;
       next.setLoop(attack ? THREE.LoopOnce : THREE.LoopRepeat, attack ? 1 : Infinity);
-      if (attack) next.setDuration(config().attackDuration);
+      if (attack) next.setDuration(duration);
       if (previous) next.fadeIn(config().crossFade);
       next.play();
       active = next;
     }
     mixer.addEventListener('finished', event => {
-      if (event.action === active) change(moving ? config().clips.walk : config().clips.idle);
+      if (!dying && event.action === active) change(moving ? config().clips.walk : config().clips.idle);
     });
+    function die() {
+      if (disposed || dying) return;
+      dying = true; moving = false;
+      change(config().clips.death, true, E.Config.visualEffects.unitDeathDuration);
+    }
     change(config().clips.idle);
     mixer.update(0);
     instances++;
     group.userData.warrior = {
       setMoving(value) { moving = Boolean(value); },
       attack(sequence) {
-        if (disposed || sequence === attackSequence) return;
+        if (disposed || dying || sequence === attackSequence) return;
         attackSequence = sequence;
         change(config().clips.attacks[(sequence - 1) % config().clips.attacks.length], true);
       },
-      tick(delta, paused, dying = false) {
-        if (disposed || paused || dying) return;
-        if (!config().clips.attacks.includes(active?.getClip().name)) change(moving ? config().clips.walk : config().clips.idle);
+      die,
+      tick(delta, paused, dead = false) {
+        if (disposed || paused) return;
+        if (dead) die();
+        if (!dying && !config().clips.attacks.includes(active?.getClip().name)) change(moving ? config().clips.walk : config().clips.idle);
         mixer.update(Math.min(delta, config().maxFrameDelta));
       },
       dispose() {
@@ -115,6 +122,8 @@
       get action() { return active?.getClip().name; },
       get time() { return active?.time || 0; },
       get sequence() { return attackSequence; },
+      get dying() { return dying; },
+      get deathProgress() { return dying ? Math.min(1, active.time / active.getClip().duration) : 0; },
       get mixer() { return mixer; }
     };
     return group;

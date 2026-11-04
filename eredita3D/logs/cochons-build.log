@@ -1,0 +1,55 @@
+/Users/robin/-redita/-redita/eredita3D/scripts/create_elevage_cochons.py:124: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat=bpy.data.materials.new(name);mat.use_nodes=True;node=mat.node_tree.nodes.get('Principled BSDF');node.inputs['Roughness'].default_value=roughness
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+11:00:39 | INFO: Starting glTF 2.0 export
+11:00:39 | INFO: Extracting primitive: Enclos_petit
+11:00:39 | INFO: Primitives created: 1
+11:00:39 | INFO: Extracting primitive: Cochon_00
+11:00:39 | INFO: Primitives created: 1
+11:00:39 | INFO: Finished glTF 2.0 export in 0.006416797637939453 s
+00:06.122  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_cochon_petit_three_quarter.png'
+00:12.633  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/cochon_detail.png'
+00:13.537  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_cochon_petit_sprite.png'
+
+Info: Saved as "elevage_cochon_petit.blend"
+11:00:52 | INFO: Starting glTF 2.0 export
+11:00:52 | INFO: Extracting primitive: Enclos_moyen
+11:00:52 | INFO: Primitives created: 1
+11:00:52 | INFO: Extracting primitive: Cochon_00
+11:00:52 | INFO: Primitives created: 1
+11:00:52 | INFO: Extracting primitive: Cochon_01
+11:00:52 | INFO: Primitives created: 1
+11:00:52 | INFO: Extracting primitive: Cochon_02
+11:00:52 | INFO: Primitives created: 1
+11:00:52 | INFO: Finished glTF 2.0 export in 0.0059299468994140625 s
+00:19.534  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_cochon_moyen_three_quarter.png'
+00:20.557  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_cochon_moyen_sprite.png'
+
+Info: Saved as "elevage_cochon_moyen.blend"
+11:00:59 | INFO: Starting glTF 2.0 export
+11:00:59 | INFO: Extracting primitive: Enclos_grand
+11:00:59 | INFO: Primitives created: 1
+11:00:59 | INFO: Extracting primitive: Cochon_00
+11:00:59 | INFO: Primitives created: 1
+11:00:59 | INFO: Extracting primitive: Cochon_01
+11:00:59 | INFO: Primitives created: 1
+11:00:59 | INFO: Extracting primitive: Cochon_02
+11:00:59 | INFO: Primitives created: 1
+11:00:59 | INFO: Extracting primitive: Cochon_03
+11:00:59 | INFO: Primitives created: 1
+11:00:59 | INFO: Extracting primitive: Cochon_04
+11:00:59 | INFO: Primitives created: 1
+11:00:59 | INFO: Extracting primitive: Cochon_05
+11:00:59 | INFO: Primitives created: 1
+11:00:59 | INFO: Finished glTF 2.0 export in 0.009076833724975586 s
+00:26.696  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_cochon_grand_three_quarter.png'
+00:27.775  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_cochon_grand_sprite.png'
+/Users/robin/-redita/-redita/eredita3D/scripts/create_elevage_cochons.py:211: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  ink=bpy.data.materials.new('Encre');ink.use_nodes=True;ink.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(.025,.035,.02,1);data.materials.append(ink)
+00:35.100  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_cochons_comparatif.png'
+
+Info: Saved as "elevage_cochon_grand.blend"
+COCHONS_VALIDATION [{"variant": "petit", "preview_animals": 1, "triangles": 2206, "bytes": 221160, "materials": 2, "dimensions_three": [0.47200000286102295, 0.13199999928474426, 0.47200000286102295], "pig_prototype_triangles": 902}, {"variant": "moyen", "preview_animals": 3, "triangles": 4230, "bytes": 410584, "materials": 2, "dimensions_three": [0.5019999742507935, 0.22930000722408295, 0.5019999742507935], "pig_prototype_triangles": 902}, {"variant": "grand", "preview_animals": 6, "triangles": 6936, "bytes": 669420, "materials": 2, "dimensions_three": [0.5320000052452087, 0.22930000722408295, 0.5320000052452087], "pig_prototype_triangles": 902}]
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

@@ -1,0 +1,21 @@
+/Users/robin/-redita/-redita/eredita3D/scripts/create_ble.py:32: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  m=bpy.data.materials.new(name);m.use_nodes=True
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+18:48:54 | INFO: Starting glTF 2.0 export
+18:48:54 | INFO: Extracting primitive: Terre_et_sillons
+18:48:54 | INFO: Primitives created: 1
+18:48:54 | INFO: Extracting primitive: Tiges_et_feuilles
+18:48:54 | INFO: Primitives created: 1
+18:48:54 | INFO: Extracting primitive: Epis_et_barbes
+18:48:54 | INFO: Primitives created: 1
+18:48:54 | INFO: Finished glTF 2.0 export in 0.008868932723999023 s
+00:07.997  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/ble_three_quarter.png'
+00:15.683  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/ble_top.png'
+00:22.741  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/ble_detail.png'
+00:23.916  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/ble_sprite.png'
+
+Info: Saved as "ble.blend"
+BLE_VALIDATION {"triangles": 4420, "plants": 35, "materials": 2, "textures": 0, "bytes": 480500, "dimensions_three": [0.47999998927116394, 0.30896615982055664, 0.47999998927116394], "runtime_batches": 2, "note": "Repr\u00e9sentation m\u00fbre statique, sans modification des r\u00e9coltes ; performances Quest physique \u00e0 mesurer."}
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

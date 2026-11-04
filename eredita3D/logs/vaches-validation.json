@@ -1,0 +1,41 @@
+[
+  {
+    "variant": "petit",
+    "preview_animals": 1,
+    "triangles": 2550,
+    "bytes": 251368,
+    "materials": 2,
+    "dimensions_three": [
+      0.47200000286102295,
+      0.23999999463558197,
+      0.47200000286102295
+    ],
+    "cow_prototype_triangles": 1394
+  },
+  {
+    "variant": "moyen",
+    "preview_animals": 3,
+    "triangles": 5830,
+    "bytes": 562228,
+    "materials": 2,
+    "dimensions_three": [
+      0.5019999742507935,
+      0.23999999463558197,
+      0.5019999742507935
+    ],
+    "cow_prototype_triangles": 1394
+  },
+  {
+    "variant": "grand",
+    "preview_animals": 6,
+    "triangles": 10012,
+    "bytes": 972684,
+    "materials": 2,
+    "dimensions_three": [
+      0.5320000052452087,
+      0.23999999463558197,
+      0.5320000052452087
+    ],
+    "cow_prototype_triangles": 1394
+  }
+]

@@ -53,7 +53,17 @@
       THREE = module;
       setup();
       ready = true;
+      E.VillagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.WarriorModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.OrcuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.FullettuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.LupuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.SurpatoreModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.PlainTerrain?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.MountainTerrain?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.CoastTerrain?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.CropModels?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.LivestockModels?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.XR?.refreshAvailability();
       setMode(enabled);
       if (latestState) update(latestState, true);
@@ -136,17 +146,19 @@
     group.position.set(laneX(village.lane), 0, z);
     group.userData = { playerId: owner, lane: village.lane };
 
-    const tile = mesh(new THREE.BoxGeometry(2.82 * terrainWidthScale(), 0.22, 4.85), colors[village.biome], { castShadow: false });
-    tile.position.y = -0.08;
+    const terrainModel = { plaine: E.PlainTerrain, montagne: E.MountainTerrain, littoral: E.CoastTerrain }[village.biome];
+    const importedTerrain = terrainModel?.create(terrainWidthScale(), village.burnUntil > latestState.elapsed, owner);
+    const tile = importedTerrain || mesh(new THREE.BoxGeometry(2.82 * terrainWidthScale(), 0.22, 4.85), colors[village.biome], { castShadow: false });
+    if (!importedTerrain) tile.position.y = -0.08;
     group.add(tile);
 
     const border = mesh(new THREE.BoxGeometry(2.92 * terrainWidthScale(), 0.08, 4.95), owner === "red" ? colors.red : colors.blue, { castShadow: false, metalness: 0.15 });
     border.position.y = -0.19;
     group.add(border);
 
-    if (village.biome === "montagne") addMountains(group, village.lane);
-    if (village.biome === "plaine") addPlainDetails(group, village.lane);
-    if (village.biome === "littoral") addCoast(group, village);
+    if (village.biome === "montagne" && !importedTerrain) addMountains(group, village.lane);
+    if (village.biome === "plaine" && !importedTerrain) addPlainDetails(group, village.lane);
+    if (village.biome === "littoral") addCoast(group, village, Boolean(importedTerrain));
     addMythologyTerrain(group, village);
     addSlots(group, village);
     addVillageAndBuildings(group, village);
@@ -205,16 +217,18 @@
     }
   }
 
-  function addCoast(group, village) {
+  function addCoast(group, village, importedTerrain = false) {
     const owner = village.ownerId;
     const waterZ = owner === "red" ? 1.46 : -1.46;
-    const water = mesh(new THREE.BoxGeometry(2.78 * terrainWidthScale(), 0.08, 1.82), 0x238eb0, { castShadow: false, roughness: 0.25, metalness: 0.1 });
-    water.position.set(0, 0.08, waterZ);
-    group.add(water);
-    for (let index = 0; index < 5; index++) {
-      const rock = mesh(new THREE.DodecahedronGeometry(0.08 + index * 0.012, 0), 0xcbbd9b);
-      rock.position.set(-1 + index * 0.48, 0.17, waterZ + (index % 2 ? -0.47 : 0.39));
-      group.add(rock);
+    if (!importedTerrain) {
+      const water = mesh(new THREE.BoxGeometry(2.78 * terrainWidthScale(), 0.08, 1.82), 0x238eb0, { castShadow: false, roughness: 0.25, metalness: 0.1 });
+      water.position.set(0, 0.08, waterZ);
+      group.add(water);
+      for (let index = 0; index < 5; index++) {
+        const rock = mesh(new THREE.DodecahedronGeometry(0.08 + index * 0.012, 0), 0xcbbd9b);
+        rock.position.set(-1 + index * 0.48, 0.17, waterZ + (index % 2 ? -0.47 : 0.39));
+        group.add(rock);
+      }
     }
     const maritime = E.Transport.maritimeState(village);
     for (let index = 0; index < maritime.voilier; index++) {
@@ -264,13 +278,20 @@
       marker.position.set(x, 0.1, z);
       marker.userData.xrTarget = { kind: "slot", playerId: village.ownerId, lane: village.lane, slotIndex: index };
       group.add(marker);
-      if (slot.content?.category === "crop") addCrop(group, slot.content.type, x, z);
+      if (slot.content?.category === "crop") addCrop(group, slot.content.type, x, z, slot.content);
       if (slot.content?.category === "livestock") addHerd(group, slot.content.type, slot.content.count, x, z);
     });
   }
 
-  function addCrop(group, type, x, z) {
+  function addCrop(group, type, x, z, content) {
+    const importedCrop = E.CropModels?.create(type, content);
+    if (importedCrop) {
+      importedCrop.position.set(x, E.Config.cropModels[type].elevation, z);
+      group.add(importedCrop);
+      return importedCrop;
+    }
     const crop = new THREE.Group();
+    crop.name = `culture-${type}-simple`;
     const cropColor = { ble: 0xd8b94f, chataignier: 0x45612d, vignoble: 0x814a78 }[type] || 0x7c9b43;
     for (let index = 0; index < 7; index++) {
       const stem = mesh(new THREE.CylinderGeometry(0.018, 0.025, 0.25, 5), cropColor);
@@ -287,10 +308,18 @@
     }
     crop.position.set(x, 0.08, z);
     group.add(crop);
+    return crop;
   }
 
   function addHerd(group, type, count, x, z) {
+    const importedHerd = E.LivestockModels?.create(type, count);
+    if (importedHerd) {
+      importedHerd.position.set(x, E.Config.livestockModels[type].elevation, z);
+      group.add(importedHerd);
+      return;
+    }
     const herd = new THREE.Group();
+    herd.name = `elevage-${type}-simple`;
     const animalColor = { chevre: 0xe7dfc8, cochon: 0xc98d86, vache: 0x8b694f }[type] || 0xd9d0b8;
     const shown = Math.min(3, count);
     for (let index = 0; index < shown; index++) {
@@ -405,9 +434,21 @@
       const swimming = (unit.animalType || unit.role) === "sanglier" && Boolean(unit.waterOwner);
       const figure = unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
       const previousPosition = figure.userData.previousUnitPosition;
-      figure.userData.warrior?.setMoving(!unit.waterTransport && previousPosition !== undefined &&
-        Math.abs(unit.position - previousPosition) > E.Config.characterModels.warrior.movementEpsilon);
+      const moving = !unit.waterTransport && (
+        previousPosition !== undefined && Math.abs(unit.position - previousPosition) > E.Config.characterModels.warrior.movementEpsilon ||
+        figure.userData.lupu && figure.userData.previousLanePosition !== undefined &&
+        Math.abs(unit.lanePosition - figure.userData.previousLanePosition) > E.Config.characterModels.warrior.movementEpsilon);
+      characterAnimation(figure)?.setMoving(moving);
+      if (figure.userData.fullettu) {
+        const source = state.players[unit.ownerId === 'red' ? 'blue' : 'red']?.villages[unit.lane];
+        const destination = state.players[unit.ownerId]?.villages[unit.originLane];
+        const enemyHome = unit.ownerId === 'red' ? E.Config.movement.columnLength : 0;
+        const gathering = !moving && !unit.waterTransport && Math.abs(unit.position - enemyHome) <= E.Config.combat.attackRange &&
+          destination && !destination.destroyed && E.Config.resources.some(resource => source?.resources[resource] > 0);
+        figure.userData.fullettu.setHarvest(gathering, unit.mythologyGatherTimer || 0, E.Config.reinforcementPowers.fullettuGatherInterval);
+      }
       figure.userData.previousUnitPosition = unit.position;
+      figure.userData.previousLanePosition = unit.lanePosition;
       markSelected(figure, Boolean(unit.residentId && unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane));
       figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, -4.35 + (unit.position / 100) * 8.7);
       figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
@@ -432,7 +473,7 @@
         const figure = unitModel(key, player.id, resident);
         markSelected(figure, resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane);
         const isWorker = ["agriculture", "elevage", "chasse"].includes(resident.mission) && Number.isFinite(resident.workPosition);
-        figure.userData.warrior?.setMoving(isWorker && figure.userData.previousWorkPosition !== undefined &&
+        characterAnimation(figure)?.setMoving(isWorker && figure.userData.previousWorkPosition !== undefined &&
           Math.abs(resident.workPosition - figure.userData.previousWorkPosition) > E.Config.characterModels.warrior.movementEpsilon);
         figure.userData.previousWorkPosition = resident.workPosition;
         figure.scale.setScalar((isWorker ? 0.78 : 0.65) * (resident.mythologyScale || 1));
@@ -488,7 +529,7 @@
     if ((unit.visualAttackTimer || 0) > 0 && figure.userData.attackSequence !== attackSequence) {
       figure.userData.attackSequence = attackSequence;
       figure.userData.attackStartedAt = now;
-      figure.userData.warrior?.attack(attackSequence);
+      characterAnimation(figure)?.attack(attackSequence);
     }
     if ((unit.visualHitTimer || 0) > 0 && figure.userData.hitSequence !== hitSequence) {
       figure.userData.hitSequence = hitSequence;
@@ -502,7 +543,10 @@
       handledDeathEffects.add(event.id);
       const liveKey = `unit-${event.unitId}`;
       const deathKey = `death-${event.id}`;
-      let figure = unitModels.get(liveKey);
+      // Une transformation garde l'id de l'unité : la mort de son ancienne
+      // forme doit avoir sa propre figurine, sans retirer la nouvelle vivante.
+      const stillAlive = state.units.some(unit => unit.id === event.unitId && unit.hp > 0);
+      let figure = stillAlive ? null : unitModels.get(liveKey);
       if (figure) {
         unitModels.delete(liveKey);
         unitModels.set(deathKey, figure);
@@ -513,7 +557,9 @@
       const swimming = (event.animalType || event.role) === "sanglier" && Boolean(event.waterOwner);
       figure.position.set(laneX(event.lanePosition), swimming ? -0.04 : 0.2, -4.35 + (event.position / 100) * 8.7);
       figure.rotation.set(0, event.ownerId === "red" ? 0 : Math.PI, 0);
+      if (event.mythologyScale != null) figure.scale.setScalar(event.mythologyScale);
       figure.userData.dying = true;
+      characterAnimation(figure)?.die();
       figure.userData.deathStartedAt = effectClock();
       figure.userData.deathBaseY = figure.position.y;
       figure.userData.deathSide = event.id % 2 ? 1 : -1;
@@ -542,14 +588,18 @@
     lastWarriorFrame = now;
     const paused = Boolean(latestState?.paused || latestState?.phase && latestState.phase !== 'running');
     unitModels.forEach((figure, key) => {
-      figure.userData.warrior?.tick(delta, paused, figure.userData.dying);
+      characterAnimation(figure)?.tick(delta, paused, figure.userData.dying);
       if (figure.userData.dying) {
-        const progress = Math.min(1, (now - figure.userData.deathStartedAt) / (effects.unitDeathDuration * 1000));
+        const animatedDeath = characterAnimation(figure)?.dying;
+        const progress = animatedDeath ? characterAnimation(figure).deathProgress :
+          Math.min(1, (now - figure.userData.deathStartedAt) / (effects.unitDeathDuration * 1000));
         const fall = Math.min(1, progress / 0.55);
         const easedFall = 1 - Math.pow(1 - fall, 3);
-        figure.rotation.x = 0;
-        figure.rotation.z = figure.userData.deathSide * effects.unitDeathFallAngle * easedFall;
-        figure.position.y = figure.userData.deathBaseY - 0.09 * easedFall;
+        if (!animatedDeath) {
+          figure.rotation.x = 0;
+          figure.rotation.z = figure.userData.deathSide * effects.unitDeathFallAngle * easedFall;
+          figure.position.y = figure.userData.deathBaseY - 0.09 * easedFall;
+        }
         tintFigure(figure, effects.unitDeathRedMix);
         if (progress >= 1) {
           unitModels.delete(key);
@@ -561,7 +611,7 @@
 
       const attackProgress = figure.userData.attackStartedAt === undefined ? 1 :
         (now - figure.userData.attackStartedAt) / (effects.unitAttackDuration * 1000);
-      figure.rotation.x = !figure.userData.warrior && attackProgress >= 0 && attackProgress < 1 ? Math.sin(attackProgress * Math.PI) * effects.unitAttackTilt : 0;
+      figure.rotation.x = !characterAnimation(figure) && attackProgress >= 0 && attackProgress < 1 ? Math.sin(attackProgress * Math.PI) * effects.unitAttackTilt : 0;
       figure.rotation.z = 0;
 
       const hitProgress = figure.userData.hitStartedAt === undefined ? 1 :
@@ -573,6 +623,10 @@
     });
   }
 
+  function characterAnimation(figure) {
+    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior;
+  }
+
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
     let figure = unitModels.get(key);
     const animalType = appearance.animalType || (["chien", "sanglier"].includes(appearance.role) ? appearance.role : null);
@@ -581,14 +635,20 @@
     const armor = appearance.armor || null;
     const donkey = !animalType && Boolean(appearance.donkey);
     if (animalType === "sanglier") waterTransport = null;
-    const asset = profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : 'procedural';
+    const isOrcu = appearance.mythologyLegendId === 'l-orcu';
+    const isFullettu = appearance.mythologyLegendId === 'u-fullettu';
+    const isLupu = appearance.mythologyLegendId === 'u-lupu-mannaru';
+    const isSurpatore = appearance.mythologyLegendId === 'u-surpatore' && appearance.mythologyForm === 'vampire';
+    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
     const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
       figure.removeFromParent();
       disposeObject(figure);
     }
-    figure = animalType ? animalModel(owner, animalType, waterTransport, swimming) : personModel(owner, profession, tool, armor, waterTransport, donkey);
+    figure = isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : null;
+    if (figure) addHumanTransport(figure, owner, waterTransport, false);
+    else figure = animalType ? animalModel(owner, animalType, waterTransport, swimming) : personModel(owner, profession, tool, armor, waterTransport, donkey);
     Object.assign(figure.userData, { visualSignature, profession: animalType ? null : profession, animalType, tool, armor, waterTransport, donkey, swimming });
     unitModels.set(key, figure);
     unitGroup.add(figure);
@@ -610,7 +670,7 @@
     }
     if (aura) { aura.visible = Boolean(magu || bianca); aura.children[0].material.color.set(magu ? '#b45ae0' : '#69cb94'); }
     const legend = E.Mythology?.get(appearance.mythologyLegendId);
-    if (legend && !figure.userData.mythologyTinted) {
+    if (legend && !figure.userData.preserveMythologyMaterial && !figure.userData.mythologyTinted) {
       figure.traverse(node => { if (node.isMesh && node.material?.color && !node.name.includes('halo')) {
         node.material.color.lerp(new THREE.Color(legend.visuals.primaryColor), .55);
       } });
@@ -708,6 +768,10 @@
   }
 
   function personModel(owner, profession, tool = null, armor = null, waterTransport = null, donkey = false) {
+    if (profession === 'habitant') {
+      const imported = E.VillagerModel?.create(owner, tool, armor);
+      if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
+    }
     if (profession === 'guerrier') {
       const imported = E.WarriorModel?.create(owner, tool, armor);
       if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
@@ -837,7 +901,7 @@
       E.MythologyEffects?.vision(state, viewerId(state), village)?.fraction ?? 1,
       village.buildings.map((building) => `${building.type}${building.level}`).join(","),
       `${village.maritime?.barque || 0}:${village.maritime?.voilier || 0}:${village.maritime?.filet || 0}`,
-      village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}:${slot.content.count || 1}` : "-").join(",")
+      village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}:${slot.content.count || 1}:${slot.content.level || 1}:${slot.content.hp > 0}` : "-").join(",")
     ].join("/"))).join("|");
   }
 
@@ -896,7 +960,7 @@
   }
 
   function disposeObject(object) {
-    object.userData.warrior?.dispose();
+    characterAnimation(object)?.dispose();
     object.traverse((item) => {
       if (!item.userData.sharedGeometry) item.geometry?.dispose?.();
       if (Array.isArray(item.material)) item.material.forEach((entry) => entry.dispose?.());

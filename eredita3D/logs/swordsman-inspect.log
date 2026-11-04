@@ -1,0 +1,11 @@
+14:15:22 | INFO: Data are loaded, start creating Blender stuff
+14:15:22 | INFO: Blender create Mesh node meshes[0]
+14:15:24 | INFO: glTF import finished in 1.54s
+PREPARATION {"triangles_source": 1932310, "triangles_jeu": 36000, "vertices": 29641, "dimensions": [1.2398061752319336, 0.9639599323272705, 1.7999999523162842], "textures": [["medieval_swordsman_3d_model_basecolor.jpg", [2048, 2048]], ["medieval_swordsman_3d_model_normal.png", [2048, 2048]], ["medieval_swordsman_3d_model_rm.jpg", [2048, 2048]]]}
+00:12.878  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/swordsman_source_front.png'
+00:14.112  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/swordsman_source_side.png'
+00:15.370  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/swordsman_source_back.png'
+Info: Saved as "swordsman_inspect.blend"
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

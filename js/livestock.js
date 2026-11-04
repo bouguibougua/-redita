@@ -131,5 +131,20 @@
     return { quantity, meat, type };
   }
 
-  E.Livestock = { get, canPlace, hasAvailableSlot, place, purchaseQuote, buy, refreshHp, slaughter };
+  function removalQuote(state, playerId, lane, slotIndex) {
+    const village = Number.isInteger(lane) ? state.players[playerId]?.villages?.[lane] : null;
+    const slot = Number.isInteger(slotIndex) ? village?.slots?.[slotIndex] : null;
+    if (slot?.content?.category !== "livestock") return null;
+    return { refund: 0, allowed: Boolean(state.phase === "running" && !state.paused &&
+      state.preparationRemaining > 0 && !village.destroyed) };
+  }
+
+  function remove(state, playerId, lane, slotIndex) {
+    const quote = removalQuote(state, playerId, lane, slotIndex);
+    if (!quote?.allowed) return false;
+    state.players[playerId].villages[lane].slots[slotIndex].content = null;
+    return quote;
+  }
+
+  E.Livestock = { get, canPlace, hasAvailableSlot, place, purchaseQuote, buy, refreshHp, slaughter, removalQuote, remove };
 }());

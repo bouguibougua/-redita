@@ -1,0 +1,20 @@
+16:22:36 | INFO: Data are loaded, start creating Blender stuff
+16:22:36 | INFO: Blender create Mesh node tripo_708beef6_6ff0_4dbc_87a5_ed65594dfb2a
+16:22:36 | INFO: glTF import finished in 0.06s
+/Users/robin/-redita/-redita/eredita3D/scripts/prepare_orcu.py:42: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  if material.use_nodes:
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+16:22:36 | INFO: Starting glTF 2.0 export
+16:22:36 | INFO: Extracting primitive: tripo_708beef6_6ff0_4dbc_87a5_ed65594dfb2a
+16:22:36 | INFO: Primitives created: 1
+16:22:36 | INFO: Finished glTF 2.0 export in 0.4971199035644531 s
+00:04.545  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/orcu_repos.png'
+00:07.998  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/orcu_marche.png'
+00:11.119  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/orcu_attaque.png'
+00:13.544  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/orcu_mort.png'
+
+Info: Saved as "orcu.blend"
+ORCU_VALIDATION {"source": "/Users/robin/Downloads/orc barbarian 3d model.glb", "source_sha256": "9b79e8bc4d1ebad9e85cdb7f45556c3decc848120781636c8d819d17173e0ffa", "triangles": 10501, "bytes": 2236360, "materials": 1, "textures": [["Orcu_BaseColor_2048", [2048, 2048]]], "clips": ["Frappe_Droite", "Frappe_Gauche", "Marche", "Mort", "Repos"], "canonical_height": 1.8, "note": "Animations simples cr\u00e9\u00e9es sur le squelette fourni ; aucune r\u00e8gle de combat modifi\u00e9e."}
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

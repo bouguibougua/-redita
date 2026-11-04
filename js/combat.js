@@ -112,6 +112,9 @@
       animalId: unit.animalId,
       waterTransport: unit.waterTransport,
       waterOwner: unit.waterOwner,
+      ...(unit.mythologyLegendId ? { isLegend: unit.isLegend, mythologyLegendId: unit.mythologyLegendId } : {}),
+      ...(unit.mythologyForm ? { mythologyForm: unit.mythologyForm } : {}),
+      ...(unit.mythologyScale ? { mythologyScale: unit.mythologyScale } : {}),
       lanePosition: unit.lanePosition,
       position: unit.position
     });

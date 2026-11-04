@@ -1,0 +1,55 @@
+/Users/robin/-redita/-redita/eredita3D/scripts/create_elevage_vaches.py:131: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat=bpy.data.materials.new(name);mat.use_nodes=True;node=mat.node_tree.nodes.get('Principled BSDF');node.inputs['Roughness'].default_value=roughness
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+11:19:20 | INFO: Starting glTF 2.0 export
+11:19:20 | INFO: Extracting primitive: Enclos_petit
+11:19:20 | INFO: Primitives created: 1
+11:19:20 | INFO: Extracting primitive: Vache_00
+11:19:20 | INFO: Primitives created: 1
+11:19:20 | INFO: Finished glTF 2.0 export in 0.006536006927490234 s
+00:05.942  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_vache_petit_three_quarter.png'
+00:12.176  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/vache_detail.png'
+00:13.074  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_vache_petit_sprite.png'
+
+Info: Saved as "elevage_vache_petit.blend"
+11:19:32 | INFO: Starting glTF 2.0 export
+11:19:32 | INFO: Extracting primitive: Enclos_moyen
+11:19:32 | INFO: Primitives created: 1
+11:19:32 | INFO: Extracting primitive: Vache_00
+11:19:32 | INFO: Primitives created: 1
+11:19:32 | INFO: Extracting primitive: Vache_01
+11:19:32 | INFO: Primitives created: 1
+11:19:32 | INFO: Extracting primitive: Vache_02
+11:19:32 | INFO: Primitives created: 1
+11:19:32 | INFO: Finished glTF 2.0 export in 0.006426095962524414 s
+00:19.084  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_vache_moyen_three_quarter.png'
+00:20.112  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_vache_moyen_sprite.png'
+
+Info: Saved as "elevage_vache_moyen.blend"
+11:19:39 | INFO: Starting glTF 2.0 export
+11:19:39 | INFO: Extracting primitive: Enclos_grand
+11:19:39 | INFO: Primitives created: 1
+11:19:39 | INFO: Extracting primitive: Vache_00
+11:19:39 | INFO: Primitives created: 1
+11:19:39 | INFO: Extracting primitive: Vache_01
+11:19:39 | INFO: Primitives created: 1
+11:19:39 | INFO: Extracting primitive: Vache_02
+11:19:39 | INFO: Primitives created: 1
+11:19:39 | INFO: Extracting primitive: Vache_03
+11:19:39 | INFO: Primitives created: 1
+11:19:39 | INFO: Extracting primitive: Vache_04
+11:19:39 | INFO: Primitives created: 1
+11:19:39 | INFO: Extracting primitive: Vache_05
+11:19:39 | INFO: Primitives created: 1
+11:19:39 | INFO: Finished glTF 2.0 export in 0.010838985443115234 s
+00:26.407  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_vache_grand_three_quarter.png'
+00:27.560  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_vache_grand_sprite.png'
+/Users/robin/-redita/-redita/eredita3D/scripts/create_elevage_vaches.py:224: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  ink=bpy.data.materials.new('Encre');ink.use_nodes=True;ink.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(.025,.035,.02,1);data.materials.append(ink)
+00:35.058  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/elevage_vaches_comparatif.png'
+
+Info: Saved as "elevage_vache_grand.blend"
+VACHES_VALIDATION [{"variant": "petit", "preview_animals": 1, "triangles": 2550, "bytes": 251368, "materials": 2, "dimensions_three": [0.47200000286102295, 0.23999999463558197, 0.47200000286102295], "cow_prototype_triangles": 1394}, {"variant": "moyen", "preview_animals": 3, "triangles": 5830, "bytes": 562228, "materials": 2, "dimensions_three": [0.5019999742507935, 0.23999999463558197, 0.5019999742507935], "cow_prototype_triangles": 1394}, {"variant": "grand", "preview_animals": 6, "triangles": 10012, "bytes": 972684, "materials": 2, "dimensions_three": [0.5320000052452087, 0.23999999463558197, 0.5320000052452087], "cow_prototype_triangles": 1394}]
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

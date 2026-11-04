@@ -8,7 +8,7 @@
   let previousDesktopRender = 0;
   let pendingBulkTasks = [];
   const localViewMethods = new Set(["selectVillage", "selectResident"]);
-  const guestCommands = new Set(["toggleBiome", "confirmBiomes", "placeCrop", "placeLivestock", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
+  const guestCommands = new Set(["toggleBiome", "confirmBiomes", "placeCrop", "placeLivestock", "upgradeCrop", "removeSlot", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
 
   function addLog(message) {
     state.logs.unshift(message);
@@ -81,21 +81,44 @@
     placeCrop(type, slotIndex) {
       const { playerId, lane } = state.selectedVillage;
       const previous = state.players[playerId]?.villages[lane]?.slots[slotIndex]?.content;
-      if (E.Crops.place(state, playerId, lane, slotIndex, type)) {
+      const changed = E.Crops.place(state, playerId, lane, slotIndex, type);
+      if (changed) {
         const crop = E.Crops.get(type);
         const replaced = previous?.category === "crop" ? ` à la place de ${E.Crops.get(previous.type).label.toLowerCase()}` : "";
         addLog(`${state.players[playerId].name} plante ${crop.label.toLowerCase()}${replaced} en ligne ${lane + 1}.`);
       }
       E.UI.render(state);
+      return changed;
     },
 
     placeLivestock(type, slotIndex) {
       const { playerId, lane } = state.selectedVillage;
-      if (E.Livestock.place(state, playerId, lane, slotIndex, type)) {
+      const changed = E.Livestock.place(state, playerId, lane, slotIndex, type);
+      if (changed) {
         const animal = E.Livestock.get(type);
         addLog(`${state.players[playerId].name} implante ${animal.label.toLowerCase()} en ligne ${lane + 1}.`);
       }
       E.UI.render(state);
+      return changed;
+    },
+
+    upgradeCrop(slotIndex) {
+      const { playerId, lane } = state.selectedVillage;
+      const quote = E.Crops.upgradeQuote(state, playerId, lane, slotIndex);
+      const changed = E.Crops.upgrade(state, playerId, lane, slotIndex);
+      if (changed) addLog(`Culture améliorée au niveau ${quote.nextLevel} au village ${lane + 1} : −${quote.gold} or.`);
+      E.UI.render(state);
+      return changed;
+    },
+
+    removeSlot(slotIndex) {
+      const { playerId, lane } = state.selectedVillage;
+      const content = state.players[playerId]?.villages[lane]?.slots[slotIndex]?.content;
+      const rules = content?.category === "crop" ? E.Crops : content?.category === "livestock" ? E.Livestock : null;
+      const result = rules?.remove(state, playerId, lane, slotIndex);
+      if (result) addLog(`Slot ${slotIndex + 1} libéré pendant la préparation${result.refund ? ` : +${result.refund} or remboursés` : ""}.`);
+      E.UI.render(state);
+      return Boolean(result);
     },
 
     changeJob(job, direction) {

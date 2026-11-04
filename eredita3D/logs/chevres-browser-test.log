@@ -1,0 +1,5 @@
+
+> eredita-multiplayer@1.0.0 test:chevres
+> node tests/goat-farm-browser.test.js
+
+Chèvres : placement, naissances, achats, effectifs, abattage, 3 variantes, cache, 2D/3D et repli validés. {"errors":{},"models":{"chevre:petit":{"batches":2,"cachedCounts":[],"enclosureTriangles":1136,"animalTriangles":962},"chevre:moyen":{"batches":2,"cachedCounts":[],"enclosureTriangles":1356,"animalTriangles":962},"chevre:grand":{"batches":2,"cachedCounts":[],"enclosureTriangles":1356,"animalTriangles":962}}}

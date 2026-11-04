@@ -1,0 +1,18 @@
+{
+  "triangles": 10414,
+  "meshes_authoring": 235,
+  "materials": 2,
+  "bytes": 4398280,
+  "textures": [
+    1024,
+    1024
+  ],
+  "dimensions_three": [
+    2.82,
+    0.37,
+    4.85
+  ],
+  "runtime_batches_per_tile": 3,
+  "slot_clearance_radius": 0.44,
+  "note": "Fusion statique des d\u00e9cors au chargement ; aucun test sur casque physique effectu\u00e9."
+}

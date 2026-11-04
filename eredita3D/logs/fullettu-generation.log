@@ -1,0 +1,24 @@
+17:15:29 | INFO: Data are loaded, start creating Blender stuff
+17:15:29 | INFO: Blender create Mesh node tripo_64f2cad4_4fa0_4a49_86bd_ef30f84d6d9c
+17:15:29 | INFO: glTF import finished in 0.05s
+17:15:29 | INFO: Data are loaded, start creating Blender stuff
+17:15:29 | INFO: Blender create Mesh node tripo_1260ad3b_681e_40ea_8854_f15efbd4714a
+17:15:29 | INFO: glTF import finished in 0.01s
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+17:15:30 | INFO: Starting glTF 2.0 export
+17:15:30 | INFO: Extracting primitive: tripo_64f2cad4_4fa0_4a49_86bd_ef30f84d6d9c
+17:15:30 | INFO: Primitives created: 1
+17:15:30 | INFO: Extracting primitive: tripo_1260ad3b_681e_40ea_8854_f15efbd4714a
+17:15:30 | INFO: Primitives created: 1
+17:15:30 | INFO: Finished glTF 2.0 export in 0.45635366439819336 s
+00:03.744  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/fullettu_repos.png'
+00:06.081  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/fullettu_bond.png'
+00:08.411  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/fullettu_recolte.png'
+00:10.653  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/fullettu_main_dos.png'
+00:12.756  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/fullettu_mort.png'
+
+Info: Saved as "fullettu.blend"
+FULLETTU_VALIDATION {"sources": {"/Users/robin/Downloads/u fullettu 3d.glb": "edbe8329a6c5f9a1e311f614f5031c152c38e811c920df3f9904cb7f6810ffc1", "/Users/robin/Downloads/lantern fullettu 3d.glb": "6e1ea0b5119827236c4003f8ba696bd1580704869bfa3d387fc2e84f0e7e94d2"}, "triangles": 12866, "body_triangles": 9405, "lantern_source_triangles": 9891, "lantern_triangles": 3461, "bytes": 2397420, "meshes": 2, "materials": 2, "clips": ["Repos", "Bonds", "Recolte", "Mort"], "canonical_height": 1.8, "lantern_bone": "mixamorig:LeftHand", "poses": {"repos": {"right_hand": [-0.3924035429954529, -0.24555440247058868, 0.7217146754264832], "left_hand": [0.4185653030872345, -0.24246114492416382, 0.7496282458305359], "lantern": [0.44328585267066956, -0.26800793409347534, 0.2998282015323639]}, "bond": {"right_hand": [-0.39240357279777527, -0.27482736110687256, 0.8211092352867126], "left_hand": [0.4185652732849121, -0.2710542380809784, 0.8500614762306213], "lantern": [0.4432857930660248, -0.3078368008136749, 0.401040643453598]}, "recolte": {"right_hand": [-0.2800000011920929, -0.529999852180481, 0.8399999737739563], "left_hand": [0.4185652732849121, -0.24341921508312225, 0.7531107664108276], "lantern": [0.44328582286834717, -0.22393333911895752, 0.30300742387771606]}, "main_dos": {"right_hand": [-0.16000007092952728, 0.09999997168779373, 0.8899997472763062], "left_hand": [0.41851526498794556, -0.31356081366539, 0.7496282458305359], "lantern": [0.43826285004615784, -0.3431205749511719, 0.2998282015323639]}, "mort": {"right_hand": [-0.3924035429954529, -0.44478029012680054, -0.03779883310198784], "left_hand": [0.4185652434825897, -0.43882396817207336, 0.0683240219950676], "lantern": [0.4432857632637024, 0.007446736097335815, 0.006557941436767578]}}}
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit

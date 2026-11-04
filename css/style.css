@@ -77,9 +77,10 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .biome-choice strong { margin-top: 30px; font-family: Georgia, serif; font-size: 1.15rem; }
 .biome-choice span { margin-top: 2px; color: rgba(255,255,255,.76); font-size: .76rem; }
 .biome-choice::after { content: ""; position: absolute; inset: 0; opacity: .42; background: linear-gradient(145deg, transparent 30%, rgba(0,0,0,.72)); }
-.biome-choice.plaine { background: linear-gradient(135deg, #9cae5e, #53662e); }
-.biome-choice.montagne { background: linear-gradient(135deg, #8b8580, #3d403c); }
-.biome-choice.littoral { background: linear-gradient(135deg, #568e83 0 55%, #316f88 56%); }
+.biome-choice.plaine { background: linear-gradient(0deg, #15200ee8, #15200e18 85%), url("../assets/generated/terrain-plaine-card-v1.webp") center / cover, #53662e; }
+.biome-choice.montagne { background: linear-gradient(0deg, #171c1ce8, #171c1c18 85%), url("../assets/generated/terrain-montagne-card-v1.webp") center / cover, #55564e; }
+.biome-choice.littoral { background: linear-gradient(0deg, #132220e8, #13222018 85%), url("../assets/generated/terrain-littoral_rouge-card-v1.webp") center / cover, #316f88; }
+.biome-choice.littoral[data-player="blue"] { background-image: linear-gradient(0deg, #132220e8, #13222018 85%), url("../assets/generated/terrain-littoral_bleu-card-v1.webp"); }
 .choice-number { position: absolute !important; top: 12px; right: 13px; width: 25px; height: 25px; display: grid !important; place-items: center; border-radius: 50%; background: rgba(0,0,0,.28); }
 .setup-actions, .dialog-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 15px; }
 .setup-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 20px; padding: 17px 20px; border: 1px solid var(--line); border-radius: 15px; background: rgba(20,22,19,.75); }
@@ -163,10 +164,10 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .hp-track i { display: block; height: 100%; background: #e6d89a; }
 .region { position: relative; overflow: hidden; padding: 8px; }
 .region::before { content: ""; position: absolute; inset: 0; opacity: .82; background-position: center; background-size: cover; }
-.region.plaine::before { background-image: linear-gradient(#16201122, #16201144), url("../assets/generated/terrain-plaine.webp"); }
-.region.montagne::before { background-image: linear-gradient(#1116, #1112), url("../assets/generated/terrain-montagne.webp"); }
-.region.littoral.red::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral-rouge.webp"); }
-.region.littoral.blue::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral-bleu.webp"); }
+.region.plaine::before { background-image: linear-gradient(#16201122, #16201144), url("../assets/generated/terrain-plaine-v1.webp"); }
+.region.montagne::before { background-image: linear-gradient(#1113, #1112), url("../assets/generated/terrain-montagne-v1.webp"); }
+.region.littoral.red::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral_rouge-v1.webp"); }
+.region.littoral.blue::before { background-image: linear-gradient(#10202a22, #10202a44), url("../assets/generated/terrain-littoral_bleu-v1.webp"); }
 .region-name { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 5px; font-size: clamp(.58rem, 1vw, .72rem); font-weight: 850; text-shadow: 0 1px 4px #000; }
 .terrain-building-layer { position: absolute; z-index: 2; left: 4px; right: 4px; display: flex; align-items: end; justify-content: center; gap: 1px; height: clamp(46px, 8vh, 70px); pointer-events: none; filter: drop-shadow(0 4px 4px #0009); }
 .region.red .terrain-building-layer { top: 18px; }
@@ -206,13 +207,25 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .content-icon { font-size: clamp(1rem, 2vw, 1.5rem); }
 .slot.crop .content-icon, .slot.livestock .content-icon { width: 32px; height: 32px; display: block; background-repeat: no-repeat; font-size: 0; filter: drop-shadow(0 2px 2px #0008); }
 .slot.crop .content-icon { background-image: url("../assets/generated/crops-atlas.webp"); background-size: 300% 100%; }
-.slot.crop-chataignier .content-icon { background-position: 0 0; }
-.slot.crop-ble .content-icon { background-position: 50% 0; }
-.slot.crop-vignoble .content-icon { background-position: 100% 0; }
+.slot.crop-chataignier .content-icon, .crop-preview-chataignier { background-image: url("../assets/generated/crop-chataignier-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.slot.crop-chataignier.crop-size-moyen .content-icon, .crop-preview-chataignier.crop-size-moyen { background-image: url("../assets/generated/crop-chataignier-moyen-v1.webp"); }
+.slot.crop-chataignier.crop-size-grand .content-icon, .crop-preview-chataignier.crop-size-grand { background-image: url("../assets/generated/crop-chataignier-grand-v1.webp"); }
+.slot.crop-ble .content-icon, .crop-preview-ble { background-image: url("../assets/generated/crop-ble-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.crop-preview-ble, .crop-preview-chataignier, .crop-preview-vignoble { display: inline-block; width: 30px; height: 30px; flex-shrink: 0; vertical-align: middle; }
+.slot.crop-vignoble .content-icon, .crop-preview-vignoble { background-image: url("../assets/generated/crop-vignoble-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.slot.crop-vignoble.crop-size-moyen .content-icon, .crop-preview-vignoble.crop-size-moyen { background-image: url("../assets/generated/crop-vignoble-moyen-v1.webp"); }
+.slot.crop-vignoble.crop-size-grand .content-icon, .crop-preview-vignoble.crop-size-grand { background-image: url("../assets/generated/crop-vignoble-grand-v1.webp"); }
 .slot.livestock .content-icon { background-image: url("../assets/generated/livestock-atlas.webp"); background-size: 300% 100%; }
-.slot.livestock-chevre .content-icon { background-position: 0 0; }
-.slot.livestock-cochon .content-icon { background-position: 50% 0; }
-.slot.livestock-vache .content-icon { background-position: 100% 0; }
+.slot.livestock-chevre .content-icon, .herd-preview-chevre { background-image: url("../assets/generated/herd-chevre-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.slot.livestock-chevre.herd-size-moyen .content-icon, .herd-preview-chevre.herd-size-moyen { background-image: url("../assets/generated/herd-chevre-moyen-v1.webp"); }
+.slot.livestock-chevre.herd-size-grand .content-icon, .herd-preview-chevre.herd-size-grand { background-image: url("../assets/generated/herd-chevre-grand-v1.webp"); }
+.herd-preview-chevre, .herd-preview-cochon, .herd-preview-vache { display: inline-block; width: 30px; height: 30px; flex-shrink: 0; vertical-align: middle; }
+.slot.livestock-cochon .content-icon, .herd-preview-cochon { background-image: url("../assets/generated/herd-cochon-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.slot.livestock-cochon.herd-size-moyen .content-icon, .herd-preview-cochon.herd-size-moyen { background-image: url("../assets/generated/herd-cochon-moyen-v1.webp"); }
+.slot.livestock-cochon.herd-size-grand .content-icon, .herd-preview-cochon.herd-size-grand { background-image: url("../assets/generated/herd-cochon-grand-v1.webp"); }
+.slot.livestock-vache .content-icon, .herd-preview-vache { background-image: url("../assets/generated/herd-vache-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.slot.livestock-vache.herd-size-moyen .content-icon, .herd-preview-vache.herd-size-moyen { background-image: url("../assets/generated/herd-vache-moyen-v1.webp"); }
+.slot.livestock-vache.herd-size-grand .content-icon, .herd-preview-vache.herd-size-grand { background-image: url("../assets/generated/herd-vache-grand-v1.webp"); }
 .content-name { max-width: 100%; overflow: hidden; font-size: clamp(.48rem, .8vw, .65rem); font-weight: 850; text-overflow: ellipsis; }
 .content-detail { color: rgba(255,255,255,.67); font-size: .48rem; }
 @keyframes slot-glow { to { box-shadow: 0 0 0 5px rgba(223,184,94,.18), inset 0 0 12px rgba(223,184,94,.2); } }
@@ -240,7 +253,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .unit.on-water .unit-body { transform: scale(.72) translateY(-4px); border-color: #dff8ff; }
 .unit.selected-resident .unit-body { border-color: #ffe34d; }
 .unit-body, .resident-avatar { background-image: url("../assets/generated/characters-atlas.webp") !important; background-size: 400% 200% !important; background-repeat: no-repeat !important; font-size: 0 !important; }
-.profession-habitant { background-position: 0 0 !important; }
+.profession-habitant { background-image: url("../assets/generated/habitant-v1.webp") !important; background-size: contain !important; background-position: center !important; }
 .profession-guerrier { background-position: 0 100% !important; }
 .profession-ravageur { background-position: 66.666% 100% !important; }
 .profession-agriculteur { background-position: 33.333% 0 !important; }
@@ -360,8 +373,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .resident-purchase select { min-width: 0; min-height: 32px; border: 1px solid var(--line); border-radius: 6px; background: #33372f; color: var(--ink); }
 .buy-resident-button { width: 100%; margin-top: 7px; }
 .management-card .upgrade-button { width: 100%; margin-top: 8px; }
-.upgrade-resource { display: block; margin: 10px 0; font-size: .7rem; color: var(--muted); }
-.upgrade-resource select { display: block; width: 100%; margin-top: 5px; min-height: 36px; border: 1px solid var(--line); border-radius: 7px; background: #33372f; color: var(--ink); }
+.building-upgrade-resource { display: block; width: 100%; margin-top: 8px; min-height: 36px; border: 1px solid var(--line); border-radius: 7px; background: #33372f; color: var(--ink); font-size: .7rem; }
 .management-column .resident-card small { white-space: normal; font-size: .65rem; }
 .building-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
 .building-slot { min-height: 51px; display: grid; place-items: center; padding: 5px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); text-align: center; font-size: .68rem; }
@@ -392,6 +404,19 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .enclosure-control .slaughter-button { min-height: 29px; font-size: .59rem; }
 .enclosure-control .slaughter-button span { display: inline; }
 .enclosure-control .slaughter-button:disabled { cursor: not-allowed; opacity: .38; }
+.enclosure-control.slot-management { display: block; padding: 9px 6px; }
+.slot-management > strong, .slot-management > small { margin-bottom: 6px; }
+.slot-actions { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: flex-start; gap: 7px; }
+.is-preparing .slot-actions > :last-child { margin-left: auto; }
+.remove-slot-button, .crop-upgrade-button { min-height: 38px; border: 1px solid var(--gold); border-radius: 7px; padding: 6px 8px; background: #383127; color: #ffe7af; cursor: pointer; font-size: .65rem; font-weight: 800; }
+.remove-slot-button { border-color: #829a76; background: #283824; color: #e3efdb; }
+.slot-management button small, .placement-option small { display: block; margin-top: 3px; font-size: .55rem; font-weight: 500; }
+.slot-management button:disabled { opacity: .4; cursor: not-allowed; }
+.slaughter-controls { display: flex; gap: 5px; align-items: end; max-width: 100%; }
+.slaughter-controls label { width: 52px; flex-shrink: 0; }
+.slaughter-controls .slaughter-button { padding: 4px 6px; }
+.crop-replant { margin-top: 8px; font-size: .64rem; color: var(--muted); }
+.crop-replant summary { cursor: pointer; }
 .section-help { margin: -2px 0 9px; color: var(--muted); font-size: .7rem; line-height: 1.35; }
 .crop-button.active, .livestock-button.active { border-color: var(--gold); background: rgba(152,116,46,.48); box-shadow: 0 0 0 2px rgba(223,184,94,.12); }
 .cancel-placement { width: 100%; margin-top: 8px; }

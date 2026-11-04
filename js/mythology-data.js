@@ -44,7 +44,7 @@
       'Maudit une région ennemie pendant 2 minutes : son rendement est divisé par deux.',
       { durationSeconds: param('stregaDuration'), productionMultiplier: param('stregaMultiplier') }, '#42b58a',
       { aliases: ['A Stregha'], targetMode: 'enemy-region',
-        motion: { src: 'assets/mythology/a-stregha-motion.mp4', type: 'video/mp4', width: 1280, height: 720, frameRate: 24,
+        motion: { src: 'assets/mythology/a-stregha-motion.mp4?v=8cb577fb', type: 'video/mp4', width: 1280, height: 720, frameRate: 24,
           flashColor: '#42b58a' },
         lore: { subtitle: "La sorcière corse", paragraphs: [
           "A Stregha est une figure féminine associée à la sorcellerie dans les traditions corses. Elle incarne les craintes liées aux maléfices, aux maladies inexpliquées et aux influences surnaturelles.",
@@ -98,7 +98,9 @@
       ] }),
     entry('l-orcu', "L’Orcu", 'invocation',
       'Invoque L’Orcu dans la région choisie : 200 PV, 30 dégâts et un déplacement extrêmement lent.',
-      { hp: param('orcuHp'), damage: param('orcuDamage'), speed: param('orcuSpeed') }, '#c99554', { aliases: ["L'Orcu"], targetMode: 'any-region', shortDescription: '200 PV · 30 dégâts · déplacement extrêmement lent.', lore: { subtitle: "L'ogre corse", paragraphs: [
+      { hp: param('orcuHp'), damage: param('orcuDamage'), speed: param('orcuSpeed') }, '#c99554', { aliases: ["L'Orcu"], targetMode: 'any-region',
+        motion: { src: 'assets/mythology/l-orcu-motion.mp4', type: 'video/mp4', width: 1280, height: 720, frameRate: 24 },
+        shortDescription: '200 PV · 30 dégâts · déplacement extrêmement lent.', lore: { subtitle: "L'ogre corse", paragraphs: [
           "L'Orcu est une créature ancienne du folklore corse, dont les caractéristiques sont plus complexes que celles d'un simple ogre.",
           "Selon les récits, il peut prendre l'apparence d'un géant, d'un être anthropomorphe ou même d'une créature de petite taille. Il est associé aux lieux mystérieux, aux dolmens, aux sources et aux frontières entre le monde des vivants et celui des morts.",
           "Dans les Agriate, les légendes évoquent un couple d'Orchi qui terrorisait les bergers. Ces créatures sont également associées à la transmission du secret de fabrication du brocciu.",
@@ -123,8 +125,8 @@
         'Une aura violette et dorée permet de reconnaître ces habitants. Le sort ne renforce pas la population déjà présente et ne concerne pas toutes les naissances suivantes. Cliquez sur le terrain pour préparer cette bénédiction dans vos villages.'
       ] }),
     entry('u-surpatore', 'U Surpatore', 'invocation',
-      'Invoque un sanglier qui, à sa mort, devient U Surpatore : un vampire rapide de 25 PV et 5 dégâts.',
-      { vampireHp: param('vampireHp'), vampireDamage: param('vampireDamage'), vampireSpeed: param('vampireSpeed') }, '#d44351', { targetMode: 'allied-region', shortDescription: 'Un sanglier devient à sa mort un vampire rapide · 25 PV, 5 dégâts.', lore: { subtitle: "Le vampire corse", paragraphs: [
+      'Invoque un sanglier qui, à sa mort, devient U Surpatore : un vampire rapide de 40 PV et 11 dégâts.',
+      { vampireHp: param('vampireHp'), vampireDamage: param('vampireDamage'), vampireSpeed: param('vampireSpeed') }, '#d44351', { targetMode: 'allied-region', shortDescription: 'Un sanglier devient à sa mort un vampire rapide · 40 PV, 11 dégâts.', lore: { subtitle: "Le vampire corse", paragraphs: [
           "U Surpatore, également appelé U Surpadori, est l'une des créatures les plus inquiétantes du folklore corse.",
           "Il s'agit d'un être surnaturel, généralement masculin, qui s'introduit dans les habitations après minuit afin de s'attaquer aux jeunes enfants.",
           "Selon la tradition, il entaille le petit doigt de ses victimes pour en aspirer le sang. Cette caractéristique le rapproche des vampires présents dans d'autres mythologies européennes.",
@@ -133,7 +135,7 @@
         ] },
         menuDescription: [
         'U Surpatore apparaît d’abord sous la forme d’un sanglier dans la région alliée choisie. Lorsque le sanglier meurt, il laisse place à sa seconde forme : un vampire rapide.',
-        'Le vampire possède 25 PV et inflige 5 dégâts. Les deux formes appartiennent à la même invocation ; la mort du vampire met fin à sa présence sur le terrain.'
+        'Le vampire possède 40 PV et inflige 11 dégâts. Les deux formes appartiennent à la même invocation ; la mort du vampire met fin à sa présence sur le terrain.'
       ] }),
     entry('u-lupu-mannaru', 'U Lupu Mannaru', 'invocation',
       'Transforme un habitant sans tâche ni métier, ou le prochain à naître, en loup-garou : 60 PV, 20 dégâts et les propriétés du ravageur. Il attaque uniquement les structures.',

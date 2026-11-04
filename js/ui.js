@@ -117,13 +117,22 @@
       }
       const crop = event.target.closest("[data-place-crop]");
       if (crop) {
-        selectedSlot = null;
         controller.placeCrop(crop.dataset.placeCrop, Number(crop.dataset.slotIndex));
       }
       const livestock = event.target.closest("[data-place-livestock]");
       if (livestock) {
-        selectedSlot = null;
         controller.placeLivestock(livestock.dataset.placeLivestock, Number(livestock.dataset.slotIndex));
+      }
+      const cropUpgrade = event.target.closest("[data-upgrade-crop]");
+      if (cropUpgrade) controller.upgradeCrop(Number(cropUpgrade.dataset.upgradeCrop));
+      const removal = event.target.closest("[data-remove-slot]");
+      if (removal) controller.removeSlot(Number(removal.dataset.removeSlot));
+      const slaughterAll = event.target.closest("[data-slaughter-all]");
+      if (slaughterAll) {
+        const index = Number(slaughterAll.dataset.slaughterAll);
+        const selection = currentState.selectedVillage;
+        const content = currentState.players[selection.playerId]?.villages[selection.lane]?.slots[index]?.content;
+        if (content?.category === "livestock") controller.slaughter(index, content.count);
       }
       const slaughter = event.target.closest("[data-slaughter]");
       if (slaughter) {
@@ -158,7 +167,13 @@
       if (specialSlaughter) controller.slaughterSpecialAnimal(specialSlaughter.dataset.slaughterSpecial);
     }));
     elements.residents.addEventListener("change", (event) => {
-      if (event.target.matches("[data-upgrade-resource]")) upgradeResource = event.target.value;
+      if (event.target.matches("[data-upgrade-resource]")) {
+        upgradeResource = event.target.value;
+        elements.residents.querySelectorAll("[data-upgrade-resource]").forEach((select) => { select.value = upgradeResource; });
+        const { playerId, lane } = currentState.selectedVillage;
+        const player = currentState.players[playerId];
+        updateTradeAndUpgrades(currentState, player, player.villages[lane]);
+      }
       if (event.target.matches("[data-purchase-resource]")) purchaseResource = event.target.value;
     });
     elements.shop.addEventListener("change", (event) => {
@@ -411,13 +426,17 @@
       let content = `<span class="slot-number">${index + 1}</span>`;
       let contentClass = "";
       if (crop) {
-        title = `${crop.label} · ${Math.ceil(slot.content.hp)}/${slot.content.maxHp} PV`;
-        content = `<span class="content-icon">${crop.icon}</span><span class="content-name">${crop.shortLabel}</span><span class="content-detail"><b data-crop-yield>${E.Economy.cropCount(village, slot.content.type)}</b> / retour · <span data-crop-hp>${Math.ceil(slot.content.hp)}</span> PV</span>`;
+        title = `${crop.label} · Niveau ${E.Crops.levelOf(slot.content)} · ${Math.ceil(slot.content.hp)}/${slot.content.maxHp} PV`;
+        content = `<span class="content-icon">${crop.icon}</span><span class="content-name">${crop.shortLabel} · N${E.Crops.levelOf(slot.content)}</span><span class="content-detail"><b data-crop-yield>${E.Economy.cropYield(village, slot.content.type)}</b> / retour · <span data-crop-hp>${Math.ceil(slot.content.hp)}</span> PV</span>`;
         contentClass = `occupied crop crop-${slot.content.type}`;
+        const variant = E.CropModels?.variantFor(slot.content.type, slot.content);
+        if (variant) contentClass += ` crop-size-${variant.id}`;
       } else if (herd) {
         title = `${herd.label} · ${slot.content.count} animaux · ${Math.ceil(slot.content.hp)} PV`;
         content = `<span class="content-icon">${herd.icon}</span><span class="content-name">${herd.shortLabel}</span><span class="content-detail"><b data-herd-count>${slot.content.count}</b> animaux · <span data-herd-hp>${Math.ceil(slot.content.hp)}</span> PV</span>`;
         contentClass = `occupied livestock livestock-${slot.content.type}`;
+        const variant = E.LivestockModels?.variantFor(slot.content.type, slot.content.count);
+        if (variant) contentClass += ` herd-size-${variant.id}`;
       }
       return `<div class="slot ${slot.type} ${contentClass}" data-slot-visual data-player="${playerId}" data-lane="${village.lane}" data-slot-index="${index}" title="${title}">${content}</div>`;
     }).join("");
@@ -503,7 +522,19 @@
   }
 
   function terrainSignature(state) {
-    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${E.MythologyEffects?.terrainVisualKey(village) || ""}:${village.burnUntil > state.elapsed}:${village.curseUntil > state.elapsed}:${vision(state, village).fraction}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}` : "-").join(",")}`)).join("|");
+    return Object.values(state.players).flatMap((player) => player.villages.map((village) => `${village.id}:${village.destroyed}:${village.level}:${E.MythologyEffects?.terrainVisualKey(village) || ""}:${village.burnUntil > state.elapsed}:${village.curseUntil > state.elapsed}:${vision(state, village).fraction}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}:${slot.content.level || 1}:${slot.content.hp > 0}:${slot.content.category === 'livestock' ? E.LivestockModels?.variantFor(slot.content.type, slot.content.count)?.id || '' : ''}` : "-").join(",")}`)).join("|");
+  }
+
+  function livestockPreview(type) {
+    const variant = E.LivestockModels?.variantFor(type, E.Config.startingLivestockCount);
+    return variant ? `<span class="herd-preview-${type} herd-size-${variant.id}" aria-hidden="true"></span>` : E.Livestock.get(type).icon;
+  }
+
+  function cropPreview(type) {
+    if (type === 'ble') return '<span class="crop-preview-ble" aria-hidden="true"></span>';
+    const variant = E.CropModels?.variantFor(type);
+    if (variant) return `<span class="crop-preview-${type} crop-size-${variant.id}" title="${variant.label}" aria-hidden="true"></span>`;
+    return E.Crops.get(type).icon;
   }
 
   function animalAppearance(type, className) {
@@ -521,29 +552,46 @@
     return [E.Config.equipment.tools[resident.tool]?.label, E.Config.equipment.armors[resident.armor]?.label, resident.donkey ? "Âne compagnon" : null].filter(Boolean).join(" · ") || "Sans outil ni armure";
   }
 
+  function removalButton(state, player, village, slot, index) {
+    if (state.phase !== "running" || !(state.preparationRemaining > 0)) return "";
+    const crop = slot.content?.category === "crop";
+    const quote = (crop ? E.Crops : E.Livestock).removalQuote(state, player.id, village.lane, index);
+    if (!quote) return "";
+    return `<button type="button" class="remove-slot-button" data-remove-slot="${index}" ${quote.allowed ? "" : "disabled"}>${crop ? "Vendre le terrain" : "Retirer l’élevage"}<small>${crop ? `+${quote.refund} or` : "Gratuit · sans viande"}</small></button>`;
+  }
+
   function renderSlotPicker(state, player, village) {
     const activeIndex = selectedSlot?.playerId === player.id && selectedSlot.lane === village.lane
       ? selectedSlot.index : null;
+    const preparing = state.preparationRemaining > 0;
     const buttons = Array.from({ length: 4 }, (_, index) => {
       const slot = village.slots[index];
       const content = slot?.content;
       const definition = content && (E.Config.crops[content.type] || E.Config.livestock[content.type]);
       const status = !slot ? "Indisponible" : content?.category === "livestock"
-        ? `${definition.icon} ×${content.count}` : definition?.shortLabel || (slot.type === "animal" ? "Élevage libre" : "Libre");
+        ? `${definition.icon} ×${content.count}` : content?.category === "crop"
+          ? `N${E.Crops.levelOf(content)} · ${definition.shortLabel}` : slot.type === "animal" ? "Élevage libre" : "Libre";
       return `<button type="button" class="placement-slot ${activeIndex === index ? "selected" : ""}" data-select-slot="${index}" aria-expanded="${activeIndex === index}" aria-controls="slot-options" ${!slot ? "disabled" : ""}><strong>Slot ${index + 1}</strong><small>${status}</small></button>`;
     }).join("");
     const slot = activeIndex === null ? null : village.slots[activeIndex];
+    const cropOptions = slot?.type === "free" ? Object.entries(E.Config.crops)
+      .filter(([type]) => E.Crops.isAllowedInBiome(type, village.biome) && type !== slot.content?.type)
+      .map(([type, crop]) => `<button type="button" class="placement-option" data-place-crop="${type}" data-slot-index="${activeIndex}" ${!E.Crops.canPlace(state, player.id, village.lane, activeIndex, type) ? "disabled" : ""}>${cropPreview(type)}<span>${crop.shortLabel}<small>Niveau 1 · ${E.Config.cropLevels[1].gold} or</small></span></button>`) : [];
     let choices = "";
-    if (slot?.content?.category === "livestock") {
+    if (slot?.content?.category === "crop") {
+      const content = slot.content, definition = E.Crops.get(content.type);
+      const quote = E.Crops.upgradeQuote(state, player.id, village.lane, activeIndex);
+      const next = E.Config.cropLevels[quote.nextLevel];
+      choices = `<div class="enclosure-control slot-management ${preparing ? "is-preparing" : ""}"><strong>${definition.label} · Niveau ${E.Crops.levelOf(content)}</strong><small>${Math.ceil(content.hp)} PV · Rendement ×${E.Crops.yieldOf(content)}</small><div class="slot-actions">${removalButton(state, player, village, slot, activeIndex)}<button type="button" class="crop-upgrade-button" data-upgrade-crop="${activeIndex}" ${quote.allowed ? "" : "disabled"} title="${quote.reason || "Améliorer le rendement"}">${next ? `Améliorer → N${quote.nextLevel}<small>${quote.gold} or · Rendement ×${quote.yield}</small>` : "Niveau 3 · Maximum"}</button></div></div>`;
+      if (cropOptions.length) choices += `<details class="crop-replant"><summary>Changer de culture · ${E.Config.cropLevels[1].gold} or</summary><p class="section-help">La nouvelle culture repart au niveau 1. Ce remplacement ne rembourse pas l’ancienne culture.</p><div class="placement-options">${cropOptions.join("")}</div></details>`;
+    } else if (slot?.content?.category === "livestock") {
       const animal = E.Livestock.get(slot.content.type);
-      choices = `<div class="enclosure-control slaughter-card" data-meat="${animal.meatAtDeath}"><strong>${animal.icon} ${animal.shortLabel} · ${slot.content.count}</strong><small class="harassment-warning" data-herd-harassment="${activeIndex}"></small><label><span>À abattre</span><input type="number" min="1" max="${slot.content.count}" value="1" data-slaughter-quantity></label><button type="button" class="slaughter-button" data-slaughter="${activeIndex}" ${state.phase !== "running" || state.paused || village.destroyed ? "disabled" : ""}>Abattre <span data-slaughter-preview>+${animal.meatAtDeath} viande</span></button></div>`;
+      const locked = state.phase !== "running" || state.paused || village.destroyed;
+      choices = `<div class="enclosure-control slaughter-card slot-management ${preparing ? "is-preparing" : ""}" data-meat="${animal.meatAtDeath}"><strong>${animal.icon} ${animal.shortLabel} · ${slot.content.count}</strong><small class="harassment-warning" data-herd-harassment="${activeIndex}"></small><div class="slot-actions">${removalButton(state, player, village, slot, activeIndex)}<div class="slaughter-controls"><label><span>À abattre</span><input type="number" min="1" max="${slot.content.count}" value="1" data-slaughter-quantity></label><button type="button" class="slaughter-button" data-slaughter="${activeIndex}" ${locked ? "disabled" : ""}>Abattre <span data-slaughter-preview>+${animal.meatAtDeath} viande</span></button><button type="button" class="slaughter-button" data-slaughter-all="${activeIndex}" ${locked ? "disabled" : ""}>Tout abattre<small>+${slot.content.count * animal.meatAtDeath} viande</small></button></div></div></div>`;
     } else if (slot) {
-      const crops = slot.type === "free" ? Object.entries(E.Config.crops)
-        .filter(([type]) => E.Crops.isAllowedInBiome(type, village.biome))
-        .map(([type, crop]) => `<button type="button" class="placement-option" data-place-crop="${type}" data-slot-index="${activeIndex}" ${!E.Crops.canPlace(state, player.id, village.lane, activeIndex, type) ? "disabled" : ""}>${crop.icon} ${crop.shortLabel}</button>`) : [];
-      const livestock = !slot.content ? Object.entries(E.Config.livestock)
-        .map(([type, animal]) => `<button type="button" class="placement-option" data-place-livestock="${type}" data-slot-index="${activeIndex}" ${!E.Livestock.canPlace(state, player.id, village.lane, activeIndex, type) ? "disabled" : ""}>${animal.icon} ${animal.shortLabel}</button>`) : [];
-      choices = `<div class="placement-options">${[...crops, ...livestock].join("")}</div>`;
+      const livestock = Object.entries(E.Config.livestock)
+        .map(([type, animal]) => `<button type="button" class="placement-option" data-place-livestock="${type}" data-slot-index="${activeIndex}" ${!E.Livestock.canPlace(state, player.id, village.lane, activeIndex, type) ? "disabled" : ""}>${livestockPreview(type)} ${animal.shortLabel}</button>`);
+      choices = `<div class="placement-options">${[...cropOptions, ...livestock].join("")}</div>`;
     }
     return `<section class="inspector-section slot-section" aria-label="Emplacements du village"><div class="placement-slots">${buttons}</div><div id="slot-options" class="slot-options" ${!slot ? "hidden" : ""}>${slot ? `<strong>Slot ${activeIndex + 1} · ${E.Biomes.labels[village.biome]}</strong>${choices}` : ""}</div></section>`;
   }
@@ -566,7 +614,7 @@
       elements.residents.innerHTML = "";
       return;
     }
-    elements.inspector.dataset.herdSignature = herdSignature(village);
+    elements.inspector.dataset.herdSignature = `${herdSignature(village)}:${state.preparationRemaining > 0}`;
     const known = vision(state, village);
     if (!known.all && player.id !== viewerId(state)) {
       elements.inspector.innerHTML = `<h3>Village adverse · informations cachées</h3><p class="section-help">Une Tour génoise révèle une partie de la région. U Mazzeru révèle les habitants offensifs ; l’Œil de Sainte-Lucie révèle les Littoraux.</p>${known.people || known.offensive ? `<p>${village.residents.filter(person => E.MythologyEffects.residentVisible(state, viewerId(state), village, person)).map(person => E.Config.professions[person.profession || "habitant"].label).join(", ") || "Aucun habitant révélé"}</p>` : ""}`;
@@ -626,7 +674,6 @@
           <div class="resident-purchase"><strong>Nouvel habitant</strong><small>50 or + 50 ressources au choix</small><label>Ressource<select data-purchase-resource>${E.Config.resources.map((key) => `<option value="${key}" ${key === purchaseResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select></label><button type="button" class="button buy-resident-button" data-buy-resident>Acheter un habitant</button></div>
           <div class="management-card building-card building-village"><strong>Village T${village.level}</strong><small>${village.populationMax} habitants maximum</small><small>Riposte : ${E.Config.combat.villageRetaliationDamagePerSecond} dégâts/s par assaillant</small>${upgradeButton(state, player, village, "village")}</div>
         </div>
-        <label class="upgrade-resource">Ressource pour améliorer<select data-upgrade-resource>${E.Config.resources.map((key) => `<option value="${key}" ${key === upgradeResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select></label>
         <div class="built-buildings">${buildings}</div>
         <p class="section-help">${village.buildings.length}/${E.Config.building.slots} bâtiments</p>
         <div class="construction-list">${E.Config.building.types.map((type) => `<button class="button" type="button" data-build="${type}" ${cannotBuy ? "disabled" : ""}>+ ${buildingLabels[type]}<small>${E.Config.building.T1.gold} or · +75 PV</small></button>`).join("")}</div>
@@ -642,7 +689,8 @@
   function upgradeButton(state, player, village, index) {
     const quote = E.Buildings.upgradeQuote(state, player.id, village.lane, index, upgradeResource);
     if (!quote) return '<small>Niveau maximum · T3</small>';
-    return `<button type="button" class="upgrade-button" data-upgrade="${index}" ${quote.allowed ? "" : "disabled"}>Améliorer → T${quote.level}<small data-upgrade-cost></small></button>`;
+    const resourceChoice = index === "village" ? "" : `<select class="building-upgrade-resource" data-upgrade-resource aria-label="Ressource utilisée pour améliorer ce bâtiment">${E.Config.resources.map((key) => `<option value="${key}" ${key === upgradeResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select>`;
+    return `${resourceChoice}<button type="button" class="upgrade-button" data-upgrade="${index}" ${quote.allowed ? "" : "disabled"}>Améliorer → T${quote.level}<small data-upgrade-cost></small></button>`;
   }
 
   function updateTradeAndUpgrades(state, player, village) {
@@ -686,10 +734,10 @@
           if (slot.content?.category === "crop") {
             const visual = elements.columns.querySelector(`[data-slot-visual][data-player="${player.id}"][data-lane="${village.lane}"][data-slot-index="${index}"]`);
             const yieldLabel = visual?.querySelector("[data-crop-yield]");
-            if (yieldLabel) yieldLabel.textContent = E.Economy.cropCount(village, slot.content.type);
+            if (yieldLabel) yieldLabel.textContent = E.Economy.cropYield(village, slot.content.type);
             const hp = visual?.querySelector("[data-crop-hp]");
             if (hp) hp.textContent = Math.ceil(slot.content.hp);
-            if (visual) visual.title = `${E.Crops.get(slot.content.type).label} · ${Math.ceil(slot.content.hp)}/${slot.content.maxHp} PV`;
+            if (visual) visual.title = `${E.Crops.get(slot.content.type).label} · Niveau ${E.Crops.levelOf(slot.content)} · ${Math.ceil(slot.content.hp)}/${slot.content.maxHp} PV`;
             return;
           }
           if (!slot.content || slot.content.category !== "livestock") return;
@@ -699,6 +747,7 @@
           const hp = slotButton.querySelector("[data-herd-hp]");
           if (count) count.textContent = slot.content.count;
           if (hp) hp.textContent = Math.ceil(slot.content.hp);
+          slotButton.title = `${E.Livestock.get(slot.content.type).label} · ${slot.content.count} animaux · ${Math.ceil(slot.content.hp)} PV`;
         });
       });
     });
@@ -715,7 +764,7 @@
       if (elements.inspector.dataset.vision !== visibility) { elements.inspector.dataset.vision = visibility; renderInspector(state); }
       if (!known.all) return;
     }
-    if (elements.inspector.dataset.herdSignature !== herdSignature(village)) {
+    if (elements.inspector.dataset.herdSignature !== `${herdSignature(village)}:${state.preparationRemaining > 0}`) {
       renderInspector(state);
       return;
     }
@@ -748,6 +797,16 @@
     });
     elements.inspector.querySelectorAll("[data-place-livestock]").forEach((button) => {
       button.disabled = !E.Livestock.canPlace(state, player.id, village.lane, Number(button.dataset.slotIndex), button.dataset.placeLivestock);
+    });
+    elements.inspector.querySelectorAll("[data-upgrade-crop]").forEach(button => {
+      button.disabled = !E.Crops.upgradeQuote(state, player.id, village.lane, Number(button.dataset.upgradeCrop))?.allowed;
+    });
+    elements.inspector.querySelectorAll("[data-remove-slot]").forEach(button => {
+      const index = Number(button.dataset.removeSlot), slot = village.slots[index];
+      button.disabled = !(slot?.content?.category === "crop" ? E.Crops : E.Livestock).removalQuote(state, player.id, village.lane, index)?.allowed;
+    });
+    elements.inspector.querySelectorAll("[data-slaughter], [data-slaughter-all]").forEach(button => {
+      button.disabled = state.phase !== "running" || state.paused || village.destroyed;
     });
     elements.inspector.querySelectorAll("[data-herd-harassment]").forEach((label) => {
       const effect = E.Animals.harassment(state, village, Number(label.dataset.herdHarassment));
@@ -980,7 +1039,7 @@
   }
 
   function herdSignature(village) {
-    return village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}:${slot.content.count || 0}` : "-").join("|");
+    return village.slots.map((slot) => slot.content ? `${slot.content.category}:${slot.content.type}:${slot.content.count || 0}:${slot.content.level || 1}:${slot.content.investedGold || 0}` : "-").join("|");
   }
 
   function farmerPhaseLabel(resident) {

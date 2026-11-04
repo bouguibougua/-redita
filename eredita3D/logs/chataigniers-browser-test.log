@@ -1,0 +1,5 @@
+
+> eredita-multiplayer@1.0.0 test:chataigniers
+> node tests/chestnut-browser.test.js
+
+Châtaigniers : 3 variantes, transitions 1/2/3/4 plantations, retrait, 2D/3D, cache et biomes validés. {"errors":{},"models":{"ble":{"batches":2,"triangles":4420},"chataignier:petit":{"batches":2,"triangles":3484},"chataignier:moyen":{"batches":2,"triangles":5512},"chataignier:grand":{"batches":2,"triangles":7540}}}

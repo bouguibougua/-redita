@@ -1,0 +1,21 @@
+14:43:37 | INFO: Data are loaded, start creating Blender stuff
+14:43:37 | INFO: Blender create Mesh node b2fadf46_bcd1_442b_96ef_67e8f8f57175
+14:43:37 | INFO: glTF import finished in 0.05s
+INFO Draco mesh compression is available, use library at /Applications/Blender.app/Contents/Resources/5.1/scripts/addons_core/io_scene_gltf2/libextern_draco.dylib
+14:43:37 | INFO: Starting glTF 2.0 export
+14:43:37 | INFO: Extracting primitive: b2fadf46_bcd1_442b_96ef_67e8f8f57175
+14:43:37 | INFO: Primitives created: 1
+14:43:38 | INFO: Finished glTF 2.0 export in 0.5952990055084229 s
+00:04.067  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/surpatore_repos.png'
+00:06.573  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/surpatore_marche.png'
+00:09.864  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/surpatore_griffe_haute.png'
+00:12.760  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/surpatore_attaque.png'
+00:15.627  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/surpatore_mort.png'
+00:20.728  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/surpatore_bouche_fermee.png'
+00:28.906  render           | Saved: '/Users/robin/-redita/-redita/eredita3D/previews/surpatore_bouche_ouverte.png'
+
+Info: Saved as "surpatore_vampire.blend"
+SURPATORE_VALIDATION {"source": "/Users/robin/Downloads/fantasy vampire 3d model.glb", "source_sha256": "73ad1f83d37afaf31a717a3d0c9a605ed02a6c8e2755207e35451f515c42aabc", "triangles": 8156, "bytes": 1910776, "meshes": 1, "materials": 1, "texture_size": 2048, "clips": ["Repos", "Marche", "Griffe", "Mort"], "canonical_height": 1.8, "jaw_vertices": 420, "jaw_open_angle": 0.46, "poses": {"repos": {"hand": [-0.4004806876182556, 0.15310217440128326, 0.9942142367362976], "jaw_angle": 0.0}, "marche": {"hand": [-0.4089941084384918, 0.2065654844045639, 1.0347269773483276], "jaw_angle": 0.0}, "griffe_haute": {"hand": [-0.35999998450279236, -0.14000003039836884, 1.690000295639038], "jaw_angle": 0.4345182180404663}, "attaque": {"hand": [0.03999997675418854, -0.28999993205070496, 1.2500001192092896], "jaw_angle": 0.4599991738796234}, "mort": {"hand": [-0.4004806876182556, -0.21776942908763885, 0.5460638403892517], "jaw_angle": 0.0}}}
+Blender 5.1.1 (hash b70da489d7f4 built 2026-04-14 01:46:23)
+
+Blender quit
