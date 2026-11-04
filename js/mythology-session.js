@@ -35,6 +35,10 @@
     const id = player(state);
     return online() ? privateView && privateView.epoch === state.reinforcementEpoch && privateView.playerId === id ? privateView : null : localAuthority?.view(id) || null;
   }
+  function getPublicSummary(state, playerId) {
+    const current = online() ? privateView?.epoch === state.reinforcementEpoch ? privateView : null : null;
+    return (online() ? current?.publicPlayers : localAuthority?.publicView())?.[playerId] || { count: 0, colors: [] };
+  }
   // Le stock LÉGENDES dérive des confirmations privées, sans deuxième
   // inventaire. Toujours l’image normale, même après un choix à droite.
   function getObtainedLegends() {
@@ -296,7 +300,7 @@
   }, true);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && getTargeting()) { event.preventDefault(); cancelTargeting(); } });
   battlefield.addEventListener('contextmenu', event => { if (getTargeting()) { event.preventDefault(); cancelTargeting(); } });
-  E.MythologySession = { start, update, render, receive, reset, getObtainedLegends, activate, arm, cancelTargeting, getTargeting, canTargetRegion, targetRegion, hoverRegion,
+  E.MythologySession = { start, update, render, receive, reset, getObtainedLegends, getPublicSummary, activate, arm, cancelTargeting, getTargeting, canTargetRegion, targetRegion, hoverRegion,
     get diagnostics() { return { privateView: stateRef ? view(stateRef) : null, offerId, ownerId, submitted, resolved,
       targeting: getTargeting(), crystal: component?.crystal.diagnostics || null }; } };
 }());

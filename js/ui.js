@@ -160,7 +160,7 @@
       const animal = event.target.closest("[data-buy-animal]");
       if (animal) controller.buyAnimal(animal.dataset.buyAnimal);
       const equipment = event.target.closest("[data-buy-equipment]");
-      if (equipment) controller.buyEquipment(equipment.dataset.residentId, equipment.dataset.equipmentKind, equipment.dataset.buyEquipment);
+      if (equipment) controller.buyEquipment(equipment.dataset.equipmentKind, equipment.dataset.buyEquipment);
       const specialAnimal = event.target.closest("[data-buy-special-animal]");
       if (specialAnimal) controller.buySpecialAnimal(specialAnimal.dataset.buySpecialAnimal, specialAnimal.dataset.residentId);
       const animalOrder = event.target.closest("[data-order-animal]");
@@ -355,51 +355,85 @@
     }));
   }
 
+  const campIds = ['red', 'blue'];
+  const campName = id => id === 'red' ? 'Rouge' : 'Bleu';
+  const statsKnown = (state, playerId) => E.MythologyEffects.canSeeStats(state, viewerId(state), playerId);
+  const hudSignature = state => JSON.stringify([viewerId(state), ...campIds.map(id => [state.players[id].villages.length, statsKnown(state,id)])]);
+  function equipmentPips(kind, type) {
+    const tier = E.Config.equipment[kind][type]?.requiredTier || 0;
+    const path = kind === 'tools'
+      ? '<path d="m4 20 3-3m-2-3 5 5m-3-5L17 4l3-1-1 3L9 16M3 21l2-2"/>'
+      : '<path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6Z"/>';
+    return `<span class="hud-pips" data-tier="${tier}" aria-label="${kind === 'tools' ? 'Outils' : 'Armures'} : palier ${tier} sur 3">${[1,2,3].map(n => `<svg viewBox="0 0 24 24" aria-hidden="true" class="hud-pip ${n <= tier ? 'is-lit' : ''}">${path}</svg>`).join('')}</span>`;
+  }
   function renderMapVillagePopups(state) {
-    const playerId = viewerId(state);
-    elements.mapVillagePopups.dataset.viewer = playerId;
-    elements.mapVillagePopups.style.setProperty("--village-card-count", state.players[playerId].villages.length);
-    elements.mapVillagePopups.innerHTML = [playerId].flatMap((playerId) => {
-      const player = state.players[playerId];
-      return player.villages.map((village) => {
-        const selected = state.selectedVillage.playerId === playerId && state.selectedVillage.lane === village.lane;
-        const available = E.Economy.getAvailableResidents(state, playerId, village.lane);
-        const resources = E.Config.resources.map((resource) => `<div title="${resourceLabels[resource]}"><dt>${resourceIcons[resource]}</dt><dd data-map-resource="${resource}">${formatNumber(village.resources[resource])}</dd></div>`).join("");
-        return `<article class="map-village-popup ${playerId} lane-${village.lane} ${selected ? "selected" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""} ${village.destroyed ? "destroyed" : ""}" data-map-village data-player="${playerId}" data-lane="${village.lane}" aria-current="${selected}">
-          <header><strong>${playerId === "red" ? "Rouge" : "Bleu"} V${village.lane + 1}</strong><span>${biomeIcons[village.biome]}</span></header>
-          <div class="map-village-stats"><span title="Points de vie">PV <b data-map-hp>${Math.ceil(village.hp)}/${village.maxHp}</b></span><span title="Population">Pop. <b data-map-population>${village.population}/${village.populationMax}</b></span><span title="Habitants disponibles">Dispo. <b data-map-available>${available}</b></span></div>
-          <dl>${resources}</dl>
-        </article>`;
-      });
-    }).join("");
+    elements.mapVillagePopups.dataset.viewer = viewerId(state);
+    elements.mapVillagePopups.dataset.signature = hudSignature(state);
+    elements.mapVillagePopups.style.setProperty('--camp-card-count', state.players.red.villages.length + 1);
+    elements.mapVillagePopups.innerHTML = campIds.map(playerId => {
+      const player = state.players[playerId], known = statsKnown(state,playerId);
+      const global = `<article class="map-camp-summary ${playerId}" data-map-camp="${playerId}" aria-label="Statistiques globales du camp ${campName(playerId)}">
+        <header><strong>${campName(playerId)} · Global</strong><span>${playerId === viewerId(state) ? 'Vous' : 'Adversaire'}</span></header>
+        <div class="hud-global-row hud-global-values"><span>Or <b data-camp-gold></b></span><span>PV <b data-camp-hp></b></span></div>
+        <div class="hud-global-row hud-equipment" data-camp-equipment aria-label="Paliers d’équipement par village"></div>
+        <div class="hud-global-row hud-legend-row"><span class="hud-legend-count"><b data-camp-legends>0</b> <span data-camp-legend-label>légendes</span></span><div class="hud-crystals" data-camp-crystals aria-label="Cristaux des légendes en réserve"></div></div>
+      </article>`;
+      const villages = player.villages.map(village => `<article class="map-village-popup ${playerId} lane-${village.lane}" data-map-village data-player="${playerId}" data-lane="${village.lane}" data-stats-visible="${known}" aria-label="${campName(playerId)} Village ${village.lane + 1}">
+        <header><strong>${campName(playerId)} V${village.lane + 1}</strong><span data-map-intelligence>${biomeIcons[village.biome]}</span></header>
+        <div class="map-village-stats"><span title="Points de vie">PV <b data-map-hp></b></span><span title="Population">Pop. <b data-map-population>${known ? `${village.population}/${village.populationMax}` : '?'}</b></span><span title="Habitants disponibles">Dispo. <b data-map-available>${known ? E.Economy.getAvailableResidents(state,playerId,village.lane) : '?'}</b></span></div>
+        <dl>${E.Config.resources.map(resource => `<div title="${resourceLabels[resource]}"><dt>${resourceIcons[resource]}</dt><dd data-map-resource="${resource}">${known ? formatNumber(village.resources[resource]) : '?'}</dd></div>`).join('')}</dl>
+      </article>`).join('');
+      return global + villages;
+    }).join('');
+    const cardCount = state.players.red.villages.length + 1;
+    [...elements.mapVillagePopups.children].forEach((card,index) => {
+      card.style.setProperty('--hud-column', index < cardCount ? index + 1 : index + 2);
+      card.style.setProperty('--hud-side', index < cardCount ? 1 : 3);
+      card.style.setProperty('--hud-row', index % cardCount + 1);
+    });
+    updateMapVillagePopups(state);
   }
 
   function updateMapVillagePopups(state) {
-    const player = state.players[viewerId(state)];
-    if (elements.mapVillagePopups.dataset.viewer !== player.id || elements.mapVillagePopups.children.length !== player.villages.length) renderMapVillagePopups(state);
-    player.villages.forEach((village) => {
-      const popup = elements.mapVillagePopups.querySelector(`[data-map-village][data-player="${player.id}"][data-lane="${village.lane}"]`);
-      if (!popup) {
-        renderMapVillagePopups(state);
-        return;
+    if (elements.mapVillagePopups.dataset.signature !== hudSignature(state)) return renderMapVillagePopups(state);
+    for (const playerId of campIds) {
+      const player = state.players[playerId], known = statsKnown(state,playerId);
+      const summary = elements.mapVillagePopups.querySelector(`[data-map-camp="${playerId}"]`);
+      summary.querySelector('[data-camp-gold]').textContent = formatNumber(player.gold);
+      summary.querySelector('[data-camp-hp]').textContent = `${Math.ceil(player.villages.reduce((n,v) => n+v.hp,0))}/${player.villages.reduce((n,v) => n+v.maxHp,0)}`;
+      const equipment = summary.querySelector('[data-camp-equipment]');
+      const equipmentKey = JSON.stringify(player.villages.map(v => v.equipment));
+      if (equipment.dataset.signature !== equipmentKey) {
+        equipment.dataset.signature = equipmentKey;
+        equipment.innerHTML = player.villages.map(v => `<span class="hud-village-equipment" data-equipment-lane="${v.lane}"><small>V${v.lane+1}</small>${equipmentPips('tools',v.equipment?.tool)}${equipmentPips('armors',v.equipment?.armor)}</span>`).join('');
       }
-      const selected = state.selectedVillage.playerId === player.id && state.selectedVillage.lane === village.lane;
-      popup.classList.toggle("selected", selected);
-      popup.classList.toggle("under-attack", village.damageSmoke > 0);
-      popup.classList.toggle("destroyed", village.destroyed);
-      popup.setAttribute("aria-current", String(selected));
-      const hp = popup.querySelector("[data-map-hp]");
-      const population = popup.querySelector("[data-map-population]");
-      const available = popup.querySelector("[data-map-available]");
-      const known = vision(state, village);
-      if (hp) hp.textContent = `${Math.ceil(village.hp)}/${village.maxHp}`;
-      if (population) population.textContent = known.people ? `${village.population}/${village.populationMax}` : "?";
-      if (available) available.textContent = known.people ? E.Economy.getAvailableResidents(state, player.id, village.lane) : "?";
-      E.Config.resources.forEach((resource) => {
-        const value = popup.querySelector(`[data-map-resource="${resource}"]`);
-        if (value) value.textContent = known.all ? formatNumber(village.resources[resource]) : "?";
-      });
-    });
+      const stock = E.MythologySession?.getPublicSummary(state,playerId) || {count:0,colors:[]};
+      summary.querySelector('[data-camp-legends]').textContent = stock.count;
+      summary.querySelector('[data-camp-legend-label]').textContent = stock.count === 1 ? 'légende' : 'légendes';
+      const crystals = summary.querySelector('[data-camp-crystals]'), colorsKey = JSON.stringify(stock.colors);
+      if (crystals.dataset.signature !== colorsKey) {
+        crystals.dataset.signature = colorsKey;
+        crystals.innerHTML = stock.colors.map(color => `<svg viewBox="0 0 20 28" class="hud-crystal" style="--gem-color:${color}" role="img" aria-label="Cristal coloré"><path d="m10 1 8 8v10l-8 8-8-8V9Z"/><path d="M10 1v26M2 9h16M2 19h16M10 1 6 9v10l4 8m0-26 4 8v10l-4 8"/></svg>`).join('');
+      }
+      for (const village of player.villages) {
+        const popup = elements.mapVillagePopups.querySelector(`[data-map-village][data-player="${playerId}"][data-lane="${village.lane}"]`);
+        const selected = state.selectedVillage.playerId === playerId && state.selectedVillage.lane === village.lane;
+        popup.classList.toggle('selected',selected);
+        popup.classList.toggle('under-attack',village.damageSmoke > 0);
+        popup.classList.toggle('destroyed',village.destroyed);
+        popup.classList.toggle('is-concealed',!known);
+        popup.setAttribute('aria-current',String(selected));
+        popup.querySelector('[data-map-hp]').textContent = `${Math.ceil(village.hp)}/${village.maxHp}`;
+        popup.querySelector('[data-map-population]').textContent = known ? `${village.population}/${village.populationMax}` : '?';
+        popup.querySelector('[data-map-available]').textContent = known ? E.Economy.getAvailableResidents(state,playerId,village.lane) : '?';
+        const intelligence = popup.querySelector('[data-map-intelligence]');
+        intelligence.textContent = `${biomeIcons[village.biome]} ${known ? `T${village.level}` : '🔒'}`;
+        intelligence.title = known ? `Village T${village.level} · ${village.buildings.map(b => `${buildingLabels[b.type]} T${b.level}`).join(' · ') || 'Aucun bâtiment'}` : 'Population et ressources masquées · Œil de Sainte-Lucie requis';
+        E.Config.resources.forEach(resource => {
+          popup.querySelector(`[data-map-resource="${resource}"]`).textContent = known ? formatNumber(village.resources[resource]) : '?';
+        });
+      }
+    }
   }
 
   function renderBoard(state) {
@@ -853,8 +887,9 @@
     elements.shop.dataset.signature = shopSignature(state, village);
     const sales = `<section class="shop-sales" aria-label="Vendre les ressources du village"><header><h3>Vendre les ressources</h3><span>Or global <b data-shop-gold>${formatNumber(player.gold)}</b></span></header><p>Stocks du village ${village.lane + 1} · jusqu’à ${E.Config.saleBatchSize} unités par vente.</p><div class="shop-sale-list">${E.Config.resources.map((resource) => `<div class="shop-sale" data-shop-sale="${resource}"><div><strong>${resourceIcons[resource]} ${resourceLabels[resource]}</strong><small>Stock : <b data-shop-stock="${resource}">${formatNumber(village.resources[resource])}</b></small></div><span data-shop-sale-preview="${resource}"></span><button class="sell-button" type="button" data-sell="${resource}">Vendre</button></div>`).join("")}</div></section>`;
     const artisanatLevel = E.Transport.buildingLevel(village, "artisanat");
-    const equipmentPreview = resident ? `<label class="shop-resident-picker">Habitant à équiper<select data-shop-resident>${village.residents.map((item) => `<option value="${item.id}" ${item.id === resident.id ? "selected" : ""}>${item.name} · ${E.Config.professions[item.profession || "habitant"].label}</option>`).join("")}</select></label><div class="equipment-preview">${residentAppearance(resident, "resident-avatar")}<div><strong>Équiper ${resident.name}</strong><small>${E.Config.professions[resident.profession || "habitant"].label}</small><small>${equipmentLabel(resident)}</small></div></div><p class="section-help">L’achat équipe immédiatement cet habitant. Un outil et une armure maximum ; remplacement sans remboursement.</p>` : '<p class="section-help">Aucun habitant à équiper.</p>';
-    const equipmentTarget = `<section class="shop-equipment-target" aria-label="Habitant à équiper"><header><span>⚒ Échoppe de l’Artisanat</span><b>${artisanatLevel ? `T${artisanatLevel}` : "Bâtiment requis"}</b></header>${equipmentPreview}</section>`;
+    const villageEquipment = village.equipment || {};
+    const equipmentTarget = `<section class="shop-equipment-target" aria-label="Équipement du village"><header><span>⚒ Équipement du village ${village.lane + 1}</span><b>${artisanatLevel ? `T${artisanatLevel}` : "Artisanat requis"}</b></header><div data-village-equipment><strong>${villageEquipment.tool ? E.Config.equipment.tools[villageEquipment.tool].label : "Aucun outil"}</strong><p>${villageEquipment.armor ? E.Config.equipment.armors[villageEquipment.armor].label : "Aucune armure"}</p></div><p class="section-help">Un seul achat équipe tous les habitants actuels et futurs de ce village, y compris ceux au combat. Les légendes sont exclues. Un outil et une armure maximum par habitant ; remplacement sans cumul ni remboursement.</p></section>`;
+    const companionTarget = `<section class="shop-equipment-target" aria-label="Habitant pour l’âne">${resident ? `<label class="shop-resident-picker">Habitant associé à l’âne<select data-shop-resident>${village.residents.map((item) => `<option value="${item.id}" ${item.id === resident.id ? "selected" : ""}>${item.name} · ${E.Config.professions[item.profession || "habitant"].label}</option>`).join("")}</select></label><div class="equipment-preview">${residentAppearance(resident, "resident-avatar")}<div><strong>${resident.name}</strong><small>${resident.donkey ? "Âne déjà associé" : "Aucun âne associé"}</small></div></div>` : '<p class="section-help">Aucun habitant pour l’âne.</p>'}</section>`;
     const stores = Object.entries(E.Config.villageShops).map(([buildingType, store]) => {
       const buildingLevel = E.Transport.buildingLevel(village, buildingType);
       const tiers = Object.entries(store.tiers).map(([tier, items]) => {
@@ -870,8 +905,8 @@
             return `<article class="shop-item" data-shop-catalog-item><span class="shop-item-icon">${item.icon}</span><div><strong>${item.label}</strong><small>1 animal · enclos compatible au hasard</small><small data-animal-count>${animalShopCount(village, item.animalType)}</small></div><button type="button" data-buy-animal="${item.animalType}" ${!quote.allowed ? "disabled" : ""}>Acheter<small>${quote.gold} or</small></button><p data-shop-reason>${quote.reason}</p></article>`;
           }
           if (item.equipmentKind) {
-            const quote = E.Equipment.quote(state, player.id, village.lane, resident?.id, item.equipmentKind, item.equipmentType);
-            return `<article class="shop-item ${quote.equipped ? "equipped" : ""}" data-shop-catalog-item><span class="shop-item-icon">${item.icon}</span><div><strong>${item.label}</strong><small>${equipmentEffect(item.equipmentKind, item.equipmentType)}</small></div><button type="button" data-buy-equipment="${item.equipmentType}" data-equipment-kind="${item.equipmentKind}" data-resident-id="${resident?.id || ""}" ${!quote.allowed ? "disabled" : ""}>${quote.equipped ? "Équipé" : "Équiper"}<small>${quote.gold} or</small></button><p data-shop-reason>${quote.reason}</p></article>`;
+            const quote = E.Equipment.quote(state, player.id, village.lane, item.equipmentKind, item.equipmentType);
+            return `<article class="shop-item ${quote.equipped ? "equipped" : ""}" data-shop-catalog-item><span class="shop-item-icon">${item.icon}</span><div><strong>${item.label}</strong><small>${equipmentEffect(item.equipmentKind, item.equipmentType)}</small></div><button type="button" data-buy-equipment="${item.equipmentType}" data-equipment-kind="${item.equipmentKind}" data-equipment-scope="village" ${!quote.allowed ? "disabled" : ""}>${quote.equipped ? "Équipé" : "Équiper le village"}<small>${quote.gold} or</small></button><p data-shop-reason>${quote.reason}</p></article>`;
           }
           if (item.purchaseType) {
             const quote = E.Transport.shopQuote(state, player.id, village.lane, item.purchaseType);
@@ -887,7 +922,7 @@
       return `<section class="shop-store ${buildingLevel ? "unlocked" : "locked"}" data-shop-store="${buildingType}" data-level="${buildingLevel}"><header><span>${store.icon} ${store.label}</span><b>${buildingLevel ? `T${buildingLevel}` : "Bâtiment requis"}</b></header>${tiers}${buildingType === "bergerie" ? renderAnimalRoster(state, player, village) : ""}</section>`;
     }).join("");
     const fleetReserve = `<section class="shop-equipment-target" aria-label="Réserve de barques du village"><header><span>🛶 Réserve de barques</span></header><p data-fleet-summary>${fleetSummary(state, village)}</p><p class="section-help">Achetez vos barques à l’Artisanat T1 ou à la Boucherie T1. Elles transportent automatiquement les unités de ce village ; les places sont réutilisables après la traversée.</p></section>`;
-    elements.shop.innerHTML = `<div class="shop-columns"><div class="shop-sales-column">${sales}${fleetReserve}${equipmentTarget}</div>${stores}</div>`;
+    elements.shop.innerHTML = `<div class="shop-columns"><div class="shop-sales-column">${sales}${fleetReserve}${equipmentTarget}${companionTarget}</div>${stores}</div>`;
     updateShopSales(state, player, village);
   }
 
@@ -946,7 +981,7 @@
 
   function shopSignature(state, village) {
     const resident = shopResident(state, village);
-    return `${village.destroyed}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${resident?.id}:${resident?.profession}:${resident?.tool}:${resident?.armor}:${resident?.donkey}:${herdSignature(village)}:${(village.animals || []).map((animal) => `${animal.id}:${animal.mission}:${animal.unitId}`).join(",")}`;
+    return `${village.equipment?.tool}:${village.equipment?.armor}:${village.residents.length}:${village.destroyed}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${resident?.id}:${resident?.profession}:${resident?.tool}:${resident?.armor}:${resident?.donkey}:${herdSignature(village)}:${(village.animals || []).map((animal) => `${animal.id}:${animal.mission}:${animal.unitId}`).join(",")}`;
   }
 
   function animalShopCount(village, type) {
@@ -1006,7 +1041,7 @@
       card.querySelector("[data-animal-count]").textContent = animalShopCount(village, button.dataset.buyAnimal);
     });
     elements.shop.querySelectorAll("[data-buy-equipment]").forEach((button) => {
-      const quote = E.Equipment.quote(state, player.id, village.lane, button.dataset.residentId, button.dataset.equipmentKind, button.dataset.buyEquipment);
+      const quote = E.Equipment.quote(state, player.id, village.lane, button.dataset.equipmentKind, button.dataset.buyEquipment);
       button.disabled = !quote.allowed;
       button.closest("[data-shop-catalog-item]").querySelector("[data-shop-reason]").textContent = quote.reason;
     });

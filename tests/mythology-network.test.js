@@ -45,7 +45,11 @@ async function run() {
     guest.send({ type: 'mythology-select', epoch: blue.epoch, offerId: blueAccumulated.queue[1].id, legendId: blueAccumulated.queue[1].legendIds[0] });
     assert.equal((await result).reason, 'offer-unavailable', 'Only the oldest offer can be consumed');
     const request = { type: 'mythology-select', epoch: blue.epoch, offerId: blue.pending.id, legendId: blue.pending.legendIds[0] };
+    const publicStock = host.next(m => m.type === 'mythology' && m.view.publicPlayers?.blue.count === 1);
     result = guest.next(m => m.type === 'mythology' && m.accepted === true); guest.send(request); const selected = await result;
+    const publicBlue = (await publicStock).view.publicPlayers.blue;
+    assert.deepEqual(Object.keys(publicBlue).sort(), ['colors','count']);assert.equal(publicBlue.colors.length,1);
+    assert.match(publicBlue.colors[0],/^#[0-9a-f]{6}$/i);
     assert.equal(selected.view.selections.length, 1); assert.equal(selected.view.selections[0].status, 'awaiting-activation');
     assert.equal(selected.view.pendingCount, 2); assert.equal(selected.view.pending.id, blueAccumulated.queue[1].id);
     result = guest.next(m => m.type === 'mythology' && m.accepted === false); guest.send(request); assert.equal((await result).reason, 'offer-unavailable');
@@ -77,7 +81,8 @@ async function run() {
     assert.equal((await retry).view.selections[0].status, 'activation-pending', 'Guest confirmation is ignored');
     assert.deepEqual((await repeated).execution, trusted, 'A retry keeps its original target and token');
     const confirmed = guest.next(m => m.type === 'mythology' && m.activation && m.view.selections[0].status === 'activated');
-    host.send({ type: 'mythology-result', activationId: trusted.activationId, accepted: true });await confirmed;
+    const consumed = host.next(m => m.type === 'mythology' && m.view.publicPlayers?.blue.count === 1);
+    host.send({ type: 'mythology-result', activationId: trusted.activationId, accepted: true });await confirmed;await consumed;
     const denied = guest.next(m => m.type === 'mythology' && m.activation && !m.accepted);
     guest.send({ type: 'mythology-activate', epoch: blue.epoch, offerId: blue.pending.id, target: {} });
     assert.equal((await denied).reason, 'selection-unavailable');

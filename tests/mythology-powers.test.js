@@ -158,3 +158,15 @@ test('activation is idempotent, validates target and epoch, and refuses pause',(
   assert.equal(E.MythologyEffects.activate(s,{...request,activationId:'two',epoch:'old'}).accepted,false);
   s.paused=true;assert.equal(E.MythologyEffects.activate(s,{...request,activationId:'three'}).accepted,false);
 });
+
+test('Sainte-Lucie reveals every enemy village statistic only to its owner until match end',()=>{
+  const {E,s,cast}=fixture();
+  for(const owner of ['red','blue'])for(const viewer of ['red','blue'])assert.equal(E.MythologyEffects.canSeeStats(s,viewer,owner),viewer===owner);
+  assert.equal(cast('oeil-sainte-lucie').accepted,true);
+  assert.equal(E.MythologyEffects.canSeeStats(s,'red','blue'),true);
+  assert.equal(E.MythologyEffects.canSeeStats(s,'blue','red'),false);
+  s.elapsed=9999;assert.equal(E.MythologyEffects.canSeeStats(s,'red','blue'),true);
+  const snapshot=JSON.parse(JSON.stringify(s));assert.equal(E.MythologyEffects.canSeeStats(snapshot,'red','blue'),true);
+  assert.equal(E.MythologyEffects.canSeeStats(E.Board.createState('simplified'),'red','blue'),false);
+  assert.equal(E.MythologyEffects.canSeeStats(s,'intruder','blue'),false);
+});

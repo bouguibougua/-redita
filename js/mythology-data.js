@@ -238,8 +238,8 @@
         'Ils y récoltent des ressources à la place de l’ennemi et les transfèrent directement dans votre banque locale. Cliquez sur le terrain pour les invoquer : leurs points d’apparition sont déterminés automatiquement.'
       ] }),
     entry('oeil-sainte-lucie', 'Œil de Sainte-Lucie', 'vision',
-      'Les Littoraux adverses sont déjà visibles : aucun dévoilement supplémentaire dans cette version.',
-      { until: 'match-end', target: 'enemy-coastal-regions' }, '#e0ba69', { aliases: ['ochju-di-santa-lucia', 'Ochju di Santa Lucia', 'Œil de Sainte-Lucie'], lore: { subtitle: "Le talisman protecteur", paragraphs: [
+      'Révèle toutes les statistiques des villages ennemis jusqu’à la fin de la partie.',
+      { until: 'match-end', target: 'enemy-statistics' }, '#e0ba69', { aliases: ['ochju-di-santa-lucia', 'Ochju di Santa Lucia', 'Œil de Sainte-Lucie'], lore: { subtitle: "Le talisman protecteur", paragraphs: [
           "L'Œil de Sainte-Lucie est un symbole de protection particulièrement répandu en Corse.",
           "Il s'agit de l'opercule d'un mollusque marin, reconnaissable à sa forme arrondie et à sa spirale blanche. Cet objet naturel est traditionnellement considéré comme un porte-bonheur capable de protéger contre le mauvais œil.",
           "Selon une version de la légende, Sainte Lucie, jeune chrétienne originaire de Syracuse, aurait renoncé à ses yeux pour préserver sa foi. La Vierge Marie lui aurait ensuite rendu la vue et offert des yeux encore plus beaux.",
@@ -247,8 +247,8 @@
           "En Corse, l'Œil de Sainte-Lucie est fréquemment porté sous forme de bijou. On lui attribue des vertus de protection, de chance et de prospérité."
         ] },
         menuDescription: [
-        'L’Œil de Sainte-Lucie avait un pouvoir de révélation des Littoraux adverses. Le brouillard de guerre est désormais retiré : ces régions et leurs habitants sont visibles dès le début.',
-        'Les trois biomes et les personnages des deux camps sont visibles en permanence. Ce pouvoir ne donne donc pas de visibilité supplémentaire et aucun autre bonus ne lui est attribué.'
+        'L’Œil de Sainte-Lucie révèle toutes les statistiques des villages ennemis : population, habitants disponibles, ressources, niveau et bâtiments. Les valeurs restent mises à jour jusqu’à la fin de la partie.',
+        'L’or, les points de vie, les paliers d’équipement et les cristaux colorés des légendes en réserve sont déjà publics. Activez ce pouvoir pour dévoiler les autres informations du camp adverse, sans modifier sa gestion ni révéler les propositions encore en attente.'
       ] })
   ];
   E.Config.mythology = freeze({ schemaVersion: 1, categories, entries,

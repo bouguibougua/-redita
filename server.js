@@ -205,6 +205,8 @@ function handleConnection(socket) {
     if (message.type === 'mythology-select' && (socket === room.host || socket === room.guest)) {
       const result = room.mythology.select(socket === room.host ? 'red' : 'blue', message);
       send(socket, { type: 'mythology', ...result, view: room.mythology.view(socket === room.host ? 'red' : 'blue') });
+      if (result.accepted) send(socket === room.host ? room.guest : room.host,
+        { type: 'mythology', view: room.mythology.view(socket === room.host ? 'blue' : 'red') });
       return;
     }
     if (message.type === 'mythology-activate' && (socket === room.host || socket === room.guest)) {
@@ -222,6 +224,8 @@ function handleConnection(socket) {
       if (playerId) send(playerId === 'red' ? room.host : room.guest,
         { type: 'mythology', activation: true, accepted: message.accepted === true, reason: message.reason,
           view: room.mythology.view(playerId) });
+      if (playerId) send(playerId === 'red' ? room.guest : room.host,
+        { type: 'mythology', view: room.mythology.view(playerId === 'red' ? 'blue' : 'red') });
       return;
     }
     if (message.type === "command" && socket === room.guest) {

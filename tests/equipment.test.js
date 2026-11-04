@@ -78,18 +78,23 @@ assert.equal(unit.armor, "fer");
 assert.equal(unit.hp, E.Config.units.habitant.hp + 50 + E.Config.building.artisanatBonus.hp);
 assert.equal(unit.maxHp, unit.hp);
 assert.equal(unit.damage, E.Config.units.habitant.damage + 20 + E.Config.building.artisanatBonus.damage);
-assert.equal(buy("armors", "cuir"), false, "Equipment cannot change during combat");
+const combatBefore = {hp:unit.hp,maxHp:unit.maxHp};
+assert.ok(buy("armors", "cuir"), "Village equipment also applies during combat");
+assert.equal(unit.armor, "cuir");
+assert.equal(unit.maxHp, combatBefore.maxHp - 35);
+assert.equal(unit.hp, combatBefore.hp - 35);
 const warrior = E.Units.create("red", 0, "guerrier", { tool: "bronze", armor: "maille" });
 assert.equal(warrior.hp, E.Config.units.guerrier.hp + 35);
 assert.equal(warrior.damage, E.Config.units.guerrier.damage + 10);
 
 const fishing = setup("littoral");
-fishing.resident.tool = "bois";
+E.Buildings.buildT1(fishing.state, "red", 0, "artisanat");
+assert.ok(E.Equipment.buy(fishing.state,"red",0,"tools","bois"));
 for (const fisher of fishing.village.residents.slice(0, 2)) {
   assert.equal(E.Economy.assignResidentJob(fishing.state, "red", 0, fisher.id, "peche"), true);
 }
 E.Economy.updateProduction(fishing.state, 25);
-assert.equal(fishing.village.resources.poisson, 1, "Wood speeds only the equipped fisher");
+assert.equal(fishing.village.resources.poisson, 2, "The village tool speeds both fishers");
 E.Economy.updateProduction(fishing.state, 5);
 assert.equal(fishing.village.resources.poisson, 2);
 assert.equal(E.Economy.unassignResidentJob(fishing.state, "red", 0, fishing.resident.id), true);

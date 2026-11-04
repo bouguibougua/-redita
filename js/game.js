@@ -262,10 +262,10 @@
       E.UI.render(state);
     },
 
-    buyEquipment(residentId, kind, type) {
+    buyEquipment(...args) {
       const { playerId, lane } = state.selectedVillage;
-      const purchase = E.Equipment.buy(state, playerId, lane, residentId, kind, type);
-      if (purchase) addLog(`${E.Economy.getResident(state, playerId, lane, residentId).name} équipe : ${E.Config.equipment[kind][type].label}.`);
+      const purchase = E.Equipment.buy(state, playerId, lane, ...args);
+      if (purchase) addLog(`Village ${lane + 1} : ${purchase.label} pour tous les habitants actuels et futurs, hors légendes.`);
       E.UI.render(state);
     },
 

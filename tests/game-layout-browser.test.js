@@ -22,8 +22,8 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     })()`);
     assert.equal(await page.evaluate("document.querySelector('#building-market').previousElementSibling.id"),'open-shop-modal');
     assert.equal(await page.evaluate("document.querySelector('#pause-game')===null&&document.querySelector('#toggle-board-view')===null&&document.querySelectorAll('#game-screen [data-open-xr]').length===0"),true,'Les anciens boutons sont retirés');
-    assert.equal(await page.evaluate("document.querySelectorAll('#map-village-popups [data-map-village]').length"),2);
-    assert.equal(await page.evaluate("document.querySelectorAll('[data-map-village][data-player=blue], [data-village-select][data-player=blue]').length"),0,'Pas de fiche ni de sélection adverse');
+    assert.equal(await page.evaluate("document.querySelectorAll('#map-village-popups [data-map-village]').length"),4);
+    assert.equal(await page.evaluate("document.querySelectorAll('[data-village-select][data-player=blue]').length"),0,'Pas de gestion adverse');
     assert.equal(await page.evaluate("document.querySelector('#map-village-popups').closest('#battlefield')===null"),true,'Les fiches sont sorties du terrain');
 
     await page.click('#building-market [data-build="bergerie"]');
@@ -59,8 +59,8 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
       assert.ok(layout.pageWidth<=width+1&&layout.pageHeight<=height+1,`${width}×${height} : page débordante ${JSON.stringify(layout)}`);
       for(const panel of layout.panels) assert.ok(panel.x>=-1&&panel.y>=-1&&panel.right<=width+1&&panel.bottom<=height+1&&panel.width>0&&panel.height>0,`${width}×${height} : panneau hors écran ${JSON.stringify(panel)}`);
       const hud=await page.evaluate("Array.from(document.querySelectorAll('[data-map-village]')).map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};})");
-      assert.ok(Math.abs(hud[0].y-hud[1].y)<1&&hud[0].right<hud[1].x&&hud.every(r=>r.y>=0&&r.bottom<=height&&r.right<=width),'Les deux fiches sont côte à côte en haut');
-      assert.ok(Math.abs((hud[0].x+hud[1].right)/2-width/2)<2,'Les fiches sont centrées dans la fenêtre');
+      assert.ok(hud.every(r=>r.y>=0&&r.bottom<=height&&r.right<=width),'Toutes les fiches des deux camps tiennent en haut');
+      for(let a=0;a<hud.length;a++)for(let b=a+1;b<hud.length;b++)assert.ok(hud[a].right<=hud[b].x||hud[b].right<=hud[a].x||hud[a].bottom<=hud[b].y||hud[b].bottom<=hud[a].y,'Fiches sans chevauchement');
 
       assert.equal(await page.evaluate("Array.from(document.querySelectorAll('.resident-card')).every(card=>{const r=card.getBoundingClientRect(),t=card.querySelector('strong').getBoundingClientRect();return t.top>=r.top&&t.bottom<=r.bottom})"),true,'Les noms restent dans leur fiche');
       if(width>=801) {
@@ -85,7 +85,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await page.send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
     await page.evaluate("(()=>{const c=Eredita.Board.createState('classic');layoutState.players=c.players;layoutState.format='classic';Eredita.UI.render(layoutState);Eredita.Board3D.update(layoutState,true);})()");
     await delay(250);
-    assert.equal(await page.evaluate("document.querySelectorAll('[data-map-village]').length"),4,'Seules les quatre fiches du joueur sont affichées en Classique');
+    assert.equal(await page.evaluate("document.querySelectorAll('[data-map-village]').length"),8,'Les huit fiches des deux camps sont affichées en Classique');
     await page.evaluate('layoutState.preparationRemaining=0;Eredita.UI.render(layoutState)');
     assert.equal(await page.evaluate("document.querySelector('#preparation-hint').getClientRects().length"),0,'Le message de préparation disparaît en combat');
     assert.equal(page.errors.length,0,JSON.stringify(page.errors));

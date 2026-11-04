@@ -70,11 +70,17 @@
       }
       return changed;
     }
+    function publicView() {
+      return Object.fromEntries(Object.entries(players).map(([id, player]) => {
+        const stock = player.selections.filter(item => item.status !== 'activated');
+        return [id, { count: stock.length, colors: stock.map(item => E.Mythology.get(item.legendId).visuals.primaryColor) }];
+      }));
+    }
     function view(playerId) {
       if (!players[playerId]) return null;
       const result = copy({ epoch, revision, playerId, phase, paused, ...players[playerId] });
       // Compatibilité avec le composant existant : pending désigne uniquement la tête FIFO.
-      return { ...result, pending: result.queue[0] || null, pendingCount: result.queue.length };
+      return { ...result, pending: result.queue[0] || null, pendingCount: result.queue.length, publicPlayers: publicView() };
     }
     function select(playerId, request) {
       const player = players[playerId];
@@ -123,7 +129,7 @@
       }
       return null;
     }
-    return { sync, view, select, reset, requestActivation, finishActivation };
+    return { sync, view, publicView, select, reset, requestActivation, finishActivation };
   }
   E.MythologyMatch = Object.freeze({ createAuthority, activatable, newEpoch });
 }());

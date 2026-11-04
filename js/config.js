@@ -239,17 +239,17 @@
       sanglier: { label: "Sanglier", icon: "🐗", gold: 180, requiredTier: 3, hp: 80, damage: 8, speed: 5, waterSpeedMultiplier: 0.5, meatAtDeath: 8 }
     },
     equipment: {
-      // TEMP_BALANCE_VALUE — prix provisoires ; bonus des outils fixés par le GDD.
+      // Prix validés par village ; les achats équipent les habitants actuels et futurs, hors légendes.
       tools: {
-        bois: { label: "Outil en bois", gold: 75, requiredTier: 1, damage: 5, productionBonus: 0.2 },
-        bronze: { label: "Outil en bronze", gold: 150, requiredTier: 2, damage: 10, productionBonus: 0.3 },
-        fer: { label: "Outil en fer", gold: 250, requiredTier: 3, damage: 20, productionBonus: 0.5 }
+        bois: { label: "Outil en bois", gold: 150, requiredTier: 1, damage: 5, productionBonus: 0.2 },
+        bronze: { label: "Outil en bronze", gold: 250, requiredTier: 2, damage: 10, productionBonus: 0.3 },
+        fer: { label: "Outil en fer", gold: 400, requiredTier: 3, damage: 20, productionBonus: 0.5 }
       },
-      // TEMP_BALANCE_VALUE — prix et rattachement des armures à l'Artisanat T1/T2/T3.
+      // Tiers d’Artisanat existants ; un outil et une armure par habitant.
       armors: {
-        cuir: { label: "Armure de cuir", gold: 75, requiredTier: 1, hp: 15 },
-        maille: { label: "Cotte de mailles", gold: 150, requiredTier: 2, hp: 35 },
-        fer: { label: "Armure de fer", gold: 250, requiredTier: 3, hp: 50 }
+        cuir: { label: "Armure de cuir", gold: 150, requiredTier: 1, hp: 15 },
+        maille: { label: "Cotte de mailles", gold: 250, requiredTier: 2, hp: 35 },
+        fer: { label: "Armure de fer", gold: 400, requiredTier: 3, hp: 50 }
       }
     },
     resources: ["ble", "chataigne", "raisin", "viande", "poisson", "lait"],

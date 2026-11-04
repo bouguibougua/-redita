@@ -217,7 +217,11 @@
           const resident = selectedResident();
           if (item.animalType) return button(item.label, command("buyAnimal", item.animalType), own && E.Livestock.purchaseQuote(s, p.id, v.lane, item.animalType).allowed);
           if (item.purchaseType) return button(item.label, command("buyShopItem", item.purchaseType), own && level >= Number(tier) && E.Transport.shopQuote(s, p.id, v.lane, item.purchaseType).allowed);
-          if (item.equipmentKind) return button(item.label, command("buyEquipment", resident?.id, item.equipmentKind, item.equipmentType), own && E.Equipment.quote(s, p.id, v.lane, resident?.id, item.equipmentKind, item.equipmentType).allowed);
+          if (item.equipmentKind) {
+            const q = E.Equipment.quote(s, p.id, v.lane, item.equipmentKind, item.equipmentType);
+            return button(item.label, command("buyEquipment", item.equipmentKind, item.equipmentType), own && q.allowed,
+              {detail: `${q.gold} or · village entier, actuels et futurs · hors légendes`, reason: q.reason});
+          }
           if (item.specialAnimal) return button(item.label, command("buySpecialAnimal", item.specialAnimal, resident?.id), own && E.Animals.purchaseQuote(s, p.id, v.lane, item.specialAnimal, resident?.id).allowed);
           return button(`${item.label} · à venir`, null, false);
         }));

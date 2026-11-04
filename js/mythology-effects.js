@@ -120,6 +120,7 @@
       const { id, name } = person;
       Object.assign(person, pending.resident, { id, name, unitId: null, mission: 'disponible', workPosition: null,
         workPhase: null, carrying: null, workTimer: 0 });
+      E.Equipment.applyVillage(destination, person);
       return false;
     });
   }
@@ -194,7 +195,7 @@
           speed: cfg().fullettuSpeed, mythologyScale: .65, mythologyGatherTimer: 0 }, position);
       }
     },
-    'oeil-sainte-lucie': (s, id) => { s.players[id].revealCoasts = true; }
+    'oeil-sainte-lucie': (s, id) => { s.players[id].revealEnemyStats = true; }
   };
   function activate(state, request) {
     const prior = Object.hasOwn(state.mythology?.executions || {}, request?.activationId) ? state.mythology.executions[request.activationId] : null;
@@ -212,6 +213,10 @@
   // Cette API commune conserve la même politique pour les vues 2D, 3D et XR.
   function vision() {
     return { fraction: 1, people: true, all: true, offensive: false };
+  }
+  function canSeeStats(state, viewerId, ownerId) {
+    return Boolean(state?.players?.[viewerId] && state?.players?.[ownerId] &&
+      (viewerId === ownerId || state.players[viewerId].revealEnemyStats));
   }
   function residentVisible() {
     return true;
@@ -239,6 +244,6 @@
     }
   }
   E.MythologyEffects = Object.freeze({ bindings, getBinding, init, targets, quote, activate, update, recordDeath,
-    onResidentBorn, decorateUnit, preventDeath, protectWorker, onUnitDeath, protectionActive, deathCount, vision, residentVisible, unitVisible,
+    onResidentBorn, decorateUnit, preventDeath, protectWorker, onUnitDeath, protectionActive, deathCount, vision, canSeeStats, residentVisible, unitVisible,
     productionMultiplier, isBurned, terrainVisualKey });
 }());

@@ -16,8 +16,11 @@
 
   // Adaptateur de vue : relit la référence courante, y compris après un snapshot réseau.
   function villageInfo(playerId, lane) {
-    if (E.Network.mode !== "local" && playerId !== (E.Network.playerId || "red")) return null;
     const state = readState();
+    const viewer = E.Network.mode === 'local' ? state.selectedVillage.playerId : E.Network.playerId || 'red';
+    const visible = E.MythologyEffects?.canSeeStats ? E.MythologyEffects.canSeeStats(state, viewer, playerId) :
+      viewer === playerId || Boolean(state.players[viewer]?.revealEnemyStats);
+    if (!visible) return null;
     const player = state.players[playerId];
     const village = player?.villages[lane];
     if (!village) return null;
@@ -27,7 +30,8 @@
       hp: village.hp, maxHp: village.maxHp, destroyed: village.destroyed,
       population: village.population, populationMax: village.populationMax,
       resources: E.Config.resources.map((key) => ({ label: resourceLabels[key], amount: village.resources[key] })),
-      buildings: village.buildings.map((building) => `${building.type} T${building.level}`)
+      buildings: village.buildings.map((building) => `${building.type} T${building.level}`),
+      equipment: { ...village.equipment }
     };
   }
 

@@ -64,6 +64,7 @@
         jobs: { agriculture: 0, elevage: 0, peche: 0, chasse: 0 },
         jobTimers: { agriculture: 0, peche: 0 },
         maritime: { barque: 0, voilier: 0, filet: 0, filetTimer: 0 },
+        equipment: { tool: null, armor: null },
         resources: emptyResources(),
         buildings: [],
         damageSmoke: 0,

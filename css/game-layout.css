@@ -354,3 +354,68 @@ body.is-resizing-game, body.is-resizing-game * { user-select: none !important; c
   .app-shell:has(#game-screen:not([hidden])) .session-status { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #game-screen .preparation-hint { position: fixed; top: 25px; left: 6px; max-width: calc(50vw - 55px); }
 }
+/* Informations publiques des deux camps, détails adverses révélés par Sainte-Lucie. */
+.app-shell:has(#game-screen:not([hidden])) { padding-top: 30px; }
+.app-shell:has(#game-screen:not([hidden])) .masthead { top: 4px; width: calc(50% - 72px); }
+.app-shell:has(#game-screen:not([hidden])) .session-status { font-size: .57rem; white-space: nowrap; }
+#game-screen .preparation-hint { top: -26px; left: auto; right: 12px; max-width: calc(50% - 72px); max-height: 21px; font-size: .52rem; -webkit-line-clamp: 1; }
+#game-screen .game-topbar { display: block; height: var(--layout-header-height,108px); flex-basis: var(--layout-header-height,108px); }
+#game-screen .game-topbar #map-village-popups {
+  grid-template-columns: repeat(var(--camp-card-count,3),minmax(0,1fr)) var(--crystal-gap) repeat(var(--camp-card-count,3),minmax(0,1fr));
+  grid-template-rows: minmax(0,1fr); gap: 5px; overflow: hidden;
+}
+#game-screen .game-topbar #map-village-popups > * {
+  grid-column: var(--hud-column); grid-row: 1; position: relative; inset: auto; width: auto; height: 100%; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 6px; border-radius: 9px; overflow: hidden; pointer-events: auto;
+}
+#game-screen .map-camp-summary { border: 1px solid var(--line); background: var(--surface-glass); }
+#game-screen .map-camp-summary.red { border-color: var(--red); }
+#game-screen .map-camp-summary.blue { border-color: var(--blue); }
+#game-screen .game-topbar #map-village-popups header { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 0 0 2px; font-size: clamp(.53rem,.85vw,.76rem); color: var(--gold); line-height: 1.2; text-transform: uppercase; }
+#game-screen .game-topbar #map-village-popups header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#game-screen .game-topbar #map-village-popups header span { display: inline; flex-shrink: 0; font-size: .65em; color: var(--muted); }
+#game-screen .game-topbar #map-village-popups .map-village-stats { margin: 0; gap: 3px; }
+#game-screen .game-topbar #map-village-popups .map-village-stats span { font-size: clamp(.4rem,.67vw,.65rem); }
+#game-screen .game-topbar #map-village-popups .map-village-stats b { font-size: inherit; }
+#game-screen .game-topbar #map-village-popups dl { gap: 3px; }
+#game-screen .game-topbar #map-village-popups dl div { font-size: clamp(.48rem,.72vw,.68rem); line-height: 1.2; }
+#game-screen .hud-global-row { display: flex; min-width: 0; align-items: center; gap: 5px; border-radius: 4px; background: #ffffff08; padding: 2px 3px; font-size: clamp(.48rem,.7vw,.66rem); line-height: 1.2; }
+#game-screen .hud-global-values { justify-content: space-between; color: var(--muted); white-space: nowrap; }
+#game-screen .hud-global-values b { color: #fff2d5; }
+#game-screen .hud-equipment { justify-content: space-around; flex-wrap: wrap; row-gap: 2px; }
+#game-screen .hud-village-equipment { display: inline-flex; align-items: center; gap: 3px; }
+#game-screen .hud-village-equipment small { color: var(--muted); font-size: .8em; }
+#game-screen .hud-pips { display: inline-flex; align-items: center; gap: 0; }
+#game-screen .hud-pip { width: clamp(8px,.84vw,15px); height: clamp(10px,1vw,17px); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: #5e5a52; opacity: .6; }
+#game-screen .hud-pip.is-lit { color: #f3cd76; opacity: 1; filter: drop-shadow(0 0 2px #c9923d77); }
+#game-screen .hud-legend-row { min-height: 19px; }
+#game-screen .hud-legend-count { flex-shrink: 0; color: var(--muted); white-space: nowrap; }
+#game-screen .hud-legend-count b { color: #fff2d5; }
+#game-screen .hud-crystals { display: flex; flex: 1; min-width: 0; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: thin; }
+#game-screen .hud-crystal { flex: 0 0 12px; width: 12px; height: 18px; overflow: visible; }
+#game-screen .hud-crystal path:first-child { fill: var(--gem-color); stroke: #fff7; stroke-width: .7; }
+#game-screen .hud-crystal path:last-child { fill: none; stroke: #fff9; stroke-width: .6; }
+#game-screen .map-village-popup.is-concealed dd, #game-screen .map-village-popup.is-concealed [data-map-population], #game-screen .map-village-popup.is-concealed [data-map-available] { color: #8d8678; }
+@media (max-width:800px) and (orientation:portrait) {
+  .app-shell:has(#game-screen:not([hidden])) { padding-top: 32px; }
+  #game-screen .game-topbar:has(.map-village-popup:nth-child(3)) { height: var(--layout-header-height,228px); flex-basis: var(--layout-header-height,228px); }
+  #game-screen .game-topbar #map-village-popups { grid-template-columns: minmax(0,1fr) 66px minmax(0,1fr); grid-template-rows: repeat(var(--camp-card-count,3),minmax(0,1fr)); gap: 4px; }
+  #game-screen .game-topbar #map-village-popups > * { grid-column: var(--hud-side); grid-row: var(--hud-row); padding: 4px; gap: 2px; }
+  #game-screen .game-topbar #map-village-popups header { font-size: .53rem; }
+  #game-screen .game-topbar #map-village-popups .map-village-stats span { font-size: .4rem; }
+  #game-screen .game-topbar #map-village-popups dl div { font-size: .47rem; }
+  #game-screen .hud-global-row { font-size: .43rem; padding: 1px 2px; gap: 3px; }
+  #game-screen .hud-pip { width: 8px; height: 10px; }
+  #game-screen .hud-village-equipment { gap: 1px; }
+  #game-screen .hud-crystal { height: 14px; flex-basis: 10px; width: 10px; }
+  #game-screen .hud-legend-row { min-height: 15px; }
+  .app-shell:has(#game-screen:not([hidden])) .session-status { font-size: .47rem; }
+  #game-screen .preparation-hint { top: -28px; font-size: .44rem; }
+}
+@media (max-height:600px) and (orientation:landscape) {
+  .app-shell:has(#game-screen:not([hidden])) { padding-top: 21px; }
+  #game-screen .game-topbar #map-village-popups > * { padding: 3px; gap: 2px; }
+  #game-screen .game-topbar #map-village-popups header { font-size: .49rem; }
+  #game-screen .hud-global-row { font-size: .42rem; }
+  #game-screen .preparation-hint { top: -17px; }
+}

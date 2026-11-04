@@ -71,12 +71,28 @@ assert.equal(neighboringResident.tool, null);
 remote("buyEquipment", [blueResident.id, "tools", "bois"]);
 assert.equal(blueResident.tool, "bois");
 assert.equal(state.players.blue.gold, initialGold - E.Config.equipment.tools.bois.gold);
+assert.ok(blueVillage.residents.every(resident => resident.tool === "bois"), "La commande ancienne équipe désormais tout le village");
+initialGold = state.players.blue.gold;
+remote("buyEquipment", ["armors", "cuir"]);
+assert.equal(state.players.blue.gold, initialGold - 150, "La commande village paie une seule fois");
+assert.ok(blueVillage.residents.every(resident => resident.armor === "cuir"));
+assert.equal(neighboringResident.armor, null);
+assert.equal(redResident.armor, null);
+const newcomer = E.Economy.addResident(blueVillage, state);
+assert.equal(newcomer.tool, "bois");assert.equal(newcomer.armor, "cuir");
+const repeatedGold = state.players.blue.gold;
+remote("buyEquipment", ["armors", "cuir"]);
+assert.equal(state.players.blue.gold, repeatedGold, "Pas de double paiement en réseau");
+const protectedGear = JSON.stringify(state);
+remote("buyEquipment", ["tools", "bois"], "red");
+assert.equal(JSON.stringify(state), protectedGear, "L’équipement adverse est protégé");
+
 
 // Les prérequis sont revérifiés par l'hôte, même si le bouton invité était déverrouillé.
 initialGold = state.players.blue.gold;
 remote("buyEquipment", [blueResident.id, "armors", "fer"]);
 assert.equal(state.players.blue.gold, initialGold);
-assert.equal(blueResident.armor, null);
+assert.equal(blueResident.armor, "cuir");
 state.paused = true;
 const herdBefore = JSON.stringify(blueVillage.slots);
 remote("buyAnimal", ["chevre"]);

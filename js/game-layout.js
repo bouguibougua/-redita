@@ -42,7 +42,8 @@
     if (active && nextMode!==mode) finish(false);
     mode=nextMode;
     const p=current(),short=innerHeight<=600&&mode==='desktop';
-    if(mode==='desktop') px('header-height',clamp(p.header ? p.header*innerHeight : innerHeight*.10,short?50:82,Math.min(170,innerHeight*.21)));
+    if(mode==='desktop') px('header-height',clamp(p.header ? p.header*innerHeight : innerHeight*.12,short?78:96,Math.max(short?78:96,Math.min(180,innerHeight*.23))));
+    else px('header-height',clamp(p.header ? p.header*innerHeight : 228,210,Math.max(210,Math.min(340,innerHeight*.4))));
     const g=grid.getBoundingClientRect(),w=g.width,h=g.height,gap=parseFloat(getComputedStyle(grid).columnGap)||8;
     if(w<=0||h<=0)return;
     let left,right,jobs,village,map;

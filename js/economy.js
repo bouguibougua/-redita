@@ -271,6 +271,7 @@
       huntTargetPosition: null,
       huntTargetLaneOffset: null
     };
+    E.Equipment.applyVillage(village, resident);
     village.residents.push(resident);
     village.population = village.residents.filter(person => !person.isLegend).length;
     if (state) {
