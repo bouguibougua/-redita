@@ -254,7 +254,11 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .unit-body, .resident-avatar { background-image: url("../assets/generated/characters-atlas.webp") !important; background-size: 400% 200% !important; background-repeat: no-repeat !important; font-size: 0 !important; }
 .profession-habitant { background-image: url("../assets/generated/habitant-v1.webp") !important; background-size: contain !important; background-position: center !important; }
 .profession-guerrier { background-position: 0 100% !important; }
-.profession-ravageur { background-position: 66.666% 100% !important; }
+.profession-ravageur {
+  background-image: url("../assets/generated/ravageur-v1.png") !important;
+  background-size: contain !important;
+  background-position: center !important;
+}
 .profession-agriculteur {
   background-image: url("../assets/generated/agriculteur-v1.png") !important;
   background-size: contain !important;
@@ -669,3 +673,13 @@ body:has(.connection-screen:not([hidden])) { overflow: hidden; }
 .match-formats .button { display: grid; gap: 6px; padding: 18px 12px; text-align: center; }
 .match-formats .button span { font-size: .9em; opacity: .8; }
 .match-formats .button.selected { border-color: var(--gold); background: #65522b; color: var(--ink); }
+
+/* Le sprite de la barque fournie accompagne aussi la vue 2D. */
+.terrain-vessel.vessel-barque {
+  display: inline-block; width: 31px; height: 27px; font-size: 0;
+  background: url("../assets/generated/barque-v1.png") center / contain no-repeat;
+}
+.unit.transport-barque .unit-vessel {
+  width: clamp(42px,4vw,57px); height: clamp(32px,3.2vw,44px); font-size: 0;
+  background: url("../assets/generated/barque-v1.png") center / contain no-repeat;
+}

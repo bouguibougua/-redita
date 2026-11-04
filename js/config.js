@@ -438,6 +438,10 @@
     },
     // TEMP_BALANCE_VALUE — échelle et transitions visuelles du modèle animé.
     // Les dégâts, la portée et la cadence restent ceux du moteur de combat.
+    transportModels: {
+      // Dimensions purement visuelles ; capacité, prix et vitesse restent dans maritime.
+      barque: { src: "assets/models/barque.glb?v=1-e1ff6a2744b3", scale: 1 }
+    },
     characterModels: {
       // TEMP_BALANCE_VALUE — échelle visuelle du GLB fourni pour les sans métier.
       villager: { src: "assets/models/habitant.glb?v=1-151656a63b68", scale: 0.31 },
@@ -452,6 +456,12 @@
         src: "assets/models/chasseur.glb?v=1-5f0f9b2b4914", scale: 0.31,
         crossFade: 0.12, maxFrameDelta: 0.05, attackDuration: 0.8, arrowFlightDuration: 0.22,
         clips: { idle: "Repos", walk: "Marche", attack: "Tir", death: "Mort" }
+      },
+      // Échelle et animations visuelles du ravageur et de la hache fournis.
+      ravager: {
+        src: "assets/models/ravageur.glb?v=1-52982620a075", scale: 0.31,
+        attackDuration: 0.8, crossFade: 0.12, maxFrameDelta: 0.05,
+        clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Hache"], death: "Mort" }
       },
       warrior: {
         src: "assets/models/guerrier.glb?v=final-cd44bcb24b67", scale: 0.31,

@@ -1,0 +1,17 @@
+{
+  "source": "/Users/robin/Downloads/barque 3d.glb",
+  "source_sha256": "9173758bfff678f4374b49711f90d7614827f92f065e7bb1fc0fdf7e5b2c641f",
+  "source_triangles": 9838,
+  "triangles": 5000,
+  "bytes": 479968,
+  "sha256": "e1ff6a2744b32c1754a7e3dfe2f7b24193fd976550c31609bee5c9d04a81a2b1",
+  "dimensions_blender": [
+    0.276308536529541,
+    0.5799999833106995,
+    0.14277046918869019
+  ],
+  "texture_size": 1024,
+  "length": 0.58,
+  "forward": "+Z",
+  "simulation_changes": false
+}

@@ -50,10 +50,12 @@
     "test:xr-browser": "node tests/xr-browser.test.js",
     "test:powers": "node tests/mythology-powers.test.js",
     "test:powers-browser": "node tests/mythology-live-browser.test.js",
-    "test:layout": "node tests/game-layout-browser.test.js",
+    "test:layout": "node tests/game-layout-browser.test.js && node tests/adjustable-layout-browser.test.js",
     "test:visibility": "node tests/visibility-browser.test.js",
     "test:farmer": "node tests/farmer-browser.test.js",
-    "test:hunter": "node tests/hunter-combat.test.js && node tests/hunter-browser.test.js"
+    "test:hunter": "node tests/hunter-combat.test.js && node tests/hunter-browser.test.js",
+    "test:ravager": "node tests/ravager-browser.test.js",
+    "test:rowboat": "node tests/rowboat-browser.test.js"
   },
   "engines": {
     "node": ">=18"

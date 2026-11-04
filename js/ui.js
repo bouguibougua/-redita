@@ -664,7 +664,7 @@
 
     elements.residents.innerHTML = `<div class="residents-content management-columns">
       <aside class="character-panel panel-card" aria-label="Habitants et tâches">
-        <header class="management-context"><strong>Village ${village.lane + 1} · ${player.id === "red" ? "Rouge" : "Bleu"}</strong><span><b data-residents-available>${availableResidents}</b> disponibles · ${selectedResident ? selectedResident.name : "Aucun habitant"}</span></header>
+        <header class="management-context"><button type="button" class="layout-reset" data-layout-reset title="Réinitialiser la disposition" aria-label="Réinitialiser la disposition des panneaux">↺</button><strong>Village ${village.lane + 1} · ${player.id === "red" ? "Rouge" : "Bleu"}</strong><span><b data-residents-available>${availableResidents}</b> disponibles · ${selectedResident ? selectedResident.name : "Aucun habitant"}</span></header>
         <section class="management-column management-people"><h3>1 · Habitants</h3>
           <div class="resident-list dashboard-scroll" data-scroll-key="people" data-resident-list data-signature="${residentSignature}">${residentCards || '<p class="empty-residents">Aucun habitant vivant.</p>'}</div>
         </section>

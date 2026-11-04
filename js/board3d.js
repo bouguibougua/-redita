@@ -17,7 +17,7 @@
   let onSelectVillage = null;
   let onFrame = null;
   let xrPreview = false;
-  let orbit = { angle: -0.72, elevation: 0.88, distance: 18 };
+  let orbit = { angle: -Math.PI / 2, elevation: 0.88, distance: 18 };
   let cameraFitKey = "", cameraFitDistance = 18;
   let pointer = null;
   let dragged = false;
@@ -57,6 +57,7 @@
       E.VillagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.FarmerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.HunterModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.RavagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.WarriorModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.OrcuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.FullettuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
@@ -67,6 +68,7 @@
       E.CoastTerrain?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.CropModels?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.LivestockModels?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.RowboatModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.XR?.refreshAvailability();
       setMode(enabled);
       if (latestState) update(latestState, true);
@@ -244,6 +246,10 @@
   }
 
   function boatModel(type, owner) {
+    if (type === 'barque') {
+      const imported = E.RowboatModel?.create(owner);
+      if (imported) return imported;
+    }
     const boat = new THREE.Group();
     boat.name = `transport-${type}`;
     const hull = mesh(new THREE.BoxGeometry(type === "voilier" ? 0.42 : 0.3, 0.1, type === "voilier" ? 0.68 : 0.48), owner === "red" ? 0x7a372c : 0x315a74);
@@ -613,7 +619,7 @@
   }
 
   function characterAnimation(figure) {
-    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.hunter;
+    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.hunter || figure.userData.ravager;
   }
 
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
@@ -628,15 +634,16 @@
     const isFullettu = appearance.mythologyLegendId === 'u-fullettu';
     const isLupu = appearance.mythologyLegendId === 'u-lupu-mannaru';
     const isSurpatore = appearance.mythologyLegendId === 'u-surpatore' && appearance.mythologyForm === 'vampire';
-    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
-    const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}`;
+    const importedRavager = !animalType && !appearance.mythologyLegendId && profession === 'ravageur' && E.RavagerModel?.ready;
+    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : importedRavager ? 'ravageur-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
+    const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}${waterTransport === 'barque' ? E.RowboatModel?.ready ? ':barque-glb' : ':barque-simple' : ''}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
       figure.removeFromParent();
       disposeObject(figure);
     }
-    figure = isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : null;
-    if (figure) addHumanTransport(figure, owner, waterTransport, false);
+    figure = isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : importedRavager ? E.RavagerModel.create(owner, tool, armor) : null;
+    if (figure) addHumanTransport(figure, owner, waterTransport, importedRavager && donkey);
     else figure = animalType ? animalModel(owner, animalType, waterTransport, swimming) : personModel(owner, profession, tool, armor, waterTransport, donkey);
     Object.assign(figure.userData, { visualSignature, profession: animalType ? null : profession, animalType, tool, armor, waterTransport, donkey, swimming });
     unitModels.set(key, figure);

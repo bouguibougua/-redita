@@ -1,0 +1,21 @@
+{
+  "source": "/Users/robin/Downloads/ravageur 3d.glb",
+  "source_sha256": "2db410d5f7ceb020cbb821a3ac5a325c3a87ac0c94926b89f6f585f0a88c8e9d",
+  "axe_source": "/Users/robin/Downloads/hache 3D.glb",
+  "axe_source_sha256": "a50e36709ba633d1ae21efdf6b9c70da4c36cc0ec000c237b204f41eaa215155",
+  "triangles": 11599,
+  "body_triangles": 9399,
+  "axe_triangles": 2200,
+  "bytes": 3502676,
+  "sha256": "52982620a0751596ba367f622596b9513dd0a25939b4b60256b8e2c33bddef17",
+  "bones": 81,
+  "clips": [
+    "Repos",
+    "Marche",
+    "Coup_Hache",
+    "Mort"
+  ],
+  "texture_size": 1024,
+  "height_m": 1.8,
+  "simulation_changes": false
+}

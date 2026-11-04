@@ -286,3 +286,71 @@ body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .bo
   body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) .mythology-crystal-composition { height: 16px; }
   body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock { top: 17px; }
 }
+
+/* Panneaux ajustables : les bordures partagées modifient la disposition locale. */
+#game-screen, #game-screen.has-mythology-hud { position: relative; padding: 0; }
+#game-screen .game-topbar { height: var(--layout-header-height, 88px); flex-basis: var(--layout-header-height, 88px); }
+#game-screen .game-topbar .map-village-popups {
+  --crystal-gap: 112px; max-width: none; column-gap: 6px;
+  grid-template-columns: minmax(0,1fr) var(--crystal-gap) minmax(0,1fr);
+}
+#game-screen .game-topbar .map-village-popup { grid-column: 1; display: flex; flex-direction: column; justify-content: center; }
+#game-screen .game-topbar .map-village-popup:nth-child(2) { grid-column: 3; }
+#game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) { grid-template-columns: repeat(2,minmax(0,1fr)) var(--crystal-gap) repeat(2,minmax(0,1fr)); }
+#game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) > :nth-child(2) { grid-column: 2; }
+#game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) > :nth-child(3) { grid-column: 4; }
+#game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) > :nth-child(4) { grid-column: 5; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { left: 50%; right: auto; transform: translateX(-50%); top: 4px; width: 106px; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) .mythology-crystal-composition { height: 46px; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock { top: 48px; }
+#game-screen .management-context { position: relative; padding-right: 38px; }
+#game-screen .layout-reset { position: absolute; top: 7px; right: 7px; width: 25px; height: 25px; min-height: 0; padding: 0; border: 1px solid #ad8b4c55; border-radius: 6px; color: #bda774; background: #211b13; cursor: pointer; font-size: 17px; line-height: 1; }
+#game-screen .layout-reset:hover, #game-screen .layout-reset:focus-visible { color: #ffe7a8; border-color: #d1ac60; outline: none; }
+#game-screen .management-people { flex: 0 0 var(--layout-people-height,32%); }
+#game-screen #building-market { height: var(--layout-market-height,auto); overflow: auto; }
+#game-screen #owned-buildings { height: var(--layout-buildings-height,auto); overflow: auto; }
+#game-screen #village-inspector { height: var(--layout-inspector-height,auto); max-height: none; overflow: auto; }
+#game-screen .layout-resizers { position: absolute; inset: 0; z-index: 35; pointer-events: none; overflow: hidden; }
+#game-screen .layout-resizer { position: absolute; pointer-events: auto; touch-action: none; border: 0; padding: 0; background: transparent; border-radius: 4px; outline: none; }
+#game-screen .layout-resizer[hidden] { display: none; }
+#game-screen .layout-resizer[aria-orientation=vertical] { cursor: col-resize; }
+#game-screen .layout-resizer[aria-orientation=horizontal] { cursor: row-resize; }
+#game-screen .layout-resizer::after { content: ''; position: absolute; inset: 3px; border-radius: 4px; background: #d9b86b; opacity: .10; transition: opacity .15s; }
+#game-screen .layout-resizer[aria-orientation=vertical]::after { left: calc(50% - 1px); width: 2px; }
+#game-screen .layout-resizer[aria-orientation=horizontal]::after { top: calc(50% - 1px); height: 2px; }
+#game-screen .layout-resizer:hover::after, #game-screen .layout-resizer:focus-visible::after, #game-screen .layout-resizer.is-dragging::after { opacity: .9; }
+body.is-resizing-game, body.is-resizing-game * { user-select: none !important; cursor: var(--layout-cursor) !important; }
+@media (min-width:801px), (orientation:landscape) {
+  #game-screen .game-layout { position: relative; grid-template-columns: var(--layout-left,20%) minmax(0,1fr) var(--layout-right,20%); grid-template-rows: minmax(0,1fr); grid-template-areas: none; }
+  #game-screen .character-panel { grid-area: auto; grid-column: 1; grid-row: 1; height: 100%; }
+  #game-screen .board-panel { grid-area: auto; grid-column: 2; grid-row: 1; align-self: start; height: calc(100% - var(--layout-jobs-height,27%) - 8px); }
+  #game-screen .management-professions { grid-area: auto; grid-column: 2; grid-row: 1; align-self: end; height: var(--layout-jobs-height,27%); }
+  #game-screen .side-panel { grid-area: auto; grid-column: 3; grid-row: 1; align-self: start; height: calc(100% - var(--layout-village-height,27%) - 8px); }
+  #game-screen .management-village { grid-area: auto; grid-column: 3; grid-row: 1; align-self: end; height: var(--layout-village-height,27%); }
+}
+@media (max-width:800px) and (orientation:portrait) {
+  #game-screen .game-layout { position: relative; grid-template-columns: var(--layout-left,50%) minmax(0,1fr); grid-template-rows: var(--layout-map-height,42%) minmax(0,1fr) var(--layout-jobs-height,15%) var(--layout-village-height,15%); }
+  #game-screen .game-topbar { height: 74px; flex-basis: 74px; }
+  #game-screen .game-topbar:has(.map-village-popup:nth-child(3)) { height: 116px; flex-basis: 116px; }
+  #game-screen .game-topbar .map-village-popups { --crystal-gap: 76px; }
+  #game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) { grid-template-columns: minmax(0,1fr) var(--crystal-gap) minmax(0,1fr); }
+  #game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) > :nth-child(2), #game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) > :nth-child(4) { grid-column: 3; }
+  #game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) > :nth-child(3) { grid-column: 1; grid-row: 2; }
+  #game-screen .game-topbar .map-village-popups:has(> :nth-child(3)) > :nth-child(4) { grid-row: 2; }
+  .app-shell:has(#game-screen:not([hidden])) .masthead { width: calc(50% - 45px); }
+  #game-screen .preparation-hint { max-width: calc(50% - 45px); }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { width: 76px; top: 0; }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) .mythology-crystal-composition { height: 26px; }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock { top: 28px; min-width: 74px; padding-inline: 2px; }
+}
+@media (max-height:600px) and (orientation:landscape) {
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) .mythology-crystal-composition { height: 21px; }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock { top: 23px; }
+}
+
+.app-shell:has(#game-screen:not([hidden])) .masthead-status { min-width: 0; width: 100%; text-align: left; }
+@media (max-width:800px) and (orientation:portrait) {
+  .app-shell:has(#game-screen:not([hidden])) .masthead { width: calc(50% - 55px); }
+  .app-shell:has(#game-screen:not([hidden])) .session-status { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #game-screen .preparation-hint { position: fixed; top: 25px; left: 6px; max-width: calc(50vw - 55px); }
+}

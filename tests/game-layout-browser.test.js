@@ -49,7 +49,8 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await page.evaluate('layoutState.paused=false;layoutState.players.red.villages[0].damageSmoke=0;Eredita.UI.render(layoutState);Eredita.Board3D.update(layoutState,true)');
     for(const [width,height] of [[1920,1080],[1440,900],[1366,768],[1024,768],[390,844],[320,568],[844,390]]) {
       await page.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<801});
-      await delay(250);
+      await page.waitFor(`(() => {const grid=document.querySelector('.game-layout'),people=document.querySelector('.character-panel');return Eredita.GameLayout?.diagnostics.mode&&Math.abs(Eredita.GameLayout.diagnostics.metrics.left*grid.clientWidth-people.getBoundingClientRect().width)<1&&document.documentElement.scrollWidth<=${width}+1;})()`);
+      await delay(120);
       const layout = await page.evaluate(`(() => {
         const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
         return {pageWidth:document.documentElement.scrollWidth,pageHeight:document.documentElement.scrollHeight,
