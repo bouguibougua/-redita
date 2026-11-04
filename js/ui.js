@@ -32,6 +32,8 @@
       mapVillagePopups: document.querySelector("#map-village-popups"),
       inspector: document.querySelector("#village-inspector"),
       residents: document.querySelector("#residents-panel"),
+      construction: document.querySelector("#building-market"),
+      ownedBuildings: document.querySelector("#owned-buildings"),
       shop: document.querySelector("#village-shop"),
       shopModal: document.querySelector("#shop-modal"),
       shopModalContent: document.querySelector("#shop-modal-content"),
@@ -88,7 +90,7 @@
       const village = event.target.closest("[data-village-select]");
       if (village) controller.selectVillage(village.dataset.player, Number(village.dataset.lane));
     });
-    [elements.inspector, elements.residents, elements.shop].forEach((panel) => panel.addEventListener("click", (event) => {
+    [elements.inspector, elements.residents, elements.shop, elements.construction, elements.ownedBuildings].forEach((panel) => panel.addEventListener("click", (event) => {
       const action = event.target.closest("button");
       if (action && action.disabled) return;
       const sale = event.target.closest("[data-sell]");
@@ -166,16 +168,16 @@
       const specialSlaughter = event.target.closest("[data-slaughter-special]");
       if (specialSlaughter) controller.slaughterSpecialAnimal(specialSlaughter.dataset.slaughterSpecial);
     }));
-    elements.residents.addEventListener("change", (event) => {
+    [elements.residents, elements.ownedBuildings].forEach((target) => target.addEventListener("change", (event) => {
       if (event.target.matches("[data-upgrade-resource]")) {
         upgradeResource = event.target.value;
-        elements.residents.querySelectorAll("[data-upgrade-resource]").forEach((select) => { select.value = upgradeResource; });
+        elements.gameScreen.querySelectorAll("[data-upgrade-resource]").forEach((select) => { select.value = upgradeResource; });
         const { playerId, lane } = currentState.selectedVillage;
         const player = currentState.players[playerId];
         updateTradeAndUpgrades(currentState, player, player.villages[lane]);
       }
       if (event.target.matches("[data-purchase-resource]")) purchaseResource = event.target.value;
-    });
+    }));
     elements.shop.addEventListener("change", (event) => {
       if (event.target.matches("[data-shop-resident]")) controller.selectResident(event.target.value);
     });
@@ -274,7 +276,7 @@
     renderShop(state);
     syncShopModal(state);
     const readonly = E.Network.mode === "solo" && state.selectedVillage.playerId === "blue";
-    [elements.inspector, elements.residents, elements.shop].forEach((panel) => panel.classList.toggle("opponent-readonly", readonly));
+    [elements.inspector, elements.residents, elements.shop, elements.construction, elements.ownedBuildings].forEach((panel) => panel.classList.toggle("opponent-readonly", readonly));
     renderRedirect(state, true);
     renderResult(state);
   }
@@ -601,17 +603,18 @@
     const player = state.players[selection.playerId];
     const village = player && player.villages[selection.lane];
     const sameVillage = elements.residents.dataset.selectionKey === `${selection.playerId}-${selection.lane}`;
-    const previousDetails = elements.residents.querySelector("details");
-    const expanded = !sameVillage || !previousDetails || previousDetails.open;
     const residentScroll = sameVillage ? elements.residents.querySelector("[data-resident-list]")?.scrollTop || 0 : 0;
-    const managementScroll = sameVillage ? elements.residents.querySelector(".residents-content")?.scrollTop || 0 : 0;
+    const panelScrolls = new Map(sameVillage ? Array.from(elements.residents.querySelectorAll("[data-scroll-key]"), panel => [panel.dataset.scrollKey, panel.scrollTop]) : []);
     const inspectorScroll = sameVillage ? elements.inspector.scrollTop : 0;
     elements.residents.dataset.selectionKey = `${selection.playerId}-${selection.lane}`;
     elements.residents.className = `panel-card residents-panel ${selection.playerId} lane-${selection.lane}`;
     elements.residents.hidden = false;
+    elements.construction.hidden = false;
+    elements.ownedBuildings.hidden = false;
     if (!village) {
       elements.inspector.innerHTML = `<p class="empty-copy">Sélectionnez un village.</p>`;
       elements.residents.innerHTML = "";
+      elements.construction.hidden = elements.ownedBuildings.hidden = true;
       return;
     }
     elements.inspector.dataset.herdSignature = `${herdSignature(village)}:${state.preparationRemaining > 0}`;
@@ -619,6 +622,7 @@
     if (!known.all && player.id !== viewerId(state)) {
       elements.inspector.innerHTML = `<h3>Village adverse · informations cachées</h3><p class="section-help">Une Tour génoise révèle une partie de la région. U Mazzeru révèle les habitants offensifs ; l’Œil de Sainte-Lucie révèle les Littoraux.</p>${known.people || known.offensive ? `<p>${village.residents.filter(person => E.MythologyEffects.residentVisible(state, viewerId(state), village, person)).map(person => E.Config.professions[person.profession || "habitant"].label).join(", ") || "Aucun habitant révélé"}</p>` : ""}`;
       elements.residents.innerHTML = "";
+      elements.construction.hidden = elements.ownedBuildings.hidden = true;
       elements.inspector.dataset.vision = `${known.people}:${known.all}:${known.offensive}`;
       return;
     }
@@ -631,7 +635,7 @@
     const residentCards = village.residents.map((resident) => {
       const selected = selectedResident && selectedResident.id === resident.id;
       return `<button class="resident-card ${selected ? "selected" : ""}" type="button"
-        data-select-resident="${resident.id}" data-resident-state="${resident.mission}" aria-pressed="${selected}">
+        data-select-resident="${resident.id}" data-resident-state="${resident.mission}" aria-pressed="${selected}" title="${resident.name} · ${equipmentLabel(resident)}">
         ${residentAppearance(resident, "resident-avatar")}
         <span><strong>${resident.name}</strong><small>${E.Config.professions[resident.profession || "habitant"].label}</small><small>${residentMissionLabel(resident.mission)}${E.Economy.isBoosted(resident, resident.mission) ? " · ★ Boost" : ""}</small><small>${equipmentLabel(resident)}</small></span>
       </button>`;
@@ -650,38 +654,35 @@
       const next = (village.nextResidentProfession || "habitant") === key;
       const canSetNext = state.phase === "running" && !state.paused && !village.destroyed;
       const requirement = definition.requires && !E.Buildings.has(village, definition.requires) ? `${buildingLabels[definition.requires]} requis` : definition.description;
-      return `<div class="profession-command"><button type="button" class="profession-button ${active ? "selected" : ""}" data-profession="${key}" data-resident-id="${selectedResident.id}" aria-pressed="${active}" ${!allowed ? "disabled" : ""}>${definition.icon} ${definition.label}${active ? " · Équipé" : ""}<small>${requirement}</small></button><div class="command-actions"><button type="button" class="profession-all-button ${key === "habitant" ? "remove-all-button" : ""}" data-profession-all="${key}" ${!canAssignAll ? "disabled" : ""}>${key === "habitant" ? "Retirer les métiers à tous" : "Attribuer à tous"}</button><button type="button" class="next-resident-button ${next ? "active" : ""}" data-next-profession="${key}" aria-pressed="${next}" ${!canSetNext ? "disabled" : ""}>Attribuer aux prochain</button></div></div>`;
+      return `<div class="profession-command"><button type="button" class="profession-button ${active ? "selected" : ""}" data-profession="${key}" data-resident-id="${selectedResident.id}" aria-pressed="${active}" ${!allowed ? "disabled" : ""}>${definition.icon} ${definition.label}${active ? " · Équipé" : ""}<small>${requirement}</small></button><div class="command-actions"><button type="button" class="profession-all-button ${key === "habitant" ? "remove-all-button" : ""}" data-profession-all="${key}" title="${key === "habitant" ? "Retirer les métiers à tous" : "Attribuer ce métier à tous les habitants sans métier"}" aria-label="${key === "habitant" ? "Retirer les métiers à tous" : "Attribuer ce métier à tous les habitants sans métier"}" ${!canAssignAll ? "disabled" : ""}>${key === "habitant" ? "Retirer tous" : "Tous"}</button><button type="button" class="next-resident-button ${next ? "active" : ""}" data-next-profession="${key}" aria-pressed="${next}" ${!canSetNext ? "disabled" : ""} title="Attribuer aux prochains habitants" aria-label="Attribuer aux prochains habitants">Prochains</button></div></div>`;
     }).join("") : '<p class="section-help">Aucun habitant sélectionné.</p>';
     const buildings = village.buildings.map((building, index) => `<div class="management-card building-card building-${building.type}"><strong>${buildingLabels[building.type]} T${building.level}</strong><small>+${building.hpBonus} PV</small>${upgradeButton(state, player, village, index)}</div>`).join("");
 
     elements.inspector.innerHTML = slots;
 
-    elements.residents.innerHTML = `<details ${expanded ? "open" : ""}>
-      <summary><strong>Gestion · Village ${village.lane + 1} · ${player.id === "red" ? "Rouge" : "Bleu"}</strong><span><b data-residents-available>${availableResidents}</b> disponibles · ${selectedResident ? selectedResident.name : "Aucun habitant"} sélectionné · cliquer pour replier</span></summary>
-      <div class="residents-content management-columns">
-      <section class="management-column"><h3>1 · Habitants</h3>
-      <p class="section-help">Population de ce village ; les habitants en mission restent identifiés.</p>
-      <div class="resident-list" data-resident-list data-signature="${residentSignature}">${residentCards || '<p class="empty-residents">Aucun habitant vivant.</p>'}</div>
-      </section>
-      <section class="management-column"><h3>2 · Tâches</h3>
-        <p class="section-help">Bleu ★ : bonus du métier. Jaune ✓ : tâche active ou métier équipé. Libère une tâche avant d’en changer.</p>
-        <p class="selected-resident">${selectedResident ? `${selectedResident.name} · ${residentMissionLabel(selectedResident.mission)}` : "Aucun habitant"}</p>
-        <div class="mission-grid">${missionButtons}</div>
-      </section>
-      <section class="management-column"><h3>3 · Métiers</h3><p class="section-help">« Attribuer à tous » ne concerne que les habitants sans métier. Le retrait groupé ignore les attaquants et défenseurs engagés.</p><div class="profession-list">${professionButtons}</div></section>
-      <section class="management-column management-village"><h3>4 · Village</h3>
-        <div class="village-overview">
-          <div class="resident-purchase"><strong>Nouvel habitant</strong><small>50 or + 50 ressources au choix</small><label>Ressource<select data-purchase-resource>${E.Config.resources.map((key) => `<option value="${key}" ${key === purchaseResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select></label><button type="button" class="button buy-resident-button" data-buy-resident>Acheter un habitant</button></div>
-          <div class="management-card building-card building-village"><strong>Village T${village.level}</strong><small>${village.populationMax} habitants maximum</small><small>Riposte : ${E.Config.combat.villageRetaliationDamagePerSecond} dégâts/s par assaillant</small>${upgradeButton(state, player, village, "village")}</div>
+    elements.residents.innerHTML = `<div class="residents-content management-columns">
+      <aside class="character-panel panel-card" aria-label="Habitants et tâches">
+        <header class="management-context"><strong>Village ${village.lane + 1} · ${player.id === "red" ? "Rouge" : "Bleu"}</strong><span><b data-residents-available>${availableResidents}</b> disponibles · ${selectedResident ? selectedResident.name : "Aucun habitant"}</span></header>
+        <section class="management-column management-people"><h3>1 · Habitants</h3>
+          <div class="resident-list dashboard-scroll" data-scroll-key="people" data-resident-list data-signature="${residentSignature}">${residentCards || '<p class="empty-residents">Aucun habitant vivant.</p>'}</div>
+        </section>
+        <section class="management-column management-tasks"><h3>2 · Tâches</h3>
+          <p class="selected-resident">${selectedResident ? `${selectedResident.name} · ${residentMissionLabel(selectedResident.mission)}` : "Aucun habitant"}</p>
+          <div class="mission-grid dashboard-scroll" data-scroll-key="tasks">${missionButtons}</div>
+        </section>
+      </aside>
+      <section class="management-column management-professions panel-card"><h3>3 · Métiers <small>${selectedResident ? selectedResident.name : ""}</small></h3><div class="profession-list dashboard-scroll" data-scroll-key="professions">${professionButtons}</div></section>
+      <section class="management-column management-village panel-card"><h3>4 · Village</h3>
+        <div class="village-overview dashboard-scroll" data-scroll-key="village">
+          <div class="resident-purchase"><strong>Nouvel habitant</strong><small>50 or + 50 ressources</small><label>Ressource<select data-purchase-resource>${E.Config.resources.map((key) => `<option value="${key}" ${key === purchaseResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select></label><button type="button" class="button buy-resident-button" data-buy-resident>Acheter un habitant</button></div>
+          <div class="management-card building-card building-village"><strong>Village T${village.level}</strong><small>${village.populationMax} habitants maximum</small><small>Riposte : ${E.Config.combat.villageRetaliationDamagePerSecond} dégâts/s</small>${upgradeButton(state, player, village, "village")}</div>
         </div>
-        <div class="built-buildings">${buildings}</div>
-        <p class="section-help">${village.buildings.length}/${E.Config.building.slots} bâtiments</p>
-        <div class="construction-list">${E.Config.building.types.map((type) => `<button class="button" type="button" data-build="${type}" ${cannotBuy ? "disabled" : ""}>+ ${buildingLabels[type]}<small>${E.Config.building.T1.gold} or · +75 PV</small></button>`).join("")}</div>
       </section>
-      </div>
-    </details>`;
+    </div>`;
+    elements.construction.innerHTML = `<h3>Construire <small>${village.buildings.length}/${E.Config.building.slots}</small></h3><div class="construction-list">${E.Config.building.types.map((type) => `<button class="button" type="button" data-build="${type}" ${cannotBuy ? "disabled" : ""}>+ ${buildingLabels[type]}<small>${E.Config.building.T1.gold} or</small></button>`).join("")}</div>`;
+    elements.ownedBuildings.innerHTML = `<h3>Bâtiments</h3><div class="built-buildings">${buildings || '<p class="empty-buildings">Aucun bâtiment construit.</p>'}</div>`;
     elements.residents.querySelector("[data-resident-list]").scrollTop = residentScroll;
-    elements.residents.querySelector(".residents-content").scrollTop = managementScroll;
+    elements.residents.querySelectorAll("[data-scroll-key]").forEach(panel => { panel.scrollTop = panelScrolls.get(panel.dataset.scrollKey) || 0; });
     elements.inspector.scrollTop = inspectorScroll;
     updateTradeAndUpgrades(state, player, village);
   }
@@ -701,7 +702,7 @@
       const preview = elements.inspector.querySelector(`[data-sale-preview="${button.dataset.sell}"]`);
       preview.textContent = quote.amount > 0 ? `${formatNumber(quote.amount)} → ${quote.gold.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} or` : "Stock vide";
     });
-    elements.residents.querySelectorAll("[data-upgrade]").forEach((button) => {
+    elements.gameScreen.querySelectorAll("[data-upgrade]").forEach((button) => {
       const index = button.dataset.upgrade === "village" ? "village" : Number(button.dataset.upgrade);
       const quote = E.Buildings.upgradeQuote(state, player.id, village.lane, index, upgradeResource);
       button.disabled = !quote?.allowed;
@@ -790,7 +791,7 @@
       renderInspector(state);
       return;
     }
-    elements.residents.querySelectorAll("[data-build]").forEach((button) => { button.disabled = cannotBuild; });
+    elements.construction.querySelectorAll("[data-build]").forEach((button) => { button.disabled = cannotBuild; });
     updateTradeAndUpgrades(state, player, village);
     elements.inspector.querySelectorAll("[data-place-crop]").forEach((button) => {
       button.disabled = !E.Crops.canPlace(state, player.id, village.lane, Number(button.dataset.slotIndex), button.dataset.placeCrop);
@@ -820,7 +821,7 @@
     const locked = state.phase !== "running" || (state.paused && !tutorialDefenseOrder) || village.destroyed;
     const hasAvailableResidents = E.Economy.getAvailableResidents(state, player.id, village.lane) > 0;
     const canSetNext = !locked;
-    const nextButton = (mission) => `<button class="next-resident-button ${(village.nextResidentMission || "disponible") === mission ? "active" : ""}" type="button" data-next-mission="${mission}" aria-pressed="${(village.nextResidentMission || "disponible") === mission}" ${!canSetNext ? "disabled" : ""}>Attribuer aux prochain</button>`;
+    const nextButton = (mission) => `<button class="next-resident-button ${(village.nextResidentMission || "disponible") === mission ? "active" : ""}" type="button" data-next-mission="${mission}" aria-pressed="${(village.nextResidentMission || "disponible") === mission}" ${!canSetNext ? "disabled" : ""} title="Attribuer aux prochains habitants" aria-label="Attribuer aux prochains habitants">Prochains</button>`;
     const economicButtons = Object.entries(E.Config.jobs).map(([job, definition]) => {
       const allowed = available && E.Economy.canAssignResidentJob(state, player.id, village.lane, resident.id, job);
       const canAssignAll = hasAvailableResidents && E.Economy.canAssignJob(state, player.id, village.lane, job);
@@ -828,16 +829,16 @@
       const assigned = resident.mission === job;
       return `<div class="mission-command"><button class="mission-button ${boosted ? "boosted" : ""} ${assigned ? "assigned" : ""}" type="button" aria-pressed="${assigned}" data-resident-mission="${job}" data-resident-id="${resident.id}" ${!allowed ? "disabled" : ""}>
         ${definition.icon} ${definition.label}${boosted ? " ★" : ""}${assigned ? " ✓" : ""}<small>${jobRequirementText(village, job)}${boosted ? " · Bonus métier" : " · Sans bonus métier"}</small>
-      </button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="${job}" ${!canAssignAll ? "disabled" : ""}>Attribuer à tous</button>${nextButton(job)}</div></div>`;
+      </button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="${job}" ${!canAssignAll ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton(job)}</div></div>`;
     }).join("");
     const canFight = available && !locked;
     const canAssignAllCombat = hasAvailableResidents && !locked;
     const releaseAllowed = Object.hasOwn(E.Config.jobs, resident.mission) && !locked;
     const canReleaseAll = !locked && village.residents.some((item) => Object.hasOwn(E.Config.jobs, item.mission));
-    return `<div class="mission-command"><button class="mission-button mission-release" type="button" data-release-resident="${resident.id}" ${!releaseAllowed ? "disabled" : ""}>↩ Rendre disponible<small>Arrête la tâche, conserve le métier</small></button><div class="command-actions"><button class="assign-all-button remove-all-button" type="button" data-release-all ${!canReleaseAll ? "disabled" : ""}>Retirer les tâches à tous</button>${nextButton("disponible")}</div></div>
+    return `<div class="mission-command"><button class="mission-button mission-release" type="button" data-release-resident="${resident.id}" ${!releaseAllowed ? "disabled" : ""}>↩ Rendre disponible<small>Arrête la tâche, conserve le métier</small></button><div class="command-actions"><button class="assign-all-button remove-all-button" type="button" data-release-all ${!canReleaseAll ? "disabled" : ""} title="Retirer les tâches à tous" aria-label="Retirer les tâches à tous">Retirer tous</button>${nextButton("disponible")}</div></div>
       ${economicButtons}
-      <div class="mission-command"><button class="mission-button mission-attack ${E.Economy.isBoosted(resident, "attaque") ? "boosted" : ""} ${resident.mission === "attaque" ? "assigned" : ""}" type="button" aria-pressed="${resident.mission === "attaque"}" data-resident-mission="attaque" data-resident-id="${resident.id}" ${!canFight ? "disabled" : ""}>⚔ Attaquer${resident.mission === "attaque" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "attaque") ? "★ Bonus métier" : "Combat de base"} · Village : −5 PV/s</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="attaque" ${!canAssignAllCombat ? "disabled" : ""}>Attribuer à tous</button>${nextButton("attaque")}</div></div>
-      <div class="mission-command"><button class="mission-button mission-defense ${E.Economy.isBoosted(resident, "defense") ? "boosted" : ""} ${resident.mission === "defense" ? "assigned" : ""}" type="button" aria-pressed="${resident.mission === "defense"}" data-resident-mission="defense" data-resident-id="${resident.id}" ${!canFight ? "disabled" : ""}>🛡 Défendre${resident.mission === "defense" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "defense") ? "★ Bonus métier" : "Combat de base"}</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="defense" ${!canAssignAllCombat ? "disabled" : ""}>Attribuer à tous</button>${nextButton("defense")}</div></div>
+      <div class="mission-command"><button class="mission-button mission-attack ${E.Economy.isBoosted(resident, "attaque") ? "boosted" : ""} ${resident.mission === "attaque" ? "assigned" : ""}" type="button" aria-pressed="${resident.mission === "attaque"}" data-resident-mission="attaque" data-resident-id="${resident.id}" ${!canFight ? "disabled" : ""}>⚔ Attaquer${resident.mission === "attaque" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "attaque") ? "★ Bonus métier" : "Combat de base"} · Village : −5 PV/s</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="attaque" ${!canAssignAllCombat ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton("attaque")}</div></div>
+      <div class="mission-command"><button class="mission-button mission-defense ${E.Economy.isBoosted(resident, "defense") ? "boosted" : ""} ${resident.mission === "defense" ? "assigned" : ""}" type="button" aria-pressed="${resident.mission === "defense"}" data-resident-mission="defense" data-resident-id="${resident.id}" ${!canFight ? "disabled" : ""}>🛡 Défendre${resident.mission === "defense" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "defense") ? "★ Bonus métier" : "Combat de base"}</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="defense" ${!canAssignAllCombat ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton("defense")}</div></div>
       `;
   }
 

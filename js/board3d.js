@@ -18,6 +18,7 @@
   let onFrame = null;
   let xrPreview = false;
   let orbit = { angle: -0.72, elevation: 0.88, distance: 18 };
+  let cameraFitKey = "", cameraFitDistance = 18;
   let pointer = null;
   let dragged = false;
   let lastUnitUpdate = 0;
@@ -83,7 +84,6 @@
     const backdrop = typeof getComputedStyle === "function"
       ? getComputedStyle(document.documentElement).getPropertyValue("--surface-deep").trim() || "#100e0b" : "#100e0b";
     scene.background = new THREE.Color(backdrop);
-    scene.fog = new THREE.Fog(backdrop, 19, 32);
     camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
     renderer.xr.enabled = true;
@@ -341,7 +341,6 @@
     const outerZ = village.ownerId === "red" ? -1.82 : 1.82;
     const villageModel = buildingModel("village", village.level, village.ownerId);
     villageModel.position.set(-0.72, 0.12, outerZ);
-    if (village.damageSmoke > 0) addStructureSmoke(villageModel, 0);
     tagSelectable(villageModel, village.ownerId, village.lane);
     villageModel.userData.xrTarget = { kind: "village", playerId: village.ownerId, lane: village.lane };
     group.add(villageModel);
@@ -349,27 +348,12 @@
       const model = buildingModel(building.type, building.level, village.ownerId);
       model.scale.setScalar(0.72);
       model.position.set(-0.03 + index * 0.52, 0.1, outerZ);
-      if (village.damageSmoke > 0) addStructureSmoke(model, index + 1);
       tagSelectable(model, village.ownerId, village.lane);
       group.add(model);
     });
     if (village.destroyed) group.traverse((item) => {
       if (item.material?.color) item.material.color.multiplyScalar(0.32);
     });
-  }
-
-  function addStructureSmoke(model, seed) {
-    for (let index = 0; index < 3; index++) {
-      const smoke = new THREE.Mesh(
-        new THREE.SphereGeometry(0.09 + index * 0.025, 7, 5),
-        new THREE.MeshStandardMaterial({ color: 0x777a73, transparent: true, opacity: 0.48, roughness: 1, depthWrite: false })
-      );
-      smoke.castShadow = false;
-      smoke.receiveShadow = false;
-      smoke.position.set((index - 1) * 0.07, 0.68 + index * 0.1, 0.02);
-      smoke.userData.smoke = { baseX: smoke.position.x, baseY: smoke.position.y, phase: (seed * 0.23 + index * 0.31) % 1 };
-      model.add(smoke);
-    }
   }
 
   function tagSelectable(object, playerId, lane) {
@@ -896,7 +880,7 @@
 
   function signature(state) {
     return Object.values(state.players).flatMap((player) => player.villages.map((village) => [
-      village.id, village.biome, village.level, village.destroyed, village.damageSmoke > 0,
+      village.id, village.biome, village.level, village.destroyed,
       E.MythologyEffects?.terrainVisualKey(village) || "", village.burnUntil > state.elapsed, village.curseUntil > state.elapsed,
       E.MythologyEffects?.vision(state, viewerId(state), village)?.fraction ?? 1,
       village.buildings.map((building) => `${building.type}${building.level}`).join(","),
@@ -1028,9 +1012,26 @@
   }
 
   function updateCamera() {
-    const horizontal = Math.cos(orbit.elevation) * orbit.distance;
-    camera.position.set(Math.sin(orbit.angle) * horizontal, Math.sin(orbit.elevation) * orbit.distance, Math.cos(orbit.angle) * horizontal);
-    camera.lookAt(0, 0, 0);
+    const direction = new THREE.Vector3(Math.sin(orbit.angle) * Math.cos(orbit.elevation),
+      Math.sin(orbit.elevation), Math.cos(orbit.angle) * Math.cos(orbit.elevation));
+    const fitKey = `${orbit.angle}:${orbit.elevation}:${camera.aspect}:${boardWidth()}`;
+    if (cameraFitKey !== fitKey) {
+      const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), direction).normalize();
+      const up = new THREE.Vector3().crossVectors(direction, right);
+      const tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      let distance = 0;
+      for (const x of [-boardWidth() / 2, boardWidth() / 2]) for (const y of [-.1, 1.1]) for (const z of [-5.6, 5.6]) {
+        const point = new THREE.Vector3(x, y, z), depth = point.dot(direction);
+        distance = Math.max(distance, Math.abs(point.dot(right)) / (tangent * camera.aspect) + depth,
+          Math.abs(point.dot(up)) / tangent + depth);
+      }
+      cameraFitDistance = distance * 1.07;
+      cameraFitKey = fitKey;
+    }
+    // La distance d'orbite reste le zoom choisi par le joueur, autour du cadrage adapté à l'écran.
+    camera.position.copy(direction.multiplyScalar(cameraFitDistance * orbit.distance / 18));
+    camera.position.y += .1;
+    camera.lookAt(0, .1, 0);
   }
 
   function resize() {
@@ -1046,16 +1047,6 @@
     if ((!enabled && !E.XR?.active) || !renderer) return;
     // L'horloge tourne toujours ; seul le dessin du plateau masqué est évité.
     if (!E.XR?.active && (E.MenuVR?.active || container.getClientRects().length === 0)) return;
-    const time = performance.now() / 1200;
-    terrainGroup?.traverse((item) => {
-      const smoke = item.userData?.smoke;
-      if (!smoke) return;
-      const progress = (time + smoke.phase) % 1;
-      item.position.y = smoke.baseY + progress * 0.48;
-      item.position.x = smoke.baseX + Math.sin(time * 3 + smoke.phase * 9) * 0.035;
-      item.scale.setScalar(0.72 + progress * 0.8);
-      item.material.opacity = 0.5 * (1 - progress);
-    });
     animateUnitEffects();
     if (!E.XR?.active) updateCamera();
     renderer.render(scene, camera);

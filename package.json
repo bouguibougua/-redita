@@ -49,7 +49,8 @@
     "test:xr": "node tests/xr.test.js && node tests/xr-environment.test.js && node tests/xr-windows.test.js && node tests/xr-ui-premium.test.js",
     "test:xr-browser": "node tests/xr-browser.test.js",
     "test:powers": "node tests/mythology-powers.test.js",
-    "test:powers-browser": "node tests/mythology-live-browser.test.js"
+    "test:powers-browser": "node tests/mythology-live-browser.test.js",
+    "test:layout": "node tests/game-layout-browser.test.js"
   },
   "engines": {
     "node": ">=18"

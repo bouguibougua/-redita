@@ -174,7 +174,6 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .region.blue .terrain-building-layer { bottom: 5px; }
 .terrain-building-layer.destroyed { filter: grayscale(1) drop-shadow(0 4px 4px #0009); opacity: .42; }
 .terrain-building { position: relative; flex: 0 1 clamp(34px, 4.5vw, 54px); width: clamp(34px, 4.5vw, 54px); aspect-ratio: 1; overflow: visible; background-image: url("../assets/generated/buildings-tier-atlas.webp"); background-size: 400% 300%; background-repeat: no-repeat; }
-.terrain-building-layer.under-attack .terrain-building::before { content: ""; position: absolute; z-index: 4; left: 42%; bottom: 62%; width: 18px; height: 24px; background: radial-gradient(circle at 35% 78%, #555c 0 20%, transparent 22%), radial-gradient(circle at 64% 50%, #777b 0 23%, transparent 25%), radial-gradient(circle at 42% 20%, #9998 0 19%, transparent 22%); filter: blur(.6px); animation: structure-smoke 1.15s infinite ease-out; }
 .terrain-building.terrain-village { flex-basis: clamp(44px, 5.5vw, 66px); width: clamp(44px, 5.5vw, 66px); }
 .terrain-building::after { content: "T" attr(data-building-tier); position: absolute; right: 0; bottom: 0; padding: 1px 3px; border: 1px solid #ffffff66; border-radius: 4px; background: #171914d9; color: #ffe7a0; font-size: .46rem; font-weight: 900; line-height: 1.1; }
 .terrain-village { background-position-x: 0; }
@@ -287,7 +286,6 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .harassment-warning { color: #ffc288 !important; }
 @keyframes pulse { to { box-shadow: 0 0 0 7px rgba(223,184,94,.3); } }
 @keyframes structure-hit { to { filter: brightness(1.28) saturate(1.25); } }
-@keyframes structure-smoke { from { transform: translateY(4px) scale(.65); opacity: .25; } 55% { opacity: .85; } to { transform: translate(5px, -18px) scale(1.25); opacity: 0; } }
 @keyframes hunter-step { to { transform: translateY(-3px) rotate(4deg); } }
 
 .side-panel { display: grid; align-content: start; gap: 14px; }

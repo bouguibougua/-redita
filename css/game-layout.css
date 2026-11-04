@@ -1,0 +1,208 @@
+/* Écran de partie : le plateau et les commandes partagent le viewport.
+   Les listes longues défilent dans leur panneau, jamais la page entière. */
+body:has(#game-screen:not([hidden])) { height: 100dvh; overflow: hidden; background: #100f0b; }
+.app-shell:has(#game-screen:not([hidden])) {
+  width: 100%; height: 100dvh; padding: 64px 8px 8px; display: flex; flex-direction: column;
+}
+.app-shell:has(#game-screen:not([hidden])) > main { flex: 1; min-width: 0; min-height: 0; }
+.app-shell:has(#game-screen:not([hidden])) .masthead { position: absolute; top: 8px; left: 12px; right: 12px; height: 22px; border: 0; padding: 0; }
+.app-shell:has(#game-screen:not([hidden])) .session-status { max-width: 34vw; margin: 0; font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#game-screen:not([hidden]) { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 0; }
+#game-screen .preparation-hint { position: absolute; top: 37px; left: 12px; right: auto; max-width: calc(50vw - 75px); height: 20px; margin: 0; padding: 2px 8px; font-size: .62rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#game-screen .game-layout {
+  --side-width: clamp(200px, 20vw, 300px);
+  display: grid; flex: 1; min-height: 0; gap: 8px;
+  grid-template-columns: var(--side-width) minmax(0, 1fr) var(--side-width);
+  grid-template-rows: minmax(0, 1fr) clamp(180px, 27dvh, 250px);
+  grid-template-areas: 'people map tools' 'people jobs village';
+  align-items: stretch;
+}
+#game-screen .board-panel { grid-area: map; min-height: 0; display: flex; flex-direction: column; }
+#game-screen .board-legend { flex-shrink: 0; font-size: .54rem; margin-bottom: 4px; }
+#game-screen .battlefield { flex: 1; width: 100%; height: 100%; min-height: 0; border-radius: 12px; box-shadow: none; }
+#game-screen .battlefield-3d { inset: 76px 0 51px; }
+#game-screen .board-columns, #game-screen .units-layer { inset: 76px 0 51px; }
+#game-screen .lane { grid-template-rows: 0 minmax(0, 1fr) 12px minmax(0, 1fr) 0; }
+#game-screen .village-token { display: none; }
+#game-screen .region { padding: 3px; }
+#game-screen .region-name { font-size: .48rem; }
+#game-screen .terrain-building-layer { height: 25px; }
+#game-screen .region.red .terrain-building-layer { top: 12px; }
+#game-screen .region.blue .terrain-building-layer { bottom: 2px; }
+#game-screen .terrain-building { width: 24px; flex-basis: 24px; }
+#game-screen .slot-grid { grid-template-columns: repeat(2, minmax(12px, 27px)); gap: 3px; margin-top: 26px; }
+#game-screen .region.blue .slot-grid { margin-top: 3px; margin-bottom: 26px; }
+#game-screen .slot { min-height: 0; padding: 1px; border-radius: 4px; }
+#game-screen .slot.occupied { min-height: 26px; }
+#game-screen .slot .content-icon { width: 22px; height: 22px; }
+#game-screen .slot .content-name, #game-screen .slot .content-detail, #game-screen .slot.animal::after { display: none; }
+#game-screen .battlefield > .view-controls { top: 6px; right: 6px; bottom: auto; gap: 4px; }
+#game-screen .view-controls .button { min-height: 26px; padding: 3px 6px; font-size: .6rem; }
+#game-screen .panel-card { border-radius: 10px; box-shadow: none; }
+#game-screen #residents-panel, #game-screen .residents-content { display: contents; }
+#game-screen #residents-panel[hidden] { display: none; }
+#game-screen .character-panel { grid-area: people; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+#game-screen .management-context { flex: 0 0 auto; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--gold-wash); }
+#game-screen .management-context strong { font-size: .75rem; color: var(--gold); }
+#game-screen .management-context span { display: block; margin-top: 3px; font-size: .6rem; color: var(--muted); }
+#game-screen .management-column { min-height: 0; min-width: 0; margin: 0; padding: 8px; border-left: 0; border-top: 0; display: flex; flex-direction: column; gap: 6px; }
+#game-screen .management-column h3, #game-screen .side-panel h3 {
+  flex-shrink: 0; margin: 0; font: 750 .7rem/1.3 system-ui, sans-serif; color: var(--gold); letter-spacing: .03em;
+}
+#game-screen h3 small { float: right; font-size: .59rem; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+#game-screen .management-people { flex: 0 1 31%; min-height: 104px; border-bottom: 1px solid var(--line); }
+#game-screen .management-tasks { flex: 1; overflow: hidden; }
+#game-screen .management-professions { grid-area: jobs; overflow: hidden; }
+#game-screen .management-village { grid-area: village; overflow: hidden; }
+#game-screen .dashboard-scroll { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #79643e transparent; }
+#game-screen .resident-list { flex: 1; align-content: start; max-height: none; grid-template-columns: 1fr; grid-auto-rows: minmax(44px, max-content); gap: 4px; padding: 2px; }
+#game-screen .resident-card { min-height: 44px; gap: 6px; padding: 4px; border-radius: 6px; overflow: hidden; }
+#game-screen .resident-avatar { width: 32px; height: 32px; flex: 0 0 32px; }
+#game-screen .resident-card > span:last-child { line-height: 1.2; }
+#game-screen .resident-card > span:last-child > small:last-child { display: none; }
+#game-screen .resident-card strong { font-size: .65rem; }
+#game-screen .resident-card small { font-size: .55rem; line-height: 1.2; white-space: normal; }
+#game-screen .selected-resident { flex-shrink: 0; margin: 0; font-size: .6rem; color: var(--muted); }
+#game-screen .management-tasks .mission-grid { flex: 1; display: grid; grid-template-columns: 1fr; align-content: start; gap: 5px; padding: 2px; }
+#game-screen .mission-command { gap: 3px; }
+#game-screen .management-column .mission-button { min-height: 32px; padding: 5px; font-size: .66rem; border-radius: 6px; }
+#game-screen .management-column .mission-button small { font-size: .53rem; line-height: 1.25; }
+#game-screen .command-actions { gap: 3px; }
+#game-screen .command-actions button { min-width: 0; min-height: 23px; padding: 2px 4px; font-size: .55rem; border-radius: 5px; }
+#game-screen .profession-list { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: start; gap: 5px; padding: 2px; }
+#game-screen .profession-command { align-content: start; gap: 3px; }
+#game-screen .profession-button { min-height: 39px; padding: 4px; font-size: .64rem; border-radius: 6px; }
+#game-screen .profession-button small { margin-top: 2px; font-size: .5rem; line-height: 1.2; }
+#game-screen .village-overview { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+#game-screen .resident-purchase { margin: 0; padding: 5px; font-size: .64rem; border-radius: 6px; }
+#game-screen .resident-purchase small { margin: 3px 0; font-size: .54rem; }
+#game-screen .resident-purchase label { grid-template-columns: 1fr; gap: 2px; font-size: .54rem; }
+#game-screen .resident-purchase select { width: 100%; min-height: 26px; padding: 2px; font-size: .62rem; }
+#game-screen .buy-resident-button { min-height: 28px; padding: 4px; margin-top: 4px; font-size: .6rem; }
+#game-screen .building-card { min-height: 0; padding: 6px; margin: 0; background-image: none; border: 1px solid var(--line); font-size: .64rem; }
+#game-screen .building-card small { margin-top: 3px; font-size: .54rem; }
+#game-screen .upgrade-button { width: 100%; min-height: 28px; padding: 4px; margin-top: 5px; font-size: .6rem; border-radius: 6px; }
+#game-screen .building-upgrade-resource { min-height: 26px; padding: 2px; margin-top: 4px; font-size: .61rem; }
+#game-screen .side-panel { grid-area: tools; min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+#game-screen .side-panel > * { flex-shrink: 0; min-width: 0; }
+#game-screen .shop-open-button { min-height: 33px; margin: 0; padding: 6px 9px; font-size: .72rem; }
+#game-screen .building-market, #game-screen .owned-buildings { padding: 8px; }
+#game-screen .construction-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 6px; }
+#game-screen .construction-list .button { min-width: 0; min-height: 40px; padding: 4px 2px; font-size: .58rem; border-radius: 6px; }
+#game-screen .construction-list small { font-size: .52rem; margin-top: 2px; }
+#game-screen .built-buildings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin-top: 6px; }
+#game-screen .empty-buildings { margin: 0; grid-column: 1 / -1; color: var(--muted); font-size: .6rem; }
+#game-screen .village-selector { gap: 4px; }
+#game-screen .village-select-group { gap: 3px; }
+#game-screen .village-select-label { min-height: 16px; font-size: .5rem; border-radius: 4px; }
+#game-screen .village-select { min-height: 30px; padding: 3px 5px; border-radius: 5px; }
+#game-screen .village-select strong { font-size: .57rem; }
+#game-screen .village-select small { font-size: .48rem; }
+#game-screen #village-inspector { max-height: 220px; overflow: auto; }
+#game-screen .inspector-section { padding: 7px; }
+#game-screen .placement-slots { gap: 3px; }
+#game-screen .placement-slot { min-height: 36px; padding: 3px; border-radius: 5px; }
+#game-screen .placement-slot strong { font-size: .6rem; }
+#game-screen .placement-slot small { font-size: .48rem; margin-top: 2px; }
+#game-screen .map-village-popup { padding: 3px; border-radius: 6px; }
+#game-screen .map-village-popup.red { top: 38px; }
+#game-screen .map-village-popup.blue { bottom: 6px; }
+#game-screen .map-village-popup header { font-size: .48rem; margin-bottom: 2px; }
+#game-screen .map-village-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 2px; }
+#game-screen .map-village-stats span, #game-screen .map-village-popup dl div { padding: 1px; font-size: .42rem; }
+#game-screen .map-village-stats span { display: flex; justify-content: center; gap: 2px; }
+#game-screen .map-village-stats b { display: inline; font-size: .46rem; }
+#game-screen .mythology-stock { padding: 8px; }
+#game-screen .mythology-stock-header { margin-bottom: 4px; padding-bottom: 4px; }
+#game-screen .mythology-stock-eyebrow, #game-screen .mythology-stock-help { display: none; }
+#game-screen .mythology-stock h2 { font-size: .8rem; margin: 0; }
+#game-screen .mythology-stock-count { height: 18px; min-width: 18px; font-size: .6rem; }
+#game-screen .mythology-stock-empty { gap: 0; padding: 4px 0 0; font-size: .6rem; }
+#game-screen .mythology-stock-empty > svg, #game-screen .mythology-stock-empty > p { display: none; }
+#game-screen .mythology-inventory-list { gap: 5px; margin: 0; }
+#game-screen .mythology-stock-name { font-size: .6rem; }
+#game-screen .mythology-stock-category { font-size: .42rem; }
+#game-screen .mythology-stock-frame .mythology-illustration { max-height: 60px; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top: 3px; width: 110px; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) .mythology-crystal-composition { height: 30px; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock { top: 31px; gap: 2px; padding: 2px 10px; min-width: 90px; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock strong { font-size: 1.1rem; }
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock span { font-size: .42rem; }
+
+@media (min-width: 1101px) {
+  #game-screen .management-tasks .mission-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1100px) and (min-width: 801px) {
+  #game-screen .game-layout { --side-width: 190px; gap: 6px; }
+  #game-screen .profession-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #game-screen .profession-button small { display: none; }
+  #game-screen .village-overview { grid-template-columns: 1fr; }
+}
+@media (max-width: 800px) and (orientation: portrait) {
+  .app-shell:has(#game-screen:not([hidden])) { padding: 62px 5px 5px; }
+  #game-screen .game-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(160px, 42%) minmax(0, 1fr) minmax(86px, 15%) minmax(88px, 15%);
+    grid-template-areas: 'map map' 'people tools' 'people jobs' 'people village'; gap: 5px;
+  }
+  #game-screen .board-legend { display: none; }
+  #game-screen .management-column, #game-screen .building-market, #game-screen .owned-buildings { padding: 5px; }
+  #game-screen .management-context { padding: 5px; }
+  #game-screen .management-context strong { font-size: .65rem; }
+  #game-screen .management-people { min-height: 90px; flex-basis: 30%; }
+  #game-screen .resident-card small { font-size: .5rem; }
+  #game-screen .profession-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  #game-screen .profession-button { min-height: 30px; font-size: .58rem; }
+  #game-screen .profession-button small { display: none; }
+  #game-screen .command-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+  #game-screen .command-actions button { font-size: .5rem; min-height: 24px; padding-inline: 1px; }
+  #game-screen .village-overview { grid-template-columns: 1fr; }
+  #game-screen .construction-list { grid-template-columns: 1fr; }
+  #game-screen .construction-list .button { min-height: 30px; text-align: left; padding: 4px; }
+  #game-screen .construction-list small { display: inline; float: right; }
+  #game-screen .built-buildings { grid-template-columns: 1fr; }
+  #game-screen .view-controls .button { min-height: 27px; font-size: .55rem; }
+  #game-screen .map-village-stats span { display: flex; }
+  #game-screen .map-village-stats b { display: inline; }
+  #game-screen .map-village-popup header span { display: none; }
+  #game-screen .battlefield-3d { inset: 76px 0 51px; }
+  #game-screen .slot-grid { grid-template-columns: repeat(2, minmax(10px, 20px)); margin-top: 23px; gap: 2px; }
+  #game-screen .region.blue .slot-grid { margin-top: 1px; margin-bottom: 23px; }
+  #game-screen .slot.occupied { min-height: 20px; }
+  #game-screen .slot .content-icon { width: 18px; height: 18px; }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .app-shell:has(#game-screen:not([hidden])) { padding: 40px 5px 5px; }
+  .app-shell:has(#game-screen:not([hidden])) .masthead { top: 4px; height: 12px; align-items: flex-start; }
+  .app-shell:has(#game-screen:not([hidden])) .session-status { font-size: .57rem; }
+  #game-screen .game-layout { --side-width: clamp(150px, 22vw, 190px); grid-template-rows: minmax(0, 1fr) 34%; gap: 5px; }
+  #game-screen .board-legend { display: none; }
+  #game-screen .battlefield > .view-controls { top: -34px; right: 0; }
+  #game-screen .management-people { min-height: 74px; flex-basis: 30%; }
+  #game-screen .profession-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #game-screen .profession-button { min-height: 28px; font-size: .56rem; }
+  #game-screen .profession-button small { display: none; }
+  #game-screen .management-context { padding: 4px; }
+  #game-screen .management-column, #game-screen .building-market, #game-screen .owned-buildings { padding: 5px; }
+  #game-screen .village-overview { grid-template-columns: 1fr; }
+  #game-screen .battlefield-3d { inset: 34px 0; }
+  #game-screen .board-columns, #game-screen .units-layer { inset: 34px 0; }
+  #game-screen .region-name { display: none; }
+  #game-screen .terrain-building-layer { display: none; }
+  #game-screen .slot-grid, #game-screen .region.blue .slot-grid { margin: 0; grid-template-columns: repeat(2, minmax(10px, 18px)); gap: 2px; }
+  #game-screen .slot.occupied { min-height: 17px; }
+  #game-screen .slot .content-icon { width: 15px; height: 15px; }
+  #game-screen .map-village-popup { padding: 2px; }
+  #game-screen .map-village-popup header { font-size: .43rem; }
+  #game-screen .map-village-popup dl div { font-size: .38rem; }
+  #game-screen .map-village-popup dl { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #game-screen .map-village-popup.red { top: 4px; }
+  #game-screen .map-village-popup.blue { bottom: 4px; }
+  #game-screen .map-village-stats { display: none; }
+  #game-screen .preparation-hint { top: 21px; left: 5px; right: 5px; height: 15px; font-size: .5rem; }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { width: 90px; top: 0; }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) .mythology-crystal-composition { height: 12px; }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock { top: 12px; padding: 1px 6px; }
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) > .board-clock span { display: none; }
+}
