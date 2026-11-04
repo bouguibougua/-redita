@@ -13,8 +13,6 @@ async function run(){
     assert.deepEqual(diagnostics.clips.sort(),['Griffe','Marche','Mort','Repos']);
     await page.click('[data-menu-screen="play"]');await page.click('#training-button');
     await page.waitFor("Eredita.Network.mode==='solo'");
-    await page.click('[data-setup-action="keep"][data-player="red"]');await page.click('#start-game');
-    await page.waitFor("Eredita.GameView.getState().phase==='running'");await page.click('#pause-game');
     const invoked=await page.evaluate(`(()=>{
       const E=Eredita,s=window.vState=E.GameView.getState();s.phase='running';s.paused=false;s.preparationRemaining=0;s.elapsed=0;s.units=[];s.unitDeathEffects=[];
       s.reinforcementEpoch='surpatore-model';E.MythologyEffects.init(s);
@@ -32,7 +30,7 @@ async function run(){
       for(const u of s.units)u.hp=0;E.Combat.settleDeaths(s);E.Board3D.update(s,true);
       window.vRed=vFind('red');window.vBlue=vFind('blue');
       window.vMesh=f=>{let found;f.traverse(p=>{if(!found&&p.isSkinnedMesh)found=p;});return found;};
-      window.vBoneObject=(f,suffix)=>vMesh(f).skeleton.bones.find(b=>b.name.endsWith(suffix));
+      window.vBoneObject=(f,suffix)=>vMesh(f).skeleton.bones.find(b=>b.name===({LeftFoot:'foot_l',RightHand:'hand_r',Jaw:'jaw',Hips:'pelvis'}[suffix]||suffix));
       window.vBone=(f,suffix)=>{const T=E.Board3D.getXRContext().THREE;f.updateMatrixWorld(true);return vBoneObject(f,suffix).getWorldPosition(new T.Vector3()).toArray();};
       window.vAdvance=(f,seconds)=>{for(let remaining=seconds;remaining>1e-8;remaining-=.05)f.userData.surpatore.tick(Math.min(.05,remaining),false);};
       return {accepted:result,boarCount,prematureVampires,liveVampires:vFigures().filter(f=>f.userData.surpatore&&!f.userData.dying).length,
@@ -46,15 +44,22 @@ async function run(){
     const imported=await page.evaluate(`(()=>{
       const E=Eredita,T=E.Board3D.getXRContext().THREE,a=vMesh(vRed),b=vMesh(vBlue);
       window.vJawRest=vBoneObject(vRed,'Jaw').quaternion.clone();window.vDisposed=0;a.geometry.addEventListener('dispose',()=>vDisposed++);
-      return {count:vFigures().filter(f=>f.userData.surpatore).length,triangles:a.geometry.index.count/3,
+      const jaw=vBoneObject(vRed,'Jaw'),jawIndex=a.skeleton.bones.indexOf(jaw),indices=a.geometry.attributes.skinIndex.array,weights=a.geometry.attributes.skinWeight.array;
+      let jawSkinnedVertices=0,vertex=-1,strongest=0;
+      for(let i=0;i<a.geometry.attributes.position.count;i++)for(let c=0;c<4;c++)if(indices[i*4+c]===jawIndex&&weights[i*4+c]>.001){jawSkinnedVertices++;if(weights[i*4+c]>strongest){strongest=weights[i*4+c];vertex=i;}break;}
+      let jawDeformation=0;
+      if(vertex>=0){vRed.updateMatrixWorld(true);a.skeleton.update();const before=a.getVertexPosition(vertex,new T.Vector3());jaw.rotateX(.4);vRed.updateMatrixWorld(true);a.skeleton.update();jawDeformation=before.distanceTo(a.getVertexPosition(vertex,new T.Vector3()));jaw.quaternion.copy(vJawRest);vRed.updateMatrixWorld(true);a.skeleton.update();}
+
+      return {jawSkinnedVertices,jawDeformation,count:vFigures().filter(f=>f.userData.surpatore).length,triangles:a.geometry.index.count/3,
         shared:a.geometry===b.geometry,texturesShared:a.material.map===b.material.map,
         separateMaterials:a.material!==b.material,separateBones:a.skeleton.bones[0]!==b.skeleton.bones[0],
         texture:[a.material.map.image.width,a.material.map.image.height],originalColor:a.material.color.getHex(),
-        closedDesign:a.userData.bouche_fermee_au_repos===true,jawVertices:a.userData.sommets_machoire,
+        closedDesign:a.userData.bouche_fermee_au_repos===true,jawVertices:a.userData.sommets_machoire,source:a.userData.source_sha256,bones:a.skeleton.bones.length,
         height:new T.Box3().setFromObject(vRed.getObjectByName('u-surpatore-vampire-modele')).getSize(new T.Vector3()).y,
         teams:[vRed,vBlue].map(f=>f.getObjectByName('equipe-surpatore').material.color.getHex())};
     })()`);
     assert.equal(imported.count,2);assert.equal(imported.triangles,8156);
+    assert.equal(imported.source,'b4398d72e6bcfe409fb021a4dfb6042d27a1faa71f7f985ef846e522e603bf2f');assert.equal(imported.bones,81);assert.ok(imported.jawSkinnedVertices>20 && imported.jawDeformation>.001,'La mâchoire déforme réellement le mesh');
     assert.ok(imported.shared&&imported.texturesShared&&imported.separateMaterials&&imported.separateBones);
     assert.deepEqual(imported.texture,[2048,2048]);assert.equal(imported.originalColor,0xffffff);
     assert.ok(imported.closedDesign&&imported.jawVertices>20);assert.ok(imported.height>.5&&imported.height<.7);
@@ -62,8 +67,8 @@ async function run(){
     const before=await page.evaluate('JSON.stringify(vState)');
     await page.evaluate('Eredita.Board3D.update(vState,true);Eredita.Board3D.setXRPreview(true);Eredita.Board3D.setXRPreview(false)');
     assert.equal(await page.evaluate('JSON.stringify(vState)'),before);
-    const folder=path.join(__dirname,'../eredita3D/previews');fs.mkdirSync(folder,{recursive:true});
-    async function screenshot(name){const r=await page.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(folder,name+'.png'),Buffer.from(r.data,'base64'));}
+    const folder=process.env.EREDITA_SURPATORE_PREVIEW_DIR;if(folder)fs.mkdirSync(folder,{recursive:true});
+    async function screenshot(name){if(!folder)return;const r=await page.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(folder,name+'.png'),Buffer.from(r.data,'base64'));}
     await screenshot('surpatore_in_game');
     const walk=await page.evaluate(`(()=>{
       const foot=vBone(vRed,'LeftFoot'),other=vBone(vBlue,'LeftFoot');vRed.userData.surpatore.setMoving(true);vAdvance(vRed,.25);

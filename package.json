@@ -31,7 +31,7 @@
     "test:reinforcements": "node tests/mythology-match.test.js && node tests/mythology-network.test.js",
     "test:reinforcements-browser": "node tests/mythology-match-browser.test.js",
     "menu:gif": "node scripts/export-menu-gif.js",
-    "test": "node tests/crop-levels.test.js && node tests/simplified.test.js && node tests/preparation.test.js && node tests/core.test.js && node tests/transport.test.js && node tests/server-assets.test.js && node tests/network-server.test.js && node tests/ai.test.js && node tests/livestock-shop.test.js && node tests/equipment.test.js && node tests/buildings.test.js && node tests/board3d-appearance.test.js && node tests/shop-network-commands.test.js && node tests/special-animals.test.js && node tests/donkey.test.js && node tests/board3d-animals.test.js && node tests/board3d-combat-animation.test.js && node tests/mythology.test.js && node tests/mythology-match.test.js && node tests/mythology-network.test.js && node tests/mythology-powers.test.js",
+    "test": "node tests/crop-levels.test.js && node tests/simplified.test.js && node tests/preparation.test.js && node tests/core.test.js && node tests/hunter-combat.test.js && node tests/transport.test.js && node tests/server-assets.test.js && node tests/network-server.test.js && node tests/ai.test.js && node tests/livestock-shop.test.js && node tests/equipment.test.js && node tests/buildings.test.js && node tests/board3d-appearance.test.js && node tests/shop-network-commands.test.js && node tests/special-animals.test.js && node tests/donkey.test.js && node tests/board3d-animals.test.js && node tests/board3d-combat-animation.test.js && node tests/mythology.test.js && node tests/mythology-match.test.js && node tests/mythology-network.test.js && node tests/mythology-powers.test.js",
     "test:simplified": "node tests/simplified.test.js",
     "test:assets": "node tests/server-assets.test.js",
     "test:preparation": "node tests/preparation.test.js",
@@ -50,7 +50,10 @@
     "test:xr-browser": "node tests/xr-browser.test.js",
     "test:powers": "node tests/mythology-powers.test.js",
     "test:powers-browser": "node tests/mythology-live-browser.test.js",
-    "test:layout": "node tests/game-layout-browser.test.js"
+    "test:layout": "node tests/game-layout-browser.test.js",
+    "test:visibility": "node tests/visibility-browser.test.js",
+    "test:farmer": "node tests/farmer-browser.test.js",
+    "test:hunter": "node tests/hunter-combat.test.js && node tests/hunter-browser.test.js"
   },
   "engines": {
     "node": ">=18"

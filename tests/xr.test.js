@@ -26,6 +26,8 @@ async function run() {
   state.players.blue.villages[1].hp = 123;
   assert.equal(E.GameView.villageInfo("blue", 1).hp, 123);
   assert.equal(E.GameView.selectVillage("blue", 1), true);
+  assert.equal(E.GameView.villageInfo("red", 0), null);
+  assert.equal(E.GameView.selectVillage("red", 0), false);
   assert.equal(E.GameView.selectVillage("missing", 1), false);
   assert.deepEqual(calls, [["blue", 1]]);
   const source = (hand, profiles = ["meta-quest-touch-plus"], mapping = "xr-standard") => ({

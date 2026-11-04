@@ -7,7 +7,6 @@
   const cfg = () => E.Config.reinforcementPowers;
   const humans = village => village.residents.filter(person => !person.isLegend);
   const isHuman = entity => !entity.isLegend && !entity.animalType && !['chien', 'sanglier'].includes(entity.role);
-  const offensive = entity => isHuman(entity) && (entity.stance === 'attack' || entity.mission === 'attaque' || ['guerrier', 'ravageur'].includes(entity.profession));
   const territory = position => position < E.Config.movement.columnLength / 2 ? 'red' : 'blue';
   const isBurned = (state, village) => Boolean(village && village.burnUntil > state.elapsed);
   const terrainVisualKey = village => String(Boolean(village.terrain?.river));
@@ -209,19 +208,16 @@
     state.logs.unshift(`${state.players[request.playerId].name} invoque ${legend.name}.`);
     return { ...result };
   }
-  function vision(state, viewerId, village) {
-    if (!state.mythology) return { fraction: 1, people: true, all: true };
-    const viewer = state.players[viewerId], full = viewerId === village.ownerId || Boolean(viewer?.revealCoasts && village.biome === 'littoral');
-    return { fraction: full ? 1 : 0, people: full, all: full, offensive: Boolean(!full && viewer?.revealOffensive) };
+  // Décision du concepteur : les deux camps sont toujours entièrement visibles.
+  // Cette API commune conserve la même politique pour les vues 2D, 3D et XR.
+  function vision() {
+    return { fraction: 1, people: true, all: true, offensive: false };
   }
-  function residentVisible(state, viewerId, village, person) {
-    const known = vision(state, viewerId, village); return known.people || known.offensive && offensive(person);
+  function residentVisible() {
+    return true;
   }
-  function unitVisible(state, viewerId, unit) {
-    if (!state.mythology) return true;
-    if (unit.ownerId === viewerId || territory(unit.position) === viewerId) return true;
-    return Boolean(vision(state, viewerId, state.players[unit.ownerId].villages[unit.lane]).all ||
-      state.players[viewerId]?.revealOffensive && offensive(unit));
+  function unitVisible() {
+    return true;
   }
   function productionMultiplier(state, village) {
     return (village.curseUntil > state.elapsed ? cfg().stregaMultiplier : 1) * (village.blessingUntil > state.elapsed ? cfg().streguMultiplier : 1);

@@ -267,8 +267,10 @@
     showDialogue("dernierePrecision", () => {
       showDialogue("montagne", () => {
         showDialogue("littoral", () => {
-          stage = "return3d";
-          render(state);
+          E.Board3D?.setMode(true);
+          stage = "freePlay";
+          state.paused = false;
+          clearHighlights();
         });
       });
     });
@@ -319,13 +321,12 @@
       document.querySelectorAll('[data-slot-visual][data-player="red"][data-lane="0"]').forEach((element) => element.classList.add("tutorial-highlight"));
     }
     else if (stage === "harvest") { highlight('#residents-panel [data-select-resident][data-resident-state="disponible"]'); highlight('#residents-panel [data-resident-mission="agriculture"]'); }
-    else if (stage === "buildBergerie") highlight('#residents-panel [data-build="bergerie"]');
+    else if (stage === "buildBergerie") highlight('#building-market [data-build="bergerie"]');
     else if (stage === "profession") { highlight('#residents-panel [data-select-resident][data-resident-state="agriculture"]'); highlight('#residents-panel [data-profession="agriculteur"]'); }
     else if (stage === "defend") { highlight(`#residents-panel [data-select-resident="${defenderResidentId}"]`); highlight('#residents-panel [data-resident-mission="attaque"]'); }
-    else if (stage === "buildArtisanat") highlight('#residents-panel [data-build="artisanat"]');
+    else if (stage === "buildArtisanat") highlight('#building-market [data-build="artisanat"]');
     else if (stage === "warriors") highlight('#residents-panel [data-profession-all="guerrier"]');
     else if (stage === "generalAttack") highlight('#residents-panel [data-assign-all="attaque"]');
-    else if (stage === "return3d") highlight("#toggle-board-view");
     renderedStage = stage;
     if (!state.tutorial.freePlay) document.body.classList.add("tutorial-guided");
   }
@@ -354,13 +355,6 @@
     controller = options.controller;
     document.querySelector("#tutorial-dialog").addEventListener("click", onDialogueClick);
     document.addEventListener("click", onSlotClick, true);
-    document.querySelector("#toggle-board-view").addEventListener("click", () => {
-      if (!active || stage !== "return3d") return;
-      if (!document.querySelector("#battlefield")?.classList.contains("three-mode")) return;
-      stage = "freePlay";
-      stateRef.paused = false;
-      clearHighlights();
-    });
     document.querySelector("#tutorial-return-menu").addEventListener("click", () => location.reload());
   }
 

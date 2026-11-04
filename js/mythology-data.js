@@ -30,15 +30,15 @@
   }
   const entries = [
     entry('u-mazzeru', 'U Mazzeru', 'vision',
-      'Révèle tous les habitants offensifs adverses jusqu’à la fin de la partie.',
+      'Les habitants adverses sont déjà visibles : aucun dévoilement supplémentaire dans cette version.',
       { until: 'match-end', target: 'enemy-offensive-humans' }, '#c73d4d', { lore: { subtitle: "Le chasseur de morts", paragraphs: [
           "U Mazzeru est l'une des figures les plus emblématiques de la mythologie corse. Il s'agit d'un individu possédant un don surnaturel qui lui permet de pressentir la mort d'une personne à travers ses rêves.",
           "Pendant son sommeil, son esprit participe à une chasse nocturne au cours de laquelle il poursuit et tue un animal, généralement un sanglier ou un autre gibier. Lorsqu'il s'approche de sa proie, il découvre que celle-ci possède le visage d'une personne qu'il connaît. Selon la croyance, cette personne est destinée à mourir prochainement.",
           "Le Mazzeru n'est pas nécessairement malveillant. Son pouvoir est souvent involontaire et peut être vécu comme une malédiction. Certaines traditions évoquent également des affrontements entre groupes de Mazzeri, notamment lors des Mandrache, associés au destin des communautés."
         ] },
         menuDescription: [
-        'U Mazzeru lève le voile sur les habitants offensifs de votre adversaire. Guerriers, Ravageurs et humains en mission d’attaque deviennent visibles jusqu’à la fin de la partie.',
-        'Cette vision permet de suivre les forces ennemies sans révéler les autres civils ni les légendes. Le pouvoir s’applique à l’ensemble du terrain : cliquez sur une région pour l’activer.'
+        'U Mazzeru avait un pouvoir de révélation des habitants offensifs adverses. Le brouillard de guerre est désormais retiré : ces habitants sont visibles dès le début.',
+        'Tous les terrains, habitants et unités des deux camps sont visibles en permanence. Ce pouvoir ne donne donc pas de visibilité supplémentaire et aucun autre bonus ne lui est attribué.'
       ] }),
     entry('a-stregha', 'A Strega', 'enchantement',
       'Maudit une région ennemie pendant 2 minutes : son rendement est divisé par deux.',
@@ -238,7 +238,7 @@
         'Ils y récoltent des ressources à la place de l’ennemi et les transfèrent directement dans votre banque locale. Cliquez sur le terrain pour les invoquer : leurs points d’apparition sont déterminés automatiquement.'
       ] }),
     entry('oeil-sainte-lucie', 'Œil de Sainte-Lucie', 'vision',
-      'Révèle intégralement les régions littorales adverses, habitants compris, jusqu’à la fin de la partie.',
+      'Les Littoraux adverses sont déjà visibles : aucun dévoilement supplémentaire dans cette version.',
       { until: 'match-end', target: 'enemy-coastal-regions' }, '#e0ba69', { aliases: ['ochju-di-santa-lucia', 'Ochju di Santa Lucia', 'Œil de Sainte-Lucie'], lore: { subtitle: "Le talisman protecteur", paragraphs: [
           "L'Œil de Sainte-Lucie est un symbole de protection particulièrement répandu en Corse.",
           "Il s'agit de l'opercule d'un mollusque marin, reconnaissable à sa forme arrondie et à sa spirale blanche. Cet objet naturel est traditionnellement considéré comme un porte-bonheur capable de protéger contre le mauvais œil.",
@@ -247,8 +247,8 @@
           "En Corse, l'Œil de Sainte-Lucie est fréquemment porté sous forme de bijou. On lui attribue des vertus de protection, de chance et de prospérité."
         ] },
         menuDescription: [
-        'L’Œil de Sainte-Lucie révèle intégralement les régions littorales de votre adversaire, ainsi que les personnages qui s’y trouvent. Cette vision demeure jusqu’à la fin de la partie.',
-        'Le pouvoir concerne les Littoraux ennemis ; les autres biomes restent soumis à leur visibilité habituelle. Aucun Littoral allié n’est nécessaire pour l’activer : choisissez la légende puis cliquez sur le terrain.'
+        'L’Œil de Sainte-Lucie avait un pouvoir de révélation des Littoraux adverses. Le brouillard de guerre est désormais retiré : ces régions et leurs habitants sont visibles dès le début.',
+        'Les trois biomes et les personnages des deux camps sont visibles en permanence. Ce pouvoir ne donne donc pas de visibilité supplémentaire et aucun autre bonus ne lui est attribué.'
       ] })
   ];
   E.Config.mythology = freeze({ schemaVersion: 1, categories, entries,

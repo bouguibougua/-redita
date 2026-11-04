@@ -15,6 +15,7 @@ async function run() {
     assert.equal(diagnostics.error, null);
     assert.equal(diagnostics.ready, true);
     assert.ok(diagnostics.triangles > 0 && diagnostics.triangles <= 20000, 'Le villageois utilise le modèle allégé');
+    await page.waitFor('Eredita.FarmerModel?.ready', 30000);
     await page.click('[data-menu-screen="play"]');
     await page.click('#training-button');
     await page.waitFor("Eredita.Network.mode==='solo'");
@@ -67,7 +68,7 @@ async function run() {
     await page.evaluate("vState.players.red.villages[0].biome='littoral';vResident('red').mission='peche';delete vResident('red').workPosition;Eredita.Board3D.update(vState,true)");
     assert.equal(await page.evaluate('vFind(\'red\')===vRed'), true, 'Pêcher sans métier ne crée pas un pêcheur spécialisé');
     await page.evaluate("vResident('red').profession='agriculteur';Eredita.Board3D.update(vState,true)");
-    assert.equal(await page.evaluate("!vFind('red').getObjectByName('habitant-sans-metier') && !!vFind('red').getObjectByName('chapeau-paille')"), true);
+    assert.equal(await page.evaluate("!vFind('red').getObjectByName('habitant-sans-metier') && !!vFind('red').getObjectByName('agriculteur-modele')"), true);
     assert.equal(await page.evaluate('vSharedDisposed'), 0, 'Changer de métier conserve la géométrie du cache');
     await page.evaluate("vResident('red').profession='habitant';vResident('red').tool='fer';vResident('red').armor='maille';vResident('red').donkey=true;Eredita.Board3D.update(vState,true);vRed=vFind('red');void 0");
     assert.equal(await page.evaluate("!!vRed.getObjectByName('habitant-sans-metier') && !!vRed.getObjectByName('armure-maille') && !!vRed.getObjectByName('outil-tete') && !!vRed.getObjectByName('animal-ane')"), true, 'Le villageois importé conserve son équipement et son âne');

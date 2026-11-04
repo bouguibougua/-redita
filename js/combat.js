@@ -68,11 +68,17 @@
     return false;
   }
 
+  function attackRange(unit) {
+    const professionRange = !unit.animalType && !unit.isLegend && !unit.mythologyLegendId &&
+      E.Config.combat.professionAttackRanges[unit.profession || unit.role];
+    return professionRange || E.Config.combat.attackRange;
+  }
+
   function nearestEnemyUnit(state, unit) {
     return state.units
       .filter((other) => other.ownerId !== unit.ownerId && other.hp > 0)
       .filter((other) => Math.abs(other.lanePosition - unit.lanePosition) < 0.12)
-      .filter((other) => Math.abs(other.position - unit.position) <= E.Config.combat.detectionRange)
+      .filter((other) => Math.abs(other.position - unit.position) <= Math.max(E.Config.combat.detectionRange, attackRange(unit)))
       .sort((a, b) => Math.abs(a.position - unit.position) - Math.abs(b.position - unit.position))[0] || null;
   }
 
@@ -84,10 +90,13 @@
     return (unit.animalType || unit.role) === "sanglier";
   }
 
-  function triggerAttackVisual(unit) {
+  function triggerAttackVisual(unit, target = null) {
     if ((unit.visualAttackTimer || 0) > 0) return;
     unit.visualAttackSequence = (unit.visualAttackSequence || 0) + 1;
     unit.visualAttackTimer = E.Config.visualEffects.unitAttackDuration;
+    if (target && attackRange(unit) > E.Config.combat.attackRange) {
+      unit.visualAttackTarget = { position: target.position, lanePosition: target.lanePosition };
+    }
   }
 
   function triggerHitVisual(unit) {
@@ -122,9 +131,9 @@
   }
 
   function tryAttackUnit(unit, enemyUnit, damageEvents, delta) {
-    if (!enemyUnit || Math.abs(enemyUnit.position - unit.position) > E.Config.combat.attackRange) return false;
+    if (!enemyUnit || Math.abs(enemyUnit.position - unit.position) > attackRange(unit)) return false;
     if (unit.attackCooldown <= 0) {
-      triggerAttackVisual(unit);
+      triggerAttackVisual(unit, enemyUnit);
       damageEvents.push({ type: "unit", target: enemyUnit, amount: unit.damage });
       unit.attackCooldown = attackInterval(unit);
     }
@@ -208,13 +217,13 @@
         return;
       }
       const villagePosition = unit.ownerId === "red" ? E.Config.movement.columnLength : 0;
-      if (targetVillage && !targetVillage.destroyed && targetVillage.hp > 0 && Math.abs(villagePosition - unit.position) <= E.Config.combat.attackRange) {
-        if (unit.retaliationCooldown <= 0) {
+      if (targetVillage && !targetVillage.destroyed && targetVillage.hp > 0 && Math.abs(villagePosition - unit.position) <= attackRange(unit)) {
+        if (Math.abs(villagePosition - unit.position) <= E.Config.combat.attackRange && unit.retaliationCooldown <= 0) {
           damageEvents.push({ type: "unit", target: unit, amount: E.Config.combat.villageRetaliationDamagePerSecond });
           unit.retaliationCooldown = 1;
         }
         if (unit.attackCooldown <= 0) {
-          triggerAttackVisual(unit);
+          triggerAttackVisual(unit, { position: villagePosition, lanePosition: targetLane });
           damageEvents.push({ type: "village", target: targetVillage, amount: unit.damage + (E.Config.units[unit.role].villageDamageBonus || 0) });
           unit.attackCooldown = attackInterval(unit);
         }

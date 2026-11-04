@@ -2,10 +2,19 @@
 Blender 5.1.1, aucune installation et aucun fichier source modifié.
 """
 from pathlib import Path
-import bpy,math,json,struct,hashlib,shutil
+import bpy,math,json,struct,hashlib,shutil,argparse,sys
 from mathutils import Vector,Quaternion,Matrix
-ROOT=Path(__file__).resolve().parents[1]
-SOURCE=Path('/Users/robin/Downloads/fantasy vampire 3d model.glb')
+parser=argparse.ArgumentParser(description='Prepare the supplied U Surpatore GLB locally with Blender.')
+parser.add_argument('--source',default='/Users/robin/Downloads/u surpatore 3d.glb')
+parser.add_argument('--output-dir',default=str(Path(__file__).resolve().parents[1]))
+parser.add_argument('--asset-output',help='Optional destination for the game GLB.')
+args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+ROOT=Path(args.output_dir).resolve()
+SOURCE=Path(args.source).resolve()
+BONE_NAMES={'Hips':'pelvis','Spine':'spine_01','Spine1':'spine_03','Spine2':'spine_05','Neck':'neck_02','Head':'head','Jaw':'jaw'}
+for side,suffix in [('Left','l'),('Right','r')]:
+    for name,native in [('Shoulder','clavicle'),('Arm','upperarm'),('ForeArm','lowerarm'),('Hand','hand'),('UpLeg','thigh'),('Leg','calf'),('Foot','foot')]:
+        BONE_NAMES[side+name]=native+'_'+suffix
 source_hash=hashlib.sha256(SOURCE.read_bytes()).hexdigest()
 for folder in ('models','exports','previews','logs','textures/surpatore'):(ROOT/folder).mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
@@ -20,7 +29,7 @@ def smooth(a,b,t):
 # Le modèle original crie. On ferme réellement sa mâchoire dans le mesh de base.
 # Un os indépendant la rouvre pendant le geste de griffe, sans masque ni image.
 hinge=Vector((.075,-.018,.889));angle=.46
-body_inverse=body.matrix_world.inverted();head_group=body.vertex_groups['mixamorig:Head']
+body_inverse=body.matrix_world.inverted();head_group=body.vertex_groups['head']
 jaw_weights={};original_positions={}
 for vertex in body.data.vertices:
     p=body.matrix_world@vertex.co
@@ -34,11 +43,11 @@ for vertex in body.data.vertices:
 assert len(jaw_weights)>20,'Zone de mâchoire introuvable'
 bpy.ops.object.select_all(action='DESELECT');rig.select_set(True);bpy.context.view_layer.objects.active=rig
 bpy.ops.object.mode_set(mode='EDIT')
-jaw=rig.data.edit_bones.new('mixamorig:Jaw')
+jaw=rig.data.edit_bones.new('jaw')
 jaw.head=rig.matrix_world.inverted()@hinge;jaw.tail=rig.matrix_world.inverted()@(hinge+Vector((.05,0,-.02)))
-jaw.parent=rig.data.edit_bones['mixamorig:Head']
+jaw.parent=rig.data.edit_bones['head']
 bpy.ops.object.mode_set(mode='OBJECT')
-group=body.vertex_groups.new(name='mixamorig:Jaw')
+group=body.vertex_groups.new(name='jaw')
 for index,weight in jaw_weights.items():
     vertex=body.data.vertices[index]
     for old in list(vertex.groups):
@@ -54,45 +63,46 @@ root=bpy.data.objects.new('Surpatore_Normalisation',None);scene.collection.objec
 for obj in roots:
     world=obj.matrix_world.copy();obj.parent=root;obj.matrix_world=world
 root.matrix_world=Matrix.Rotation(-math.pi/2,4,'Z')@Matrix.Scale(factor,4)@Matrix.Translation(-center)
-body['bouche_fermee_au_repos']=True;body['sommets_machoire']=len(jaw_weights)
+body['source_sha256']=source_hash;body['source_design']=SOURCE.name;body['bouche_fermee_au_repos']=True;body['sommets_machoire']=len(jaw_weights)
 for material in body.data.materials:
     material.name='Surpatore_Texture_Originale'
     for node in material.node_tree.nodes:
         if node.type=='BSDF_PRINCIPLED':node.inputs['Transmission Weight'].default_value=0
         if node.type=='TEX_IMAGE' and node.image:
             image=node.image
+            _=image.pixels[0]  # Load imported packed pixels before reducing the texture.
             if max(image.size)>2048:
                 ratio=2048/max(image.size);image.scale(round(image.size[0]*ratio),round(image.size[1]*ratio))
             image.file_format='JPEG';image.filepath_raw=str(ROOT/'textures/surpatore/surpatore_basecolor_2048.jpg');image.save()
-            replacement=bpy.data.images.load(image.filepath_raw,check_existing=False);replacement.colorspace_settings.name=image.colorspace_settings.name;replacement.name='Surpatore_BaseColor_2048';node.image=replacement
+            replacement=bpy.data.images.load(image.filepath_raw,check_existing=False);replacement.colorspace_settings.name=image.colorspace_settings.name;replacement.name='Surpatore_BaseColor_2048';node.image=replacement;replacement.pack()
 bpy.context.view_layer.update()
 arm_inverse=rig.matrix_world.to_3x3().inverted();axes={}
 for bone in rig.pose.bones:
     bone.rotation_mode='QUATERNION';axes[bone.name]=bone.bone.matrix_local.to_quaternion().inverted()
 
 def rotate(name,axis,amount):
-    bone=rig.pose.bones.get('mixamorig:'+name)
+    bone=rig.pose.bones.get(BONE_NAMES[name])
     if bone:
         local=(axes[bone.name]@(arm_inverse@Vector(axis))).normalized()
         bone.rotation_quaternion=bone.rotation_quaternion@Quaternion(local,amount)
 
 def translate(name,delta):
-    bone=rig.pose.bones['mixamorig:'+name];bone.location=axes[bone.name]@(arm_inverse@Vector(delta))
+    bone=rig.pose.bones[BONE_NAMES[name]];bone.location=axes[bone.name]@(arm_inverse@Vector(delta))
 
 def aim(name,target):
-    bone=rig.pose.bones['mixamorig:'+name];goal=rig.matrix_world.inverted()@target
+    bone=rig.pose.bones[BONE_NAMES[name]];goal=rig.matrix_world.inverted()@target
     rotation=(bone.tail-bone.head).normalized().rotation_difference((goal-bone.head).normalized())@bone.matrix.to_quaternion()
     bone.matrix=Matrix.LocRotScale(bone.head,rotation,bone.matrix.to_scale());bpy.context.view_layer.update()
 
 def right_arm_ik(target):
-    bpy.context.view_layer.update();a,b,c=[rig.matrix_world@rig.pose.bones['mixamorig:'+n].head for n in ('RightArm','RightForeArm','RightHand')]
+    bpy.context.view_layer.update();a,b,c=[rig.matrix_world@rig.pose.bones[BONE_NAMES[n]].head for n in ('RightArm','RightForeArm','RightHand')]
     l1=(b-a).length;l2=(c-b).length;direction=(target-a).normalized()
     distance=max(abs(l1-l2)+.0001,min((target-a).length,l1+l2-.0001));target=a+direction*distance
     along=(l1*l1-l2*l2+distance*distance)/(2*distance);pole=Vector((-1,0,0));perp=(pole-direction*pole.dot(direction)).normalized()
     elbow=a+direction*along+perp*math.sqrt(max(0,l1*l1-along*along))
     aim('RightArm',elbow);aim('RightForeArm',target)
 
-right_rest=rig.matrix_world@rig.pose.bones['mixamorig:RightHand'].head
+right_rest=rig.matrix_world@rig.pose.bones['hand_r'].head
 raised=Vector((-.36,-.14,1.69));struck=Vector((.04,-.29,1.25))
 def pose(kind,t):
     for bone in rig.pose.bones:bone.matrix_basis=Matrix.Identity(4)
@@ -137,7 +147,8 @@ glb=ROOT/'exports/surpatore_vampire.glb'
 assert bpy.ops.export_scene.gltf(filepath=str(glb),export_format='GLB',use_selection=True,export_apply=False,
  export_animations=True,export_animation_mode='ACTIONS',export_frame_range=False,export_force_sampling=True,export_nla_strips=True,
  export_cameras=False,export_lights=False,export_extras=True,export_image_format='JPEG',export_jpeg_quality=90)=={'FINISHED'}
-shutil.copyfile(glb,ROOT.parent/'assets/models/surpatore_vampire.glb')
+if args.asset_output:
+    public=Path(args.asset_output).resolve();public.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(glb,public)
 
 scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=24;scene.cycles.use_denoising=True
 scene.render.resolution_x=850;scene.render.resolution_y=1000;scene.render.resolution_percentage=100
@@ -152,7 +163,7 @@ view((2.3,-4.5,2.0));bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'models/surpa
 metrics={}
 for name,frame,suffix in [('Repos',0,'repos'),('Marche',6,'marche'),('Griffe',6,'griffe_haute'),('Griffe',16,'attaque'),('Mort',36,'mort')]:
  rig.animation_data.action=actions[name];scene.frame_set(frame);bpy.context.view_layer.update();view((2.3,-4.5,2.0))
- metrics[suffix]={'hand':list(rig.matrix_world@rig.pose.bones['mixamorig:RightHand'].head),'jaw_angle':rig.pose.bones['mixamorig:Jaw'].rotation_quaternion.angle}
+ metrics[suffix]={'hand':list(rig.matrix_world@rig.pose.bones['hand_r'].head),'jaw_angle':rig.pose.bones['jaw'].rotation_quaternion.angle}
  scene.render.filepath=str(ROOT/'previews'/f'surpatore_{suffix}.png');bpy.ops.render.render(write_still=True)
 for name,frame,suffix in [('Repos',0,'bouche_fermee'),('Griffe',12,'bouche_ouverte')]:
  rig.animation_data.action=actions[name];scene.frame_set(frame);bpy.context.view_layer.update()
@@ -163,9 +174,9 @@ raw=glb.read_bytes();size=struct.unpack_from('<I',raw,12)[0];doc=json.loads(raw[
 triangles=sum(doc['accessors'][p['indices']]['count']//3 for mesh in doc['meshes'] for p in mesh['primitives'])
 assert triangles==8156 and len(doc['meshes'])==len(doc['skins'])==len(doc['materials'])==1
 assert set(a['name'] for a in doc['animations'])==set(CLIPS)
-assert any(n.get('name')=='mixamorig:Jaw' for n in doc['nodes'])
+assert any(n.get('name')=='jaw' for n in doc['nodes'])
 assert hashlib.sha256(SOURCE.read_bytes()).hexdigest()==source_hash
 report={'source':str(SOURCE),'source_sha256':source_hash,'triangles':triangles,'bytes':len(raw),'meshes':1,'materials':1,'texture_size':2048,
- 'clips':list(CLIPS),'canonical_height':1.8,'jaw_vertices':len(jaw_weights),'jaw_open_angle':angle,'poses':metrics}
+ 'clips':list(CLIPS),'canonical_height':1.8,'bones':len(doc['skins'][0]['joints']),'rig':'supplied Unreal skeleton + jaw','output_sha256':hashlib.sha256(raw).hexdigest(),'jaw_vertices':len(jaw_weights),'jaw_open_angle':angle,'poses':metrics}
 (ROOT/'logs/surpatore-validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
 print('SURPATORE_VALIDATION',json.dumps(report),flush=True)

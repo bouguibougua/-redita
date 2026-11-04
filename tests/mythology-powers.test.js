@@ -114,13 +114,24 @@ test('I Lacramanti counts cumulative allied column deaths, buffs own humans only
   assert.equal(own.hp,before[0]+4);assert.equal(own.damage,before[1]+2);assert.equal(enemy.hp,before[2]);assert.equal(legend.hp,before[3]);
   const later=deploy();assert.equal(later.hp,E.Config.units.habitant.hp+4);assert.equal(later.damage,E.Config.units.habitant.damage+2);
 });
-test('U Mazzeru reveals only offensive humans; Sainte-Lucie reveals whole enemy coastal regions until match end',()=>{
-  const {E,s,cast,deploy}=fixture(),v=s.players.blue.villages[0];
-  const attack=deploy('blue');assert.equal(E.MythologyEffects.unitVisible(s,'red',attack),false);cast('u-mazzeru');
-  assert.equal(E.MythologyEffects.unitVisible(s,'red',attack),true);assert.equal(E.MythologyEffects.residentVisible(s,'red',v,v.residents.find(r=>!r.unitId)),false);
-  s.elapsed=700;assert.equal(E.MythologyEffects.unitVisible(s,'red',attack),true);
-  v.biome='littoral';cast('oeil-sainte-lucie');assert.equal(E.MythologyEffects.vision(s,'red',v).all,true);
-  assert.equal(E.MythologyEffects.vision(s,'red',s.players.blue.villages[1]).all,false);
+test('both camps stay fully visible before and after the legacy vision powers',()=>{
+  const {E,s,cast,deploy}=fixture();
+  const attack=deploy('blue'),civilian=s.players.blue.villages[0].residents.find(r=>!r.unitId);
+  for(const viewer of ['red','blue'])for(const owner of ['red','blue'])for(const v of s.players[owner].villages){
+    for(const biome of ['plaine','montagne','littoral']){
+      v.biome=biome;
+      const known=E.MythologyEffects.vision(s,viewer,v);
+      assert.equal(known.fraction,1);assert.equal(known.people,true);assert.equal(known.all,true);
+    }
+    assert.equal(E.MythologyEffects.residentVisible(s,viewer,v,civilian),true);
+    assert.equal(E.MythologyEffects.unitVisible(s,viewer,attack),true);
+  }
+  assert.equal(cast('u-mazzeru').accepted,true);
+  assert.equal(cast('oeil-sainte-lucie').accepted,true);
+  s.elapsed=700;
+  assert.equal(E.MythologyEffects.unitVisible(s,'red',attack),true);
+  assert.equal(E.MythologyEffects.residentVisible(s,'red',s.players.blue.villages[0],civilian),true);
+  assert.equal(E.MythologyEffects.vision(s,'red',s.players.blue.villages[1]).all,true);
 });
 test('U Fullettu summons five fast units; enemy bank transfers conserve resources and stop on pause',()=>{
   const {E,s,cast}=fixture();for(const v of s.players.blue.villages)v.resources.ble=20;

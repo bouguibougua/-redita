@@ -12,7 +12,7 @@
         cloneSkeleton = skeleton.clone;
         const asset = await new loader.GLTFLoader().loadAsync(new URL(config().src, document.baseURI).href);
         const names = [config().clips.idle, config().clips.walk, ...config().clips.attacks, config().clips.death];
-        if (!names.every(name => asset.animations.some(clip => clip.name === name))) throw new Error('Animations de L’Surpatore manquantes');
+        if (!names.every(name => asset.animations.some(clip => clip.name === name))) throw new Error('Animations d’U Surpatore manquantes');
         template = asset.scene; clips = asset.animations;
         return true;
       }).catch(reason => { error = String(reason?.stack || reason); return false; });

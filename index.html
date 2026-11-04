@@ -40,6 +40,9 @@
 
       <section id="game-screen" class="screen" hidden aria-label="Partie en cours">
         <p id="preparation-hint" class="hint preparation-hint" role="status" hidden>Préparation : attribuez vos tâches et métiers, puis organisez vos villages. Le combat commencera à la fin du compte à rebours.</p>
+        <header class="game-topbar" aria-label="État de vos villages">
+          <aside id="map-village-popups" class="map-village-popups" aria-label="État et ressources de vos villages"></aside>
+        </header>
         <div class="game-layout">
           <section class="board-panel" aria-label="Plateau de jeu">
             <div class="board-legend" aria-hidden="true">
@@ -49,11 +52,9 @@
             </div>
             <div id="battlefield" class="battlefield">
               <div class="board-clock" role="timer" aria-label="Temps restant"><span id="phase-label">Temps normal</span><strong id="game-clock">12:30</strong></div>
-              <div class="view-controls"><button id="pause-game" class="button button-quiet" type="button">Pause</button><button id="toggle-board-view" class="button button-quiet" type="button" aria-pressed="false">Chargement 3D…</button><button class="button button-quiet" data-open-xr type="button">Réalité mixte</button></div>
               <div id="board-columns" class="board-columns"></div>
               <div id="battlefield-3d" class="battlefield-3d" hidden></div>
               <div id="units-layer" class="units-layer" aria-label="Unités sur le terrain"></div>
-              <aside id="map-village-popups" class="map-village-popups" aria-label="État et ressources des villages"></aside>
             </div>
           </section>
 
@@ -208,6 +209,8 @@
   <script src="js/network.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/villager-model.js"></script>
+  <script src="js/farmer-model.js"></script>
+  <script src="js/hunter-model.js"></script>
   <script src="js/warrior-model.js"></script>
   <script src="js/orcu-model.js"></script>
   <script src="js/fullettu-model.js"></script>

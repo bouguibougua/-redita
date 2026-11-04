@@ -1,0 +1,21 @@
+{
+  "source": "/Users/robin/Downloads/chasseur 3d.glb",
+  "source_sha256": "9416c3fe5d9b59910f13839060f6e088a75041309f41c092c8345456a6a0363d",
+  "source_triangles": 10504,
+  "triangles": 10992,
+  "bytes": 1676048,
+  "sha256": "5f0f9b2b491429b2ee83ef034eb02b87ccb33e6c5d8886a204293d7c0e4f34e5",
+  "bones": 23,
+  "clips": [
+    "Marche",
+    "Mort",
+    "Repos",
+    "Tir"
+  ],
+  "texture_size": [
+    1024,
+    1024
+  ],
+  "height_m": 1.8,
+  "simulation_changes": false
+}

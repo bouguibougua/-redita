@@ -64,6 +64,8 @@
     },
 
     selectVillage(playerId, lane) {
+      if (E.Network.mode !== "local" && playerId !== (E.Network.playerId || "red")) return false;
+      if (!state.players[playerId]?.villages[lane]) return false;
       state.selectedVillage = { playerId, lane };
       const village = state.players[playerId] && state.players[playerId].villages[lane];
       state.selectedResidentId = village && village.residents[0] ? village.residents[0].id : null;

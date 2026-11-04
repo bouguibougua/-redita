@@ -302,11 +302,12 @@
       for (const id of ["red", "blue"]) {
         for (let lane = s.players[id].villages.length; lane < E.Config.formats.classic.regions; lane++) dashboard.paint(`${id}${lane}`, "", [], [], false);
         const player = s.players[id];
-        dashboard.paint(`${id}Gold`, `${id === "red" ? "ROUGE" : "BLEU"} · OR GLOBAL`, [String(Math.floor(player.gold))], [], inGame);
+        const showPlayer = inGame && id === (E.Network.mode === "local" ? sel.playerId : owner());
+        dashboard.paint(`${id}Gold`, `${id === "red" ? "ROUGE" : "BLEU"} · OR GLOBAL`, [String(Math.floor(player.gold))], [], showPlayer);
         player.villages.forEach((item, lane) => dashboard.paint(`${id}${lane}`,
           `${id === "red" ? "ROUGE" : "BLEU"} V${lane + 1}`,
           [`${E.Biomes.labels[item.biome]} · T${item.level}`, `PV ${Math.ceil(item.hp)}/${item.maxHp}`,
-            `${item.population}/${item.populationMax} hab. · ${E.Economy.getAvailableResidents(s, id, lane)} libres`], [], inGame,
+            `${item.population}/${item.populationMax} hab. · ${E.Economy.getAvailableResidents(s, id, lane)} libres`], [], showPlayer,
           { action: { type: "select-village", playerId: id, lane }, selected: sel.playerId === id && sel.lane === lane }));
       }
       const preparing = s.preparationRemaining > 0;

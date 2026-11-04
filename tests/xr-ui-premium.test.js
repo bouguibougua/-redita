@@ -40,7 +40,9 @@ const dashboard = { targets: [], textSize: "normal",
 const ui = E.XRUI.create(dashboard); ui.render();
 const find = predicate => dashboard.targets.find(t => predicate(t.userData.xrTarget))?.userData.xrTarget;
 for (const id of ["jobs", "tasks", "buildings", "residents"]) assert.equal(painted.get(id).visible, true);
-assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 8);
+assert.equal(painted.get("blue0").visible, false);
+assert.equal(painted.get("blueGold").visible, false);
+assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 4);
 assert.ok(painted.get("jobs").rows.flat().some(entry => entry[1]?.args?.[1] === "agriculteur"));
 assert.equal(painted.get("jobs").rows.flat().some(entry => entry[1]?.method === "changeJob"), false, "Métiers et tâches ne sont plus confondus");
 const red = state.players.red, v = red.villages[0], person = v.residents[0];
@@ -153,11 +155,11 @@ assert.equal(painted.get("modal").rows[1].length, 2);
 assert.equal(painted.get("modal").rows.length, 2, "Une ligne de biomes et les réglages, sans ligne de decks en format simplifié");
 assert.match(painted.get("modal").lines[0], /0\/1 biomes/);
 state.phase = "running"; ui.close();
-assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 4);
+assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 2);
 assert.equal(painted.get("red2").visible, false);
 ui.execute({type:"open", name:"panel-layout"}); ui.render();
 assert.equal(find(t => t.action?.data === "red2"), undefined);
-console.log("UI simplifiée : deux biomes, un échange, quatre fiches et fenêtres existantes uniquement.");
+console.log("UI simplifiée : deux biomes, un échange, deux fiches du joueur et fenêtres existantes uniquement.");
 
 state = E.Board.createState("simplified"); state.phase = "running"; state.preparationRemaining = 60;
 const cropVillage = state.players.red.villages[0]; cropVillage.biome = "plaine"; cropVillage.slots = E.Biomes.createSlots("plaine");

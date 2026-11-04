@@ -1,15 +1,16 @@
 """Inspection locale du vampire fourni, sans modification de l'original."""
 from pathlib import Path
-import bpy,json
+import bpy,json,hashlib
 from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[1]
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
-bpy.ops.import_scene.gltf(filepath='/Users/robin/Downloads/fantasy vampire 3d model.glb')
+SOURCE=Path('/Users/robin/Downloads/u surpatore 3d.glb')
+bpy.ops.import_scene.gltf(filepath=str(SOURCE))
 s=bpy.context.scene;body=next(o for o in s.objects if o.type=='MESH' and any(m.type=='ARMATURE' for m in o.modifiers));rig=next(o for o in s.objects if o.type=='ARMATURE')
 points=[body.matrix_world@v.co for v in body.data.vertices]
 low=Vector(tuple(min(p[i] for p in points) for i in range(3)));high=Vector(tuple(max(p[i] for p in points) for i in range(3)))
 center=(low+high)/2;h=high.z-low.z
-data={'bounds':[list(low),list(high)],'textures':[[i.name,list(i.size)] for i in bpy.data.images], 'bones':{b.name:list(rig.matrix_world@b.head_local) for b in rig.data.bones}}
+data={'source':str(SOURCE),'source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'bounds':[list(low),list(high)],'textures':[[i.name,list(i.size)] for i in bpy.data.images], 'bones':{b.name:list(rig.matrix_world@b.head_local) for b in rig.data.bones}}
 (ROOT/'logs/surpatore-source.json').write_text(json.dumps(data,indent=2));print('SURPATORE_SOURCE',json.dumps(data),flush=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'models/surpatore_source.blend'))
 s.render.engine='CYCLES';s.cycles.device='CPU';s.cycles.samples=16;s.cycles.use_denoising=True

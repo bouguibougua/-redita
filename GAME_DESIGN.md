@@ -1035,6 +1035,8 @@ périodiquement.
 
 La fréquence exacte n'est PAS encore définie.
 
+**Combat à l’arc — règle validée :** le métier Chasseur tire à **15 unités** sur les troupes adverses de sa ligne, ainsi que sur le village ennemi. En attaque, il s’arrête dès qu’une cible est à portée ; en défense, il tire depuis sa position de garde. Les troupes ennemies à portée restent prioritaires sur le village. La détection couvre sa portée de tir. Les dégâts et la cadence existants sont conservés ; le projectile est visuel et les dégâts restent appliqués par le moteur de combat. Le village ne riposte qu’à sa portée de contact existante. Un habitant sans métier affecté à la chasse ne reçoit pas cette portée.
+
 Pendant sa mission, le chasseur est visible et se déplace continuellement vers des positions aléatoires bornées à l’intérieur de sa région d’origine. Un habitant sans métier affecté à la chasse utilise la vitesse normale ; le métier Chasseur applique la vitesse validée de **7,5 unités/s**. Ce déplacement est visuel et ne modifie ni la fréquence ni le rendement de production de viande.
 
 Condition :
@@ -1602,7 +1604,7 @@ PV :
 
 **300.**
 
-Le jeu possède un système d'informations cachées.
+Ancienne règle : le jeu possédait un système d'informations cachées, retiré dans la version actuelle (section 78).
 
 La Tour génoise permet de révéler :
 
@@ -1852,10 +1854,7 @@ la planche restent provisoires, pas des couleurs définitivement validées.
 
 # 66. U MAZZERU — VISION
 
-Révèle les habitants adverses de catégorie offensive jusqu’à la fin de partie.
-Les autres civils et les légendes ne sont pas révélés par ce pouvoir.
-Dans le prototype, les humains Guerriers, Ravageurs ou en mission d’attaque
-constituent la catégorie offensive.
+Ancien pouvoir : révélation des humains offensifs adverses. Depuis le retrait du brouillard de guerre (section 78), tous les habitants et unités sont déjà visibles ; ce pouvoir ne donne plus de visibilité supplémentaire.
 
 ---
 
@@ -1932,7 +1931,7 @@ La protection utilise une lueur verte et dorée.
 | A Mumma | enchantement | Fait repartir les intrus ennemis présents dans tous les territoires alliés. |
 | I Lacramanti | enchantement | Humains alliés présents sur la colonne : +2 PV et +1 dégât par mort allié depuis le début sur cette colonne ; pas les légendes. |
 | U Fullettu | invocation | Cinq follets aléatoirement sur les terres alliées, 20 PV, 0 dégât, très rapides ; ressources ennemies transférées directement à la banque locale alliée. |
-| Œil de Sainte-Lucie | vision | Révèle intégralement les Littoraux adverses, personnages compris, jusqu’à la fin de partie, sans condition de Littoral d’origine. |
+| Œil de Sainte-Lucie | vision | Ancienne révélation des Littoraux adverses ; ils sont désormais toujours visibles (section 78). |
 
 Les invocations utilisent les unités et déplacements existants. Les vitesses
 non chiffrées par le concepteur restent temporaires dans la configuration.
@@ -2044,20 +2043,18 @@ Ne pas permettre arbitrairement à toute la population de migrer d'un village ve
 
 ---
 
-# 78. INFORMATION CACHÉE
+# 78. VISIBILITÉ DU TERRAIN
 
-Le joueur ne doit pas connaître automatiquement toutes les informations adverses.
+Le brouillard de guerre et le système de dissimulation du camp adverse sont retirés.
+Les deux joueurs voient en permanence tous les terrains, villages, bâtiments,
+cultures, élevages, habitants et unités des deux camps, en 2D, en 3D et en XR.
+Les fiches de statistiques, les stocks et les panneaux de gestion concernent
+uniquement le camp du joueur ; la consultation des villages adverses est retirée.
+En mode local partagé, le camp actif détermine les fiches présentées.
 
-Les informations adverses peuvent être cachées.
-
-Certains renforts servent spécifiquement à obtenir de l’information.
-
-Exemples :
-
-* U Mazzeru ;
-* Œil de Sainte-Lucie.
-
-Le système de visibilité doit donc être prévu dès l'architecture du jeu.
+U Mazzeru et l’Œil de Sainte-Lucie restent dans le catalogue, mais leurs anciens
+pouvoirs de révélation ne donnent plus de visibilité supplémentaire. Aucun bonus
+de remplacement n’est défini. Leurs descriptions signalent ce changement.
 
 ---
 
@@ -2083,9 +2080,9 @@ Vendre les ressources locales
 
 L’écran de jeu occupe une seule hauteur de fenêtre, sans défilement global : la carte est centrée, les habitants et leurs tâches se trouvent à gauche, les métiers en bas au centre et la gestion du village en bas à droite. Sous la boutique, à droite, les boutons de construction sont séparés du panneau Bâtiments, qui affiche les bâtiments possédés et leurs améliorations. Les listes longues défilent à l’intérieur de leurs panneaux. Sur téléphone en portrait, la carte occupe toute la largeur et les panneaux compacts se répartissent en dessous. Chaque tâche propose aussi **« Attribuer à tous »** : la commande affecte uniquement les habitants sans tâche, actuellement disponibles dans le village, un par un à **0,5 seconde d'intervalle** ; elle ne remplace jamais une tâche existante. Chaque métier possède la même commande, qui affecte uniquement les habitants sans métier et ne remplace jamais une spécialité existante. **« Retirer les tâches à tous »** libère progressivement tous les habitants affectés aux tâches économiques, sans changer leur métier. **« Retirer les métiers à tous »** retire les spécialités de tous les habitants locaux, y compris ceux qui travaillent, sans changer leur tâche. Ces deux retraits groupés ignorent toujours les habitants engagés en attaque ou en défense. Les métiers dont le bâtiment requis manque restent inaccessibles. À côté des commandes groupées, chaque tâche et chaque métier possède un bouton vert **« Attribuer aux prochain »**. Chaque village mémorise une tâche et un métier pour tous les habitants qui y apparaissent ensuite, par génération naturelle ou achat. Les choix restent actifs jusqu'à ce que le joueur en sélectionne d'autres. Les choix par défaut au début de la partie sont **« Rendre disponible »** et **« Sans métier »**. Le métier est appliqué avant la tâche ; si une condition d'accès manque à l'arrivée, le choix concerné ne s'applique pas et l'habitant conserve son état de base. Un encadré **bleu** et une étoile signalent un bonus de métier. Un encadré **jaune** signale le métier équipé ou la tâche active ; si cette tâche est aussi boostée, un liseré bleu intérieur reste visible. L'habitant sélectionné est entouré d'une lumière jaune dans la liste et sur le plateau 2D/3D. Les pêcheurs affectés ensemble restent visibles individuellement. La vente des ressources locales se fait dans la première colonne de la boutique. Informations, cultures et élevages restent à droite. Les commandes groupées sont affichées sous les libellés compacts « Tous » et « Prochains », avec leur description complète en infobulle et pour les lecteurs d’écran.
 
-La sélection ne se fait plus en cliquant sur le terrain. Les boutons Rouge et Bleu V1 à V4 en Classique ou V1 à V2 en Simplifié, avec biome, PV et tier, se trouvent dans le panneau de droite. La carte 2D/3D sert uniquement à visualiser la partie : ses villages et emplacements ne sont pas des boutons. Le temps restant apparaît en haut au centre de la carte. Dans le panneau latéral, un groupe unique de quatre boutons **Slot 1 à 4** remplace les listes séparées de cultures et d'élevages. Cliquer sur un slot ouvre juste sous ces boutons les cultures compatibles avec son biome et, si le slot l'autorise, les élevages disponibles. Un clic sur un type place directement le contenu et garde son panneau de Slot ouvert. Les cultures affichent leur niveau et le prix de plantation de 75 or. Un slot de culture donne accès aux améliorations N2/N3 et, pendant la préparation, à la vente remboursée à gauche de l’amélioration. Un slot occupé par un élevage donne accès au retrait gratuit pendant la préparation, à l’abattage d’une quantité choisie et à Tout abattre. Le retrait disparaît à la fin de la préparation, et l’action restante se replace à gauche. Le remplacement payant d’une culture est accessible dans le volet Changer de culture. Les slots inexistants sont grisés. Le Littoral ne possède toujours que deux slots.
+La sélection ne se fait plus en cliquant sur le terrain. Les boutons du camp du joueur, V1 à V4 en Classique ou V1 à V2 en Simplifié, avec biome, PV et tier, se trouvent dans le panneau de droite. Les boutons permettant de consulter le camp adverse sont retirés. La carte 2D/3D sert uniquement à visualiser la partie : ses villages et emplacements ne sont pas des boutons. Le temps restant apparaît en haut au centre de la carte. Dans le panneau latéral, un groupe unique de quatre boutons **Slot 1 à 4** remplace les listes séparées de cultures et d'élevages. Cliquer sur un slot ouvre juste sous ces boutons les cultures compatibles avec son biome et, si le slot l'autorise, les élevages disponibles. Un clic sur un type place directement le contenu et garde son panneau de Slot ouvert. Les cultures affichent leur niveau et le prix de plantation de 75 or. Un slot de culture donne accès aux améliorations N2/N3 et, pendant la préparation, à la vente remboursée à gauche de l’amélioration. Un slot occupé par un élevage donne accès au retrait gratuit pendant la préparation, à l’abattage d’une quantité choisie et à Tout abattre. Le retrait disparaît à la fin de la préparation, et l’action restante se replace à gauche. Le remplacement payant d’une culture est accessible dans le volet Changer de culture. Les slots inexistants sont grisés. Le Littoral ne possède toujours que deux slots.
 
-Huit fiches compactes restent superposées en permanence à la carte, une par village. Chacune affiche ses points de vie, sa population, le nombre d'habitants disponibles et ses six stocks locaux : blé, châtaigne, raisin, viande, poisson et lait. La fiche du village sélectionné est mise en évidence. Ces fiches sont communes aux vues 2D et 3D et restent purement informatives.
+Les fiches des villages du joueur sont placées tout en haut au centre de l’écran, hors du terrain : deux fiches côte à côte en Simplifié et quatre en Classique (deux colonnes sur téléphone). Chacune affiche les PV, la population, les habitants disponibles et les six stocks locaux. La fiche sélectionnée est mise en évidence. Aucune fiche adverse n’est affichée. En réseau, le joueur Bleu voit uniquement les fiches bleues. Le terrain profite de l’espace libéré par les anciennes superpositions pour être agrandi. Les boutons Pause, Vue 2D/3D et Réalité mixte sont retirés de l’écran de partie. Le tutoriel revient automatiquement en 3D après l’explication des biomes.
 
 Les bâtiments et le village peuvent évoluer jusqu'à T3. L'amélioration ajoute uniquement la différence de PV entre niveaux aux PV courants et maximum, conservant les dégâts déjà subis. Le village passe aux plafonds de 25 puis 35 habitants. TEMP_BALANCE_VALUE : son amélioration coûte 300 or vers T2 et 450 or vers T3, sans ressource locale. Les coûts provisoires sont centralisés dans `config.js`.
 
@@ -2093,7 +2090,7 @@ Le joueur peut aussi acheter immédiatement un nouvel habitant dans le village s
 
 Le plateau emploie désormais des illustrations dédiées pour les trois terrains, les cultures, les élevages, les habitants et les bâtiments. Ces visuels servent à identifier plus vite les éléments ; les libellés, états et infobulles restent la référence fonctionnelle.
 
-Chaque habitant possède une apparence liée à son **métier réel**, indépendamment de sa tâche : modèle GLB fourni par le concepteur, en pose de repos (sans métier), chapeau de paille et fourche (agriculteur), cape et houlette (berger), chapeau et canne (pêcheur), capuche et arc (chasseur), guerrier corse à bandeau blanc, chemise de lin, gilet de cuir et épée (modèle 3D du guerrier), bandeau et hache (ravageur). Les modèles 3D combinent cette silhouette avec le matériau de l'outil et l'armure portés ; les portraits et la vue 2D montrent aussi les équipements. Les habitants disponibles et les pêcheurs restent visibles, sans doublonner les unités militaires. Le magasin de l'Artisanat affiche l'habitant ciblé et son équipement actuel ; les objets déjà équipés sont encadrés en jaune.
+Chaque habitant possède une apparence liée à son **métier réel**, indépendamment de sa tâche : modèle GLB fourni par le concepteur, en pose de repos (sans métier), modèle GLB du fermier fourni, avec chapeau de paille et animation de récolte accroupie (agriculteur), cape et houlette (berger), chapeau et canne (pêcheur), modèle GLB du chasseur fourni et arc en bois avec corde animée (chasseur), guerrier corse à bandeau blanc, chemise de lin, gilet de cuir et épée (modèle 3D du guerrier), bandeau et hache (ravageur). Les modèles 3D combinent cette silhouette avec le matériau de l'outil et l'armure portés ; les portraits et la vue 2D montrent aussi les équipements. Les habitants disponibles et les pêcheurs restent visibles, sans doublonner les unités militaires. Le magasin de l'Artisanat affiche l'habitant ciblé et son équipement actuel ; les objets déjà équipés sont encadrés en jaune.
 
 Les habitants **sans métier** utilisent le modèle fourni
 (`medieval warrior 3d model.glb`), allégé à **15 999 triangles** et trois
@@ -2121,7 +2118,7 @@ les instances, avec un squelette et des matériaux propres à chaque guerrier.
 
 Le village et ses bâtiments construits sont visibles directement sur leur région, au bord extérieur du terrain près du village propriétaire. Le village apparaît dès le début de la partie. Bergerie, Artisanat et Boucherie apparaissent immédiatement après leur construction. Chaque famille possède une apparence propre pour T1, T2 et T3 ; son sprite est remplacé dès que le niveau change. Ces éléments visuels ne créent pas de nouveaux slots et ne modifient pas leurs règles de ciblage.
 
-Les fumées des structures attaquées et la brume décorative du plateau sont retirées. Le signal de dégâts reste représenté par la mise en évidence du village ; les règles de visibilité des pouvoirs mythologiques restent applicables.
+Les fumées des structures attaquées et la brume décorative du plateau sont retirées. Le signal de dégâts reste représenté par la mise en évidence du village ; les deux camps sont désormais visibles en permanence, sans brouillard de guerre (section 78).
 
 TEMP_BALANCE_VALUE visuelle : en 3D, une unité bascule légèrement vers l'avant lorsqu'elle porte un coup (le Guerrier joue ses attaques à l'épée) et clignote une fois en rouge lorsqu'elle reçoit l'impact appliqué chaque seconde. À sa mort, sa figurine reste brièvement visible, prend une teinte rouge à **70 %**, tombe sur le côté, puis sa figurine disparaît. Le Guerrier effectue cette chute avec son squelette ; les autres figurines gardent la bascule du modèle entier. Les durées, le nombre de particules et les angles sont centralisés dans `config.js`. Ces animations n'affectent ni les dégâts, ni le moment où l'unité est retirée de la simulation.
 
@@ -2147,11 +2144,15 @@ Le **Vignoble 3D V1** dispose de trois modèles `assets/models/vignoble_{petit,m
 
 **L’Orcu 3D** utilise le modèle fourni par le concepteur (`orc barbarian 3d model.glb`), préparé dans `eredita3D` et exporté en `assets/models/orcu.glb`. Le modèle conserve ses 10 501 triangles et sa texture d’origine, réduite à 2048 px pour le plateau. Son squelette permet cinq animations simples ajoutées pour le jeu : repos, marche lente, frappes droite/gauche et mort. Le chargement est propre à `l-orcu` ; les autres légendes et le guerrier gardent leurs modèles. Les invocations partagent géométrie et texture, avec un squelette et des matériaux par instance, un repère d’équipe et les effets de dégâts existants. La pause fige les animations. Les événements visuels de mort conservent l’identité et l’échelle mythologiques, y compris lors d’une réception tardive par un client. Les règles de L’Orcu restent celles du chapitre des renforts : 200 PV, 30 dégâts et déplacement extrêmement lent. Le personnage simple reste disponible pendant le chargement ou si le GLB manque. Les aperçus et mesures sont dans `eredita3D` ; `npm run test:orcu` contrôle l’intégration. Les performances sur Quest 3 physique restent à mesurer.
 
+**Chasseur 3D** : `assets/models/chasseur.glb` reprend le personnage fourni, son carquois et ses textures. L’arc en noyer, sa poignée en cuir, ses bagues, sa corde et la flèche encochée sont modélisés avec le personnage. Le squelette contient `Repos`, `Marche`, `Tir` et `Mort`. `Tir` lève l’arc, tend la corde et décoche ; une flèche visuelle rejoint la position de la cible enregistrée au tir. La pause fige le personnage et ce projectile. Les tirs utilisent les événements du moteur, y compris après synchronisation réseau ; la portée de 15 est définie au chapitre 35 et dans `Config.combat.professionAttackRanges`. Le portrait 2D provient du même modèle. Les équipements, transports, repères d’équipe et effets d’impact restent disponibles. Le modèle compte 10 992 triangles et des textures 1 024 pixels. `npm run test:hunter` vérifie le combat et le rendu.
+
+**Agriculteur 3D** : `assets/models/agriculteur.glb` reprend le fermier fourni par le concepteur, avec ses vêtements et textures. Son squelette de 20 os contient `Repos`, `Marche`, `Recolte`, `Frappe` et `Mort`. Pendant la phase économique `harvesting` d’une tâche Agriculture, il s’accroupit, incline le buste et récolte de la main droite ; il marche pendant les trajets et revient au repos lors des pauses. L’apparence reste liée au métier Agriculteur : affecter un sans métier à l’agriculture ne change pas son modèle. La pause fige les animations. Le modèle comporte 18 000 triangles et des textures 1 024 pixels ; géométrie et textures sont partagées, les squelettes et matériaux sont indépendants. Le portrait 2D provient du même modèle. Les cadences, rendements et dépôts restent ceux du moteur économique. `npm run test:farmer` vérifie l’intégration ; les sources Blender et le script de préparation sont dans `eredita3D`.
+
 **U Fullettu 3D** : le personnage et la lanterne fournis sont réunis dans `assets/models/fullettu.glb`. La lanterne reste un mesh indépendant attaché à l’os de la main gauche. Le déplacement utilise de petits bonds ; le geste de récolte tend la main droite vers l’avant puis la passe derrière le dos. Cette animation suit le cycle existant du vol à l’arrivée au village adverse : elle ne crée ni dégâts aux cultures ni transport de ressources et conserve le transfert direct entre banques décrit au chapitre 73. Le GLB contient les clips `Repos`, `Bonds`, `Recolte` et `Mort`, 12 866 triangles et deux matériaux avec textures 2 048/1 024 pixels. Les cinq follets partagent géométrie et textures, mais chaque instance garde son squelette, sa pose et ses matériaux. La pause fige les animations, le personnage simple assure le chargement de secours. Les scripts, fichiers Blender et aperçus sont dans `eredita3D` ; `npm run test:fullettu` vérifie l’intégration. Les performances sur Quest 3 physique restent à mesurer.
 
 **U Lupu Mannaru 3D** : le modèle fourni est utilisé dans `assets/models/lupu_mannaru.glb`, avec un squelette de 22 os créé localement. Le repos est accroupi ; le déplacement utilise les quatre membres, y compris lors d’une redirection latérale. Lors d’une attaque de structure, il se redresse et donne deux coups de griffes diagonaux de haut en bas, en croix. Les clips sont `Repos`, `Quatre_Pattes`, `Griffes_Croisees` et `Mort`. Le GLB conserve les 10 406 triangles et la texture originale réduite à 2 048 pixels. Les deux griffures constituent le geste visuel d’une seule attaque du moteur ; elles n’ajoutent aucun impact. La transformation, les 60 PV, les 20 dégâts et les propriétés du Ravageur restent inchangés. Les déformations des épaules et poignets de ce premier rig peuvent être affinées par peinture des poids. `npm run test:lupu` vérifie le rendu et les règles existantes.
 
-**U Surpatore 3D** : seule sa seconde forme, le vampire, utilise le modèle fourni dans `assets/models/surpatore_vampire.glb`. Le sanglier initial est conservé. Le design de base a la bouche fermée ; un os de mâchoire ajouté ouvre la bouche pendant le coup de griffe et la referme ensuite. Les clips sont `Repos`, `Marche`, `Griffe` et `Mort`. Le GLB contient 8 156 triangles et une texture de 2 048 pixels. À la demande du concepteur, les statistiques du vampire après la mort du sanglier passent à **40 PV et 11 dégâts** ; sa vitesse existante reste provisoire. La mort du sanglier possède sa figurine distincte afin de ne pas retirer le vampire qui vient d’apparaître. Les événements de mort conservent aussi la forme mythologique pour les clients recevant l’événement tardivement. `npm run test:surpatore` vérifie la transformation, la mâchoire, l’attaque, les nouvelles statistiques et le nettoyage. Ces animations sont réalisées par script et ne simulent pas le manteau ; les performances sur Quest 3 physique restent à mesurer.
+**U Surpatore 3D** : seule sa seconde forme, le vampire, utilise le nouveau fichier `u surpatore 3d.glb` fourni par le concepteur, préparé dans `assets/models/surpatore_vampire.glb`. Le sanglier initial est conservé et ce modèle apparaît dès sa mort. Le squelette fourni est conservé, avec ses os de torsion et ses doigts ; un os de mâchoire ajouté ferme la bouche au repos et l’ouvre pendant le coup de griffe. Les clips sont `Repos`, `Marche`, `Griffe` et `Mort`. Le GLB contient 8 156 triangles, une texture de 2 048 pixels et 81 joints exportés. Le vampire conserve **40 PV et 11 dégâts**, ainsi que sa vitesse existante. La mort du sanglier possède sa figurine distincte afin de ne pas retirer le vampire qui vient d’apparaître. Les événements de mort conservent aussi la forme mythologique pour les clients recevant l’événement tardivement. `npm run test:surpatore` vérifie la provenance du modèle chargé, la transformation, la mâchoire, la marche, l’attaque, la pause et le nettoyage. Les animations sont réalisées dans Blender par script, sans simulation du manteau ; les performances sur Quest 3 physique restent à mesurer.
 
 ---
 

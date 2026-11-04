@@ -16,6 +16,7 @@
 
   // Adaptateur de vue : relit la référence courante, y compris après un snapshot réseau.
   function villageInfo(playerId, lane) {
+    if (E.Network.mode !== "local" && playerId !== (E.Network.playerId || "red")) return null;
     const state = readState();
     const player = state.players[playerId];
     const village = player?.villages[lane];
@@ -65,6 +66,7 @@
     },
     villageInfo,
     selectVillage(playerId, lane) {
+      if (E.Network.mode !== "local" && playerId !== this.getPlayerId()) return false;
       if (!readState().players[playerId]?.villages[lane]) return false;
       commands.selectVillage(playerId, lane);
       return true;

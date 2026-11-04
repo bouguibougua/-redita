@@ -267,7 +267,7 @@
       pecheur: { label: "Pêcheur", icon: "🎣", requires: "artisanat", missions: ["peche"], workBonus: 0.2, biome: "littoral", biomeBonus: 0.3, description: "+20 % poisson (+30 % sur le Littoral)" },
       guerrier: { label: "Guerrier", icon: "⚔", requires: "artisanat", missions: ["attaque", "defense"], description: "+20 PV, +5 dégâts, +10 % vitesse" },
       ravageur: { label: "Ravageur", icon: "🪓", requires: "boucherie", missions: ["attaque"], description: "+10 PV, +2 dégâts, +35 % vitesse ; +5 contre village" },
-      chasseur: { label: "Chasseur", icon: "🏹", requires: "boucherie", missions: ["chasse"], speedBonus: 0.5, description: "5 viandes par chasse au lieu de 3, +50 % vitesse" }
+      chasseur: { label: "Chasseur", icon: "🏹", requires: "boucherie", missions: ["chasse"], speedBonus: 0.5, description: "5 viandes par chasse au lieu de 3, +50 % vitesse ; arc : portée 15" }
     },
     resourceSaleValues: {
       ble: 1,
@@ -409,6 +409,8 @@
       villageRetaliationDamagePerSecond: 5,
       // TEMP_BALANCE_VALUE — portée, détection et vitesse d'attaque sont TBD.
       attackRange: 3,
+      // Règle validée : le métier Chasseur tire à 15 unités, troupes comprises.
+      professionAttackRanges: { chasseur: 15 },
       detectionRange: 4.5,
       attackInterval: 1,
       // TEMP_BALANCE_VALUE — position logique de garde dans chaque territoire.
@@ -439,6 +441,18 @@
     characterModels: {
       // TEMP_BALANCE_VALUE — échelle visuelle du GLB fourni pour les sans métier.
       villager: { src: "assets/models/habitant.glb?v=1-151656a63b68", scale: 0.31 },
+      // Échelle et transitions visuelles ; production et cadence économique inchangées.
+      farmer: {
+        src: "assets/models/agriculteur.glb?v=1-f802929f0a88", scale: 0.31,
+        crossFade: 0.18, maxFrameDelta: 0.05, attackDuration: 0.6,
+        clips: { idle: "Repos", walk: "Marche", harvest: "Recolte", attack: "Frappe", death: "Mort" }
+      },
+      // Animations et projectile purement visuels ; portée de combat définie dans combat.
+      hunter: {
+        src: "assets/models/chasseur.glb?v=1-5f0f9b2b4914", scale: 0.31,
+        crossFade: 0.12, maxFrameDelta: 0.05, attackDuration: 0.8, arrowFlightDuration: 0.22,
+        clips: { idle: "Repos", walk: "Marche", attack: "Tir", death: "Mort" }
+      },
       warrior: {
         src: "assets/models/guerrier.glb?v=final-cd44bcb24b67", scale: 0.31,
         attackDuration: 0.72, crossFade: 0.08, maxFrameDelta: 0.05,
@@ -467,7 +481,7 @@
       },
       // TEMP_BALANCE_VALUE — rendu de la forme vampire ; statistiques dans reinforcementPowers.
       surpatore: {
-        src: "assets/models/surpatore_vampire.glb?v=1-73ad1f83d37a", scale: 0.31,
+        src: "assets/models/surpatore_vampire.glb?v=2-5ffb7ed01318", scale: 0.31,
         attackDuration: 0.9, walkTimeScale: 1, crossFade: 0.08,
         maxFrameDelta: 0.05, movementEpsilon: 0.0001,
         clips: { idle: "Repos", walk: "Marche", attacks: ["Griffe"], death: "Mort" }

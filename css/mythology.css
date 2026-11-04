@@ -420,6 +420,3 @@
 .mythology-terrain-river { position: absolute; left: 3%; top: 44%; width: 86%; height: 5px; background: #50b2c9; transform: rotate(-11deg); border-radius: 40%; }
 .region.mythology-burned::after { content: "Terrain brûlé"; position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; background: #38170c88; color: #ffd08a; font-size: .75rem; pointer-events: none; }
 .region.mythology-cursed { filter: hue-rotate(20deg); box-shadow: inset 0 0 28px #a173d388; }
-.mythology-terrain-fog { position: absolute; left: 0; right: 0; z-index: 7; pointer-events: none; background: repeating-linear-gradient(135deg, #171d23ee, #171d23ee 10px, #202a30ee 11px, #202a30ee 21px); }
-.region.red .mythology-terrain-fog { top: 0; }
-.region.blue .mythology-terrain-fog { bottom: 0; }

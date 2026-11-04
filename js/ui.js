@@ -84,8 +84,8 @@
       event.preventDefault();
       controller.selectVillage(button.dataset.player, Number(button.dataset.shopVillage));
     });
-    elements.pause.addEventListener("click", () => controller.togglePause());
-    document.querySelector("#toggle-board-view").addEventListener("click", () => E.Board3D?.toggle());
+    elements.pause?.addEventListener("click", () => controller.togglePause());
+    document.querySelector("#toggle-board-view")?.addEventListener("click", () => E.Board3D?.toggle());
     elements.villageSelector.addEventListener("click", (event) => {
       const village = event.target.closest("[data-village-select]");
       if (village) controller.selectVillage(village.dataset.player, Number(village.dataset.lane));
@@ -275,10 +275,16 @@
     renderInspector(state);
     renderShop(state);
     syncShopModal(state);
-    const readonly = E.Network.mode === "solo" && state.selectedVillage.playerId === "blue";
-    [elements.inspector, elements.residents, elements.shop, elements.construction, elements.ownedBuildings].forEach((panel) => panel.classList.toggle("opponent-readonly", readonly));
+    updatePanelPermissions(state);
     renderRedirect(state, true);
     renderResult(state);
+  }
+
+  function updatePanelPermissions(state) {
+    const readonly = !["local", "pending"].includes(E.Network.mode) &&
+      state.selectedVillage.playerId !== (E.Network.playerId || "red");
+    [elements.inspector, elements.residents, elements.shop, elements.construction, elements.ownedBuildings]
+      .forEach(panel => panel.classList.toggle("opponent-readonly", readonly));
   }
 
   function openShopModal() {
@@ -322,11 +328,11 @@
     elements.clock.closest(".board-clock")?.setAttribute("aria-label", state.preparationRemaining > 0 ? "Préparation : attribuez vos tâches avant le combat" : "Temps restant");
     const clock = elements.clock.closest('.board-clock');
     if (clock) clock.dataset.paused = String(state.paused);
-    elements.pause.textContent = state.paused ? "Reprendre" : "Pause";
+    if (elements.pause) elements.pause.textContent = state.paused ? "Reprendre" : "Pause";
   }
 
   function renderVillageSelector(state) {
-    elements.villageSelector.innerHTML = ["red", "blue"].map((playerId) => {
+    elements.villageSelector.innerHTML = (E.Network.mode === "local" ? ["red", "blue"] : [viewerId(state)]).map((playerId) => {
       const player = state.players[playerId];
       const buttons = player.villages.map((village) => {
         const selected = state.selectedVillage.playerId === playerId && state.selectedVillage.lane === village.lane;
@@ -350,13 +356,16 @@
   }
 
   function renderMapVillagePopups(state) {
-    elements.mapVillagePopups.innerHTML = ["red", "blue"].flatMap((playerId) => {
+    const playerId = viewerId(state);
+    elements.mapVillagePopups.dataset.viewer = playerId;
+    elements.mapVillagePopups.style.setProperty("--village-card-count", state.players[playerId].villages.length);
+    elements.mapVillagePopups.innerHTML = [playerId].flatMap((playerId) => {
       const player = state.players[playerId];
       return player.villages.map((village) => {
         const selected = state.selectedVillage.playerId === playerId && state.selectedVillage.lane === village.lane;
         const available = E.Economy.getAvailableResidents(state, playerId, village.lane);
         const resources = E.Config.resources.map((resource) => `<div title="${resourceLabels[resource]}"><dt>${resourceIcons[resource]}</dt><dd data-map-resource="${resource}">${formatNumber(village.resources[resource])}</dd></div>`).join("");
-        return `<article style="left:calc(${village.lane * 100 / player.villages.length}% + 4px);width:calc(${100 / player.villages.length}% - 8px)" class="map-village-popup ${playerId} lane-${village.lane} ${selected ? "selected" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""} ${village.destroyed ? "destroyed" : ""}" data-map-village data-player="${playerId}" data-lane="${village.lane}" aria-current="${selected}">
+        return `<article class="map-village-popup ${playerId} lane-${village.lane} ${selected ? "selected" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""} ${village.destroyed ? "destroyed" : ""}" data-map-village data-player="${playerId}" data-lane="${village.lane}" aria-current="${selected}">
           <header><strong>${playerId === "red" ? "Rouge" : "Bleu"} V${village.lane + 1}</strong><span>${biomeIcons[village.biome]}</span></header>
           <div class="map-village-stats"><span title="Points de vie">PV <b data-map-hp>${Math.ceil(village.hp)}/${village.maxHp}</b></span><span title="Population">Pop. <b data-map-population>${village.population}/${village.populationMax}</b></span><span title="Habitants disponibles">Dispo. <b data-map-available>${available}</b></span></div>
           <dl>${resources}</dl>
@@ -366,7 +375,9 @@
   }
 
   function updateMapVillagePopups(state) {
-    Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
+    const player = state.players[viewerId(state)];
+    if (elements.mapVillagePopups.dataset.viewer !== player.id || elements.mapVillagePopups.children.length !== player.villages.length) renderMapVillagePopups(state);
+    player.villages.forEach((village) => {
       const popup = elements.mapVillagePopups.querySelector(`[data-map-village][data-player="${player.id}"][data-lane="${village.lane}"]`);
       if (!popup) {
         renderMapVillagePopups(state);
@@ -388,7 +399,7 @@
         const value = popup.querySelector(`[data-map-resource="${resource}"]`);
         if (value) value.textContent = known.all ? formatNumber(village.resources[resource]) : "?";
       });
-    }));
+    });
   }
 
   function renderBoard(state) {
@@ -419,7 +430,6 @@
   }
 
   function regionMarkup(state, village, playerId) {
-    const known = vision(state, village);
     const overlays = village.terrain?.river ? '<div class="mythology-terrain-overlays"><span class="mythology-terrain-river" title="Rivière"></span></div>' : "";
     const slots = village.slots.map((slot, index) => {
       const crop = slot.content && slot.content.category === "crop" ? E.Crops.get(slot.content.type) : null;
@@ -458,7 +468,6 @@
       <div class="terrain-building-layer ${village.destroyed ? "destroyed" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""}" aria-label="Village et bâtiments visibles sur le terrain">${terrainBuildings}</div>
       ${maritimeLayer}
       ${overlays}
-      ${known.fraction < 1 ? `<div class="mythology-terrain-fog" style="height:${(1 - known.fraction) * 100}%" aria-label="Zone non révélée"></div>` : ""}
       <div class="slot-grid">${slots}</div>
     </div>`;
   }
@@ -608,6 +617,7 @@
     const inspectorScroll = sameVillage ? elements.inspector.scrollTop : 0;
     elements.residents.dataset.selectionKey = `${selection.playerId}-${selection.lane}`;
     elements.residents.className = `panel-card residents-panel ${selection.playerId} lane-${selection.lane}`;
+    updatePanelPermissions(state);
     elements.residents.hidden = false;
     elements.construction.hidden = false;
     elements.ownedBuildings.hidden = false;
@@ -618,14 +628,6 @@
       return;
     }
     elements.inspector.dataset.herdSignature = `${herdSignature(village)}:${state.preparationRemaining > 0}`;
-    const known = vision(state, village);
-    if (!known.all && player.id !== viewerId(state)) {
-      elements.inspector.innerHTML = `<h3>Village adverse · informations cachées</h3><p class="section-help">Une Tour génoise révèle une partie de la région. U Mazzeru révèle les habitants offensifs ; l’Œil de Sainte-Lucie révèle les Littoraux.</p>${known.people || known.offensive ? `<p>${village.residents.filter(person => E.MythologyEffects.residentVisible(state, viewerId(state), village, person)).map(person => E.Config.professions[person.profession || "habitant"].label).join(", ") || "Aucun habitant révélé"}</p>` : ""}`;
-      elements.residents.innerHTML = "";
-      elements.construction.hidden = elements.ownedBuildings.hidden = true;
-      elements.inspector.dataset.vision = `${known.people}:${known.all}:${known.offensive}`;
-      return;
-    }
     const noSlot = village.buildings.length >= E.Config.building.slots;
     const cannotBuy = player.gold < E.Config.building.T1.gold || noSlot || village.destroyed || state.phase !== "running" || state.paused;
     const availableResidents = E.Economy.getAvailableResidents(state, player.id, village.lane);
@@ -759,12 +761,6 @@
     const player = state.players[selection.playerId];
     const village = player && player.villages[selection.lane];
     if (!village) return;
-    const known = vision(state, village);
-    if (state.mythology && player.id !== viewerId(state)) {
-      const visibility = `${known.people}:${known.all}:${known.offensive}`;
-      if (elements.inspector.dataset.vision !== visibility) { elements.inspector.dataset.vision = visibility; renderInspector(state); }
-      if (!known.all) return;
-    }
     if (elements.inspector.dataset.herdSignature !== `${herdSignature(village)}:${state.preparationRemaining > 0}`) {
       renderInspector(state);
       return;
@@ -851,11 +847,6 @@
     elements.shop.dataset.selectionKey = `${selection.playerId}-${selection.lane}`;
     if (!village) {
       elements.shop.innerHTML = '<p class="empty-copy">Sélectionnez un village.</p>';
-      return;
-    }
-    if (!vision(state, village).all && player.id !== viewerId(state)) {
-      elements.shop.innerHTML = '<p class="section-help">Stocks adverses non révélés.</p>';
-      elements.shop.dataset.signature = shopSignature(state, village);
       return;
     }
     const resident = shopResident(state, village);

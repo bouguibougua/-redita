@@ -255,10 +255,18 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .profession-habitant { background-image: url("../assets/generated/habitant-v1.webp") !important; background-size: contain !important; background-position: center !important; }
 .profession-guerrier { background-position: 0 100% !important; }
 .profession-ravageur { background-position: 66.666% 100% !important; }
-.profession-agriculteur { background-position: 33.333% 0 !important; }
+.profession-agriculteur {
+  background-image: url("../assets/generated/agriculteur-v1.png") !important;
+  background-size: contain !important;
+  background-position: center !important;
+}
 .profession-berger { background-position: 66.666% 0 !important; }
 .profession-pecheur { background-position: 100% 0 !important; }
-.profession-chasseur { background-position: 33.333% 100% !important; }
+.profession-chasseur {
+  background-image: url("../assets/generated/chasseur-v1.png") !important;
+  background-size: contain !important;
+  background-position: center !important;
+}
 .unit.worker[data-worker-mission="chasse"] .unit-body { animation: hunter-step .38s infinite alternate ease-in-out; }
 .unit-body, .resident-avatar { position: relative; }
 .gear-armor { position: absolute; inset: 49% 23% 8%; border: 1px solid #f0d8a3; clip-path: polygon(10% 0, 36% 8%, 64% 8%, 90% 0, 100% 26%, 83% 34%, 86% 100%, 14% 100%, 17% 34%, 0 26%); }

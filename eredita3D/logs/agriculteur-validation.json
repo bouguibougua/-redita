@@ -1,0 +1,22 @@
+{
+  "source": "/Users/robin/Downloads/fermier 3d.glb",
+  "source_sha256": "0bac4280ac6a0e7d7e4873812219450a7fac1cc74b64fde3335df3c3cf5dc761",
+  "source_triangles": 1927428,
+  "triangles": 18000,
+  "bytes": 2365792,
+  "sha256": "f802929f0a88fb368e820f6ba98cfd5cd9bbb1b0990a085c4429788d218b510a",
+  "bones": 20,
+  "clips": [
+    "Frappe",
+    "Marche",
+    "Mort",
+    "Recolte",
+    "Repos"
+  ],
+  "texture_size": [
+    1024,
+    1024
+  ],
+  "height_m": 1.8,
+  "simulation_changes": false
+}

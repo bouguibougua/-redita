@@ -140,7 +140,7 @@ achats de la boutique restent disponibles.
 
 | Légende | Effet |
 | --- | --- |
-| U Mazzeru | Vision des humains offensifs ennemis jusqu’à la fin ; pas les autres civils ni les légendes. |
+| U Mazzeru | Ancien pouvoir de vision ; les deux camps sont désormais toujours visibles, sans bonus de remplacement. |
 | A Strega | Rendement d’une région ennemie ×0,5 pendant 120 s. |
 | U Stregu | Rendement d’une région alliée ×2 pendant 120 s. |
 | A Fata | Rivière et vitesse de pêche +25 % dans la région choisie. |
@@ -155,7 +155,7 @@ achats de la boutique restent disponibles.
 | A Mumma | Fait repartir les intrus ennemis des territoires alliés. |
 | I Lacramanti | Humains alliés de la colonne : +2 PV / +1 dégât par mort allié depuis le début, pas les légendes. |
 | U Fullettu | Cinq follets, 20 PV / 0 dégât, très rapides ; vol de ressources ennemies directement vers la banque locale alliée. |
-| Œil de Sainte-Lucie | Vision complète des régions littorales ennemies jusqu’à la fin. |
+| Œil de Sainte-Lucie | Ancien pouvoir de vision des Littoraux ; ils sont désormais toujours visibles, sans bonus de remplacement. |
 
 La seule description affichée pour U Diavule est « Anéantit le village de
 votre adversaire. », conformément à la demande. Sa description mécanique

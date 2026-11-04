@@ -1,21 +1,26 @@
-# U Surpatore — forme vampire fournie
+# U Surpatore — nouveau modèle fourni
 
-Le fichier source `fantasy vampire 3d model.glb` dans Downloads est uniquement lu, sans modification. Son SHA-256 est `73ad1f83d37afaf31a717a3d0c9a605ed02a6c8e2755207e35451f515c42aabc`.
+Source : `/Users/robin/Downloads/u surpatore 3d.glb`, laissée intacte.
+SHA-256 : `b4398d72e6bcfe409fb021a4dfb6042d27a1faa71f7f985ef846e522e603bf2f`.
 
-Le GLB de jeu `../../assets/models/surpatore_vampire.glb` et `../exports/surpatore_vampire.glb` sont identiques : 1 910 776 octets, 8 156 triangles, un mesh, un matériau avec texture JPEG 2 048 px et un squelette. Le modèle est normalisé à 1,80 m de haut et orienté face au déplacement du jeu. La géométrie et les textures sont partagées entre instances ; les squelettes et matériaux sont indépendants.
+Le modèle de jeu utilise le squelette fourni (noms Unreal, doigts et os de torsion conservés). Un os `jaw` permet de garder la bouche fermée au repos et de l’ouvrir pendant la griffe. L’export comprend 81 joints, 8 156 triangles, un mesh et un matériau avec texture JPEG 2 048 px. La hauteur normalisée est de 1,80 m. Les textures sont empaquetées dans le GLB et dans le fichier Blender.
 
-La bouche est fermée dans le mesh de base. Le script referme la géométrie de la mâchoire originale sur 420 sommets, puis ajoute un os `mixamorig:Jaw` au squelette fourni. Cet os ouvre la bouche pendant le coup de griffe et revient à sa position fermée ensuite. Ce n’est pas une image ni un masque posé sur le visage. La fermeture conserve les UV et la texture d’origine ; les plis des joues restent une approximation de déformation, sans sculpture faciale manuelle.
+Clips : `Repos` (2 s), `Marche` (1 s, déplacement sur place), `Griffe` (1 s, adaptée à 0,9 s dans le jeu) et `Mort` (1,75 s, adaptée à la durée existante). Le mouvement de la griffe lève la main droite puis la rabat en travers du torse. Les doigts suivent le squelette fourni ; le manteau n’utilise pas de simulation physique.
 
-Les quatre clips sont `Repos` (2 s), `Marche` (1 s), `Griffe` (1 s, lecture visuelle adaptée à 0,9 s en jeu) et `Mort` (1,75 s, adaptée à la durée de mort existante). La griffe droite monte puis descend en travers du torse ; la bouche s’ouvre pendant ce geste. Les animations sont créées par script sur le squelette existant, sans simulation du manteau ni capture de mouvement.
+Le GLB est utilisé uniquement pour `mythologyLegendId: u-surpatore` avec `mythologyForm: vampire`. Le sanglier initial reste visible jusqu’à sa mort et possède ensuite sa propre figurine de mort. La seconde forme conserve 40 PV, 11 dégâts et la vitesse déjà définie ; une seconde mort retire l’invocation. Aucun changement de règle économique ou de combat n’est ajouté.
 
-Les règles d’U Surpatore, avec les nouvelles statistiques validées du vampire : il apparaît d’abord en sanglier ; après sa première mort, il devient le vampire fourni avec 40 PV, 11 dégâts et la vitesse existante. Une seconde mort le retire. Le modèle n’est chargé sur la figurine que pour `mythologyForm: vampire`.
+Géométrie et textures sont partagées, matériaux et squelettes restent indépendants. La pause fige les animations. Le chargement simple sert de solution de secours.
 
-Régénération :
+## Régénérer avec Blender 5.1
+
+Depuis la racine du projet :
 
 ```sh
-/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python eredita3D/scripts/prepare_surpatore.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python-exit-code 1 --python eredita3D/scripts/prepare_surpatore.py -- --source "/Users/robin/Downloads/u surpatore 3d.glb" --output-dir eredita3D --asset-output assets/models/surpatore_vampire.glb
 ```
 
-Test navigateur : `npm run test:surpatore`.
+Le paramètre `--asset-output` est facultatif : sans lui, seules les sorties dans `--output-dir` sont écrites. Après régénération, actualiser l’empreinte de l’URL dans `Config.characterModels.surpatore`.
 
-Aperçus dans `../previews/` : `surpatore_repos.png`, `surpatore_marche.png`, `surpatore_griffe_haute.png`, `surpatore_attaque.png`, `surpatore_mort.png`, `surpatore_bouche_fermee.png`, `surpatore_bouche_ouverte.png`. Le journal de validation est `../logs/surpatore-validation.json`. Les performances sur Quest 3 physique restent à mesurer.
+Le fichier éditable est `surpatore_vampire.blend`, les aperçus sont dans `../previews`, et les empreintes/mesures dans `../logs/surpatore-validation.json`.
+
+Vérifier avec `npm run test:surpatore` et `npm test`. Le test navigateur contrôle aussi que le modèle chargé provient du nouveau fichier source, la transformation et les morts tardives reçues en réseau. Les performances sur Quest physique restent à mesurer.

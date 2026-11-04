@@ -55,6 +55,8 @@
       setup();
       ready = true;
       E.VillagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.FarmerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.HunterModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.WarriorModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.OrcuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.FullettuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
@@ -162,14 +164,6 @@
     addMythologyTerrain(group, village);
     addSlots(group, village);
     addVillageAndBuildings(group, village);
-    const visible = E.MythologyEffects?.vision(latestState, viewerId(latestState), village);
-    if (visible && visible.fraction < 1) {
-      const length = 4.85 * (1 - visible.fraction);
-      const fog = mesh(new THREE.BoxGeometry(2.8 * terrainWidthScale(), 1.25, length), 0x253039, { castShadow: false });
-      fog.name = "mythology-fog"; fog.position.set(0, 0.56, owner === "red" ? -2.425 + length / 2 : 2.425 - length / 2);
-      fog.material.transparent = true; fog.material.opacity = 0.94;
-      group.add(fog);
-    }
     // Espacer les éléments sans étirer les bâtiments, les cultures ou les animaux.
     group.children.forEach(item => { item.position.x *= terrainWidthScale(); });
     terrainGroup.add(group);
@@ -423,6 +417,7 @@
         figure.userData.lupu && figure.userData.previousLanePosition !== undefined &&
         Math.abs(unit.lanePosition - figure.userData.previousLanePosition) > E.Config.characterModels.warrior.movementEpsilon);
       characterAnimation(figure)?.setMoving(moving);
+      figure.userData.farmer?.setHarvest(false);
       if (figure.userData.fullettu) {
         const source = state.players[unit.ownerId === 'red' ? 'blue' : 'red']?.villages[unit.lane];
         const destination = state.players[unit.ownerId]?.villages[unit.originLane];
@@ -436,6 +431,9 @@
       markSelected(figure, Boolean(unit.residentId && unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane));
       figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, -4.35 + (unit.position / 100) * 8.7);
       figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
+      if (figure.userData.hunter && unit.visualAttackTarget && unit.attackCooldown > 0) {
+        figure.rotation.y = unit.visualAttackTarget.position >= unit.position ? 0 : Math.PI;
+      }
       if (unit.mythologyRetreating) figure.rotation.y += Math.PI;
       figure.scale.setScalar(unit.mythologyScale || 1);
       updateMythologyAura(figure, appearance, unit.ownerId, state);
@@ -459,6 +457,7 @@
         const isWorker = ["agriculture", "elevage", "chasse"].includes(resident.mission) && Number.isFinite(resident.workPosition);
         characterAnimation(figure)?.setMoving(isWorker && figure.userData.previousWorkPosition !== undefined &&
           Math.abs(resident.workPosition - figure.userData.previousWorkPosition) > E.Config.characterModels.warrior.movementEpsilon);
+        figure.userData.farmer?.setHarvest(isWorker && resident.mission === 'agriculture' && resident.workPhase === 'harvesting');
         figure.userData.previousWorkPosition = resident.workPosition;
         figure.scale.setScalar((isWorker ? 0.78 : 0.65) * (resident.mythologyScale || 1));
         updateMythologyAura(figure, resident, player.id, state);
@@ -513,7 +512,13 @@
     if ((unit.visualAttackTimer || 0) > 0 && figure.userData.attackSequence !== attackSequence) {
       figure.userData.attackSequence = attackSequence;
       figure.userData.attackStartedAt = now;
-      characterAnimation(figure)?.attack(attackSequence);
+      const target = unit.visualAttackTarget;
+      const targetPoint = target && Number.isFinite(target.position) && Number.isFinite(target.lanePosition)
+        ? new THREE.Vector3(laneX(target.lanePosition), .47, -4.35 + target.position / 100 * 8.7) : null;
+      if (figure.userData.hunter && targetPoint) {
+        figure.rotation.y = target.position >= unit.position ? 0 : Math.PI;
+      }
+      characterAnimation(figure)?.attack(attackSequence, targetPoint);
     }
     if ((unit.visualHitTimer || 0) > 0 && figure.userData.hitSequence !== hitSequence) {
       figure.userData.hitSequence = hitSequence;
@@ -608,7 +613,7 @@
   }
 
   function characterAnimation(figure) {
-    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior;
+    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.hunter;
   }
 
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
@@ -623,7 +628,7 @@
     const isFullettu = appearance.mythologyLegendId === 'u-fullettu';
     const isLupu = appearance.mythologyLegendId === 'u-lupu-mannaru';
     const isSurpatore = appearance.mythologyLegendId === 'u-surpatore' && appearance.mythologyForm === 'vampire';
-    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
+    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
     const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
@@ -754,6 +759,14 @@
   function personModel(owner, profession, tool = null, armor = null, waterTransport = null, donkey = false) {
     if (profession === 'habitant') {
       const imported = E.VillagerModel?.create(owner, tool, armor);
+      if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
+    }
+    if (profession === 'chasseur') {
+      const imported = E.HunterModel?.create(owner, tool, armor);
+      if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
+    }
+    if (profession === 'agriculteur') {
+      const imported = E.FarmerModel?.create(owner, tool, armor);
       if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
     }
     if (profession === 'guerrier') {
