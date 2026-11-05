@@ -485,6 +485,7 @@
       return `<div class="slot ${slot.type} ${contentClass}" data-slot-visual data-player="${playerId}" data-lane="${village.lane}" data-slot-index="${index}" title="${title}">${content}</div>`;
     }).join("");
     const terrainBuildings = [
+      `<span class="terrain-building terrain-campfire tier-${village.level}" data-terrain-building="campfire" data-building-tier="${village.level}" title="Feu de camp T${village.level}"></span>`,
       `<span class="terrain-building terrain-village tier-${village.level}" data-terrain-building="village" data-building-tier="${village.level}" title="Village T${village.level}"></span>`,
       ...village.buildings.map((building, index) => `<span class="terrain-building terrain-${building.type} tier-${building.level}" data-terrain-building="${building.type}" data-building-tier="${building.level}" data-building-index="${index}" title="${buildingLabels[building.type]} T${building.level}"></span>`)
     ].join("");
@@ -497,6 +498,7 @@
     </div>` : "";
     return `<div class="region ${village.biome} ${playerId} ${village.burnUntil > state.elapsed ? "mythology-burned" : ""} ${village.curseUntil > state.elapsed ? "mythology-cursed" : ""}" data-mythology-region data-player="${playerId}" data-lane="${village.lane}">
       <div class="region-name"><span>${E.Biomes.labels[village.biome]}</span><span data-region-population>${village.population}/${village.populationMax} hab.</span></div>
+      <div class="terrain-ramparts tier-${village.level} ${village.destroyed ? 'destroyed' : ''}" data-terrain-ramparts title="Remparts · ${Math.ceil(village.hp)} PV"></div>
       <div class="terrain-building-layer ${village.destroyed ? "destroyed" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""}" aria-label="Village et bâtiments visibles sur le terrain">${terrainBuildings}</div>
       ${maritimeLayer}
       ${overlays}
@@ -539,16 +541,18 @@
       village.destroyed || !vision(state, village).people && !vision(state, village).offensive ? [] : (() => {
         const visible = village.residents.filter((resident) => !resident.unitId && !["attaque", "defense"].includes(resident.mission)
           && !(["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null));
-        let fisherIndex = 0;
+        let fisherIndex = 0, idleIndex = 0;
+        const idleCount = visible.filter(r => r.mission !== "peche").length;
         return visible.filter(resident => !E.MythologyEffects || E.MythologyEffects.residentVisible(state, viewerId(state), village, resident)).map((resident, index) => {
           const fishing = resident.mission === "peche";
           const narrow = window.innerWidth < 720;
           const fisherColumns = narrow ? 4 : 7;
           const fishingSlot = fishing ? fisherIndex++ : 0;
+          const angle = 2 * Math.PI * (fishing ? 0 : idleIndex++) / Math.max(1, idleCount);
           const left = fishing
             ? ((village.lane + (fishingSlot % fisherColumns + 0.5) / fisherColumns) / regionCount) * 100
-            : ((village.lane + 0.2 + (index % 4) * 0.18) / regionCount) * 100;
-          const distance = fishing ? 23 + Math.floor(fishingSlot / fisherColumns) * (narrow ? 1.9 : 3) : 8 + Math.floor(index / 4) * 2;
+            : ((village.lane + .5 + Math.cos(angle) * .31) / regionCount) * 100;
+          const distance = fishing ? 23 + Math.floor(fishingSlot / fisherColumns) * (narrow ? 1.9 : 3) : 12 + Math.sin(angle) * 3.4;
           const top = player.id === "red" ? distance : 100 - distance;
           const selected = resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane;
           return `<div class="local-person ${player.id} ${fishing ? "fishing" : ""} ${selected ? "selected-resident" : ""}" data-local-resident="${resident.id}" style="left:${left}%;top:${top}%" title="${resident.name} · ${E.Config.professions[resident.profession || "habitant"].label}">${residentAppearance(resident, "unit-body")}</div>`;
@@ -708,7 +712,7 @@
       <section class="management-column management-village panel-card"><h3>4 · Village</h3>
         <div class="village-overview dashboard-scroll" data-scroll-key="village">
           <div class="resident-purchase"><strong>Nouvel habitant</strong><small>50 or + 50 ressources</small><label>Ressource<select data-purchase-resource>${E.Config.resources.map((key) => `<option value="${key}" ${key === purchaseResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select></label><button type="button" class="button buy-resident-button" data-buy-resident>Acheter un habitant</button></div>
-          <div class="management-card building-card building-village"><strong>Village T${village.level}</strong><small>${village.populationMax} habitants maximum</small><small>Riposte : ${E.Config.combat.villageRetaliationDamagePerSecond} dégâts/s</small>${upgradeButton(state, player, village, "village")}</div>
+          <div class="management-card building-card building-village"><img class="campfire-management-image" src="assets/generated/feu_camp_t1.png" alt="" width="80" height="80"><strong>Feu de camp T${village.level}</strong><small>${village.populationMax} habitants maximum</small><small>Améliore le village et ses remparts</small><small>Riposte : ${E.Config.combat.villageRetaliationDamagePerSecond} dégâts/s</small>${upgradeButton(state, player, village, "village")}</div>
         </div>
       </section>
     </div>`;
@@ -752,7 +756,7 @@
       const level = building?.level || 1, definition = cfg.descriptions[type];
       const professions = Object.values(E.Config.professions).filter(p => p.requires === type).map(p => p.label).join(' · ');
       const action = building ? upgradeButton(state,player,village,index,false) : `<button class="building-buy-button" type="button" data-build="${type}" aria-label="Construire ${definition.label} pour ${cfg.T1.gold} or"><span>Construire</span><strong>${cfg.T1.gold} or</strong></button>`;
-      return `<tr class="building-table-row building-${type} ${building ? 'is-built' : 'is-unbuilt'}" data-building-row="${type}" data-building-level="${building?.level || 0}"><th scope="row"><div class="building-row-title"><span class="building-thumbnail building-${type}" aria-hidden="true"></span><span><strong>${definition.label}</strong><small>${definition.purpose}</small></span><span class="building-tier ${building ? 'is-owned' : ''}">${building ? `T${level}` : 'T1'}</span></div><p class="building-professions">Métiers : ${professions}</p><ul class="building-bonuses">${buildingEffects(type,level).map(effect => `<li>${effect}</li>`).join('')}</ul><details data-building-details="${type}" ${open.has(type) ? 'open' : ''}><summary>Effets et déblocages</summary>${buildingDetails(type)}</details></th><td class="building-action-cell"><span class="building-step">${building ? level === 3 ? 'Construit' : `Vers T${level+1}` : 'À construire'}</span>${action}<small class="building-action-hint" data-building-hint></small></td></tr>`;
+      return `<tr class="building-table-row building-${type} ${building ? 'is-built' : 'is-unbuilt'}" data-building-row="${type}" data-building-level="${building?.level || 0}"><th scope="row"><div class="building-row-title"><span class="building-thumbnail building-${type} ${level === 1 ? 'model-preview' : ''}" aria-hidden="true"></span><span><strong>${definition.label}</strong><small>${definition.purpose}</small></span><span class="building-tier ${building ? 'is-owned' : ''}">${building ? `T${level}` : 'T1'}</span></div><p class="building-professions">Métiers : ${professions}</p><ul class="building-bonuses">${buildingEffects(type,level).map(effect => `<li>${effect}</li>`).join('')}</ul><details data-building-details="${type}" ${open.has(type) ? 'open' : ''}><summary>Effets et déblocages</summary>${buildingDetails(type)}</details></th><td class="building-action-cell"><span class="building-step">${building ? level === 3 ? 'Construit' : `Vers T${level+1}` : 'À construire'}</span>${action}<small class="building-action-hint" data-building-hint></small></td></tr>`;
     }).join('');
     elements.ownedBuildings.innerHTML = `<table class="building-table"><caption class="visually-hidden">Bâtiments du village ${village.lane+1} : effets, bonus et coûts</caption><colgroup><col class="building-info-column"><col class="building-cost-column"></colgroup><thead><tr><th scope="col">Bâtiment et bonus</th><th scope="col">Coût / Action</th></tr></thead><tbody>${rows}</tbody></table><p class="building-payment-note">Or partagé · ressources de ce village.</p>`;
     elements.ownedBuildings.scrollTop = scrollTop;
@@ -778,7 +782,7 @@
     const quote = E.Buildings.upgradeQuote(state, player.id, village.lane, index, upgradeResource);
     if (!quote) return '<small>Niveau maximum · T3</small>';
     const resourceChoice = index === "village" || !withResource ? "" : `<select class="building-upgrade-resource" data-upgrade-resource aria-label="Ressource utilisée pour améliorer ce bâtiment">${E.Config.resources.map((key) => `<option value="${key}" ${key === upgradeResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select>`;
-    return `${resourceChoice}<button type="button" class="upgrade-button" data-upgrade="${index}" ${quote.allowed ? "" : "disabled"}>Améliorer → T${quote.level}<small data-upgrade-cost></small></button>`;
+    return `${resourceChoice}<button type="button" class="upgrade-button" data-upgrade="${index}" ${quote.allowed ? "" : "disabled"}>${index === 'village' ? 'Améliorer le feu' : 'Améliorer'} → T${quote.level}<small data-upgrade-cost></small></button>`;
   }
 
   function updateTradeAndUpgrades(state, player, village) {

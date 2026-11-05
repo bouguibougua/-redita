@@ -21,6 +21,29 @@
       littoral_rouge: { src: "assets/models/littoral_rouge.glb?v=1" },
       littoral_bleu: { src: "assets/models/littoral_bleu.glb?v=1" }
     },
+    // Présentation du village : ni PV supplémentaires ni collision avec les remparts.
+    villageModels: {
+      bergerie_t1: { src: "assets/models/bergerie_t1.glb?v=1-1b420c32cac7" },
+      artisanat_t1: { src: "assets/models/artisanat_t1.glb?v=1-f82735ce16bc" },
+      boucherie_t1: { src: "assets/models/boucherie_t1.glb?v=1-cfc8c9551320" },
+      hotel_t1: { src: "assets/models/hotel_t1.glb?v=1-6fc24a07302f" },
+      feu_camp_t1: { src: "assets/models/feu_camp_t1.glb?v=1-2e9c70d59637" },
+      remparts_t1: { src: "assets/models/remparts_t1.glb?v=1-05c0a93e02a3" },
+      remparts_t2: { src: "assets/models/remparts_t2.glb?v=1-8699ad569edd" },
+      remparts_t3: { src: "assets/models/remparts_t3.glb?v=1-dd5f62518a89" }
+    },
+    // TEMP_BALANCE_VALUE — implantation purement visuelle, dans le village d’origine.
+    villagePresentation: {
+      regionCenter: 2.55, front: -0.32, back: -2.34, elevation: 0.13,
+      buildingScale: 0.62, hotelScale: 0.70, fireScale: 0.54,
+      buildings: { bergerie: [-1.02, -1.98], village: [-0.34, -1.98],
+        artisanat: [0.34, -1.98], boucherie: [1.02, -1.98] },
+      fire: [0, -0.94], idleRadiusX: 1.10, idleRadiusZ: 0.51,
+      idleScale: 0.58, crowdedIdleScale: 0.47, crowdedThreshold: 20,
+      wallHalfWidth: 1.38, combatTransition: 30,
+      slotsTwo: [[-0.55, 0.10], [0.55, 0.10]],
+      slotsFour: [[-0.60, 0.30], [0.60, 0.30], [-0.60, 1.42], [0.60, 1.42]]
+    },
     // TEMP_BALANCE_VALUE — hauteur visuelle sur le marqueur du slot ; aucune règle de récolte.
     cropModels: {
       ble: { src: "assets/models/ble.glb?v=1", elevation: 0.13 },

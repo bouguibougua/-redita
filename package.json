@@ -60,7 +60,8 @@
     "test:missions": "node tests/resident-missions.test.js && node tests/resident-missions-browser.test.js",
     "test:shepherd": "node tests/shepherd-browser.test.js",
     "test:buildings": "node tests/buildings.test.js && node tests/building-table-browser.test.js",
-    "test:legend-display": "node tests/legend-display-browser.test.js"
+    "test:legend-display": "node tests/legend-display-browser.test.js",
+    "test:villages": "node tests/village-models-browser.test.js"
   },
   "engines": {
     "node": ">=18"

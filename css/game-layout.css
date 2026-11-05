@@ -500,3 +500,26 @@ body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top
 }
 
 #game-screen .building-action-hint:empty { display: none; }
+
+/* Modèles fournis : silhouettes entières et proportions natives. */
+#game-screen .building-thumbnail.model-preview { background-size: contain; background-position: center; }
+#game-screen .building-thumbnail.building-bergerie.model-preview { background-image: url('../assets/generated/bergerie_t1.png'); }
+#game-screen .building-thumbnail.building-artisanat.model-preview { background-image: url('../assets/generated/artisanat_t1.png'); }
+#game-screen .building-thumbnail.building-boucherie.model-preview { background-image: url('../assets/generated/boucherie_t1.png'); }
+.campfire-management-image { width: 72px; height: 60px; max-width: 100%; object-fit: contain; align-self: center; }
+.terrain-building.tier-1.terrain-village { background-image: url('../assets/generated/hotel_t1.png'); background-size: contain; background-position: center; }
+.terrain-building.tier-1.terrain-bergerie { background-image: url('../assets/generated/bergerie_t1.png'); background-size: contain; background-position: center; }
+.terrain-building.tier-1.terrain-artisanat { background-image: url('../assets/generated/artisanat_t1.png'); background-size: contain; background-position: center; }
+.terrain-building.tier-1.terrain-boucherie { background-image: url('../assets/generated/boucherie_t1.png'); background-size: contain; background-position: center; }
+.terrain-building.terrain-campfire { background-image: url('../assets/generated/feu_camp_t1.png'); background-size: contain; background-position: center; }
+.terrain-ramparts { position: absolute; z-index: 1; left: 5%; right: 5%; height: 36%; border: 4px ridge #946834; border-radius: 5px; pointer-events: none; }
+.region.red .terrain-ramparts { top: 8%; }
+.region.blue .terrain-ramparts { bottom: 8%; }
+.terrain-ramparts.tier-2 { border-color: #77756b; }
+.terrain-ramparts.tier-3 { border-color: #c4b898; }
+.terrain-ramparts.destroyed { border-style: dashed; opacity: .45; }
+
+#game-screen .management-village .building-village { display: flex; flex-direction: column; gap: 3px; padding: 6px; background-image: none; }
+#game-screen .management-village .building-village strong { display: block; }
+#game-screen .management-village .building-village small { margin-top: 0; }
+#game-screen .management-village .building-village .upgrade-button { margin-top: auto; }

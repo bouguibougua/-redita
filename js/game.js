@@ -287,7 +287,7 @@
 
     upgrade(index, resource) {
       const { playerId, lane } = state.selectedVillage;
-      if (E.Buildings.upgrade(state, playerId, lane, index, resource)) addLog(`Amélioration du ${index === "village" ? "village" : "bâtiment"} en ligne ${lane + 1}.`);
+      if (E.Buildings.upgrade(state, playerId, lane, index, resource)) addLog(`Amélioration du ${index === "village" ? "feu de camp" : "bâtiment"} en ligne ${lane + 1}.`);
       E.UI.render(state);
     },
 

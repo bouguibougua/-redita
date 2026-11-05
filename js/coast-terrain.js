@@ -8,7 +8,7 @@
   E.CoastTerrain = {
     async init(three) { return (await Promise.all(Object.values(variants).map(model => model.init(three)))).some(Boolean); },
     create(width, burned, owner) {
-      const group = variants[owner]?.create(width, burned);
+      const group = variants[owner]?.create(width, burned, owner);
       if (group) { group.name = 'terrain-littoral'; group.userData.owner = owner; }
       return group;
     },

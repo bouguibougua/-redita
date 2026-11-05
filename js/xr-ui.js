@@ -193,7 +193,7 @@
       } else if (name === "upgrade") {
         title = `Améliorer ${data === "village" ? "le village" : v.buildings[data]?.type || "bâtiment"}`;
         const resources = data === "village" ? ["ble"] : E.Config.resources;
-        entries = resources.map((resource) => { const q = upgradeInfo(data, resource); return button(data === "village" ? "Améliorer le village" : `Payer en ${labels[resource]}`, command("upgrade", data, resource), !q.reason, { detail: q.cost, reason: q.reason }); });
+        entries = resources.map((resource) => { const q = upgradeInfo(data, resource); return button(data === "village" ? "Améliorer le feu de camp" : `Payer en ${labels[resource]}`, command("upgrade", data, resource), !q.reason, { detail: q.cost, reason: q.reason }); });
       } else if (name === "shop") {
         title = "Échoppes et ventes";
         lines = [`Or : ${Math.floor(p.gold)}`];
@@ -330,7 +330,7 @@
         row(button("À tous", open("all-missions"), own, { reason: lockedReason() }), button("Aux prochains", open("next-mission"), own, { reason: lockedReason() }))
       ], managerVisible);
       const villageQuote = upgradeInfo("village");
-      const buildingRows = [row(button(`Village principal · T${v?.level || 1}`, open("upgrade", "village"), !villageQuote.reason,
+      const buildingRows = [row(button(`Feu de camp · T${v?.level || 1}`, open("upgrade", "village"), !villageQuote.reason,
         { icon: "⌂", detail: `Améliorer · ${villageQuote.cost}`, reason: villageQuote.reason }))];
       E.Config.building.types.forEach((type) => {
         const builtItems = v.buildings.map((item, index) => ({ ...item, index })).filter((item) => item.type === type);

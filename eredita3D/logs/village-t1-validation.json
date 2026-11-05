@@ -1,0 +1,70 @@
+[
+  {
+    "name": "artisanat_t1",
+    "triangles": 7830,
+    "bytes": 599172,
+    "sha256": "f82735ce16bc128c32c08033c92222de957f25f7b6bf7b79f83b01b3762832c0",
+    "source": "/Users/robin/Downloads/artisanat T1 3d.glb",
+    "source_sha256": "8cf6181dc0690c11ca125ceb5c5d028252a952063c87e576cb3b4a65a81f926d",
+    "source_triangles": 7830,
+    "texture_max": 1024
+  },
+  {
+    "name": "bergerie_t1",
+    "triangles": 6724,
+    "bytes": 565836,
+    "sha256": "1b420c32cac706f6a18d7236ab006513a8cfdd7994ad75ca91749819d0eaa6bb",
+    "source": "/Users/robin/Downloads/bergerie T1 3d.glb",
+    "source_sha256": "cfa254db4695a3af941f5b2d7785c61e613025264b7b9e5fd3ddbae683b2756b",
+    "source_triangles": 6724,
+    "texture_max": 1024
+  },
+  {
+    "name": "boucherie_t1",
+    "triangles": 18000,
+    "bytes": 1160480,
+    "sha256": "cfc8c9551320a8fb2a3c0d0b0ea723231605b81003d6344d11ab6aca3d933cca",
+    "source": "/Users/robin/Downloads/boucherie T1 3d.glb",
+    "source_sha256": "4c35d6dcf931a02439f1d412c5ac88c860b8a341d2bcd6449fb523b1ecb5787f",
+    "source_triangles": 1752322,
+    "texture_max": 1024
+  },
+  {
+    "name": "hotel_t1",
+    "triangles": 17999,
+    "bytes": 1100580,
+    "sha256": "6fc24a07302f12d0ac4c3f8a25b9d1a9c711d3f29bac5741417e6e6b3b65caa0",
+    "source": "/Users/robin/Downloads/hotel T1 3d.glb",
+    "source_sha256": "ec53a155c5fa59bd2cc74a98596114fa7a0460e1d6d6960cef1e6622319a002a",
+    "source_triangles": 1870186,
+    "texture_max": 1024
+  },
+  {
+    "name": "feu_camp_t1",
+    "triangles": 18000,
+    "bytes": 1025864,
+    "sha256": "2e9c70d596374457b54f6d6eee617ad1dbfe5efbf188a57d56c34e3a9a3fd80d",
+    "source": "/Users/robin/Downloads/campfire T1 3d.glb",
+    "source_sha256": "85638d1873e51c33250f5f0d53fb68c309a80537273870e23e33138e0e0c0a66",
+    "source_triangles": 1857860,
+    "texture_max": 1024
+  },
+  {
+    "name": "remparts_t1",
+    "triangles": 2652,
+    "bytes": 198844,
+    "sha256": "05c0a93e02a38dfd7ceeda9539297e89f4f979204ceec4edb9a803e8f9f72523"
+  },
+  {
+    "name": "remparts_t2",
+    "triangles": 2268,
+    "bytes": 165744,
+    "sha256": "8699ad569edd8862c09a80fd16ea3ecc4e76203c7245caecd88860dde76417f1"
+  },
+  {
+    "name": "remparts_t3",
+    "triangles": 2268,
+    "bytes": 165732,
+    "sha256": "dd5f62518a891b479d360930c7763fe397db799f09cdb6b4c390ea030840e1d6"
+  }
+]
