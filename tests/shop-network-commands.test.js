@@ -168,3 +168,6 @@ assert.equal(JSON.stringify(state), afterPreparation);
 remote("upgradeCrop", [0]); assert.equal(blueVillage.slots[0].content.level, 2);
 assert.equal(state.players.blue.gold, 775);
 console.log("Cultures réseau : prix autoritaires, niveaux, remboursement et fin de préparation validés.");
+
+// La limite d’un bâtiment de chaque type est aussi vérifiée pour les ordres invités.
+const beforeDuplicateBuilding=JSON.stringify(state);remote("build",["artisanat"]);assert.equal(JSON.stringify(state),beforeDuplicateBuilding,"Un doublon réseau ne dépense rien et ne renforce pas le village");

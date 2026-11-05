@@ -45,7 +45,7 @@
         <div class="game-layout">
           <section class="board-panel" aria-label="Plateau de jeu">
             <div class="board-legend" aria-hidden="true">
-              <span>Villages rouges</span>
+              <span class="board-legend-spacer"></span>
               <span>Frontière</span>
               <span>Villages bleus</span>
             </div>
@@ -59,8 +59,10 @@
 
           <aside class="side-panel">
             <button id="open-shop-modal" class="button button-primary shop-open-button" type="button">Ouvrir la boutique</button>
-            <section id="building-market" class="panel-card building-market" aria-label="Acheter des bâtiments"></section>
-            <section id="owned-buildings" class="panel-card owned-buildings" aria-label="Bâtiments possédés"></section>
+            <section id="building-panel" class="panel-card building-panel" aria-label="Construction et amélioration des bâtiments">
+              <header id="building-market" class="building-market"></header>
+              <div id="owned-buildings" class="owned-buildings" aria-label="Tableau des bâtiments"></div>
+            </section>
             <nav id="village-selector" class="village-selector" aria-label="Sélection rapide des villages"></nav>
             <section id="village-inspector" class="panel-card" aria-label="Informations et achats du village"></section>
             <section id="mythology-stock" class="panel-card mythology-stock" aria-label="Légendes obtenues" hidden></section>

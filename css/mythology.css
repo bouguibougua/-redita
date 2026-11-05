@@ -238,8 +238,8 @@
 .mythology-inventory-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 8px; }
 .mythology-stock-empty { grid-column: 1 / -1; padding: 18px 6px; text-align: center; border-top: 1px solid #b5965c33; }
 .mythology-stock-legend { min-width: 0; display: grid; gap: 7px; padding: 0; border: 0; border-radius: 0; color: #eadfc7; background: none; cursor: pointer; font: .76rem Georgia, serif; }
-.mythology-stock-frame { display: block; padding: 1px; background: var(--mythology-primary); clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%); transition: background .15s ease, filter .15s ease; }
-.mythology-stock-frame .mythology-illustration { width: 100%; aspect-ratio: 3 / 2 !important; clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%); }
+.mythology-stock-frame { display: block; padding: 2px; background: var(--mythology-primary); clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%); transition: background .15s ease, filter .15s ease; }
+.mythology-stock-frame .mythology-illustration { width: 100%; aspect-ratio: var(--mythology-art-ratio, 1.5) !important; clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%); }
 .mythology-stock-legend:hover .mythology-stock-frame { background: #f9dc8c; filter: brightness(1.2); }
 .mythology-stock-legend[aria-pressed=true] { color: #ffe4a4; }
 .mythology-stock-legend[aria-pressed=true] .mythology-stock-frame { padding: 2px; background: #ffe4a4; filter: brightness(1.2); }

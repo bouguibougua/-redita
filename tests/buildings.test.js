@@ -26,7 +26,9 @@ test("Artisanat works without the retired card engine, preserves wounds and does
   assert.equal(unit.hp, base.hp + bonus.hp);
   assert.equal(unit.damage, base.damage + bonus.damage);
   unit.hp -= 10;
-  assert.equal(E.Buildings.buildT1(state, "red", 0, "artisanat"), true);
+  const beforeDuplicate = JSON.stringify(state);
+  assert.equal(E.Buildings.buildT1(state, "red", 0, "artisanat"), false);
+  assert.equal(JSON.stringify(state), beforeDuplicate, "Un doublon ne dépense rien et n’ajoute aucun PV");
   E.Buildings.updateArtisanatBonuses(state);
   assert.equal(unit.hp, base.hp + bonus.hp - 10);
   assert.equal(unit.damage, base.damage + bonus.damage);
@@ -68,4 +70,13 @@ test("Artisanat respects Magu's multiplier and excludes enemies, animals and leg
   E.Buildings.updateArtisanatBonuses(state);
   assert.equal(unit.maxHp, base.hp * 2);
   assert.equal(unit.damage, base.damage * 2);
+});
+
+test("each village can own exactly one of every building, with atomic duplicate rejection", () => {
+ const {E,state,village}=fixture();state.players.red.gold=10000;const baseHp=village.maxHp;
+ for(const type of E.Config.building.types){const gold=state.players.red.gold;assert.equal(E.Buildings.buildQuote(state,'red',0,type).allowed,true);assert.equal(E.Buildings.buildT1(state,'red',0,type),true);assert.equal(state.players.red.gold,gold-E.Config.building.T1.gold);const before=JSON.stringify(state);assert.equal(E.Buildings.buildT1(state,'red',0,type),false);assert.equal(JSON.stringify(state),before);}
+ assert.equal(village.buildings.length,3);assert.equal(village.maxHp,baseHp+E.Config.building.T1.hp*3);
+ assert.equal(E.Buildings.buildT1(state,'red',1,'bergerie'),true,'La limite est propre au village');
+ state.players.blue.gold=1000;assert.equal(E.Buildings.buildT1(state,'blue',0,'bergerie'),true,'La limite est propre au joueur');
+ village.resources.ble=1000;assert.equal(E.Buildings.upgrade(state,'red',0,0,'ble'),true);assert.equal(village.buildings[0].level,2);assert.equal(village.buildings.length,3);assert.equal(E.Buildings.buildT1(state,'red',0,'bergerie'),false,'Améliorer ne permet pas de racheter');
 });

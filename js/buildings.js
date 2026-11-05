@@ -3,16 +3,26 @@
 
   const E = window.Eredita;
 
-  function buildT1(state, playerId, lane, type) {
+  function buildQuote(state, playerId, lane, type) {
     const player = state.players[playerId];
-    const village = player && player.villages[lane];
+    const village = player?.villages[lane];
     const config = E.Config.building;
+    if (!village || !config.types.includes(type)) return null;
+    let reason = null;
+    if (state.phase !== 'running') reason = 'Partie inactive';
+    else if (state.paused) reason = 'Partie en pause';
+    else if (village.destroyed) reason = 'Village détruit';
+    else if (E.MythologyEffects?.isBurned(state, village)) reason = 'Terrain brûlé';
+    else if (village.buildings.filter(b => b.type === type).length >= config.maxPerType) reason = 'Déjà construit dans ce village';
+    else if (village.buildings.length >= config.slots) reason = `Limite de ${config.slots} bâtiments atteinte`;
+    else if (player.gold < config.T1.gold) reason = 'Or insuffisant';
+    return { type, level: 1, gold: config.T1.gold, hp: config.T1.hp, allowed: !reason, reason };
+  }
 
-    if (state.phase !== "running" || state.paused || !village || village.destroyed) return false;
-    if (E.MythologyEffects?.isBurned(state, village)) return false;
-    if (!config.types.includes(type) || village.buildings.length >= config.slots) return false;
-    if (player.gold < config.T1.gold) return false;
-
+  function buildT1(state, playerId, lane, type) {
+    const quote = buildQuote(state, playerId, lane, type);
+    if (!quote?.allowed) return false;
+    const player = state.players[playerId], village = player.villages[lane], config = E.Config.building;
     player.gold -= config.T1.gold;
     village.buildings.push({ type, level: 1, hpBonus: config.T1.hp });
     village.maxHp += config.T1.hp;
@@ -87,5 +97,5 @@
     }
   }
 
-  E.Buildings = { buildT1, has, upgradeQuote, upgrade, updateArtisanatBonuses };
+  E.Buildings = { buildQuote, buildT1, has, upgradeQuote, upgrade, updateArtisanatBonuses };
 }());

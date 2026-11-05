@@ -167,13 +167,14 @@
       const specialSlaughter = event.target.closest("[data-slaughter-special]");
       if (specialSlaughter) controller.slaughterSpecialAnimal(specialSlaughter.dataset.slaughterSpecial);
     }));
-    [elements.residents, elements.ownedBuildings].forEach((target) => target.addEventListener("change", (event) => {
+    [elements.residents, elements.construction, elements.ownedBuildings].forEach((target) => target.addEventListener("change", (event) => {
       if (event.target.matches("[data-upgrade-resource]")) {
         upgradeResource = event.target.value;
         elements.gameScreen.querySelectorAll("[data-upgrade-resource]").forEach((select) => { select.value = upgradeResource; });
         const { playerId, lane } = currentState.selectedVillage;
         const player = currentState.players[playerId];
         updateTradeAndUpgrades(currentState, player, player.villages[lane]);
+        updateBuildingTable(currentState, player, player.villages[lane]);
       }
       if (event.target.matches("[data-purchase-resource]")) purchaseResource = event.target.value;
     }));
@@ -660,8 +661,6 @@
       return;
     }
     elements.inspector.dataset.herdSignature = `${herdSignature(village)}:${state.preparationRemaining > 0}`;
-    const noSlot = village.buildings.length >= E.Config.building.slots;
-    const cannotBuy = player.gold < E.Config.building.T1.gold || noSlot || village.destroyed || state.phase !== "running" || state.paused;
     const availableResidents = E.Economy.getAvailableResidents(state, player.id, village.lane);
     const slots = renderSlotPicker(state, player, village);
     const selectedResident = village.residents.find((resident) => resident.id === state.selectedResidentId) || village.residents[0] || null;
@@ -690,7 +689,7 @@
       const requirement = definition.requires && !E.Buildings.has(village, definition.requires) ? `${buildingLabels[definition.requires]} requis` : definition.description;
       return `<div class="profession-command"><button type="button" class="profession-button ${active ? "selected" : ""}" data-profession="${key}" data-resident-id="${selectedResident.id}" aria-pressed="${active}" ${!allowed ? "disabled" : ""}>${definition.icon} ${definition.label}${active ? " · Équipé" : ""}<small>${requirement}</small></button><div class="command-actions"><button type="button" class="profession-all-button ${key === "habitant" ? "remove-all-button" : ""}" data-profession-all="${key}" title="${key === "habitant" ? "Retirer les métiers à tous" : "Attribuer ce métier à tous les habitants sans métier"}" aria-label="${key === "habitant" ? "Retirer les métiers à tous" : "Attribuer ce métier à tous les habitants sans métier"}" ${!canAssignAll ? "disabled" : ""}>${key === "habitant" ? "Retirer tous" : "Tous"}</button><button type="button" class="next-resident-button ${next ? "active" : ""}" data-next-profession="${key}" aria-pressed="${next}" ${!canSetNext ? "disabled" : ""} title="Attribuer aux prochains habitants" aria-label="Attribuer aux prochains habitants">Prochains</button></div></div>`;
     }).join("") : '<p class="section-help">Aucun habitant sélectionné.</p>';
-    const buildings = village.buildings.map((building, index) => `<div class="management-card building-card building-${building.type}"><strong>${buildingLabels[building.type]} T${building.level}</strong><small>+${building.hpBonus} PV</small>${upgradeButton(state, player, village, index)}</div>`).join("");
+
 
     elements.inspector.innerHTML = slots;
 
@@ -713,18 +712,72 @@
         </div>
       </section>
     </div>`;
-    elements.construction.innerHTML = `<h3>Construire <small>${village.buildings.length}/${E.Config.building.slots}</small></h3><div class="construction-list">${E.Config.building.types.map((type) => `<button class="button" type="button" data-build="${type}" ${cannotBuy ? "disabled" : ""}>+ ${buildingLabels[type]}<small>${E.Config.building.T1.gold} or</small></button>`).join("")}</div>`;
-    elements.ownedBuildings.innerHTML = `<h3>Bâtiments</h3><div class="built-buildings">${buildings || '<p class="empty-buildings">Aucun bâtiment construit.</p>'}</div>`;
+    renderBuildingTable(state, player, village);
     elements.residents.querySelector("[data-resident-list]").scrollTop = residentScroll;
     elements.residents.querySelectorAll("[data-scroll-key]").forEach(panel => { panel.scrollTop = panelScrolls.get(panel.dataset.scrollKey) || 0; });
     elements.inspector.scrollTop = inspectorScroll;
     updateTradeAndUpgrades(state, player, village);
   }
 
-  function upgradeButton(state, player, village, index) {
+  const buildingPercent = value => `${Math.round(value * 100)} %`;
+  function buildingEffects(type, level) {
+    const cfg = E.Config.building, bonus = cfg.artisanatBonus;
+    const effects = [`+${cfg[`T${level}`].hp} PV au village`];
+    if (type === 'bergerie') effects.push(`Production +${buildingPercent(cfg.bergerieBonusByLevel[level])}`);
+    if (type === 'artisanat') effects.push(`Humains : +${bonus.hp} PV, +${bonus.damage} dégâts`);
+    effects.push(`Ventes +${buildingPercent(level * E.Config.saleBonusPerLevel)}`);
+    return effects;
+  }
+  function buildingDetails(type) {
+    const cfg = E.Config.building, resourceNames = E.Config.saleBuildingResources[type].map(key => resourceLabels[key]);
+    const production = type === 'bergerie' ? `<p>Accélère la récolte et la reproduction, et augmente le lait : ${[1,2,3].map(level => `T${level} +${buildingPercent(cfg.bergerieBonusByLevel[level])}`).join(' · ')}.</p>` :
+      type === 'artisanat' ? `<p>+${cfg.artisanatBonus.hp} PV et +${cfg.artisanatBonus.damage} dégâts aux humains alliés de la colonne, à tous les niveaux.</p>` : '';
+    const shop = E.Config.villageShops[type];
+    return `${production}<p>Revente de ${resourceNames.join(', ')} : +${buildingPercent(E.Config.saleBonusPerLevel)} par niveau. Le meilleur bonus s’applique par ressource.</p><ol class="building-unlocks">${[1,2,3].map(level => `<li><b>T${level}</b> ${shop.tiers[level].map(item => { const active = item.animalType || item.equipmentKind || item.specialAnimal || item.purchaseType; const biome = item.purchaseType && E.Config.maritime.shop[item.purchaseType]?.biome; return item.label + (!active ? ' (à venir)' : biome ? ` (${E.Biomes.labels[biome]})` : ''); }).join(', ')}</li>`).join('')}</ol>`;
+  }
+  function buildingTableSignature(player, village) {
+    return JSON.stringify([player.id,village.lane,village.destroyed,village.buildings.map(b => [b.type,b.level,b.hpBonus])]);
+  }
+  function renderBuildingTable(state, player, village) {
+    const cfg = E.Config.building, selection = `${player.id}-${village.lane}`;
+    const scrollTop = elements.ownedBuildings.dataset.selectionKey === selection ? elements.ownedBuildings.scrollTop : 0;
+    const open = elements.ownedBuildings.dataset.selectionKey === selection ? new Set([...elements.ownedBuildings.querySelectorAll('[data-building-details][open]')].map(d => d.dataset.buildingDetails)) : new Set();
+    elements.ownedBuildings.dataset.selectionKey = selection;
+    elements.ownedBuildings.dataset.signature = buildingTableSignature(player,village);
+    const builtCount = cfg.types.filter(type => E.Buildings.has(village,type)).length;
+    const canUpgrade = village.buildings.some(b => b.level < 3);
+    elements.construction.innerHTML = `<div class="building-panel-heading"><h3>Bâtiments <span>${builtCount}/${cfg.types.length}</span></h3><small>Un de chaque par village</small></div>${canUpgrade ? `<label class="building-resource-picker">Améliorer avec<select data-upgrade-resource aria-label="Ressource des améliorations de bâtiments">${E.Config.resources.map(key => `<option value="${key}" ${key === upgradeResource ? 'selected' : ''}>${resourceLabels[key]} (${formatNumber(village.resources[key])})</option>`).join('')}</select></label>` : ''}`;
+    const rows = cfg.types.map(type => {
+      const index = village.buildings.findIndex(b => b.type === type), building = village.buildings[index];
+      const level = building?.level || 1, definition = cfg.descriptions[type];
+      const professions = Object.values(E.Config.professions).filter(p => p.requires === type).map(p => p.label).join(' · ');
+      const action = building ? upgradeButton(state,player,village,index,false) : `<button class="building-buy-button" type="button" data-build="${type}" aria-label="Construire ${definition.label} pour ${cfg.T1.gold} or"><span>Construire</span><strong>${cfg.T1.gold} or</strong></button>`;
+      return `<tr class="building-table-row building-${type} ${building ? 'is-built' : 'is-unbuilt'}" data-building-row="${type}" data-building-level="${building?.level || 0}"><th scope="row"><div class="building-row-title"><span class="building-thumbnail building-${type}" aria-hidden="true"></span><span><strong>${definition.label}</strong><small>${definition.purpose}</small></span><span class="building-tier ${building ? 'is-owned' : ''}">${building ? `T${level}` : 'T1'}</span></div><p class="building-professions">Métiers : ${professions}</p><ul class="building-bonuses">${buildingEffects(type,level).map(effect => `<li>${effect}</li>`).join('')}</ul><details data-building-details="${type}" ${open.has(type) ? 'open' : ''}><summary>Effets et déblocages</summary>${buildingDetails(type)}</details></th><td class="building-action-cell"><span class="building-step">${building ? level === 3 ? 'Construit' : `Vers T${level+1}` : 'À construire'}</span>${action}<small class="building-action-hint" data-building-hint></small></td></tr>`;
+    }).join('');
+    elements.ownedBuildings.innerHTML = `<table class="building-table"><caption class="visually-hidden">Bâtiments du village ${village.lane+1} : effets, bonus et coûts</caption><colgroup><col class="building-info-column"><col class="building-cost-column"></colgroup><thead><tr><th scope="col">Bâtiment et bonus</th><th scope="col">Coût / Action</th></tr></thead><tbody>${rows}</tbody></table><p class="building-payment-note">Or partagé · ressources de ce village.</p>`;
+    elements.ownedBuildings.scrollTop = scrollTop;
+    updateBuildingTable(state,player,village);
+  }
+  function updateBuildingTable(state, player, village) {
+    if (elements.ownedBuildings.dataset.signature !== buildingTableSignature(player,village)) return renderBuildingTable(state,player,village);
+    elements.construction.querySelectorAll('[data-upgrade-resource] option').forEach(option => {
+      option.textContent = `${resourceLabels[option.value]} (${formatNumber(village.resources[option.value])})`;
+    });
+    elements.ownedBuildings.querySelectorAll('[data-building-row]').forEach(row => {
+      const type = row.dataset.buildingRow, index = village.buildings.findIndex(b => b.type === type), building = village.buildings[index];
+      const button = row.querySelector('[data-build]'), hint = row.querySelector('[data-building-hint]');
+      const quote = building ? E.Buildings.upgradeQuote(state,player.id,village.lane,index,upgradeResource) : E.Buildings.buildQuote(state,player.id,village.lane,type);
+      if (button) { button.disabled = !quote?.allowed; button.title = quote?.reason || `Construire ${E.Config.building.descriptions[type].label}`; }
+      if (!quote) hint.textContent = '';
+      else if (quote.allowed) hint.textContent = building ? `+${E.Config.building[`T${quote.level}`].hp-building.hpBonus} PV au village` : '';
+      else hint.textContent = quote.reason || (state.paused ? 'Partie en pause' : village.destroyed ? 'Village détruit' : player.gold < quote.gold ? 'Or insuffisant' : `${resourceLabels[quote.resourceType] || 'Ressource'} insuffisant(e)`);
+    });
+  }
+
+  function upgradeButton(state, player, village, index, withResource = true) {
     const quote = E.Buildings.upgradeQuote(state, player.id, village.lane, index, upgradeResource);
     if (!quote) return '<small>Niveau maximum · T3</small>';
-    const resourceChoice = index === "village" ? "" : `<select class="building-upgrade-resource" data-upgrade-resource aria-label="Ressource utilisée pour améliorer ce bâtiment">${E.Config.resources.map((key) => `<option value="${key}" ${key === upgradeResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select>`;
+    const resourceChoice = index === "village" || !withResource ? "" : `<select class="building-upgrade-resource" data-upgrade-resource aria-label="Ressource utilisée pour améliorer ce bâtiment">${E.Config.resources.map((key) => `<option value="${key}" ${key === upgradeResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select>`;
     return `${resourceChoice}<button type="button" class="upgrade-button" data-upgrade="${index}" ${quote.allowed ? "" : "disabled"}>Améliorer → T${quote.level}<small data-upgrade-cost></small></button>`;
   }
 
@@ -809,8 +862,6 @@
       if (target) target.textContent = formatNumber(village.resources[resource]);
     });
 
-    const noBuildingSlot = village.buildings.length >= E.Config.building.slots;
-    const cannotBuild = player.gold < E.Config.building.T1.gold || noBuildingSlot || village.destroyed || state.phase !== "running" || state.paused;
     const available = elements.residents.querySelector("[data-residents-available]");
     if (available) available.textContent = E.Economy.getAvailableResidents(state, player.id, village.lane);
     const residentList = elements.residents.querySelector("[data-resident-list]");
@@ -818,7 +869,7 @@
       renderInspector(state);
       return;
     }
-    elements.construction.querySelectorAll("[data-build]").forEach((button) => { button.disabled = cannotBuild; });
+    updateBuildingTable(state, player, village);
     updateTradeAndUpgrades(state, player, village);
     elements.inspector.querySelectorAll("[data-place-crop]").forEach((button) => {
       button.disabled = !E.Crops.canPlace(state, player.id, village.lane, Number(button.dataset.slotIndex), button.dataset.placeCrop);

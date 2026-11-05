@@ -20,18 +20,18 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
       for(const key of E.Config.resources)v.resources[key]=2000;
       E.UI.render(s);E.Board3D.update(s,true);E.Board3D.setMode(true);
     })()`);
-    assert.equal(await page.evaluate("document.querySelector('#building-market').previousElementSibling.id"),'open-shop-modal');
+    assert.equal(await page.evaluate("document.querySelector('#building-panel').previousElementSibling.id"),'open-shop-modal');
     assert.equal(await page.evaluate("document.querySelector('#pause-game')===null&&document.querySelector('#toggle-board-view')===null&&document.querySelectorAll('#game-screen [data-open-xr]').length===0"),true,'Les anciens boutons sont retirés');
     assert.equal(await page.evaluate("document.querySelectorAll('#map-village-popups [data-map-village]').length"),4);
     assert.equal(await page.evaluate("document.querySelectorAll('[data-village-select][data-player=blue]').length"),0,'Pas de gestion adverse');
     assert.equal(await page.evaluate("document.querySelector('#map-village-popups').closest('#battlefield')===null"),true,'Les fiches sont sorties du terrain');
 
-    await page.click('#building-market [data-build="bergerie"]');
-    await page.waitFor("document.querySelector('#owned-buildings .building-bergerie')");
+    await page.click('#owned-buildings [data-build="bergerie"]');
+    await page.waitFor("document.querySelector('#owned-buildings .building-bergerie.is-built')");
     assert.equal(await page.evaluate("layoutState.players.red.villages[0].buildings[0].type"),'bergerie');
-    await page.click('#building-market [data-build="artisanat"]');
-    assert.equal(await page.evaluate("document.querySelectorAll('#owned-buildings .building-card').length"),2);
-    await page.evaluate("(()=>{const select=document.querySelector('#owned-buildings [data-upgrade-resource]');select.value='lait';select.dispatchEvent(new Event('change',{bubbles:true}));})()");
+    await page.click('#owned-buildings [data-build="artisanat"]');
+    assert.equal(await page.evaluate("document.querySelectorAll('#owned-buildings .building-table-row.is-built').length"),2);
+    await page.evaluate("(()=>{const select=document.querySelector('#building-market [data-upgrade-resource]');select.value='lait';select.dispatchEvent(new Event('change',{bubbles:true}));})()");
     const before = await page.evaluate('layoutState.players.red.villages[0].resources.lait');
     await page.click('#owned-buildings [data-upgrade="0"]');
     assert.equal(await page.evaluate('layoutState.players.red.villages[0].buildings[0].level'),2);

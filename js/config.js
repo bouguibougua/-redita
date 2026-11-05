@@ -192,6 +192,13 @@
     },
     building: {
       slots: 3,
+      maxPerType: 1,
+      bergerieBonusByLevel: { 1: 0.1, 2: 0.2, 3: 0.3 },
+      descriptions: {
+        bergerie: { label: "Bergerie", icon: "🐑", purpose: "Récoltes et élevage", production: "Récolte, lait et reproduction" },
+        artisanat: { label: "Artisanat", icon: "⚒", purpose: "Équipement et combat" },
+        boucherie: { label: "Boucherie", icon: "🔪", purpose: "Chasse et transport" }
+      },
       artisanatBonus: { hp: 5, damage: 2 },
       types: ["bergerie", "artisanat", "boucherie"],
       T1: { hp: 75, gold: 200 },

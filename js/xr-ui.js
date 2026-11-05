@@ -103,9 +103,8 @@
         { icon: missionIcons[key], selected, reason, detail: resident?.pendingMission && selected ? "Retour au village, puis nouvelle tâche" : reason || (selected ? "Tâche active" : E.Economy.isBoosted(resident, key) ? "Attribuer · Bonus métier" : "Attribuer") });
     }
     function buildReason(type) {
-      return lockedReason() || (!E.Config.building.types.includes(type) ? "Bâtiment inconnu." :
-        village().buildings.length >= E.Config.building.slots ? "Tous les emplacements de bâtiments sont occupés." :
-          state().players[selection().playerId].gold < E.Config.building.T1.gold ? `Il faut ${E.Config.building.T1.gold} or global.` : "");
+      const q = E.Buildings.buildQuote(state(),selection().playerId,village().lane,type);
+      return lockedReason() || (q?.reason === 'Or insuffisant' ? `Il faut ${q.gold} or global.` : q?.reason) || (!q ? "Bâtiment inconnu." : "");
     }
     function upgradeInfo(index, resource) {
       const s = state(), v = village(), p = s.players[selection().playerId];

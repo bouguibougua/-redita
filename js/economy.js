@@ -404,7 +404,7 @@
       .filter((building) => building.type === "bergerie")
       .map((building) => building.level);
     if (!levels.length) return 0;
-    return { 1: 0.1, 2: 0.2, 3: 0.3 }[Math.max(...levels)] || 0;
+    return E.Config.building.bergerieBonusByLevel[Math.max(...levels)] || 0;
   }
 
   function moveWorker(resident, target, speed, delta) {

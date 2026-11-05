@@ -14,7 +14,6 @@
     ['village','horizontal','Hauteur du panneau Village',-1],
     ['people','horizontal','Répartition Habitants et Tâches',1],
     ['header','horizontal','Hauteur des fiches de villages',1],
-    ['market','horizontal','Hauteur du panneau Construire',1],
     ['buildings','horizontal','Hauteur du panneau Bâtiments',1],
     ['inspector','horizontal','Hauteur des emplacements',1]
   ].map(([key,orientation,label,sign]) => ({key,orientation,label,sign}));
@@ -68,7 +67,7 @@
     const people=clamp(p.people*availablePeople,Math.min(80,availablePeople*.35),availablePeople-Math.min(125,availablePeople*.45));
     px('people-height',people);
     metrics={left:left/w,right:(right||0)/w,jobs:jobs/h,village:village/h,map:(map||0)/h,people:people/availablePeople,header:(rect('.game-topbar')?.height||0)/innerHeight};
-    for(const key of ['market','buildings','inspector']){
+    for(const key of ['buildings','inspector']){
       const selector={market:'#building-market',buildings:'#owned-buildings',inspector:'#village-inspector'}[key];
       if(Number.isFinite(p[key]))px(key==='buildings'?'buildings-height':key+'-height',clamp(p[key]*h,70,Math.max(90,h*.8)));
       else screen.style.removeProperty('--layout-'+(key==='buildings'?'buildings-height':key+'-height'));
@@ -95,7 +94,7 @@
     place('village',village.left,village.top-thickness/2-3,village.width,thickness);
     if(residents)place('people',residents.left+4,residents.bottom-thickness/2,residents.width-8,thickness);
     place('header',header.left,header.bottom-thickness/2+4,header.width,thickness,mode==='desktop');
-    for(const key of ['market','buildings','inspector']){
+    for(const key of ['buildings','inspector']){
       const r=rect({market:'#building-market',buildings:'#owned-buildings',inspector:'#village-inspector'}[key]);
       const visible=r&&r.height>0&&r.bottom>tools.top+8&&r.bottom<tools.bottom-5;
       if(r)place(key,Math.max(r.left,tools.left)+5,r.bottom-thickness/2,Math.min(r.right,tools.right)-Math.max(r.left,tools.left)-10,thickness,visible);

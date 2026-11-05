@@ -96,7 +96,7 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.domElement.setAttribute("aria-label", "Plateau Eredità en trois dimensions");
+    renderer.domElement.setAttribute("aria-label", "Carte");
     container.replaceChildren(renderer.domElement);
 
     scene.add(new THREE.HemisphereLight(0xffedcc, 0x26362b, 2.1));
