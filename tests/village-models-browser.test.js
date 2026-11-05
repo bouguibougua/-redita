@@ -91,8 +91,30 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await p.click('[data-upgrade="village"]');
     await p.evaluate('vState.paused=true;Eredita.Board3D.update(vState,true)');
     assert.equal(await p.evaluate('vState.players.red.villages[0].level'),3);
-    assert.ok((await assetKeys('red')).includes('feu_camp_t2'),'Au T3, le feu garde le dernier modèle fourni');
+    assert.ok((await assetKeys('red')).includes('feu_camp_t3'),'Le feu T3 utilise le modèle fourni');
+    assert.ok((await assetKeys('red')).includes('hotel_t3'),'L’hôtel T3 utilise le modèle fourni');
+    assert.match(await p.evaluate("document.querySelector('.campfire-management-image').src"),/feu_camp_t3\.png/);
     assert.ok(!(await assetKeys('red')).includes('hotel_t2'),'L’hôtel T3 garde son apparence propre');
+    const expectedT3=['bergerie_t3','artisanat_t3','boucherie_t3','hotel_t3','feu_camp_t3'];
+    for(const type of ['bergerie','artisanat','boucherie'])assert.ok((await assetKeys('red')).includes(type+'_t2'),'Le niveau du commerce ne dépend pas de celui du feu');
+    const goldBeforeT3=await p.evaluate('vState.players.red.gold');
+    const hpBeforeT3=await p.evaluate('vState.players.red.villages[0].hp');
+    await p.evaluate('vState.paused=false;Eredita.UI.render(vState)');
+    for(const type of ['bergerie','artisanat','boucherie']) {
+      await p.click('[data-building-row="'+type+'"] [data-upgrade]');
+      await p.waitFor(`vRegion('red').getObjectByName('batiment-${type}').userData.villageAsset==='${type}_t3'`);
+      assert.match(await p.evaluate(`getComputedStyle(document.querySelector('[data-building-row="${type}"] .building-thumbnail')).backgroundImage`),new RegExp(type+'_t3\\.png'));
+      assert.match(await p.evaluate(`getComputedStyle(document.querySelector('.region.red [data-terrain-building="${type}"]')).backgroundImage`),new RegExp(type+'_t3\\.png'));
+      assert.equal(await p.evaluate(`document.querySelector('[data-building-row="${type}"] [data-upgrade]')`),null,'Le T3 reste le dernier niveau');
+    }
+    await p.evaluate('vState.paused=true;Eredita.Board3D.update(vState,true)');
+    assert.equal(await p.evaluate('vState.players.red.gold'),goldBeforeT3-900);
+    assert.equal(await p.evaluate('vState.players.red.villages[0].hp'),hpBeforeT3+225);
+    for(const key of expectedT3)assert.ok((await assetKeys('red')).includes(key),key);
+    assert.ok(!(await assetKeys('red',1)).some(k=>expectedT3.includes(k)),'Le village voisin garde ses modèles T1');
+    const tier3Sources=await p.evaluate(`(()=>{const result={};vRegion('red').traverse(o=>{if(o.userData.source_sha256)result[o.userData.village_asset]=o.userData.source_sha256;});return result;})()`);
+    const tier3Reports=JSON.parse(fs.readFileSync(path.join(__dirname,'../eredita3D/logs/village-t3-validation.json'),'utf8'));
+    for(const report of tier3Reports.filter(r=>r.name.endsWith('_t3')))assert.equal(tier3Sources[report.name],report.source_sha256,'Le T3 provient du modèle fourni');
     // All biomes and both board formats keep the courtyard clear and slots outside.
     await p.waitFor('Eredita.PlainTerrain.ready&&Eredita.MountainTerrain.ready&&Eredita.CoastTerrain.ready',30000);
     await p.evaluate(`(()=>{const E=Eredita;Object.assign(vState,E.Board.createState('classic'));vState.phase='running';vState.paused=true;vState.preparationRemaining=3600;
@@ -109,7 +131,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
       const dir=process.env.EREDITA_VILLAGE_PREVIEW_DIR; fs.mkdirSync(dir,{recursive:true});
       await p.send('Emulation.setDeviceMetricsOverride',{width:1600,height:1000,deviceScaleFactor:1,mobile:false});await delay(250);
       await p.evaluate(`(()=>{const E=Eredita;Object.assign(vState,E.Board.createState('simplified'));vState.phase='running';vState.paused=true;vState.preparationRemaining=180;
-        for(const p of Object.values(vState.players))for(const v of p.villages){v.biome=v.lane===0?'montagne':'littoral';v.slots=E.Biomes.createSlots(v.biome);v.level=2;v.populationMax=25;v.buildings=E.Config.building.types.map(type=>({type,level:2,hpBonus:150}));v.hp=v.maxHp=850;}
+        for(const p of Object.values(vState.players))for(const v of p.villages){v.biome=v.lane===0?'montagne':'littoral';v.slots=E.Biomes.createSlots(v.biome);v.level=3;v.populationMax=35;v.buildings=E.Config.building.types.map(type=>({type,level:3,hpBonus:225}));v.hp=v.maxHp=1275;}
         vState.selectedResidentId=vState.players.red.villages[0].residents[0].id;E.UI.render(vState);E.Board3D.update(vState,true);})()`);
       await delay(200);
       const shot=await p.send('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(dir,'village-jeu.png'),Buffer.from(shot.data,'base64'));
@@ -119,6 +141,6 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
 
     }
     assert.deepEqual(p.errors,[]);assert.deepEqual(p.consoleErrors,[]);assert.deepEqual(p.badResponses.filter(u=>/\/(assets|js|css)\//.test(u)),[]);
-    console.log('Villages : modèles T1/T2 fournis, achats et améliorations indépendantes, provenance, portraits, remparts, habitants au feu, PV, destruction, rendu XR et responsive validés.');
+    console.log('Villages : modèles T1/T2/T3 fournis et Boucherie T2 corrigée, achats et améliorations indépendantes, provenance, portraits, remparts, habitants au feu, PV, destruction, rendu XR et responsive validés.');
   } finally { await browser?.close(); await new Promise(r=>site.server.close(r)); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

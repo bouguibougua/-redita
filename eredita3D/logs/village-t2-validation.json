@@ -41,12 +41,12 @@
   },
   {
     "name": "boucherie_t2",
-    "triangles": 17999,
-    "bytes": 1076304,
-    "sha256": "ade24925fdfcfc732afc762f7be77a0c249c9816b36b8b8ce3e351b3ce2ed8ae",
-    "source": "/Users/robin/Downloads/artisans T2 3d.glb",
-    "source_sha256": "9b8bb3f1ff9977f2d275eb6b3194de9fccb42413d9a0d91c0595765e0a85190e",
-    "source_triangles": 1966479,
+    "triangles": 18000,
+    "bytes": 1073192,
+    "sha256": "3675e2faceaacefd0932a5462844c318df803db5ea35a25b1251cc5d5232ce95",
+    "source": "/Users/robin/Downloads/boucherie T2 3d.glb",
+    "source_sha256": "d20e6070a7e21f54cf9cfa22de98cdf19cc3b60d9b9b988654cf4650fc7da68f",
+    "source_triangles": 1851017,
     "texture_max": 1024
   }
 ]

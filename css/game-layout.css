@@ -527,9 +527,19 @@ body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top
 /* Les visuels suivent le T2 propre à chaque bâtiment et au village. */
 #game-screen .building-thumbnail.building-bergerie.model-tier-2 { background-image: url('../assets/generated/bergerie_t2.png'); }
 #game-screen .building-thumbnail.building-artisanat.model-tier-2 { background-image: url('../assets/generated/artisanat_t2.png'); }
-#game-screen .building-thumbnail.building-boucherie.model-tier-2 { background-image: url('../assets/generated/boucherie_t2.png'); }
+#game-screen .building-thumbnail.building-boucherie.model-tier-2 { background-image: url('../assets/generated/boucherie_t2.png?v=2-c41a930c6fb1'); }
 .terrain-building.tier-2.terrain-village { background-image: url('../assets/generated/hotel_t2.png'); background-size: contain; background-position: center; }
 .terrain-building.tier-2.terrain-bergerie { background-image: url('../assets/generated/bergerie_t2.png'); background-size: contain; background-position: center; }
 .terrain-building.tier-2.terrain-artisanat { background-image: url('../assets/generated/artisanat_t2.png'); background-size: contain; background-position: center; }
-.terrain-building.tier-2.terrain-boucherie { background-image: url('../assets/generated/boucherie_t2.png'); background-size: contain; background-position: center; }
-.terrain-building.terrain-campfire:is(.tier-2, .tier-3) { background-image: url('../assets/generated/feu_camp_t2.png'); }
+.terrain-building.tier-2.terrain-boucherie { background-image: url('../assets/generated/boucherie_t2.png?v=2-c41a930c6fb1'); background-size: contain; background-position: center; }
+.terrain-building.terrain-campfire.tier-2 { background-image: url('../assets/generated/feu_camp_t2.png'); }
+
+/* Les cinq modèles T3 fournis remplacent les formes du prototype. */
+#game-screen .building-thumbnail.building-bergerie.model-tier-3 { background-image: url('../assets/generated/bergerie_t3.png'); }
+#game-screen .building-thumbnail.building-artisanat.model-tier-3 { background-image: url('../assets/generated/artisanat_t3.png'); }
+#game-screen .building-thumbnail.building-boucherie.model-tier-3 { background-image: url('../assets/generated/boucherie_t3.png'); }
+.terrain-building.tier-3.terrain-village { background-image: url('../assets/generated/hotel_t3.png'); background-size: contain; background-position: center; }
+.terrain-building.tier-3.terrain-bergerie { background-image: url('../assets/generated/bergerie_t3.png'); background-size: contain; background-position: center; }
+.terrain-building.tier-3.terrain-artisanat { background-image: url('../assets/generated/artisanat_t3.png'); background-size: contain; background-position: center; }
+.terrain-building.tier-3.terrain-boucherie { background-image: url('../assets/generated/boucherie_t3.png'); background-size: contain; background-position: center; }
+.terrain-building.terrain-campfire.tier-3 { background-image: url('../assets/generated/feu_camp_t3.png'); }

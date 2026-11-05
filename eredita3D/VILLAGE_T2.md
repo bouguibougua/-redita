@@ -10,9 +10,9 @@ Intégration des cinq GLB fournis. Chaque bâtiment remplace uniquement son appa
 | bergerie T2 3d.glb | bergerie_t2 | 18,000 | 1049 Ko |
 | campfire T2 3d.glb | feu_camp_t2 | 18,000 | 937 Ko |
 | hotel T2 3d.glb | hotel_t2 | 18,000 | 1071 Ko |
-| artisans T2 3d.glb | boucherie_t2 | 17,999 | 1051 Ko |
+| boucherie T2 3d.glb | boucherie_t2 | 18,000 | 1048 Ko |
 
-Les deux fichiers Artisanat/Artisans sont des forges différentes. Le concepteur a explicitement choisi `artisans T2 3d.glb` pour la Boucherie T2. Leurs fichiers d’origine restent inchangés.
+Le fichier dédié `boucherie T2 3d.glb` fourni ensuite remplace le visuel provisoire de Boucherie T2 issu de `artisans T2 3d.glb`. Le script T2 utilise maintenant ce fichier dédié. Les originaux restent inchangés. Les cinq modèles T3 sont intégrés ; voir `VILLAGE_T3.md`.
 
 ## Régénérer
 

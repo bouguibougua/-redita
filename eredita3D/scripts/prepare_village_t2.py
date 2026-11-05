@@ -46,7 +46,7 @@ def render(name, front=True, width=1.55):
     o.rotation_euler=(target-o.location).to_track_quat('-Z','Y').to_euler()
     scene.render.filepath=str(out/(name+'.png')); bpy.ops.render.render(write_still=True)
 
-for source_name, name, budget in [('artisanat','artisanat_t2',18000),('artisans','boucherie_t2',18000),
+for source_name, name, budget in [('artisanat','artisanat_t2',18000),('boucherie','boucherie_t2',18000),
     ('bergerie','bergerie_t2',18000),('campfire','feu_camp_t2',18000),('hotel','hotel_t2',18000)]:
     if args.only and name not in args.only: continue
     reset(); source=Path(args.source_dir)/(source_name+' T2 3d.glb')

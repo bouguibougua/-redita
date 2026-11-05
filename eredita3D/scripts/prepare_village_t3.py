@@ -1,0 +1,111 @@
+"""Prepare supplied tier 3 village GLBs and the corrected tier 2 butcher locally."""
+import argparse, hashlib, json, math, struct, sys
+from pathlib import Path
+import bpy
+from mathutils import Vector
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--source-dir', default='/Users/robin/Downloads')
+parser.add_argument('--output-dir', required=True)
+parser.add_argument('--only', nargs='+', help='Asset names to rebuild, e.g. feu_camp_t3')
+args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:])
+out = Path(args.output_dir).resolve(); out.mkdir(parents=True, exist_ok=True)
+reports = json.loads((out/'validation.json').read_text()) if args.only and (out/'validation.json').exists() else []
+if args.only: reports = [r for r in reports if r['name'] not in args.only]
+
+def reset():
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.context.preferences.filepaths.save_version = 0
+
+def export(name):
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in bpy.context.scene.objects:
+        if o.type == 'MESH': o.select_set(True)
+    file = out / (name + '.glb')
+    bpy.ops.export_scene.gltf(filepath=str(file), export_format='GLB', use_selection=True,
+        export_animations=False, export_skins=False, export_extras=True, export_cameras=False,
+        export_lights=False, export_image_format='JPEG', export_jpeg_quality=88)
+    raw = file.read_bytes(); j = json.loads(raw[20:20 + struct.unpack_from('<I', raw, 12)[0]])
+    tri = sum(j['accessors'][p['indices']]['count'] // 3 for m in j['meshes'] for p in m['primitives'])
+    return {'name':name, 'triangles':tri, 'bytes':len(raw), 'sha256':hashlib.sha256(raw).hexdigest()}
+
+def render(name, front=True, width=1.55):
+    scene = bpy.context.scene
+    scene.render.engine = 'CYCLES'; scene.cycles.samples = 16; scene.cycles.use_denoising = True
+    scene.render.resolution_x = scene.render.resolution_y = 640; scene.render.resolution_percentage = 100
+    scene.render.film_transparent = True
+    scene.world = bpy.data.worlds.new('Studio'); scene.world.color = (.24,.24,.24)
+    for label, pos, power in [('Key',(-2,-3,4),350),('Fill',(2,1,3),220)]:
+        d = bpy.data.lights.new(label,'AREA'); d.energy = power; d.size = 3
+        o = bpy.data.objects.new(label,d); scene.collection.objects.link(o); o.location = pos
+        o.rotation_euler = (Vector((0,0,.2))-o.location).to_track_quat('-Z','Y').to_euler()
+    d = bpy.data.cameras.new('Preview'); d.type='ORTHO'; d.ortho_scale=width
+    o = bpy.data.objects.new('Preview', d); scene.collection.objects.link(o); scene.camera=o
+    # glTF front is +Z, Blender front is -Y.
+    o.location=(1.5,-2.2,1.6); target=Vector((0,0,.22 if width<2 else .1))
+    o.rotation_euler=(target-o.location).to_track_quat('-Z','Y').to_euler()
+    scene.render.filepath=str(out/(name+'.png')); bpy.ops.render.render(write_still=True)
+
+for filename, name, budget in [('artisanat T3 3d.glb', 'artisanat_t3', 18000),
+    ('bergerie T3 3d.glb', 'bergerie_t3', 18000),
+    ('boucherie T2 3d.glb', 'boucherie_t2', 18000),
+    ('boucherie T3 3d.glb', 'boucherie_t3', 18000),
+    ('campfire T3 3d.glb', 'feu_camp_t3', 18000),
+    ('Hotel T3  3d.glb', 'hotel_t3', 18000)]:
+    if args.only and name not in args.only: continue
+    reset(); source=Path(args.source_dir)/filename
+    source_hash=hashlib.sha256(source.read_bytes()).hexdigest()
+    print('PREPARE',name,flush=True); bpy.ops.import_scene.gltf(filepath=str(source))
+    objects=[o for o in bpy.context.scene.objects if o.type=='MESH']
+    points=[o.matrix_world@v.co for o in objects for v in o.data.vertices]
+    lo=Vector(tuple(min(p[i] for p in points) for i in range(3)))
+    hi=Vector(tuple(max(p[i] for p in points) for i in range(3)))
+    origin=Vector(((lo.x+hi.x)/2,(lo.y+hi.y)/2,lo.z)); scale=1/max(hi.x-lo.x,hi.y-lo.y)
+    source_triangles=sum(len(o.data.polygons) for o in objects)
+    for o in objects:
+        bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); bpy.context.view_layer.objects.active=o
+        matrix=o.matrix_world.copy(); o.parent=None
+        for v in o.data.vertices: v.co=(matrix@v.co-origin)*scale
+        o.matrix_world.identity(); o.data.update(); o.name=name
+        if source_triangles>budget:
+            m=o.modifiers.new('Version_jeu','DECIMATE'); m.ratio=budget/source_triangles
+            m.use_collapse_triangulate=True; bpy.ops.object.modifier_apply(modifier=m.name)
+        o['source_sha256']=source_hash; o['village_asset']=name
+        for p in o.data.polygons:p.use_smooth=True
+    if name == 'feu_camp_t3':
+        flames=[]
+        for label,color in [('Flamme_orange',(1,.23,.008,1)),('Flamme_doree',(1,.60,.08,1))]:
+            mat=bpy.data.materials.new(label);mat.use_nodes=True
+            shader=mat.node_tree.nodes.get('Principled BSDF')
+            shader.inputs['Base Color'].default_value=color
+            shader.inputs['Emission Color'].default_value=color
+            shader.inputs['Emission Strength'].default_value=.5
+            flames.append(mat)
+        for o in objects:
+            first=len(o.data.materials)
+            for mat in flames:o.data.materials.append(mat)
+            for poly in o.data.polygons:
+                center=sum((o.data.vertices[i].co for i in poly.vertices),Vector())/len(poly.vertices)
+                if center.z>.205 and abs(center.x)<.24 and abs(center.y)<.24:
+                    poly.material_index=first+(1 if center.z>.37 else 0)
+    for image in list(bpy.data.images):
+        if image.type!='IMAGE' or not image.size[0]:continue
+        w,h=image.size[:]; ratio=min(1,1024/max(w,h))
+        if ratio<1:image.scale(max(1,round(w*ratio)),max(1,round(h*ratio)))
+        image.pack()
+    for mat in bpy.data.materials:
+        if not mat.use_nodes:continue
+        for n in mat.node_tree.nodes:
+            if n.type!='BSDF_PRINCIPLED':continue
+            for socket in ['Alpha','Transmission Weight']:
+                for link in list(n.inputs[socket].links):mat.node_tree.links.remove(link)
+            n.inputs['Alpha'].default_value=1; n.inputs['Transmission Weight'].default_value=0
+    report=export(name); report.update(source=str(source),source_sha256=source_hash,
+        source_triangles=source_triangles,texture_max=1024)
+    assert report['triangles']<=budget+10
+    reports.append(report); print('RESULT',json.dumps(report),flush=True)
+    bpy.ops.wm.save_as_mainfile(filepath=str(out/(name+'.blend')))
+    render(name)
+
+(out/'validation.json').write_text(json.dumps(reports,indent=2))
+print('VILLAGE_T3_ASSETS_COMPLETE',flush=True)

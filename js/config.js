@@ -23,11 +23,16 @@
     },
     // Présentation du village : ni PV supplémentaires ni collision avec les remparts.
     villageModels: {
+      artisanat_t3: { src: "assets/models/artisanat_t3.glb?v=1-6db2efa35ccb" },
+      bergerie_t3: { src: "assets/models/bergerie_t3.glb?v=1-b8d909322158" },
+      boucherie_t3: { src: "assets/models/boucherie_t3.glb?v=1-e6f0fb979284" },
+      feu_camp_t3: { src: "assets/models/feu_camp_t3.glb?v=1-7614ce301e52" },
+      hotel_t3: { src: "assets/models/hotel_t3.glb?v=1-82fc4080ecfc" },
       artisanat_t2: { src: "assets/models/artisanat_t2.glb?v=1-cb1bbaa448ab" },
       bergerie_t2: { src: "assets/models/bergerie_t2.glb?v=1-7d4534501c59" },
       feu_camp_t2: { src: "assets/models/feu_camp_t2.glb?v=1-ae5418cd279f" },
       hotel_t2: { src: "assets/models/hotel_t2.glb?v=1-2f3391f28b5f" },
-      boucherie_t2: { src: "assets/models/boucherie_t2.glb?v=1-ade24925fdfc" },
+      boucherie_t2: { src: "assets/models/boucherie_t2.glb?v=2-3675e2faceaa" },
       bergerie_t1: { src: "assets/models/bergerie_t1.glb?v=1-1b420c32cac7" },
       artisanat_t1: { src: "assets/models/artisanat_t1.glb?v=1-f82735ce16bc" },
       boucherie_t1: { src: "assets/models/boucherie_t1.glb?v=1-cfc8c9551320" },

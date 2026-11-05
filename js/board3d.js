@@ -361,7 +361,7 @@
     }
     addBuilding('village', village.level);
     village.buildings.forEach(building => addBuilding(building.type, building.level));
-    const fire = E.VillageModels?.create(`feu_camp_t${Math.min(village.level, 2)}`) || fallbackCampfire();
+    const fire = E.VillageModels?.create(`feu_camp_t${village.level}`) || fallbackCampfire();
     fire.name = 'feu-de-camp'; fire.scale.setScalar(cfg.fireScale);
     fire.position.set(cfg.fire[0] * width, cfg.elevation, cfg.fire[1]);
     tagSelectable(fire, village.ownerId, village.lane);
@@ -429,7 +429,7 @@
   }
 
   function buildingModel(type, tier, owner) {
-    if (tier <= 2) {
+    if (tier <= 3) {
       const imported = E.VillageModels?.create(type === 'village' ? `hotel_t${tier}` : `${type}_t${tier}`);
       if (imported) {
         imported.scale.setScalar(type === 'village' ? E.Config.villagePresentation.hotelScale : E.Config.villagePresentation.buildingScale);

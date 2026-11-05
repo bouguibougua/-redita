@@ -29,7 +29,7 @@ Textures limitées à 1024 px, UV conservés ; réduction des modèles très den
 
 ## Règles
 
-Les remparts représentent les PV existants du village. Aucun PV, coût, bonus, collision ou déclencheur de victoire supplémentaire. Les habitants libres sont dans leur cour ; les emplacements restent devant. Le bouton du feu réutilise la commande réseau `upgrade` avec la cible `village`, les niveaux, coûts et bonus actuels. Les modèles T2 sont désormais intégrés ; voir `VILLAGE_T2.md`. Les commerces et l’hôtel T3 restent les représentations précédentes en attendant les GLB correspondants.
+Les remparts représentent les PV existants du village. Aucun PV, coût, bonus, collision ou déclencheur de victoire supplémentaire. Les habitants libres sont dans leur cour ; les emplacements restent devant. Le bouton du feu réutilise la commande réseau `upgrade` avec la cible `village`, les niveaux, coûts et bonus actuels. Les modèles T2 sont désormais intégrés ; voir `VILLAGE_T2.md`. Les modèles T3 sont également intégrés ; voir `VILLAGE_T3.md`.
 
 ## Vérifier
 

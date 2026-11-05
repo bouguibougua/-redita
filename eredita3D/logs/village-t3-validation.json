@@ -1,0 +1,62 @@
+[
+  {
+    "name": "artisanat_t3",
+    "triangles": 18000,
+    "bytes": 1037812,
+    "sha256": "6db2efa35ccbfd21cdea5a3fb084c02838e96e3e63fb8aba1f8486f72817c600",
+    "source": "/Users/robin/Downloads/artisanat T3 3d.glb",
+    "source_sha256": "e6dfeb375f6b6a5cc58dcd8931360a708a5d7ecf8372c9cbe22416ec835576dd",
+    "source_triangles": 1897179,
+    "texture_max": 1024
+  },
+  {
+    "name": "bergerie_t3",
+    "triangles": 18000,
+    "bytes": 1037536,
+    "sha256": "b8d909322158da06ee694685611a89ee64a18a0c641155808f8be7e8cefc09c4",
+    "source": "/Users/robin/Downloads/bergerie T3 3d.glb",
+    "source_sha256": "f20e81ce5f106e7007355b6c4d6b63560699d7c1e5e367f1fe2775b374376ce4",
+    "source_triangles": 1911315,
+    "texture_max": 1024
+  },
+  {
+    "name": "boucherie_t2",
+    "triangles": 18000,
+    "bytes": 1073192,
+    "sha256": "3675e2faceaacefd0932a5462844c318df803db5ea35a25b1251cc5d5232ce95",
+    "source": "/Users/robin/Downloads/boucherie T2 3d.glb",
+    "source_sha256": "d20e6070a7e21f54cf9cfa22de98cdf19cc3b60d9b9b988654cf4650fc7da68f",
+    "source_triangles": 1851017,
+    "texture_max": 1024
+  },
+  {
+    "name": "boucherie_t3",
+    "triangles": 18000,
+    "bytes": 1054756,
+    "sha256": "e6f0fb979284e6831c2921f1170e8d864743582eef820cbbe6f35134a559c7b4",
+    "source": "/Users/robin/Downloads/boucherie T3 3d.glb",
+    "source_sha256": "468c5a01a40de274bbb15fde5a0b5eefab5272372b63d14cbe03bf98502e0cf5",
+    "source_triangles": 1923281,
+    "texture_max": 1024
+  },
+  {
+    "name": "feu_camp_t3",
+    "triangles": 18000,
+    "bytes": 971756,
+    "sha256": "7614ce301e520e322ba059a6f4128db7c37a23a5f46f00f3f1c06e0d417f2648",
+    "source": "/Users/robin/Downloads/campfire T3 3d.glb",
+    "source_sha256": "bd781a2e26e07fd566fd3db4408a1da2a97b00fb54adc0510fd2d3e4df72257c",
+    "source_triangles": 1945244,
+    "texture_max": 1024
+  },
+  {
+    "name": "hotel_t3",
+    "triangles": 18000,
+    "bytes": 985872,
+    "sha256": "82fc4080ecfca82a10ba0e95c94601bd9824cfd1b2f82380a8dc8b47b941de30",
+    "source": "/Users/robin/Downloads/Hotel T3  3d.glb",
+    "source_sha256": "615ea2d23e3d4ea85273fb569cc48e578a0da9b537e4312dd1c4255a91a6a713",
+    "source_triangles": 1862180,
+    "texture_max": 1024
+  }
+]
