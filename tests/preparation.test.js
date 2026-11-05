@@ -147,3 +147,18 @@ const tutorial = createGame("tutorial"); tutorial.start();
 assert.equal(tutorial.state.preparationRemaining, 0, "Le tutoriel conserve sa préparation scénarisée");
 tutorial.advance(0.0625); assert.equal(tutorial.state.elapsed, 0.0625);
 console.log("Préparation : 60 s, tâches et métiers, groupes, pause, production, IA, transition précise, reprise, réseau et tutoriel validés.");
+
+// Un ordre individuel remplace aussi une tâche à distance et annule un retrait groupé en attente.
+const recallHost=createGame("host");recallHost.start();recallHost.state.preparationRemaining=0;
+for(const player of Object.values(recallHost.state.players))for(const village of player.villages)village.biome='plaine';
+const recallBlue=recallHost.state.players.blue.villages[0].residents[0];
+const remoteOrder=(residentId,mission)=>recallHost.handlers.onCommand({method:'assignResidentMission',args:[residentId,mission],playerId:'blue',view:{selectedVillage:{playerId:'blue',lane:0}}});
+remoteOrder(recallBlue.id,'attaque');const recalledUnit=recallHost.state.units.find(u=>u.residentId===recallBlue.id);recalledUnit.position=30;
+remoteOrder(recallBlue.id,'chasse');assert.equal(recallBlue.pendingMission,'chasse');assert.equal(recalledUnit.returningToVillage,true);
+assert.equal(recallHost.snapshot.units.find(u=>u.id===recalledUnit.id).returningToVillage,true);
+const protectedRed=recallHost.state.players.red.villages[0].residents[0];remoteOrder(protectedRed.id,'attaque');assert.equal(protectedRed.mission,'disponible');
+assert.equal(recallHost.state.selectedVillage.playerId,'red','Le rappel réseau préserve la sélection de l’hôte');
+const manual=createGame();manual.start();const manualVillage=manual.state.players.red.villages[0];manualVillage.terrain={river:true};
+manual.controller.assignAllResidents('chasse');manual.advance(3);manual.controller.releaseAllResidents();const manualResident=manualVillage.residents[1];
+manual.controller.assignResidentMission(manualResident.id,'peche');manual.advance(1);assert.equal(manualResident.mission,'peche','Un ordre manuel annule le retrait groupé en attente');
+console.log('Réaffectations : rappel réseau, snapshots, droits adverses et priorité de l’ordre individuel validés.');

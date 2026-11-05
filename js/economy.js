@@ -103,6 +103,64 @@
     resident.unitId = unit.id;
     state.units.push(unit);
     E.Buildings.updateArtisanatBonuses(state);
+    if (Number.isFinite(resident.combatHealthRatio)) {
+      unit.hp *= Math.max(0, Math.min(1, resident.combatHealthRatio));
+      delete resident.combatHealthRatio;
+    }
+    return true;
+  }
+
+  function canAssignResidentMission(state, playerId, lane, residentId, mission) {
+    const village = state.players[playerId]?.villages[lane];
+    const resident = getResident(state, playerId, lane, residentId);
+    if (state.phase !== 'running' || state.paused || !village || village.destroyed || !resident) return false;
+    if (mission !== 'disponible' && !Object.hasOwn(E.Config.jobs, mission) && !['attaque','defense'].includes(mission)) return false;
+    if (Object.hasOwn(E.Config.jobs, mission) && !jobRequirementMet(village, mission)) return false;
+    if (['attaque','defense'].includes(mission) && E.MythologyEffects?.isBurned(state, village)) return false;
+    if (resident.unitId && !state.units.some(unit => unit.id === resident.unitId && unit.residentId === residentId && unit.ownerId === playerId && unit.hp > 0)) return false;
+    return (resident.pendingMission || resident.mission) !== mission;
+  }
+
+  // Individual orders can replace an active task. Deployed residents return physically first.
+  function assignResidentMission(state, playerId, lane, residentId, mission) {
+    if (!canAssignResidentMission(state, playerId, lane, residentId, mission)) return false;
+    const resident = getResident(state, playerId, lane, residentId);
+    if (resident.unitId) {
+      const unit = state.units.find(entry => entry.id === resident.unitId);
+      if (mission === resident.mission) {
+        delete resident.pendingMission;
+        unit.returningToVillage = false;
+      } else {
+        resident.pendingMission = mission;
+        unit.returningToVillage = true;
+      }
+      unit.visualAttackTimer = 0;
+      unit.visualAttackTarget = null;
+      unit.redirectTarget = unit.redirectOrigin = null;
+      unit.waitingForRedirect = false;
+      state.pendingRedirects = state.pendingRedirects.filter(request => request.playerId !== playerId || request.fromLane !== unit.lane ||
+        state.units.some(other => other !== unit && other.ownerId === playerId && other.lane === unit.lane && other.waitingForRedirect && !other.returningToVillage));
+      return true;
+    }
+    if (economicMissions.includes(resident.mission)) unassignResidentJob(state, playerId, lane, residentId);
+    if (mission === 'disponible') return true;
+    return Object.hasOwn(E.Config.jobs, mission) ? assignResidentJob(state, playerId, lane, residentId, mission) :
+      deployResident(state, playerId, lane, residentId, mission);
+  }
+
+  function completeRecall(state, unit) {
+    const resident = getResident(state, unit.ownerId, unit.originLane, unit.residentId);
+    const village = state.players[unit.ownerId]?.villages[unit.originLane];
+    if (!resident || !village || village.destroyed || unit.hp <= 0) return false;
+    const mission = resident.pendingMission || 'disponible';
+    resident.combatHealthRatio = unit.hp / unit.maxHp;
+    resident.unitId = null;
+    resident.mission = 'disponible';
+    delete resident.pendingMission;
+    state.units = state.units.filter(entry => entry !== unit);
+    if (mission !== 'disponible' && !assignResidentMission(state, unit.ownerId, unit.originLane, resident.id, mission)) {
+      state.logs.unshift(`${resident.name} est rentré au village ; la tâche demandée n’est plus disponible.`);
+    }
     return true;
   }
 
@@ -570,6 +628,7 @@
     cropCount, cropYield, animalCounts, dairyAnimalCount,
     isBoosted, workBonus, canSetProfession, setProfession, assignProfessionToAll,
     setNextResidentMission, setNextResidentProfession, saleQuote, sell, deployResident,
+    canAssignResidentMission, assignResidentMission, completeRecall,
     update,
     updatePopulation,
     updateProduction,

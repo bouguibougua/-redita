@@ -10,7 +10,7 @@ try{browser=await startBrowser();const p=browser.page;
  async function drag(key,dx,dy,end=true){const r=await rect('[data-layout-resize="'+key+'"]'),x=r.x+r.w/2,y=r.y+r.h/2;await p.send('Input.dispatchMouseEvent',{type:'mouseMoved',x,y});await p.send('Input.dispatchMouseEvent',{type:'mousePressed',x,y,button:'left',clickCount:1});await p.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:x+dx,y:y+dy,button:'left',buttons:1});if(end){await p.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:x+dx,y:y+dy,button:'left',clickCount:1});await delay(100);}return {x:x+dx,y:y+dy};}
  async function key(key,code=key){await p.send('Input.dispatchKeyEvent',{type:'keyDown',key,code});await p.send('Input.dispatchKeyEvent',{type:'keyUp',key,code});await delay(80);}
  const state=await p.evaluate('JSON.stringify(resizeState)');
- const crystal=await rect('.mythology-match-widget');assert.ok(Math.abs(crystal.x+crystal.w/2-720)<1&&crystal.y<=8,'Cristal en haut au centre');
+ const crystal=await rect('.mythology-match-widget');assert.ok(Math.abs(crystal.x+crystal.w/2-720)<1&&crystal.y>=20&&crystal.y<=40,'Cristal centré sous le bord supérieur');
  const a=await rect('.character-panel');await drag('left',70,0);assert.ok((await rect('.character-panel')).w>a.w+65,'Colonne Habitants agrandie');
  const right=await rect('.side-panel');await drag('right',-50,0);assert.ok((await rect('.side-panel')).w>right.w+45,'Colonne droite agrandie');
  const jobs=await rect('.management-professions'),village=await rect('.management-village');await drag('jobs',0,-40);assert.ok((await rect('.management-professions')).h>jobs.h+35);assert.ok(Math.abs((await rect('.management-village')).h-village.h)<1,'Hauteurs indépendantes');

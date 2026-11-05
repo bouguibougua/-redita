@@ -134,6 +134,7 @@ assert.equal(JSON.stringify(state), protectedState);
 
 // Les Barques rejoignent aussi la réserve d'un village terrestre via une commande invitée.
 blueVillage.biome = "plaine";
+assert.ok(E.Buildings.buildT1(state, "blue", 0, "boucherie"));
 initialGold = state.players.blue.gold;
 remote("buyShopItem", ["barque"]);
 assert.equal(blueVillage.maritime.barque, 1);

@@ -1,0 +1,18 @@
+{
+  "source": "/Users/robin/Downloads/berger 3d.glb",
+  "source_sha256": "289c3ae4ea146bf85c230d42f91560b53a0147abc853493a229de001a73c6d50",
+  "triangles": 10897,
+  "bytes": 2003136,
+  "sha256": "08a9ed56ddf03e02a05a2d55111a5062ce814a244dfd0874d9d1a31d93369f02",
+  "bones": 80,
+  "clips": [
+    "Repos",
+    "Marche",
+    "Traite",
+    "Frappe",
+    "Mort"
+  ],
+  "texture_size": 1024,
+  "height_m": 1.8,
+  "simulation_changes": false
+}

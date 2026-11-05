@@ -96,6 +96,7 @@
     if (!isHuman(resident) || !protectionActive(state, village.ownerId)) return false;
     resident.workPosition = home(village.ownerId); resident.workPhase = null; resident.workTimer = 0;
     resident.carrying = null; resident.huntTargetPosition = null; resident.huntTargetLaneOffset = null;
+    delete resident.combatHealthRatio;
     return true;
   }
   function onUnitDeath(state, unit) {
@@ -121,6 +122,8 @@
       Object.assign(person, pending.resident, { id, name, unitId: null, mission: 'disponible', workPosition: null,
         workPhase: null, carrying: null, workTimer: 0 });
       E.Equipment.applyVillage(destination, person);
+      delete person.combatHealthRatio;
+      delete person.pendingMission;
       return false;
     });
   }

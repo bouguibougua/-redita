@@ -216,9 +216,9 @@
         label: "Échoppe de l’Artisanat",
         icon: "⚒",
         tiers: {
-          1: [{ label: "Barque", icon: "🛶", purchaseType: "barque" }, { label: "Outil en bois", icon: "🪵", equipmentKind: "tools", equipmentType: "bois" }, { label: "Armure de cuir", icon: "🦺", equipmentKind: "armors", equipmentType: "cuir" }],
-          2: [{ label: "Outil en bronze", icon: "🟤", equipmentKind: "tools", equipmentType: "bronze" }, { label: "Cotte de mailles", icon: "🛡", equipmentKind: "armors", equipmentType: "maille" }, { label: "Piège", icon: "🪤" }],
-          3: [{ label: "Piège défensif", icon: "🛡" }, { label: "Outil en fer", icon: "⚙", equipmentKind: "tools", equipmentType: "fer" }, { label: "Armure de fer", icon: "🛡", equipmentKind: "armors", equipmentType: "fer" }]
+          1: [{ label: "Outil en bois", icon: "🪵", equipmentKind: "tools", equipmentType: "bois" }, { label: "Armure de cuir", icon: "🦺", equipmentKind: "armors", equipmentType: "cuir" }],
+          2: [{ label: "Outil en bronze", icon: "🟤", equipmentKind: "tools", equipmentType: "bronze" }, { label: "Cotte de mailles", icon: "🛡", equipmentKind: "armors", equipmentType: "maille" }],
+          3: [{ label: "Outil en fer", icon: "⚙", equipmentKind: "tools", equipmentType: "fer" }, { label: "Armure de fer", icon: "🛡", equipmentKind: "armors", equipmentType: "fer" }]
         }
       },
       boucherie: {
@@ -227,7 +227,7 @@
         tiers: {
           1: [{ label: "Filet de pêche", icon: "🕸", purchaseType: "filet" }, { label: "Barque", icon: "🛶", purchaseType: "barque" }],
           2: [{ label: "Piège de chasse", icon: "🪤" }],
-          3: [{ label: "Voilier", icon: "⛵", purchaseType: "voilier" }]
+          3: [{ label: "Voilier", icon: "⛵", purchaseType: "voilier" }, { label: "Piège défensif", icon: "🛡" }]
         }
       }
     },
@@ -385,7 +385,7 @@
       // les prix et les vitesses des bateaux ne sont pas encore définis.
       waterRanges: { red: { min: 38, max: 50 }, blue: { min: 50, max: 62 } },
       shop: {
-        barque: { label: "Barque", icon: "🛶", gold: 100, max: 4, capacity: 2, unlock: "artisanat-ou-boucherie-t1" },
+        barque: { label: "Barque", icon: "🛶", gold: 100, max: 4, capacity: 2, unlock: "boucherie-t1" },
         voilier: { label: "Voilier", icon: "⛵", gold: 350, max: 2, capacity: 15, biome: "littoral", unlock: "boucherie-t3" },
         filet: { label: "Filet de pêche", icon: "🕸", gold: 75, max: null, fishAmount: 1, interval: 30, biome: "littoral", unlock: "boucherie-t1" }
       }
@@ -446,6 +446,12 @@
       // TEMP_BALANCE_VALUE — échelle visuelle du GLB fourni pour les sans métier.
       villager: { src: "assets/models/habitant.glb?v=1-151656a63b68", scale: 0.31 },
       // Échelle et transitions visuelles ; production et cadence économique inchangées.
+      // Berger fourni : mouvements visuels, sans modification des bonus du métier.
+      shepherd: {
+        src: "assets/models/berger.glb?v=1-08a9ed56ddf0", scale: 0.31,
+        crossFade: 0.18, maxFrameDelta: 0.05, attackDuration: 0.65,
+        clips: { idle: "Repos", walk: "Marche", harvest: "Traite", attack: "Frappe", death: "Mort" }
+      },
       farmer: {
         src: "assets/models/agriculteur.glb?v=1-f802929f0a88", scale: 0.31,
         crossFade: 0.18, maxFrameDelta: 0.05, attackDuration: 0.6,

@@ -70,16 +70,12 @@
       const locked = lockedReason(); if (locked) return locked;
       const v = village(), s = state(), id = selection().playerId;
       if (scope === "next") return "";
-      if (key === "disponible") {
-        if (scope === "all") return v.residents.some((item) => E.Config.jobs[item.mission]) ? "" : "Aucun travailleur à libérer.";
-        if (!resident) return "Sélectionnez un habitant.";
-        return E.Config.jobs[resident.mission] ? "" : resident.unitId ? "Un habitant au combat ne peut pas être rappelé." : "Cet habitant est déjà disponible.";
-      }
       if (scope === "single") {
         if (!resident) return "Sélectionnez un habitant.";
-        if (resident.unitId) return "Cet habitant est engagé au combat.";
-        if (resident.mission !== "disponible") return "Libérez d’abord sa tâche actuelle.";
+        if (E.Config.jobs[key] && !E.Economy.jobRequirementMet(v,key)) return key === "agriculture" ? "Placez d’abord une culture." : key === "elevage" ? "Placez d’abord un élevage." : "La pêche nécessite un Littoral ou une rivière.";
+        return E.Economy.canAssignResidentMission(s,id,v.lane,resident.id,key) ? "" : "Cette tâche est déjà choisie ou indisponible.";
       }
+      if (key === "disponible") return v.residents.some(item => E.Config.jobs[item.mission]) ? "" : "Aucun travailleur à libérer.";
       if (E.Config.jobs[key]) {
         if (!E.Economy.jobRequirementMet(v, key)) return key === "agriculture" ? "Placez d’abord une culture dans ce village." : key === "elevage" ? "Placez d’abord un élevage dans ce village." : "La pêche nécessite un Littoral.";
         const allowed = scope === "all" ? E.Economy.canAssignJob(s, id, v.lane, key) : E.Economy.canAssignResidentJob(s, id, v.lane, resident.id, key);
@@ -98,13 +94,13 @@
     }
     function missionButton(key, scope = "single") {
       const resident = selectedResident(), reason = missionReason(key, scope);
-      const selected = scope === "next" ? (village().nextResidentMission || "disponible") === key : scope === "single" && resident?.mission === key;
+      const selected = scope === "next" ? (village().nextResidentMission || "disponible") === key : scope === "single" && (resident?.pendingMission || resident?.mission) === key;
       let action;
       if (scope === "next") action = command("setNextResidentMission", key);
       else if (scope === "all") action = key === "disponible" ? command("releaseAllResidents") : command("assignAllResidents", key);
       else action = key === "disponible" ? command("releaseResident", resident?.id) : command("assignResidentMission", resident?.id, key);
       return button(key === "disponible" && scope !== "next" ? "Libérer la tâche" : missionLabels[key], action, !reason,
-        { icon: missionIcons[key], selected, reason, detail: reason || (selected ? "Tâche active" : E.Economy.isBoosted(resident, key) ? "Attribuer · Bonus métier" : "Attribuer") });
+        { icon: missionIcons[key], selected, reason, detail: resident?.pendingMission && selected ? "Retour au village, puis nouvelle tâche" : reason || (selected ? "Tâche active" : E.Economy.isBoosted(resident, key) ? "Attribuer · Bonus métier" : "Attribuer") });
     }
     function buildReason(type) {
       return lockedReason() || (!E.Config.building.types.includes(type) ? "Bâtiment inconnu." :
@@ -201,7 +197,7 @@
         entries = resources.map((resource) => { const q = upgradeInfo(data, resource); return button(data === "village" ? "Améliorer le village" : `Payer en ${labels[resource]}`, command("upgrade", data, resource), !q.reason, { detail: q.cost, reason: q.reason }); });
       } else if (name === "shop") {
         title = "Échoppes et ventes";
-        lines = [`Or : ${Math.floor(p.gold)}`, fleetSummary(s, v)];
+        lines = [`Or : ${Math.floor(p.gold)}`];
         entries = [button("Vendre ressources", open("sell")), button("Acheter un habitant", open("buy-resident")),
           ...Object.entries(E.Config.villageShops).map(([key, shop]) => button(shop.label, open("store", key), E.Transport.buildingLevel(v, key) > 0)),
           button("Compagnons", open("animals"))];
@@ -211,7 +207,7 @@
         entries = E.Config.resources.map((resource) => button(`${labels[resource]} · ${Math.floor(v.resources[resource])}`, command(name === "sell" ? "sell" : "buyResident", resource), own && (name === "sell" ? E.Economy.saleQuote(v, resource).amount > 0 : E.Economy.canBuyResident(s, p.id, v.lane, resource))));
       } else if (name === "store") {
         title = E.Config.villageShops[data].label;
-        lines = [fleetSummary(s, v), "Embarquement automatique · places réutilisables sur terre"];
+        lines = [];
         const level = E.Transport.buildingLevel(v, data);
         entries = Object.entries(E.Config.villageShops[data].tiers).flatMap(([tier, items]) => items.map((item) => {
           const resident = selectedResident();
@@ -366,7 +362,7 @@
           selected: item.id === resident?.id,
           portrait: { src: "assets/generated/characters-atlas.webp", columns: 4, rows: 2, index: portraitIndices[item.profession || "habitant"] ?? 0 },
           profession: E.Config.professions[item.profession || "habitant"]?.label || "Sans métier",
-          status: item.unitId ? item.mission === "defense" ? "En défense" : "Au combat" : missionLabels[item.mission] || item.mission,
+          status: item.pendingMission ? `Retour → ${missionLabels[item.pendingMission]}` : item.unitId ? item.mission === "defense" ? "En défense" : "Au combat" : missionLabels[item.mission] || item.mission,
           detail: `#${String(item.id).split("-").at(-1)}`
         }))),
         row(button("◀ Précédents", { type: "resident-page", delta: -1 }, residentPage > 0, { reason: "Première page d’habitants." }), button(`Page ${residentPage + 1}/${Math.max(1, Math.ceil(residents.length / E.Config.xr.residentPageSize))}`, null, false), button("Suivants ▶", { type: "resident-page", delta: 1 }, (residentPage + 1) * E.Config.xr.residentPageSize < residents.length, { reason: "Dernière page d’habitants." }))

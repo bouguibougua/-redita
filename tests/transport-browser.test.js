@@ -16,7 +16,7 @@ async function run() {
       village.biome = biome; village.slots = E.Biomes.createSlots(biome);
       const enemy = s.players.blue.villages[lane];
       enemy.biome = 'littoral'; enemy.slots = E.Biomes.createSlots('littoral');
-      E.Buildings.buildT1(s, 'red', lane, 'artisanat');
+      E.Buildings.buildT1(s, 'red', lane, 'boucherie');
     }
     s.selectedVillage = { playerId: 'red', lane: 0 };
     E.UI.render(s);
@@ -24,13 +24,13 @@ async function run() {
   await click("#open-shop-modal");
   for (const lane of [0, 1]) {
     await click(`[data-shop-village="${lane}"]`);
-    assert.match(await evaluate("document.querySelector('#village-shop [data-fleet-summary]').textContent"), /0\/4 barques/);
+    assert.equal(await evaluate("document.querySelector('#village-shop [data-fleet-summary]')"),null);
     const gold = await evaluate("testState.players.red.gold");
-    await click('[data-buy-shop-item="barque"][data-shop-building="artisanat"]');
+    await click('[data-buy-shop-item="barque"][data-shop-building="boucherie"]');
     assert.equal(await evaluate(`testState.players.red.villages[${lane}].maritime.barque`), 1);
     assert.equal(await evaluate("testState.players.red.gold"), gold - await evaluate("Eredita.Config.maritime.shop.barque.gold"));
     assert.equal(await evaluate("document.querySelector('#village-inspector [data-fleet-summary]')"), null, 'La réserve est consultable dans la boutique et ne remplit plus le panneau latéral');
-    assert.match(await evaluate("document.querySelector('#village-shop [data-fleet-summary]').textContent"), /1\/4 barques.*2\/2 places libres/);
+    assert.equal(await evaluate("document.querySelector('#village-shop [data-fleet-summary]')"),null);
   }
   await click("#close-shop-modal");
   await evaluate(`(() => {
@@ -45,11 +45,11 @@ async function run() {
   })()`);
   assert.equal(await evaluate("testUnit.waterTransport"), "barque");
   await click('#open-shop-modal');
-  assert.match(await evaluate("document.querySelector('#village-shop [data-fleet-summary]').textContent"), /1\/2 places libres/);
+  assert.equal(await evaluate("Eredita.Transport.fleetStatus(testState,testState.players.red.villages[1]).available"),1);
   assert.equal(await evaluate("document.querySelectorAll('.unit.on-water.transport-barque').length"), 1);
   await evaluate(`testUnit.position = Eredita.Config.maritime.waterRanges.blue.max + 1;
     Eredita.Transport.updateUnitWaterState(testState, testUnit); Eredita.UI.renderFrame(testState);`);
-  assert.match(await evaluate("document.querySelector('#village-shop [data-fleet-summary]').textContent"), /2\/2 places libres/);
+  assert.equal(await evaluate("Eredita.Transport.fleetStatus(testState,testState.players.red.villages[1]).available"),2);
   assert.equal(await evaluate("testState.players.red.villages[1].maritime.barque"), 1);
   assert.deepEqual(browser.exceptions, []);
   assert.deepEqual(browser.imageErrors, []);

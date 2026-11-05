@@ -264,7 +264,11 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
   background-size: contain !important;
   background-position: center !important;
 }
-.profession-berger { background-position: 66.666% 0 !important; }
+.profession-berger {
+  background-image: url("../assets/generated/berger-v1.png") !important;
+  background-size: contain !important;
+  background-position: center !important;
+}
 .profession-pecheur { background-position: 100% 0 !important; }
 .profession-chasseur {
   background-image: url("../assets/generated/chasseur-v1.png") !important;

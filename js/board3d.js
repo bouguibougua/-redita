@@ -56,6 +56,7 @@
       ready = true;
       E.VillagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.FarmerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.ShepherdModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.HunterModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.RavagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.WarriorModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
@@ -420,10 +421,11 @@
       const previousPosition = figure.userData.previousUnitPosition;
       const moving = !unit.waterTransport && (
         previousPosition !== undefined && Math.abs(unit.position - previousPosition) > E.Config.characterModels.warrior.movementEpsilon ||
-        figure.userData.lupu && figure.userData.previousLanePosition !== undefined &&
+        figure.userData.previousLanePosition !== undefined &&
         Math.abs(unit.lanePosition - figure.userData.previousLanePosition) > E.Config.characterModels.warrior.movementEpsilon);
       characterAnimation(figure)?.setMoving(moving);
       figure.userData.farmer?.setHarvest(false);
+      figure.userData.shepherd?.setHarvest(false);
       if (figure.userData.fullettu) {
         const source = state.players[unit.ownerId === 'red' ? 'blue' : 'red']?.villages[unit.lane];
         const destination = state.players[unit.ownerId]?.villages[unit.originLane];
@@ -440,7 +442,13 @@
       if (figure.userData.hunter && unit.visualAttackTarget && unit.attackCooldown > 0) {
         figure.rotation.y = unit.visualAttackTarget.position >= unit.position ? 0 : Math.PI;
       }
-      if (unit.mythologyRetreating) figure.rotation.y += Math.PI;
+      if (unit.mythologyRetreating || unit.returningToVillage) figure.rotation.y += Math.PI;
+      if (unit.returningToVillage && previousPosition !== undefined) {
+        const dx = laneX(unit.lanePosition) - laneX(figure.userData.previousRecallLane ?? unit.lanePosition);
+        const dz = (unit.position - previousPosition) * .087;
+        if (Math.abs(dx) + Math.abs(dz) > E.Config.characterModels.warrior.movementEpsilon) figure.rotation.y = Math.atan2(dx,dz);
+      }
+      figure.userData.previousRecallLane = unit.lanePosition;
       figure.scale.setScalar(unit.mythologyScale || 1);
       updateMythologyAura(figure, appearance, unit.ownerId, state);
       syncUnitVisualState(figure, unit);
@@ -464,6 +472,7 @@
         characterAnimation(figure)?.setMoving(isWorker && figure.userData.previousWorkPosition !== undefined &&
           Math.abs(resident.workPosition - figure.userData.previousWorkPosition) > E.Config.characterModels.warrior.movementEpsilon);
         figure.userData.farmer?.setHarvest(isWorker && resident.mission === 'agriculture' && resident.workPhase === 'harvesting');
+        figure.userData.shepherd?.setHarvest(isWorker && resident.mission === 'elevage' && resident.workPhase === 'harvesting');
         figure.userData.previousWorkPosition = resident.workPosition;
         figure.scale.setScalar((isWorker ? 0.78 : 0.65) * (resident.mythologyScale || 1));
         updateMythologyAura(figure, resident, player.id, state);
@@ -619,7 +628,7 @@
   }
 
   function characterAnimation(figure) {
-    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.hunter || figure.userData.ravager;
+    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.shepherd || figure.userData.hunter || figure.userData.ravager;
   }
 
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
@@ -635,7 +644,7 @@
     const isLupu = appearance.mythologyLegendId === 'u-lupu-mannaru';
     const isSurpatore = appearance.mythologyLegendId === 'u-surpatore' && appearance.mythologyForm === 'vampire';
     const importedRavager = !animalType && !appearance.mythologyLegendId && profession === 'ravageur' && E.RavagerModel?.ready;
-    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : importedRavager ? 'ravageur-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
+    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : importedRavager ? 'ravageur-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'berger' && E.ShepherdModel?.ready ? 'berger-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
     const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}${waterTransport === 'barque' ? E.RowboatModel?.ready ? ':barque-glb' : ':barque-simple' : ''}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
@@ -770,6 +779,10 @@
     }
     if (profession === 'chasseur') {
       const imported = E.HunterModel?.create(owner, tool, armor);
+      if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
+    }
+    if (profession === 'berger') {
+      const imported = E.ShepherdModel?.create(owner, tool, armor);
       if (imported) return addHumanTransport(imported, owner, waterTransport, donkey);
     }
     if (profession === 'agriculteur') {

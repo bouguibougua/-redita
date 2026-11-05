@@ -63,7 +63,7 @@ async function run() {
     const clockLayout=await page.evaluate("(()=>{const c=document.querySelector('.board-clock').getBoundingClientRect(),s=document.querySelector('.mythology-match-widget .mythology-crystal-stage').getBoundingClientRect();return {center:c.x+c.width/2,screen:innerWidth,top:c.top,crystalBottom:s.bottom};})()");
     assert.ok(Math.abs(clockLayout.center-clockLayout.screen/2)<1);
     assert.ok(clockLayout.top>=clockLayout.crystalBottom, 'Clock sits directly below the closed crystal');
-    assert.ok(await page.evaluate("document.querySelector('#preparation-hint').getBoundingClientRect().top>=document.querySelector('.board-clock').getBoundingClientRect().bottom+8"), 'The clock leaves room for the preparation message');
+    assert.equal(await page.evaluate("document.querySelector('#preparation-hint')"),null,'Preparation banner removed');
     await page.evaluate(`Eredita.GameView.command('togglePause');${state}.preparationRemaining=42;Eredita.UI.renderFrame(${state})`);
     assert.equal(await page.evaluate("document.querySelector('#game-clock').textContent"),'00:42');
     await page.evaluate("Eredita.GameView.command('togglePause')");

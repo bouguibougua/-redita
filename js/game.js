@@ -141,15 +141,11 @@
       const resident = E.Economy.getResident(state, playerId, lane, residentId);
       if (!resident) return;
 
-      let changed = false;
-      if (E.Config.jobs[mission]) {
-        changed = E.Economy.assignResidentJob(state, playerId, lane, residentId, mission);
-      } else if (mission === "attaque" || mission === "defense") {
-        changed = E.Economy.deployResident(state, playerId, lane, residentId, mission);
-      }
+      const changed = E.Economy.assignResidentMission(state, playerId, lane, residentId, mission);
 
       if (changed) {
-        const label = mission === "attaque" ? "attaquer" : mission === "defense" ? "défendre" : E.Config.jobs[mission].label.toLowerCase();
+        pendingBulkTasks = pendingBulkTasks.filter(task => task.playerId !== playerId || task.lane !== lane || task.residentId !== residentId);
+        const label = mission === "disponible" ? "redevenir disponible" : mission === "attaque" ? "attaquer" : mission === "defense" ? "défendre" : E.Config.jobs[mission].label.toLowerCase();
         addLog(`${resident.name} du village ${lane + 1} reçoit la mission : ${label}.`);
       }
       E.UI.render(state);
@@ -158,8 +154,9 @@
     releaseResident(residentId) {
       const { playerId, lane } = state.selectedVillage;
       const resident = E.Economy.getResident(state, playerId, lane, residentId);
-      if (resident && E.Economy.unassignResidentJob(state, playerId, lane, residentId)) {
-        addLog(`${resident.name} du village ${lane + 1} redevient disponible.`);
+      if (resident && E.Economy.assignResidentMission(state, playerId, lane, residentId, "disponible")) {
+        pendingBulkTasks = pendingBulkTasks.filter(task => task.playerId !== playerId || task.lane !== lane || task.residentId !== residentId);
+        addLog(`${resident.name} du village ${lane + 1} ${resident.pendingMission ? "revient au village pour redevenir disponible" : "redevient disponible"}.`);
       }
       E.UI.render(state);
     },

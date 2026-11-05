@@ -203,7 +203,7 @@ async function run() {
   assert.equal(await evaluate("Eredita.GameView.getState().elapsed"), 0, "Les 12:30 ne commencent pas pendant la préparation");
   assert.equal(await evaluate("document.querySelector('#phase-label').textContent"), "Préparation");
   assert.equal(await guest.evaluate("document.querySelector('#phase-label').textContent"), "Préparation");
-  assert.equal(await evaluate("document.querySelector('#preparation-hint').hidden"), false);
+  assert.equal(await evaluate("document.querySelector('#preparation-hint')"), null);
   assert.equal(await evaluate("document.querySelectorAll('[data-village-select]').length"), 8);
   await click("#pause-game");
   await guest.waitFor("Eredita.GameView.getState().paused");

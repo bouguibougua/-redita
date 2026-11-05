@@ -31,11 +31,13 @@ function deploy({ state, village, ownerId }, index = 0) {
   return state.units.find((unit) => unit.residentId === resident.id);
 }
 
-test("barques can be bought and stocked locally in all biomes, with the existing unlocks and limits", () => {
+test("barques can be bought and stocked locally in all biomes, only with a Boucherie, respecting local limits", () => {
   for (const ownerId of ["red", "blue"]) for (const biome of ["plaine", "montagne", "littoral"]) {
     const { state, village } = scenario(ownerId, biome);
     assert.equal(E.Transport.buy(state, ownerId, 0, "barque"), false);
-    const building = biome === "montagne" ? "boucherie" : "artisanat";
+    assert.equal(E.Buildings.buildT1(state, ownerId, 0, "artisanat"), true);
+    assert.equal(E.Transport.shopQuote(state, ownerId, 0, "barque").reason, "Boucherie T1 requise");
+    const building = "boucherie";
     assert.equal(E.Buildings.buildT1(state, ownerId, 0, building), true);
     const gold = state.players[ownerId].gold;
     for (let i = 0; i < boat.max; i++) assert.ok(E.Transport.buy(state, ownerId, 0, "barque"));
@@ -59,7 +61,7 @@ test("paused, inactive, destroyed or unaffordable villages cannot buy barques", 
     (s) => { s.players.red.gold = boat.gold - 1; }
   ]) {
     const { state, village } = scenario();
-    E.Buildings.buildT1(state, "red", 0, "artisanat");
+    E.Buildings.buildT1(state, "red", 0, "boucherie");
     invalidate(state, village);
     const before = JSON.stringify(state);
     assert.equal(E.Transport.buy(state, "red", 0, "barque"), false);
@@ -71,7 +73,7 @@ test("attackers from any biome automatically cross allied and enemy water in bot
   for (const ownerId of ["red", "blue"]) for (const biome of ["plaine", "montagne", "littoral"]) {
     const setup = scenario(ownerId, biome);
     const { state, village } = setup;
-    E.Buildings.buildT1(state, ownerId, 0, "artisanat");
+    E.Buildings.buildT1(state, ownerId, 0, "boucherie");
     E.Transport.buy(state, ownerId, 0, "barque");
     const unit = deploy(setup);
     let boarded = false;

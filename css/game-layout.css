@@ -355,6 +355,7 @@ body.is-resizing-game, body.is-resizing-game * { user-select: none !important; c
   #game-screen .preparation-hint { position: fixed; top: 25px; left: 6px; max-width: calc(50vw - 55px); }
 }
 /* Informations publiques des deux camps, détails adverses révélés par Sainte-Lucie. */
+#game-screen .unit-recall-indicator { position: absolute; right: -6px; top: -6px; padding: 0 2px; border-radius: 50%; color: #ffdf82; background: #241d14; font: bold 12px/1 system-ui,sans-serif; }
 .app-shell:has(#game-screen:not([hidden])) { padding-top: 30px; }
 .app-shell:has(#game-screen:not([hidden])) .masthead { top: 4px; width: calc(50% - 72px); }
 .app-shell:has(#game-screen:not([hidden])) .session-status { font-size: .57rem; white-space: nowrap; }
@@ -418,4 +419,13 @@ body.is-resizing-game, body.is-resizing-game * { user-select: none !important; c
   #game-screen .game-topbar #map-village-popups header { font-size: .49rem; }
   #game-screen .hud-global-row { font-size: .42rem; }
   #game-screen .preparation-hint { top: -17px; }
+}
+
+/* Le cristal et son compteur restent sous le bord supérieur du viewport. */
+body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top: max(22px,calc(env(safe-area-inset-top) + 22px)); }
+@media (max-width:800px) and (orientation:portrait) {
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top: max(32px,calc(env(safe-area-inset-top) + 32px)); }
+}
+@media (max-height:600px) and (orientation:landscape) {
+  body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top: max(34px,calc(env(safe-area-inset-top) + 34px)); }
 }

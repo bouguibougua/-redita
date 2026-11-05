@@ -40,7 +40,6 @@
       shopVillageNav: document.querySelector("#shop-village-nav"),
       clock: document.querySelector("#game-clock"),
       phase: document.querySelector("#phase-label"),
-      preparationHint: document.querySelector("#preparation-hint"),
       pause: document.querySelector("#pause-game"),
       redirectDialog: document.querySelector("#redirect-dialog"),
       redirectCopy: document.querySelector("#redirect-copy"),
@@ -179,7 +178,6 @@
       if (event.target.matches("[data-purchase-resource]")) purchaseResource = event.target.value;
     }));
     elements.shop.addEventListener("change", (event) => {
-      if (event.target.matches("[data-shop-resident]")) controller.selectResident(event.target.value);
     });
     elements.inspector.addEventListener("input", (event) => {
       if (!event.target.matches("[data-slaughter-quantity]")) return;
@@ -312,7 +310,6 @@
 
 
   function renderStatus(state) {
-    elements.preparationHint.hidden = !(state.preparationRemaining > 0);
     if (state.tutorial?.noTimer) {
       elements.clock.textContent = "∞";
       elements.phase.textContent = "Tutoriel libre";
@@ -325,7 +322,7 @@
     elements.clock.textContent = `${overtime ? "+" : ""}${formatTime(shownTime)}`;
     elements.phase.textContent = overtime ? "Overtime" : "Temps normal";
     }
-    elements.clock.closest(".board-clock")?.setAttribute("aria-label", state.preparationRemaining > 0 ? "Préparation : attribuez vos tâches avant le combat" : "Temps restant");
+    elements.clock.closest(".board-clock")?.setAttribute("aria-label", state.preparationRemaining > 0 ? "Temps de préparation" : "Temps restant");
     const clock = elements.clock.closest('.board-clock');
     if (clock) clock.dataset.paused = String(state.paused);
     if (elements.pause) elements.pause.textContent = state.paused ? "Reprendre" : "Pause";
@@ -515,8 +512,9 @@
       const vessel = unit.waterTransport ? `<span class="unit-vessel" title="Transporté par ${E.Config.maritime.shop[unit.waterTransport].label.toLowerCase()}">${E.Config.maritime.shop[unit.waterTransport].icon}</span>` : "";
       const selected = unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane;
       const label = E.Mythology?.get(unit.mythologyLegendId)?.name || stats.label;
-      return `<div class="unit ${unit.ownerId} role-${unit.role} ${selected ? "selected-resident" : ""} ${unit.waitingForRedirect ? "waiting" : ""} ${unit.waterTransport ? `on-water transport-${unit.waterTransport}` : ""}" style="left:${left}%;top:${top}%" title="${label} · ${Math.ceil(unit.hp)} PV${unit.waterTransport ? ` · ${E.Config.maritime.shop[unit.waterTransport].label}` : ""}">
+      return `<div class="unit ${unit.ownerId} role-${unit.role} ${selected ? "selected-resident" : ""} ${unit.waitingForRedirect ? "waiting" : ""} ${unit.waterTransport ? `on-water transport-${unit.waterTransport}` : ""}" data-unit-id="${unit.id}" style="left:${left}%;top:${top}%" title="${label} · ${Math.ceil(unit.hp)} PV${unit.returningToVillage ? " · Retour au village" : ""}${unit.waterTransport ? ` · ${E.Config.maritime.shop[unit.waterTransport].label}` : ""}">
         ${unit.animalType ? animalAppearance(unit.animalType, "unit-body") : residentAppearance(unit, "unit-body")}
+        ${unit.returningToVillage ? '<span class="unit-recall-indicator" aria-hidden="true">↩</span>' : ''}
         ${vessel}
         <span class="hp-track"><i style="width:${Math.max(0, unit.hp / unit.maxHp) * 100}%"></i></span>
       </div>`;
@@ -673,7 +671,7 @@
       return `<button class="resident-card ${selected ? "selected" : ""}" type="button"
         data-select-resident="${resident.id}" data-resident-state="${resident.mission}" aria-pressed="${selected}" title="${resident.name} · ${equipmentLabel(resident)}">
         ${residentAppearance(resident, "resident-avatar")}
-        <span><strong>${resident.name}</strong><small>${E.Config.professions[resident.profession || "habitant"].label}</small><small>${residentMissionLabel(resident.mission)}${E.Economy.isBoosted(resident, resident.mission) ? " · ★ Boost" : ""}</small><small>${equipmentLabel(resident)}</small></span>
+        <span><strong>${resident.name}</strong><small>${E.Config.professions[resident.profession || "habitant"].label}</small><small>${residentTaskLabel(resident)}${E.Economy.isBoosted(resident, resident.pendingMission || resident.mission) ? " · ★ Boost" : ""}</small><small>${equipmentLabel(resident)}</small></span>
       </button>`;
     }).join("");
     const missionButtons = selectedResident ? residentMissionButtons(state, player, village, selectedResident) : "";
@@ -703,7 +701,7 @@
           <div class="resident-list dashboard-scroll" data-scroll-key="people" data-resident-list data-signature="${residentSignature}">${residentCards || '<p class="empty-residents">Aucun habitant vivant.</p>'}</div>
         </section>
         <section class="management-column management-tasks"><h3>2 · Tâches</h3>
-          <p class="selected-resident">${selectedResident ? `${selectedResident.name} · ${residentMissionLabel(selectedResident.mission)}` : "Aucun habitant"}</p>
+          <p class="selected-resident">${selectedResident ? `${selectedResident.name} · ${residentTaskLabel(selectedResident)}` : "Aucun habitant"}</p>
           <div class="mission-grid dashboard-scroll" data-scroll-key="tasks">${missionButtons}</div>
         </section>
       </aside>
@@ -806,7 +804,6 @@
     setText("[data-inspector-available]", E.Economy.getAvailableResidents(state, player.id, village.lane));
     setText("[data-inspector-gold]", formatNumber(player.gold));
     setText("[data-inspector-birth]", nextPopulationText(state, player, village));
-    setText("[data-fleet-summary]", fleetSummary(state, village));
     E.Config.resources.forEach((resource) => {
       const target = elements.inspector.querySelector(`[data-resource="${resource}"]`);
       if (target) target.textContent = formatNumber(village.resources[resource]);
@@ -846,29 +843,30 @@
   }
 
   function residentMissionButtons(state, player, village, resident) {
-    const available = resident.mission === "disponible" && !resident.unitId;
+    const activeMission = resident.pendingMission || resident.mission;
     const tutorialDefenseOrder = E.Network.mode === "tutorial" && E.Tutorial?.stage === "defend";
     const locked = state.phase !== "running" || (state.paused && !tutorialDefenseOrder) || village.destroyed;
     const hasAvailableResidents = E.Economy.getAvailableResidents(state, player.id, village.lane) > 0;
     const canSetNext = !locked;
     const nextButton = (mission) => `<button class="next-resident-button ${(village.nextResidentMission || "disponible") === mission ? "active" : ""}" type="button" data-next-mission="${mission}" aria-pressed="${(village.nextResidentMission || "disponible") === mission}" ${!canSetNext ? "disabled" : ""} title="Attribuer aux prochains habitants" aria-label="Attribuer aux prochains habitants">Prochains</button>`;
     const economicButtons = Object.entries(E.Config.jobs).map(([job, definition]) => {
-      const allowed = available && E.Economy.canAssignResidentJob(state, player.id, village.lane, resident.id, job);
+      const allowed = E.Economy.canAssignResidentMission(state, player.id, village.lane, resident.id, job);
       const canAssignAll = hasAvailableResidents && E.Economy.canAssignJob(state, player.id, village.lane, job);
       const boosted = E.Economy.isBoosted(resident, job);
-      const assigned = resident.mission === job;
+      const assigned = activeMission === job;
       return `<div class="mission-command"><button class="mission-button ${boosted ? "boosted" : ""} ${assigned ? "assigned" : ""}" type="button" aria-pressed="${assigned}" data-resident-mission="${job}" data-resident-id="${resident.id}" ${!allowed ? "disabled" : ""}>
         ${definition.icon} ${definition.label}${boosted ? " ★" : ""}${assigned ? " ✓" : ""}<small>${jobRequirementText(village, job)}${boosted ? " · Bonus métier" : " · Sans bonus métier"}</small>
       </button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="${job}" ${!canAssignAll ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton(job)}</div></div>`;
     }).join("");
-    const canFight = available && !locked;
+    const canAttack = !locked && (tutorialDefenseOrder || E.Economy.canAssignResidentMission(state, player.id, village.lane, resident.id, "attaque"));
+    const canDefend = !locked && (tutorialDefenseOrder || E.Economy.canAssignResidentMission(state, player.id, village.lane, resident.id, "defense"));
     const canAssignAllCombat = hasAvailableResidents && !locked;
-    const releaseAllowed = Object.hasOwn(E.Config.jobs, resident.mission) && !locked;
+    const releaseAllowed = !locked && E.Economy.canAssignResidentMission(state, player.id, village.lane, resident.id, "disponible");
     const canReleaseAll = !locked && village.residents.some((item) => Object.hasOwn(E.Config.jobs, item.mission));
-    return `<div class="mission-command"><button class="mission-button mission-release" type="button" data-release-resident="${resident.id}" ${!releaseAllowed ? "disabled" : ""}>↩ Rendre disponible<small>Arrête la tâche, conserve le métier</small></button><div class="command-actions"><button class="assign-all-button remove-all-button" type="button" data-release-all ${!canReleaseAll ? "disabled" : ""} title="Retirer les tâches à tous" aria-label="Retirer les tâches à tous">Retirer tous</button>${nextButton("disponible")}</div></div>
+    return `<div class="mission-command"><button class="mission-button mission-release" type="button" data-release-resident="${resident.id}" ${!releaseAllowed ? "disabled" : ""}>↩ Rendre disponible<small>Rappelle au village, conserve le métier</small></button><div class="command-actions"><button class="assign-all-button remove-all-button" type="button" data-release-all ${!canReleaseAll ? "disabled" : ""} title="Retirer les tâches à tous" aria-label="Retirer les tâches à tous">Retirer tous</button>${nextButton("disponible")}</div></div>
       ${economicButtons}
-      <div class="mission-command"><button class="mission-button mission-attack ${E.Economy.isBoosted(resident, "attaque") ? "boosted" : ""} ${resident.mission === "attaque" ? "assigned" : ""}" type="button" aria-pressed="${resident.mission === "attaque"}" data-resident-mission="attaque" data-resident-id="${resident.id}" ${!canFight ? "disabled" : ""}>⚔ Attaquer${resident.mission === "attaque" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "attaque") ? "★ Bonus métier" : "Combat de base"} · Village : −5 PV/s</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="attaque" ${!canAssignAllCombat ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton("attaque")}</div></div>
-      <div class="mission-command"><button class="mission-button mission-defense ${E.Economy.isBoosted(resident, "defense") ? "boosted" : ""} ${resident.mission === "defense" ? "assigned" : ""}" type="button" aria-pressed="${resident.mission === "defense"}" data-resident-mission="defense" data-resident-id="${resident.id}" ${!canFight ? "disabled" : ""}>🛡 Défendre${resident.mission === "defense" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "defense") ? "★ Bonus métier" : "Combat de base"}</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="defense" ${!canAssignAllCombat ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton("defense")}</div></div>
+      <div class="mission-command"><button class="mission-button mission-attack ${E.Economy.isBoosted(resident, "attaque") ? "boosted" : ""} ${activeMission === "attaque" ? "assigned" : ""}" type="button" aria-pressed="${activeMission === "attaque"}" data-resident-mission="attaque" data-resident-id="${resident.id}" ${!canAttack ? "disabled" : ""}>⚔ Attaquer${activeMission === "attaque" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "attaque") ? "★ Bonus métier" : "Combat de base"} · Village : −5 PV/s</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="attaque" ${!canAssignAllCombat ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton("attaque")}</div></div>
+      <div class="mission-command"><button class="mission-button mission-defense ${E.Economy.isBoosted(resident, "defense") ? "boosted" : ""} ${activeMission === "defense" ? "assigned" : ""}" type="button" aria-pressed="${activeMission === "defense"}" data-resident-mission="defense" data-resident-id="${resident.id}" ${!canDefend ? "disabled" : ""}>🛡 Défendre${activeMission === "defense" ? " ✓" : ""}<small>${E.Economy.isBoosted(resident, "defense") ? "★ Bonus métier" : "Combat de base"}</small></button><div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="defense" ${!canAssignAllCombat ? "disabled" : ""} title="Attribuer à tous les habitants disponibles" aria-label="Attribuer à tous les habitants disponibles">Tous</button>${nextButton("defense")}</div></div>
       `;
   }
 
@@ -886,10 +884,6 @@
     const resident = shopResident(state, village);
     elements.shop.dataset.signature = shopSignature(state, village);
     const sales = `<section class="shop-sales" aria-label="Vendre les ressources du village"><header><h3>Vendre les ressources</h3><span>Or global <b data-shop-gold>${formatNumber(player.gold)}</b></span></header><p>Stocks du village ${village.lane + 1} · jusqu’à ${E.Config.saleBatchSize} unités par vente.</p><div class="shop-sale-list">${E.Config.resources.map((resource) => `<div class="shop-sale" data-shop-sale="${resource}"><div><strong>${resourceIcons[resource]} ${resourceLabels[resource]}</strong><small>Stock : <b data-shop-stock="${resource}">${formatNumber(village.resources[resource])}</b></small></div><span data-shop-sale-preview="${resource}"></span><button class="sell-button" type="button" data-sell="${resource}">Vendre</button></div>`).join("")}</div></section>`;
-    const artisanatLevel = E.Transport.buildingLevel(village, "artisanat");
-    const villageEquipment = village.equipment || {};
-    const equipmentTarget = `<section class="shop-equipment-target" aria-label="Équipement du village"><header><span>⚒ Équipement du village ${village.lane + 1}</span><b>${artisanatLevel ? `T${artisanatLevel}` : "Artisanat requis"}</b></header><div data-village-equipment><strong>${villageEquipment.tool ? E.Config.equipment.tools[villageEquipment.tool].label : "Aucun outil"}</strong><p>${villageEquipment.armor ? E.Config.equipment.armors[villageEquipment.armor].label : "Aucune armure"}</p></div><p class="section-help">Un seul achat équipe tous les habitants actuels et futurs de ce village, y compris ceux au combat. Les légendes sont exclues. Un outil et une armure maximum par habitant ; remplacement sans cumul ni remboursement.</p></section>`;
-    const companionTarget = `<section class="shop-equipment-target" aria-label="Habitant pour l’âne">${resident ? `<label class="shop-resident-picker">Habitant associé à l’âne<select data-shop-resident>${village.residents.map((item) => `<option value="${item.id}" ${item.id === resident.id ? "selected" : ""}>${item.name} · ${E.Config.professions[item.profession || "habitant"].label}</option>`).join("")}</select></label><div class="equipment-preview">${residentAppearance(resident, "resident-avatar")}<div><strong>${resident.name}</strong><small>${resident.donkey ? "Âne déjà associé" : "Aucun âne associé"}</small></div></div>` : '<p class="section-help">Aucun habitant pour l’âne.</p>'}</section>`;
     const stores = Object.entries(E.Config.villageShops).map(([buildingType, store]) => {
       const buildingLevel = E.Transport.buildingLevel(village, buildingType);
       const tiers = Object.entries(store.tiers).map(([tier, items]) => {
@@ -921,8 +915,7 @@
       }).join("");
       return `<section class="shop-store ${buildingLevel ? "unlocked" : "locked"}" data-shop-store="${buildingType}" data-level="${buildingLevel}"><header><span>${store.icon} ${store.label}</span><b>${buildingLevel ? `T${buildingLevel}` : "Bâtiment requis"}</b></header>${tiers}${buildingType === "bergerie" ? renderAnimalRoster(state, player, village) : ""}</section>`;
     }).join("");
-    const fleetReserve = `<section class="shop-equipment-target" aria-label="Réserve de barques du village"><header><span>🛶 Réserve de barques</span></header><p data-fleet-summary>${fleetSummary(state, village)}</p><p class="section-help">Achetez vos barques à l’Artisanat T1 ou à la Boucherie T1. Elles transportent automatiquement les unités de ce village ; les places sont réutilisables après la traversée.</p></section>`;
-    elements.shop.innerHTML = `<div class="shop-columns"><div class="shop-sales-column">${sales}${fleetReserve}${equipmentTarget}${companionTarget}</div>${stores}</div>`;
+    elements.shop.innerHTML = `<div class="shop-columns"><div class="shop-sales-column">${sales}</div>${stores}</div>`;
     updateShopSales(state, player, village);
   }
 
@@ -999,11 +992,6 @@
     return type === "filet" ? `${quote.count} installé${quote.count > 1 ? "s" : ""}` : `${quote.count}/${quote.max} · ${quote.capacity} places chacun`;
   }
 
-  function fleetSummary(state, village) {
-    const fleet = E.Transport.fleetStatus(state, village);
-    const sailboats = fleet.voilier ? ` · ${fleet.voilier} voilier(s)` : "";
-    return `${fleet.barque}/${E.Config.maritime.shop.barque.max} barques${sailboats} · ${fleet.available}/${fleet.capacity} places libres`;
-  }
 
   function shopItemEffect(type, quote) {
     if (type === "filet") return `+${quote.fishAmount} poisson toutes les ${quote.interval} s par filet`;
@@ -1020,8 +1008,6 @@
       return;
     }
     updateShopSales(state, player, village);
-    const reserve = elements.shop.querySelector("[data-fleet-summary]");
-    if (reserve) reserve.textContent = fleetSummary(state, village);
     elements.shop.querySelectorAll("[data-buy-shop-item]").forEach((button) => {
       const type = button.dataset.buyShopItem;
       const quote = E.Transport.shopQuote(state, player.id, village.lane, type);
@@ -1053,6 +1039,10 @@
     updateAnimalOrders(state, player, village);
   }
 
+  function residentTaskLabel(resident) {
+    return resident.pendingMission ? `Retour → ${residentMissionLabel(resident.pendingMission)}` : residentMissionLabel(resident.mission);
+  }
+
   function residentMissionLabel(mission) {
     if (mission === "disponible") return "Disponible au village";
     if (mission === "attaque") return "En attaque";
@@ -1062,7 +1052,7 @@
   }
 
   function residentsSignature(village) {
-    return village.residents.map((resident) => `${resident.id}:${resident.profession}:${resident.mission}:${resident.unitId || 0}:${resident.tool || ""}:${resident.armor || ""}:${resident.donkey || false}`).join("|");
+    return village.residents.map((resident) => `${resident.id}:${resident.profession}:${resident.mission}:${resident.pendingMission || ""}:${resident.unitId || 0}:${resident.tool || ""}:${resident.armor || ""}:${resident.donkey || false}`).join("|");
   }
 
   function herdSignature(village) {

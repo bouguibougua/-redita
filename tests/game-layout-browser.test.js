@@ -87,7 +87,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await delay(250);
     assert.equal(await page.evaluate("document.querySelectorAll('[data-map-village]').length"),8,'Les huit fiches des deux camps sont affichées en Classique');
     await page.evaluate('layoutState.preparationRemaining=0;Eredita.UI.render(layoutState)');
-    assert.equal(await page.evaluate("document.querySelector('#preparation-hint').getClientRects().length"),0,'Le message de préparation disparaît en combat');
+    assert.equal(await page.evaluate("document.querySelector('#preparation-hint')"),null,'Le message de préparation est retiré');
     assert.equal(page.errors.length,0,JSON.stringify(page.errors));
     assert.equal(page.consoleErrors.length,0,JSON.stringify(page.consoleErrors));
     assert.equal(page.badResponses.filter(url=>/\/(assets|js|css)\//.test(url)).length,0,JSON.stringify(page.badResponses));

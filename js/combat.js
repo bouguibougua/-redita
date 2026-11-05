@@ -166,6 +166,7 @@
     if (state.phase !== "running" || state.paused || state.preparationRemaining > 0 || !Number.isFinite(delta) || delta <= 0) return;
     E.Buildings.updateArtisanatBonuses(state);
     const damageEvents = [];
+    const completedRecalls = [];
     Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
       village.damageSmoke = Math.max(0, (village.damageSmoke || 0) - delta);
     }));
@@ -177,6 +178,18 @@
       unit.visualAttackTimer = Math.max(0, (unit.visualAttackTimer || 0) - delta);
       unit.visualHitTimer = Math.max(0, (unit.visualHitTimer || 0) - delta);
       if (!E.Transport.updateUnitWaterState(state, unit)) return;
+
+      if (unit.returningToVillage) {
+        const resident = E.Economy.getResident(state, unit.ownerId, unit.originLane, unit.residentId);
+        const origin = state.players[unit.ownerId]?.villages[unit.originLane];
+        if (!resident || !origin || origin.destroyed) { unit.returningToVillage = false; return; }
+        const destination = resident.pendingMission === 'defense' ? E.Config.combat.defensePositionByOwner[unit.ownerId] :
+          unit.ownerId === 'red' ? 0 : E.Config.movement.columnLength;
+        if (Math.abs(unit.position - destination) > 0.001) moveToward(state, unit, destination, delta);
+        else if (Math.abs(unit.lanePosition - unit.originLane) > 0.001) moveLaterally(state, unit, unit.originLane, delta);
+        if (Math.abs(unit.position - destination) <= 0.001 && Math.abs(unit.lanePosition - unit.originLane) <= 0.001) completedRecalls.push(unit);
+        return;
+      }
 
       if (unit.mythologyRetreating) {
         const destination = unit.ownerId === 'red' ? 0 : E.Config.movement.columnLength;
@@ -246,6 +259,7 @@
     }));
 
     settleDeaths(state);
+    completedRecalls.filter(unit => unit.hp > 0 && state.units.includes(unit)).forEach(unit => E.Economy.completeRecall(state, unit));
   }
 
   function settleDeaths(state) {
@@ -312,7 +326,7 @@
     state.redirectDecisions[key] = lane;
     state.pendingRedirects = state.pendingRedirects.filter((item) => item.key !== key);
     state.units.forEach((unit) => {
-      if (unit.ownerId === request.playerId && unit.lane === request.fromLane) {
+      if (unit.ownerId === request.playerId && unit.lane === request.fromLane && !unit.returningToVillage) {
         unit.redirectTarget = lane;
         unit.redirectOrigin = request.fromLane;
         unit.waitingForRedirect = false;

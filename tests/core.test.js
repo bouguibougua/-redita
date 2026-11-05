@@ -133,8 +133,8 @@ assert.equal(bulkProfessionVillage.residents[0].profession, "agriculteur", "Le r
 assert.equal(bulkProfessionVillage.residents.slice(1).every((resident) => resident.profession === "habitant"), true);
 
 assert.deepEqual(E.Config.villageShops.bergerie.tiers[1].map((item) => item.label), ["Chèvre", "Cochon", "Vache"]);
-assert.deepEqual(E.Config.villageShops.artisanat.tiers[1].map((item) => item.label), ["Barque", "Outil en bois", "Armure de cuir"]);
-assert.deepEqual(E.Config.villageShops.boucherie.tiers[3].map((item) => item.label), ["Voilier"]);
+assert.deepEqual(E.Config.villageShops.artisanat.tiers[1].map((item) => item.label), ["Outil en bois", "Armure de cuir"]);
+assert.deepEqual(E.Config.villageShops.boucherie.tiers[3].map((item) => item.label), ["Voilier", "Piège défensif"]);
 
 // Magasin maritime : déblocages du GDD, limites par Littoral et Filets.
 const maritimeState = E.Board.createState("classic");
@@ -145,12 +145,13 @@ maritimeVillage.biome = "littoral";
 maritimeVillage.slots = E.Biomes.createSlots("littoral");
 assert.equal(E.Transport.shopQuote(maritimeState, "red", 0, "barque").allowed, false);
 assert.equal(E.Buildings.buildT1(maritimeState, "red", 0, "artisanat"), true);
+assert.equal(E.Transport.shopQuote(maritimeState, "red", 0, "barque").allowed, false);
+assert.equal(E.Transport.shopQuote(maritimeState, "red", 0, "filet").allowed, false);
+assert.equal(E.Buildings.buildT1(maritimeState, "red", 0, "boucherie"), true);
 for (let count = 0; count < 4; count++) assert.ok(E.Transport.buy(maritimeState, "red", 0, "barque"));
 assert.equal(E.Transport.buy(maritimeState, "red", 0, "barque"), false);
 assert.equal(maritimeVillage.maritime.barque, 4);
 assert.equal(E.Transport.fleetCapacity(maritimeVillage), 8);
-assert.equal(E.Transport.shopQuote(maritimeState, "red", 0, "filet").allowed, false);
-assert.equal(E.Buildings.buildT1(maritimeState, "red", 0, "boucherie"), true);
 assert.ok(E.Transport.buy(maritimeState, "red", 0, "filet"));
 E.Transport.updateFishingNets(maritimeVillage, 30);
 assert.equal(maritimeVillage.resources.poisson, 1);

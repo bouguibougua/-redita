@@ -14,9 +14,6 @@
   }
 
   function unlockReason(village, item) {
-    if (item.unlock === "artisanat-ou-boucherie-t1" && buildingLevel(village, "artisanat") < 1 && buildingLevel(village, "boucherie") < 1) {
-      return "Artisanat T1 ou Boucherie T1 requis";
-    }
     if (item.unlock === "boucherie-t1" && buildingLevel(village, "boucherie") < 1) return "Boucherie T1 requise";
     if (item.unlock === "boucherie-t3" && buildingLevel(village, "boucherie") < 3) return "Boucherie T3 requise";
     return null;
