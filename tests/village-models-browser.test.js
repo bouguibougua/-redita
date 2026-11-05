@@ -10,7 +10,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await p.waitFor('window.Eredita?.Board3D?.ready && Eredita.GameView?.getState()');
     await p.waitFor('Eredita.VillageModels?.ready || Object.values(Eredita.VillageModels?.diagnostics||{}).some(d=>d.error)', 45000);
     const diagnostics = await p.evaluate('Eredita.VillageModels.diagnostics');
-    assert.equal(Object.keys(diagnostics).length, 8);
+    assert.equal(Object.keys(diagnostics).length, await p.evaluate('Object.keys(Eredita.Config.villageModels).length'));
     for (const info of Object.values(diagnostics)) { assert.equal(info.error, null); assert.ok(info.triangles > 0 && info.triangles <= 18000); }
     await p.waitFor('Eredita.VillagerModel?.ready', 30000);
     await p.click('[data-menu-screen="play"]'); await p.click('#training-button');
@@ -38,6 +38,28 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     assert.equal(await p.evaluate("vRegion('red').getObjectByName('remparts').userData.level"), 2);
     assert.equal(await p.evaluate("vRegion('red').getObjectByName('feu-de-camp').userData.campfireTier"), 2);
     assert.equal(await p.evaluate('vState.players.red.villages[1].level'), 1);
+    const assetKeys = (owner,lane=0) => p.evaluate(`(()=>{const keys=[];vRegion('${owner}',${lane}).getObjectByName('village-courtyard').traverse(o=>{if(o.userData.villageAsset)keys.push(o.userData.villageAsset);});return keys;})()`);
+    const villageT2 = await assetKeys('red');
+    for (const key of ['hotel_t2','feu_camp_t2','bergerie_t1','artisanat_t1','boucherie_t1']) assert.ok(villageT2.includes(key),key);
+    assert.match(await p.evaluate("document.querySelector('.campfire-management-image').src"),/feu_camp_t2\.png/);
+    await p.evaluate(`vState.paused=false;for(const r of Eredita.Config.resources)vState.players.red.villages[0].resources[r]=1000;Eredita.UI.render(vState)`);
+    const buildingGold = await p.evaluate('vState.players.red.gold');
+    for (const type of ['bergerie','artisanat','boucherie']) {
+      await p.click('[data-building-row="'+type+'"] [data-upgrade]');
+      await p.waitFor(`vRegion('red').getObjectByName('batiment-${type}').userData.villageAsset==='${type}_t2'`);
+      assert.ok((await assetKeys('red')).includes(type+'_t2'));
+      assert.match(await p.evaluate(`getComputedStyle(document.querySelector('[data-building-row="${type}"] .building-thumbnail')).backgroundImage`),new RegExp(type+'_t2\\.png'));
+      assert.match(await p.evaluate(`getComputedStyle(document.querySelector('.region.red [data-terrain-building="${type}"]')).backgroundImage`),new RegExp(type+'_t2\\.png'));
+    }
+    await p.evaluate('vState.paused=true;Eredita.Board3D.update(vState,true)');
+    assert.equal(await p.evaluate('vState.players.red.gold'),buildingGold-600);
+    assert.deepEqual(await p.evaluate('(()=>{const v=vState.players.red.villages[0];return [v.hp,v.maxHp];})()'),[800,850]);
+    const expectedT2=['bergerie_t2','artisanat_t2','boucherie_t2','hotel_t2','feu_camp_t2'];
+    for (const key of expectedT2) assert.ok((await assetKeys('red')).includes(key),key);
+    assert.ok(!(await assetKeys('red',1)).some(k=>expectedT2.includes(k)),'Le village voisin reste T1');
+    const sources=await p.evaluate(`(()=>{const result={};vRegion('red').traverse(o=>{if(o.userData.source_sha256)result[o.userData.village_asset]=o.userData.source_sha256;});return result;})()`);
+    const reports=JSON.parse(fs.readFileSync(path.join(__dirname,'../eredita3D/logs/village-t2-validation.json'),'utf8'));
+    for(const report of reports)assert.equal(sources[report.name],report.source_sha256,'Le T2 utilise le GLB fourni');
     // Crowded villages keep every idle person in the courtyard.
     await p.evaluate(`(()=>{const E=Eredita,v=vState.players.red.villages[0];while(v.residents.length<35)E.Economy.addResident(v,vState);v.populationMax=35;E.Board3D.update(vState,true);})()`);
     assert.equal(await p.evaluate("vFigures().filter(f=>f.userData.aroundCampfire&&f.userData.visualSignature.startsWith('red:')).length"), 40);
@@ -65,6 +87,12 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     assert.equal(await p.evaluate("vRegion('blue').getObjectByName('feu-de-camp').visible"), false);
     assert.equal(await p.evaluate("vFigures().filter(f=>f.userData.visualKey.startsWith('resident-blue-blue-0-')).length"), 0);
     assert.ok(await p.evaluate("vRegion('blue').getObjectByName('remparts').getObjectByName('rempart-avant-gauche').rotation.x< -1"));
+    await p.evaluate('vState.paused=false;Eredita.UI.render(vState)');
+    await p.click('[data-upgrade="village"]');
+    await p.evaluate('vState.paused=true;Eredita.Board3D.update(vState,true)');
+    assert.equal(await p.evaluate('vState.players.red.villages[0].level'),3);
+    assert.ok((await assetKeys('red')).includes('feu_camp_t2'),'Au T3, le feu garde le dernier modèle fourni');
+    assert.ok(!(await assetKeys('red')).includes('hotel_t2'),'L’hôtel T3 garde son apparence propre');
     // All biomes and both board formats keep the courtyard clear and slots outside.
     await p.waitFor('Eredita.PlainTerrain.ready&&Eredita.MountainTerrain.ready&&Eredita.CoastTerrain.ready',30000);
     await p.evaluate(`(()=>{const E=Eredita;Object.assign(vState,E.Board.createState('classic'));vState.phase='running';vState.paused=true;vState.preparationRemaining=3600;
@@ -81,7 +109,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
       const dir=process.env.EREDITA_VILLAGE_PREVIEW_DIR; fs.mkdirSync(dir,{recursive:true});
       await p.send('Emulation.setDeviceMetricsOverride',{width:1600,height:1000,deviceScaleFactor:1,mobile:false});await delay(250);
       await p.evaluate(`(()=>{const E=Eredita;Object.assign(vState,E.Board.createState('simplified'));vState.phase='running';vState.paused=true;vState.preparationRemaining=180;
-        for(const p of Object.values(vState.players))for(const v of p.villages){v.biome=v.lane===0?'montagne':'littoral';v.slots=E.Biomes.createSlots(v.biome);v.buildings=E.Config.building.types.map(type=>({type,level:1,hpBonus:75}));v.hp=v.maxHp=425;}
+        for(const p of Object.values(vState.players))for(const v of p.villages){v.biome=v.lane===0?'montagne':'littoral';v.slots=E.Biomes.createSlots(v.biome);v.level=2;v.populationMax=25;v.buildings=E.Config.building.types.map(type=>({type,level:2,hpBonus:150}));v.hp=v.maxHp=850;}
         vState.selectedResidentId=vState.players.red.villages[0].residents[0].id;E.UI.render(vState);E.Board3D.update(vState,true);})()`);
       await delay(200);
       const shot=await p.send('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(dir,'village-jeu.png'),Buffer.from(shot.data,'base64'));
@@ -91,6 +119,6 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
 
     }
     assert.deepEqual(p.errors,[]);assert.deepEqual(p.consoleErrors,[]);assert.deepEqual(p.badResponses.filter(u=>/\/(assets|js|css)\//.test(u)),[]);
-    console.log('Villages : cinq modèles fournis, remparts, habitants au feu, départ/retour au travail, amélioration existante, PV, destruction, rendu XR et responsive validés.');
+    console.log('Villages : modèles T1/T2 fournis, achats et améliorations indépendantes, provenance, portraits, remparts, habitants au feu, PV, destruction, rendu XR et responsive validés.');
   } finally { await browser?.close(); await new Promise(r=>site.server.close(r)); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

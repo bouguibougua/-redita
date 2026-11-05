@@ -53,7 +53,7 @@ async function run() {
     assert.equal(model.status, 200);
     assert.equal(model.headers['content-type'], 'model/gltf-binary');
     assert.equal(model.body.subarray(0,4).toString(), 'glTF');
-    for(const biome of ['bergerie_t1','artisanat_t1','boucherie_t1','hotel_t1','feu_camp_t1','remparts_t1','remparts_t2','remparts_t3','berger','barque','ravageur','agriculteur','chasseur','habitant','plaine','montagne','littoral_rouge','littoral_bleu','ble','chataignier_petit','chataignier_moyen','chataignier_grand','vignoble_petit','vignoble_moyen','vignoble_grand','orcu','fullettu','lupu_mannaru','surpatore_vampire','elevage_chevre_petit','elevage_chevre_moyen','elevage_chevre_grand','elevage_cochon_petit','elevage_cochon_moyen','elevage_cochon_grand','elevage_vache_petit','elevage_vache_moyen','elevage_vache_grand']) {
+    for(const biome of ['bergerie_t2','artisanat_t2','boucherie_t2','hotel_t2','feu_camp_t2','bergerie_t1','artisanat_t1','boucherie_t1','hotel_t1','feu_camp_t1','remparts_t1','remparts_t2','remparts_t3','berger','barque','ravageur','agriculteur','chasseur','habitant','plaine','montagne','littoral_rouge','littoral_bleu','ble','chataignier_petit','chataignier_moyen','chataignier_grand','vignoble_petit','vignoble_moyen','vignoble_grand','orcu','fullettu','lupu_mannaru','surpatore_vampire','elevage_chevre_petit','elevage_chevre_moyen','elevage_chevre_grand','elevage_cochon_petit','elevage_cochon_moyen','elevage_cochon_grand','elevage_vache_petit','elevage_vache_moyen','elevage_vache_grand']) {
       const terrain=await request(`/assets/models/${biome}.glb?v=1`);
       assert.equal(terrain.headers['content-type'],'model/gltf-binary');
       assert.deepEqual(terrain.body,fs.readFileSync(path.join(project,`assets/models/${biome}.glb`)));

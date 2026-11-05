@@ -23,6 +23,11 @@
     },
     // Présentation du village : ni PV supplémentaires ni collision avec les remparts.
     villageModels: {
+      artisanat_t2: { src: "assets/models/artisanat_t2.glb?v=1-cb1bbaa448ab" },
+      bergerie_t2: { src: "assets/models/bergerie_t2.glb?v=1-7d4534501c59" },
+      feu_camp_t2: { src: "assets/models/feu_camp_t2.glb?v=1-ae5418cd279f" },
+      hotel_t2: { src: "assets/models/hotel_t2.glb?v=1-2f3391f28b5f" },
+      boucherie_t2: { src: "assets/models/boucherie_t2.glb?v=1-ade24925fdfc" },
       bergerie_t1: { src: "assets/models/bergerie_t1.glb?v=1-1b420c32cac7" },
       artisanat_t1: { src: "assets/models/artisanat_t1.glb?v=1-f82735ce16bc" },
       boucherie_t1: { src: "assets/models/boucherie_t1.glb?v=1-cfc8c9551320" },

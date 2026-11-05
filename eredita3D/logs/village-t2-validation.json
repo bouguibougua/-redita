@@ -1,0 +1,52 @@
+[
+  {
+    "name": "artisanat_t2",
+    "triangles": 17999,
+    "bytes": 1084184,
+    "sha256": "cb1bbaa448ab1e6aeba6f8ef44df6e119ae4cec4ef33ee82884e2f6701582cd9",
+    "source": "/Users/robin/Downloads/artisanat T2 3d.glb",
+    "source_sha256": "740c278c2a4ac9492021edb9ce7208c12ee8018056e65e3ae55e9931df78e913",
+    "source_triangles": 1941087,
+    "texture_max": 1024
+  },
+  {
+    "name": "bergerie_t2",
+    "triangles": 18000,
+    "bytes": 1073948,
+    "sha256": "7d4534501c599b30fe419f999ffdb66282626fe2b96385a6a933f114e6b6fad0",
+    "source": "/Users/robin/Downloads/bergerie T2 3d.glb",
+    "source_sha256": "cfbdba737c9666a319cf8272699f165866949b6843e426f4b7b3e93634df8299",
+    "source_triangles": 1874514,
+    "texture_max": 1024
+  },
+  {
+    "name": "feu_camp_t2",
+    "triangles": 18000,
+    "bytes": 959012,
+    "sha256": "ae5418cd279f5610dd9cec29f409bb9d174351be0ac6e52c7ebca963b9a418fd",
+    "source": "/Users/robin/Downloads/campfire T2 3d.glb",
+    "source_sha256": "4ca7b0b5f179f3a067fb2a80ab4fdf1de02d3e40672f4e3d21ce57ef93039c45",
+    "source_triangles": 1952102,
+    "texture_max": 1024
+  },
+  {
+    "name": "hotel_t2",
+    "triangles": 18000,
+    "bytes": 1096284,
+    "sha256": "2f3391f28b5fcca6990f43a538e6078c5a6adf0a7809f8603870f3fd017774cb",
+    "source": "/Users/robin/Downloads/hotel T2 3d.glb",
+    "source_sha256": "89891c892ae87dde687c58eed9f2895e96d2dad0c48c0ea87d4fc7b63f9c8fd4",
+    "source_triangles": 1891497,
+    "texture_max": 1024
+  },
+  {
+    "name": "boucherie_t2",
+    "triangles": 17999,
+    "bytes": 1076304,
+    "sha256": "ade24925fdfcfc732afc762f7be77a0c249c9816b36b8b8ce3e351b3ce2ed8ae",
+    "source": "/Users/robin/Downloads/artisans T2 3d.glb",
+    "source_sha256": "9b8bb3f1ff9977f2d275eb6b3194de9fccb42413d9a0d91c0595765e0a85190e",
+    "source_triangles": 1966479,
+    "texture_max": 1024
+  }
+]
