@@ -44,13 +44,13 @@
     },
     // TEMP_BALANCE_VALUE — implantation purement visuelle, dans le village d’origine.
     villagePresentation: {
-      regionCenter: 2.55, front: -0.32, back: -2.34, elevation: 0.13,
+      regionCenter: 2.55, front: -0.70, back: -2.34, elevation: 0.13,
       buildingScale: 0.62, hotelScale: 0.70, fireScale: 0.54,
       buildings: { bergerie: [-1.02, -1.98], village: [-0.34, -1.98],
         artisanat: [0.34, -1.98], boucherie: [1.02, -1.98] },
-      fire: [0, -0.94], idleRadiusX: 1.10, idleRadiusZ: 0.51,
+      fire: [0, -1.19], idleRadiusX: 1.10, idleRadiusZ: 0.35,
       idleScale: 0.58, crowdedIdleScale: 0.47, crowdedThreshold: 20,
-      wallHalfWidth: 1.38, combatTransition: 30,
+      wallHalfWidth: 1.38, rampartModelDepth: 2.02, combatTransition: 30,
       slotsTwo: [[-0.55, 0.10], [0.55, 0.10]],
       slotsFour: [[-0.60, 0.30], [0.60, 0.30], [-0.60, 1.42], [0.60, 1.42]]
     },

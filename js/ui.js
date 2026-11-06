@@ -552,7 +552,7 @@
           const left = fishing
             ? ((village.lane + (fishingSlot % fisherColumns + 0.5) / fisherColumns) / regionCount) * 100
             : ((village.lane + .5 + Math.cos(angle) * .31) / regionCount) * 100;
-          const distance = fishing ? 23 + Math.floor(fishingSlot / fisherColumns) * (narrow ? 1.9 : 3) : 12 + Math.sin(angle) * 3.4;
+          const distance = fishing ? 23 + Math.floor(fishingSlot / fisherColumns) * (narrow ? 1.9 : 3) : 10.5 + Math.sin(angle) * 2.6;
           const top = player.id === "red" ? distance : 100 - distance;
           const selected = resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane;
           return `<div class="local-person ${player.id} ${fishing ? "fishing" : ""} ${selected ? "selected-resident" : ""}" data-local-resident="${resident.id}" style="left:${left}%;top:${top}%" title="${resident.name} · ${E.Config.professions[resident.profession || "habitant"].label}">${residentAppearance(resident, "unit-body")}</div>`;

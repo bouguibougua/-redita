@@ -44,7 +44,9 @@
   function createRampart(tier, width, destroyed = false) {
     const wall = create(`remparts_t${tier}`);
     if (!wall) return null;
+    const cfg = E.Config.villagePresentation;
     wall.name = 'remparts'; wall.scale.x = width;
+    wall.scale.z = (cfg.front - cfg.back) / cfg.rampartModelDepth;
     wall.userData.level = tier; wall.userData.destroyed = destroyed;
     if (destroyed) wall.traverse(part => {
       const section = part.userData.rampart_section;

@@ -74,7 +74,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await p.evaluate("vState.players.red.villages[0].residents[0].mission='disponible';Eredita.Board3D.update(vState,true)");
     // The enemy-facing endpoint is the wall; the central water mapping is unchanged.
     await p.evaluate(`(()=>{const E=Eredita,u=E.Units.create('red',0,'habitant');u.position=100;vState.units=[u];E.Board3D.update(vState,true);})()`);
-    assert.ok(await p.evaluate("Math.abs(vFigures().find(f=>f.userData.visualKey.startsWith('unit-')).position.z-2.87)<.001"));
+    assert.ok(await p.evaluate(`(()=>{const T=Eredita.Board3D.getXRContext().THREE,gate=vRegion('blue').getObjectByName('rempart-porte');gate.updateWorldMatrix(true,false);return Math.abs(vFigures().find(f=>f.userData.visualKey.startsWith('unit-')).position.z-gate.getWorldPosition(new T.Vector3()).z)<.001;})()`),'L’attaque atteint la nouvelle position réelle de la porte');
     const hpBefore = await p.evaluate('vState.players.blue.villages[0].hp');
     await p.evaluate('vState.paused=false;vState.preparationRemaining=0;Eredita.Combat.update(vState,1);vState.paused=true;vState.preparationRemaining=3600;Eredita.Board3D.update(vState,true)');
     assert.ok(await p.evaluate('vState.players.blue.villages[0].hp') < hpBefore, 'Les coups à la porte retirent les PV du village existant');
