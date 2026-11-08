@@ -1,0 +1,11 @@
+{
+  "tool": "Tripo CLI 0.7.2",
+  "task_id": "ffc5e5bd-0336-4e6a-9c4e-9f565d888035",
+  "type": "text_to_model",
+  "model": "P1-20260311",
+  "credits_consumed": 40,
+  "api_balance_after": 960,
+  "game_asset": "assets/models/chantier-construction.glb",
+  "sha256": "286e17f2fedb595544d933b438f445e7c8bbaba30925e93d99ef5387995818a8",
+  "notes": "Source générée une seule fois ; préparation Blender locale, aucune nouvelle génération payante. Icônes foin/outils/four rendues en géométrie partagée."
+}

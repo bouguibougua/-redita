@@ -34,9 +34,9 @@ test('A Strega and U Stregu apply separate timed yield modifiers on the match cl
 test('A Fata creates a river and speeds fishing by exactly 25 percent',()=>{
   const {E,s,cast}=fixture(),v=s.players.red.villages[0],r=v.residents[0];
   assert.equal(cast('a-fata',{playerId:'red',lane:0}).accepted,true);
-  assert.equal(v.terrain.river,true);assert.equal(E.Economy.assignResidentJob(s,'red',0,r.id,'peche'),true);
+  assert.equal(v.terrain.river,true);E.Buildings.buildT1(s,'red',0,'boucherie');assert.equal(E.Economy.assignResidentJob(s,'red',0,r.id,'peche'),true);
   E.Economy.updateProduction(s,E.Config.temporaryProduction.fishingInterval/1.25);
-  assert.equal(v.resources.poisson,E.Config.temporaryProduction.fishAmountPerWorker);
+  assert.equal(v.resources.poisson,E.Config.temporaryProduction.fishAmountPerWorker*1.2);
 });
 test('L’Orcu and U Surpatore have the specified stats; the boar becomes one vampire on death',()=>{
   const {E,s,cast}=fixture();cast('l-orcu',{playerId:'red',lane:0});
@@ -52,7 +52,7 @@ test('U Magu buffs only the next true newborn in every surviving allied village'
   for(const v of s.players.red.villages){const first=E.Economy.addResident(v,s),second=E.Economy.addResident(v,s);
     assert.equal(first.mythologyStatMultiplier,2);assert.equal(first.mythologyScale,1.5);assert.equal(second.mythologyMagu,undefined);
     assert.equal(E.Economy.deployResident(s,'red',v.lane,first.id,'attaque'),true);
-    const u=s.units.find(x=>x.residentId===first.id);assert.equal(u.hp,E.Config.units.habitant.hp*2);assert.equal(u.damage,E.Config.units.habitant.damage*2);assert.equal(u.speed,E.Config.units.habitant.speed*2);
+    const u=s.units.find(x=>x.residentId===first.id);assert.equal(u.hp,E.Config.units.guerrier.hp*2);assert.equal(u.damage,E.Config.units.guerrier.damage*2);assert.equal(u.speed,E.Config.units.guerrier.speed*2);
   }
   assert.equal(E.Economy.addResident(s.players.blue.villages[0],s).mythologyMagu,undefined);
 });
@@ -71,7 +71,7 @@ test('Anima in Pena creates one task-capable, profession-locked 1 HP / 1 DPS sou
   assert.equal(cast('anima-in-pena',{playerId:'red',lane:0}).accepted,true);
   const souls=v.residents.filter(r=>r.isLegend);assert.equal(souls.length,2);assert.equal(v.population,population);
   assert.equal(E.Economy.canSetProfession(s,'red',0,souls[0].id,'habitant'),false);
-  assert.equal(E.Economy.assignResidentJob(s,'red',0,souls[0].id,'chasse'),true);
+  E.Buildings.buildT1(s,'red',0,'artisanat');assert.equal(E.Economy.assignResidentJob(s,'red',0,souls[0].id,'chasse'),true);
   assert.equal(E.Economy.deployResident(s,'red',0,souls[1].id,'attaque'),true);
   const unit=s.units.find(u=>u.residentId===souls[1].id);assert.equal(unit.hp,1);assert.equal(unit.damage/E.Config.combat.attackInterval,1);
 });
@@ -112,7 +112,7 @@ test('I Lacramanti counts cumulative allied column deaths, buffs own humans only
   const {E,s,cast,kill,deploy}=fixture();kill();kill();kill('blue');const own=deploy(),enemy=deploy('blue');cast('l-orcu',{playerId:'red',lane:0});
   const legend=s.units.find(u=>u.isLegend),before=[own.hp,own.damage,enemy.hp,legend.hp];cast('i-lacrimenti',{lane:0});
   assert.equal(own.hp,before[0]+4);assert.equal(own.damage,before[1]+2);assert.equal(enemy.hp,before[2]);assert.equal(legend.hp,before[3]);
-  const later=deploy();assert.equal(later.hp,E.Config.units.habitant.hp+4);assert.equal(later.damage,E.Config.units.habitant.damage+2);
+  const later=deploy();assert.equal(later.hp,E.Config.units.guerrier.hp+4);assert.equal(later.damage,E.Config.units.guerrier.damage+2);
 });
 test('both camps stay fully visible before and after the legacy vision powers',()=>{
   const {E,s,cast,deploy}=fixture();

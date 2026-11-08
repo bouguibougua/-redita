@@ -57,6 +57,7 @@ const village = game.state.players.red.villages[0];
 village.biome = "plaine"; village.slots = E.Biomes.createSlots("plaine");
 const [farmer, soldier] = village.residents;
 controller.build("bergerie");
+controller.build("artisanat");
 controller.placeCrop("ble", 0);
 controller.setProfession(farmer.id, "agriculteur");
 controller.assignResidentMission(farmer.id, "agriculture");
@@ -123,6 +124,7 @@ assert.ok(solo.state.units.every(item => item.position === (item.ownerId === "bl
 // Le réseau conserve un compteur autoritaire et les droits locaux de l'invité.
 const host = createGame("host"); host.start();
 const hostView = JSON.stringify(host.state.selectedVillage);
+host.state.players.blue.villages[0].buildings.push({type:"artisanat",level:1});
 const blueResident = host.state.players.blue.villages[0].residents[0];
 host.handlers.onCommand({
   method: "assignResidentMission", args: [blueResident.id, "chasse"], playerId: "blue",
@@ -151,6 +153,7 @@ console.log("Préparation : 60 s, tâches et métiers, groupes, pause, productio
 // Un ordre individuel remplace aussi une tâche à distance et annule un retrait groupé en attente.
 const recallHost=createGame("host");recallHost.start();recallHost.state.preparationRemaining=0;
 for(const player of Object.values(recallHost.state.players))for(const village of player.villages)village.biome='plaine';
+recallHost.state.players.blue.villages[0].buildings.push({type:'artisanat',level:1});
 const recallBlue=recallHost.state.players.blue.villages[0].residents[0];
 const remoteOrder=(residentId,mission)=>recallHost.handlers.onCommand({method:'assignResidentMission',args:[residentId,mission],playerId:'blue',view:{selectedVillage:{playerId:'blue',lane:0}}});
 remoteOrder(recallBlue.id,'attaque');const recalledUnit=recallHost.state.units.find(u=>u.residentId===recallBlue.id);recalledUnit.position=30;
@@ -158,7 +161,7 @@ remoteOrder(recallBlue.id,'chasse');assert.equal(recallBlue.pendingMission,'chas
 assert.equal(recallHost.snapshot.units.find(u=>u.id===recalledUnit.id).returningToVillage,true);
 const protectedRed=recallHost.state.players.red.villages[0].residents[0];remoteOrder(protectedRed.id,'attaque');assert.equal(protectedRed.mission,'disponible');
 assert.equal(recallHost.state.selectedVillage.playerId,'red','Le rappel réseau préserve la sélection de l’hôte');
-const manual=createGame();manual.start();const manualVillage=manual.state.players.red.villages[0];manualVillage.terrain={river:true};
+const manual=createGame();manual.start();const manualVillage=manual.state.players.red.villages[0];manualVillage.terrain={river:true};manualVillage.buildings.push({type:'artisanat',level:1},{type:'boucherie',level:1});
 manual.controller.assignAllResidents('chasse');manual.advance(3);manual.controller.releaseAllResidents();const manualResident=manualVillage.residents[1];
 manual.controller.assignResidentMission(manualResident.id,'peche');manual.advance(1);assert.equal(manualResident.mission,'peche','Un ordre manuel annule le retrait groupé en attente');
 console.log('Réaffectations : rappel réseau, snapshots, droits adverses et priorité de l’ordre individuel validés.');

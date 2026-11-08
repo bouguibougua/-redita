@@ -12,7 +12,7 @@ async function run() {
   const context = vm.createContext({ window: {}, console, performance: { now: () => inputTime },
     XRRigidTransform: class { constructor(position, orientation) { this.position = position; this.orientation = orientation; } }
   });
-  ["config", "biomes", "board", "transport", "game-view", "xr-input", "xr-placement", "xr-interactions"].forEach((name) => vm.runInContext(read(`js/${name}.js`), context));
+  ["config", "biomes", "board", "transport", "game-view", "xr-input", "xr-placement", "xr-interactions", "construction-sites"].forEach((name) => vm.runInContext(read(`js/${name}.js`), context));
   const E = context.window.Eredita;
   const cfg = E.Config.xr;
   let state = E.Board.createState("classic");

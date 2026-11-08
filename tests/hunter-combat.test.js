@@ -26,7 +26,7 @@ for(const owner of ['red','blue'])for(const stance of ['attack','defense']){
  const {s,archer,enemy}=setup();enemy.lanePosition=1;E.Combat.update(s,.01);assert.equal(enemy.hp,enemy.maxHp,'Pas de tir vers une autre ligne');
 }
 {
- const {s,archer,enemy}=setup();archer.position=85;s.units=[archer];const v=s.players.blue.villages[0],hp=v.hp,own=archer.hp;E.Combat.update(s,.01);assert.equal(v.hp,hp-archer.damage,'Tir à distance sur village');assert.equal(archer.hp,own,'Riposte de contact limitée à sa portée');
+ const {s,archer,enemy}=setup();archer.position=85;s.units=[archer];const v=s.players.blue.villages[0],hp=v.hp,own=archer.hp;v.residents=[];/* Isoler la riposte des remparts. */E.Combat.update(s,.01);assert.equal(v.hp,hp-archer.damage,'Tir à distance sur village');assert.equal(archer.hp,own,'Riposte de contact limitée à sa portée');
  archer.position=98;E.Combat.update(s,.01);assert.equal(archer.hp,own-E.Config.combat.villageRetaliationDamagePerSecond,'Riposte de contact conservée');
 }
 {

@@ -16,11 +16,11 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await page.evaluate(`(() => {
       const E=Eredita,s=window.layoutState=E.GameView.getState(),p=s.players.red,v=p.villages[0];
       s.phase='running';s.paused=false;s.preparationRemaining=45;s.selectedVillage={playerId:'red',lane:0};
-      p.gold=5000;v.biome='plaine';v.buildings=[];
+      p.gold=5000;v.biome='plaine';v.buildings=[];v.slots=E.Biomes.createSlots('plaine');v.slots[0].content={category:'crop',type:'ble',hp:200,maxHp:200,level:1};
       for(const key of E.Config.resources)v.resources[key]=2000;
       E.UI.render(s);E.Board3D.update(s,true);E.Board3D.setMode(true);
     })()`);
-    assert.equal(await page.evaluate("document.querySelector('#building-panel').previousElementSibling.id"),'open-shop-modal');
+    assert.equal(await page.evaluate("document.querySelector('#building-panel').parentElement.className"),'game-layout');
     assert.equal(await page.evaluate("document.querySelector('#pause-game')===null&&document.querySelector('#toggle-board-view')===null&&document.querySelectorAll('#game-screen [data-open-xr]').length===0"),true,'Les anciens boutons sont retirés');
     assert.equal(await page.evaluate("document.querySelectorAll('#map-village-popups [data-map-village]').length"),4);
     assert.equal(await page.evaluate("document.querySelectorAll('[data-village-select][data-player=blue]').length"),0,'Pas de gestion adverse');
@@ -36,7 +36,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
     await page.click('#owned-buildings [data-upgrade="0"]');
     assert.equal(await page.evaluate('layoutState.players.red.villages[0].buildings[0].level'),2);
     assert.equal(await page.evaluate('layoutState.players.red.villages[0].resources.lait'),before-100);
-    await page.click('.management-professions [data-profession="agriculteur"]');
+    await page.click('[data-resident-mission="agriculture"]');
     assert.equal(await page.evaluate('layoutState.players.red.villages[0].residents[0].profession'),'agriculteur');
     await page.click('#open-shop-modal');
     assert.equal(await page.evaluate("document.querySelector('#shop-modal').hidden"),false);
@@ -54,7 +54,7 @@ const { startStaticServer, startBrowser, delay } = require('../scripts/export-me
       const layout = await page.evaluate(`(() => {
         const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
         return {pageWidth:document.documentElement.scrollWidth,pageHeight:document.documentElement.scrollHeight,
-          panels:['.character-panel','.board-panel','.management-professions','.management-village','.side-panel'].map(rect)};
+          panels:['.character-panel','.board-panel','#building-panel','.management-village','.side-panel'].map(rect)};
       })()`);
       assert.ok(layout.pageWidth<=width+1&&layout.pageHeight<=height+1,`${width}×${height} : page débordante ${JSON.stringify(layout)}`);
       for(const panel of layout.panels) assert.ok(panel.x>=-1&&panel.y>=-1&&panel.right<=width+1&&panel.bottom<=height+1&&panel.width>0&&panel.height>0,`${width}×${height} : panneau hors écran ${JSON.stringify(panel)}`);

@@ -5,6 +5,26 @@
   const cropResources = { chataignier: "chataigne", ble: "ble", vignoble: "raisin" };
   const economicMissions = ["agriculture", "elevage", "peche", "chasse"];
 
+  function combatProfession(resident) {
+    return E.Config.combatProfessions.includes(resident?.combatProfession) ? resident.combatProfession :
+      E.Config.combatProfessions.includes(resident?.profession) ? resident.profession : E.Config.combatProfessions[0];
+  }
+
+  function professionForMission(resident, mission, choice) {
+    if (resident?.isLegend) return resident.profession || 'habitant';
+    if (mission === 'disponible') return 'habitant';
+    if (E.Config.jobs[mission]) return E.Config.jobs[mission].profession;
+    return E.Config.combatProfessions.includes(choice) ? choice : combatProfession(resident);
+  }
+
+  function setCombatProfession(state, playerId, lane, residentId, profession) {
+    const village = state.players[playerId]?.villages[lane], resident = getResident(state, playerId, lane, residentId);
+    if (state.phase !== 'running' || state.paused || !village || village.destroyed || !resident || resident.isLegend ||
+      !E.Config.combatProfessions.includes(profession)) return false;
+    resident.combatProfession = profession;
+    return true;
+  }
+
   function isBoosted(resident, mission) {
     return Boolean(resident && E.Config.professions[resident.profession || "habitant"]?.missions.includes(mission));
   }
@@ -25,7 +45,9 @@
 
   function setProfession(state, playerId, lane, residentId, profession) {
     if (!canSetProfession(state, playerId, lane, residentId, profession)) return false;
-    getResident(state, playerId, lane, residentId).profession = profession;
+    const resident = getResident(state, playerId, lane, residentId);
+    resident.profession = profession;
+    if (E.Config.combatProfessions.includes(profession)) resident.combatProfession = profession;
     return true;
   }
 
@@ -48,11 +70,13 @@
     }, 0);
   }
 
-  function setNextResidentMission(state, playerId, lane, mission) {
+  function setNextResidentMission(state, playerId, lane, mission, choice) {
     const village = state.players[playerId]?.villages[lane];
     if (state.phase !== "running" || state.paused || !village || village.destroyed ||
       (mission !== "disponible" && !E.Config.jobs[mission] && !["attaque", "defense"].includes(mission))) return false;
+    if (choice != null && !E.Config.combatProfessions.includes(choice)) return false;
     village.nextResidentMission = mission;
+    village.nextResidentProfession = professionForMission(null, mission, choice);
     return true;
   }
 
@@ -82,13 +106,16 @@
     return quote;
   }
 
-  function deployResident(state, playerId, lane, residentId, mission) {
+  function deployResident(state, playerId, lane, residentId, mission, choice) {
     const village = state.players[playerId]?.villages[lane];
     const resident = getResident(state, playerId, lane, residentId);
     if (state.phase !== "running" || state.paused || !village || village.destroyed || !resident ||
       resident.mission !== "disponible" || resident.unitId || !["attaque", "defense"].includes(mission)) return false;
     if (E.MythologyEffects?.isBurned(state, village)) return false;
-    const role = isBoosted(resident, mission) ? resident.profession : "habitant";
+    if (choice != null && !E.Config.combatProfessions.includes(choice)) return false;
+    if (choice != null && !resident.isLegend) resident.combatProfession = choice;
+    if (!resident.isLegend) resident.profession = professionForMission(resident, mission, choice);
+    const role = isBoosted(resident, mission) && E.Config.units[resident.profession] ? resident.profession : "habitant";
     const unit = E.Units.create(playerId, lane, role, {
       residentId,
       stance: mission === "defense" ? "defense" : "attack",
@@ -110,7 +137,7 @@
     return true;
   }
 
-  function canAssignResidentMission(state, playerId, lane, residentId, mission) {
+  function canAssignResidentMission(state, playerId, lane, residentId, mission, choice) {
     const village = state.players[playerId]?.villages[lane];
     const resident = getResident(state, playerId, lane, residentId);
     if (state.phase !== 'running' || state.paused || !village || village.destroyed || !resident) return false;
@@ -118,20 +145,25 @@
     if (Object.hasOwn(E.Config.jobs, mission) && !jobRequirementMet(village, mission)) return false;
     if (['attaque','defense'].includes(mission) && E.MythologyEffects?.isBurned(state, village)) return false;
     if (resident.unitId && !state.units.some(unit => unit.id === resident.unitId && unit.residentId === residentId && unit.ownerId === playerId && unit.hp > 0)) return false;
-    return (resident.pendingMission || resident.mission) !== mission;
+    if (choice != null && !E.Config.combatProfessions.includes(choice)) return false;
+    const desired = professionForMission(resident, mission, choice);
+    return (resident.pendingMission || resident.mission) !== mission || (resident.pendingProfession || resident.profession || 'habitant') !== desired;
   }
 
   // Individual orders can replace an active task. Deployed residents return physically first.
-  function assignResidentMission(state, playerId, lane, residentId, mission) {
-    if (!canAssignResidentMission(state, playerId, lane, residentId, mission)) return false;
+  function assignResidentMission(state, playerId, lane, residentId, mission, choice) {
+    if (!canAssignResidentMission(state, playerId, lane, residentId, mission, choice)) return false;
     const resident = getResident(state, playerId, lane, residentId);
+    const desired = professionForMission(resident, mission, choice);
     if (resident.unitId) {
       const unit = state.units.find(entry => entry.id === resident.unitId);
-      if (mission === resident.mission) {
+      if (mission === resident.mission && desired === resident.profession) {
         delete resident.pendingMission;
+        delete resident.pendingProfession;
         unit.returningToVillage = false;
       } else {
         resident.pendingMission = mission;
+        resident.pendingProfession = desired;
         unit.returningToVillage = true;
       }
       unit.visualAttackTimer = 0;
@@ -143,9 +175,33 @@
       return true;
     }
     if (economicMissions.includes(resident.mission)) unassignResidentJob(state, playerId, lane, residentId);
-    if (mission === 'disponible') return true;
+    if (mission === 'disponible') { if (!resident.isLegend) resident.profession = 'habitant'; return true; }
     return Object.hasOwn(E.Config.jobs, mission) ? assignResidentJob(state, playerId, lane, residentId, mission) :
-      deployResident(state, playerId, lane, residentId, mission);
+      deployResident(state, playerId, lane, residentId, mission, desired);
+  }
+
+  // L'interruption défensive conserve la tâche, les outils et la récolte en cours.
+  function startProximityDefense(state, village, resident, position) {
+    if (resident.unitId || village.destroyed || resident.isLegend) return null;
+    const role = isBoosted(resident, resident.mission) && E.Config.units[resident.profession] ? resident.profession : 'habitant';
+    const unit = E.Units.create(village.ownerId,village.lane,role,{
+      residentId:resident.id,profession:resident.profession,tool:resident.tool,armor:resident.armor,donkey:resident.donkey,stance:'defense'
+    });
+    E.MythologyEffects?.decorateUnit(state,resident,unit);
+    unit.position=position;unit.autoDefense={position,lanePosition:village.lane};
+    resident.unitId=unit.id;state.units.push(unit);
+    E.Buildings.updateArtisanatBonuses(state);
+    if(Number.isFinite(resident.combatHealthRatio)){unit.hp*=Math.max(0,Math.min(1,resident.combatHealthRatio));delete resident.combatHealthRatio;}
+    return unit;
+  }
+
+  function finishProximityDefense(state, unit) {
+    const resident=getResident(state,unit.ownerId,unit.originLane,unit.residentId);
+    const village=state.players[unit.ownerId]?.villages[unit.originLane];
+    if(!resident||!village||village.destroyed||unit.hp<=0||resident.pendingMission)return false;
+    resident.combatHealthRatio=unit.hp/unit.maxHp;resident.unitId=null;
+    state.units=state.units.filter(entry=>entry!==unit);
+    return true;
   }
 
   function completeRecall(state, unit) {
@@ -153,12 +209,16 @@
     const village = state.players[unit.ownerId]?.villages[unit.originLane];
     if (!resident || !village || village.destroyed || unit.hp <= 0) return false;
     const mission = resident.pendingMission || 'disponible';
+    if(unit.autoDefense && economicMissions.includes(resident.mission)) unassignResidentJob(state,unit.ownerId,unit.originLane,resident.id,true);
+    const choice = resident.pendingProfession || resident.profession;
     resident.combatHealthRatio = unit.hp / unit.maxHp;
     resident.unitId = null;
     resident.mission = 'disponible';
     delete resident.pendingMission;
+    delete resident.pendingProfession;
+    if (!resident.isLegend) resident.profession = 'habitant';
     state.units = state.units.filter(entry => entry !== unit);
-    if (mission !== 'disponible' && !assignResidentMission(state, unit.ownerId, unit.originLane, resident.id, mission)) {
+    if (mission !== 'disponible' && !assignResidentMission(state, unit.ownerId, unit.originLane, resident.id, mission, !resident.isLegend && ['attaque','defense'].includes(mission) ? choice : undefined)) {
       state.logs.unshift(`${resident.name} est rentré au village ; la tâche demandée n’est plus disponible.`);
     }
     return true;
@@ -203,14 +263,19 @@
     return village.slots.some((slot) => slot.content && slot.content.category === category);
   }
 
-  function jobRequirementMet(village, job) {
+  function jobRequirementReason(village, job) {
     const definition = E.Config.jobs[job];
-    if (!definition) return false;
-    if (job === "agriculture") return hasContent(village, "crop");
-    if (job === "elevage") return hasContent(village, "livestock");
-    if (job === "peche") return village.biome === "littoral" || Boolean(village.terrain?.river);
-    if (job === "chasse") return true;
-    return false;
+    if (!definition) return 'Tâche inconnue';
+    if (definition.requires && !E.Buildings.has(village, definition.requires))
+      return `${E.Config.building.descriptions[definition.requires].label} requise`;
+    if (job === 'agriculture' && !hasContent(village, 'crop')) return 'Culture requise';
+    if (job === 'elevage' && !hasContent(village, 'livestock')) return 'Élevage requis';
+    if (job === 'peche' && village.biome !== 'littoral' && !village.terrain?.river) return 'Littoral ou rivière requis';
+    return '';
+  }
+
+  function jobRequirementMet(village, job) {
+    return Boolean(E.Config.jobs[job] && !jobRequirementReason(village, job));
   }
 
   function canAssignJob(state, playerId, lane, job) {
@@ -240,6 +305,7 @@
     if (!canAssignResidentJob(state, playerId, lane, residentId, job)) return false;
     const village = state.players[playerId].villages[lane];
     const resident = getResident(state, playerId, lane, residentId);
+    if (!resident.isLegend) resident.profession = professionForMission(resident, job);
     resident.mission = job;
     resident.workTimer = 0;
     if (job === "agriculture" || job === "elevage") {
@@ -266,18 +332,18 @@
     return resident ? assignResidentJob(state, playerId, lane, resident.id, job) : false;
   }
 
-  function assignAllAvailableResidents(state, playerId, lane, mission) {
+  function assignAllAvailableResidents(state, playerId, lane, mission, choice) {
     const availableCount = getAvailableResidents(state, playerId, lane);
     const residentIds = availableResidentList(state, playerId, lane).slice(0, availableCount).map((resident) => resident.id);
     return residentIds.reduce((assigned, residentId) => {
       const changed = E.Config.jobs[mission]
         ? assignResidentJob(state, playerId, lane, residentId, mission)
-        : deployResident(state, playerId, lane, residentId, mission);
+        : deployResident(state, playerId, lane, residentId, mission, choice);
       return assigned + Number(changed);
     }, 0);
   }
 
-  function unassignResidentJob(state, playerId, lane, residentId) {
+  function unassignResidentJob(state, playerId, lane, residentId, atVillage = false) {
     const player = state.players[playerId];
     const village = player && player.villages[lane];
     const resident = getResident(state, playerId, lane, residentId);
@@ -288,8 +354,10 @@
       !resident ||
       !economicMissions.includes(resident.mission)
     ) return false;
+    if(resident.unitId && !atVillage)return assignResidentMission(state,playerId,lane,residentId,'disponible');
     village.jobs[resident.mission] = Math.max(0, village.jobs[resident.mission] - 1);
     resident.mission = "disponible";
+    if (!resident.isLegend) resident.profession = "habitant";
     resident.workPosition = null;
     resident.workPhase = null;
     resident.workTimer = 0;
@@ -336,7 +404,7 @@
       if (E.MythologyEffects?.onResidentBorn(state, village, resident) === false) return resident;
       const mission = village.nextResidentMission || "disponible";
       const profession = village.nextResidentProfession || "habitant";
-      if (profession !== "habitant") setProfession(state, village.ownerId, village.lane, resident.id, profession);
+      if (E.Config.combatProfessions.includes(profession)) resident.combatProfession = profession;
       if (E.Config.jobs[mission]) assignResidentJob(state, village.ownerId, village.lane, resident.id, mission);
       else if (["attaque", "defense"].includes(mission)) deployResident(state, village.ownerId, village.lane, resident.id, mission);
     }
@@ -523,7 +591,7 @@
 
   function updateWorkerTrips(village, delta) {
     ["agriculture", "elevage"].forEach((mission) => village.residents
-      .filter((resident) => resident.mission === mission)
+      .filter((resident) => resident.mission === mission && !resident.unitId)
       .forEach((resident, index) => updateWorkerTrip(village, resident, index, delta)));
   }
 
@@ -531,7 +599,7 @@
     const workers = village.jobs.peche;
     if (!workers || (village.biome !== "littoral" && !village.terrain?.river)) return;
     const interval = E.Config.temporaryProduction.fishingInterval;
-    village.residents.filter((resident) => resident.mission === "peche").forEach((resident) => {
+    village.residents.filter((resident) => resident.mission === "peche" && !resident.unitId).forEach((resident) => {
       const equipment = E.Equipment.bonuses(resident);
       resident.workTimer += delta * (1 + equipment.productionSpeed) * (village.fataFishingMultiplier || 1);
       const fisherYield = (1 + workBonus(village, resident, "peche")) * (1 + equipment.productionYield) * donkeyMultiplier(resident, "workBonus");
@@ -545,7 +613,7 @@
   function reproductionInterval(village, content, animal) {
     const herdFactor = content.type === "vache" ? 1 : Math.pow(0.95, Math.floor(content.count / 2));
     const biomeSpeed = village.biome === animal.preferredBiome ? 0.05 : 0;
-    const shepherdSpeed = village.residents.filter((resident) => resident.mission === "elevage")
+    const shepherdSpeed = village.residents.filter((resident) => resident.mission === "elevage" && !resident.unitId)
       .reduce((sum, resident) => sum + workBonus(village, resident, "elevage"), 0);
     return animal.reproductionInterval * herdFactor /
       (1 + biomeSpeed + shepherdSpeed + bergerieBonus(village));
@@ -578,7 +646,7 @@
 
   function updateHunting(village, delta) {
     const config = E.Config.temporaryProduction;
-    village.residents.filter((resident) => resident.mission === "chasse").forEach((resident) => {
+    village.residents.filter((resident) => resident.mission === "chasse" && !resident.unitId).forEach((resident) => {
       if (!Number.isFinite(resident.workPosition)) resident.workPosition = villagePosition(village.ownerId);
       if (!Number.isFinite(resident.workLaneOffset)) resident.workLaneOffset = 0;
       if (!Number.isFinite(resident.huntTargetPosition) || !Number.isFinite(resident.huntTargetLaneOffset)) chooseHuntTarget(village, resident);
@@ -626,9 +694,10 @@
 
   E.Economy = {
     cropCount, cropYield, animalCounts, dairyAnimalCount,
+    combatProfession, professionForMission, setCombatProfession, jobRequirementReason,
     isBoosted, workBonus, canSetProfession, setProfession, assignProfessionToAll,
     setNextResidentMission, setNextResidentProfession, saleQuote, sell, deployResident,
-    canAssignResidentMission, assignResidentMission, completeRecall,
+    canAssignResidentMission, assignResidentMission, completeRecall, startProximityDefense, finishProximityDefense,
     update,
     updatePopulation,
     updateProduction,

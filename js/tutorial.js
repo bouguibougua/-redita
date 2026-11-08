@@ -20,12 +20,12 @@
     recolteBle: ["tutoriel_recolte_ble.mp3", "Bien. Maintenant, demande à un habitant d'aller récolter le blé.", false],
     batiments: ["tutoriel_batiments.mp3", "Tu peux placer des bâtiments pour acheter des équipements et attribuer des métiers à tes villageois.", true],
     bergerie: ["tutoriel_bergerie.mp3", "Place une bergerie dans cette plaine.", false],
-    premierMetier: ["tutoriel_premier_metier.mp3", "Maintenant, tu peux attribuer un métier à ton villageois. Ça le fera travailler plus vite, tu verras.", false],
+    premierMetier: [null, "Le métier est maintenant attribué avec la tâche. L’étoile indique les bonus de ton agriculteur.", false],
     alerteAttaque: ["tutoriel_alerte_attaque.mp3", "Attention ! Un ennemi attaque !", true],
     defendre: ["tutoriel_defendre.mp3", "Sélectionne un villageois et ordonne-lui d'attaquer.", false],
     contreAttaque: ["tutoriel_contre_attaque.mp3", "On a repoussé cette attaque. Mais maintenant, on va leur montrer de quel bois on se chauffe !", true],
     artisanat: ["tutoriel_artisanat.mp3", "Construis un artisanat à côté de la bergerie.", false],
-    tousGuerriers: ["tutoriel_tous_guerriers.mp3", "Bieeen ! Regarde ce bouton-là. Il permet d'attribuer le métier de guerrier à tout le monde.", false],
+    tousGuerriers: [null, "Choisis Guerrier dans le menu Combat, puis utilise Tous sous Attaquer pour envoyer tes habitants disponibles.", false],
     attaqueGenerale: ["tutoriel_attaque_generale.mp3", "Hooooo ! Et regarde celui-là. Il permet de donner l'ordre à tout le monde d'attaquer. Essaie un peu pour voir.", false],
     premierVillage: ["tutoriel_premier_village_detruit.mp3", "Bien ! Ça en fait un sur les quatre. Maintenant que tu as compris, je peux te laisser finir le travail tout seul.", true],
     dernierePrecision: ["tutoriel_derniere_precision.mp3", "Ah oui, c'est vrai ! Une dernière précision. Ces terrains-là sont un peu particuliers.", false],
@@ -113,9 +113,9 @@
       if (index >= text.length) finishTyping();
     }, 22);
     try {
-      dialogueAudio = new Audio(`${AUDIO_ROOT}${audioFile}`);
-      dialogueAudio.play().catch(() => {});
-      dialogueAudio.addEventListener("error", () => { dialogueAudio = null; }, { once: true });
+      dialogueAudio = audioFile ? new Audio(`${AUDIO_ROOT}${audioFile}`) : null;
+      dialogueAudio?.play().catch(() => {});
+      dialogueAudio?.addEventListener("error", () => { dialogueAudio = null; }, { once: true });
     } catch (_) { dialogueAudio = null; }
     if (id === "quatreVillages") document.querySelectorAll(".village-token.red").forEach((element) => element.classList.add("tutorial-highlight"));
     if (id === "montagne") document.querySelector(".region.red.montagne")?.classList.add("tutorial-highlight", "tutorial-biome-focus");
@@ -216,14 +216,14 @@
       const farmer = state.players.red.villages[0].residents.find((resident) => resident.mission === "agriculture");
       if (farmer) showDialogue("batiments", () => showDialogue("bergerie", () => { stage = "buildBergerie"; render(state); }));
     } else if (stage === "buildBergerie" && method === "build" && E.Buildings.has(state.players.red.villages[0], "bergerie")) {
-      showDialogue("premierMetier", () => { stage = "profession"; render(state); });
+      showDialogue("premierMetier", () => { stage = "enemyDelay"; enemyDelay = 5; render(state); });
     } else if (stage === "profession" && method === "setProfession") {
       const farmer = state.players.red.villages[0].residents.find((resident) => resident.mission === "agriculture" && resident.profession === "agriculteur");
       if (farmer) { stage = "enemyDelay"; enemyDelay = 5; }
     } else if (stage === "defend" && method === "assignResidentMission") {
       stage = "combatWait";
     } else if (stage === "buildArtisanat" && method === "build" && E.Buildings.has(state.players.red.villages[0], "artisanat")) {
-      showDialogue("tousGuerriers", () => { stage = "warriors"; render(state); });
+      showDialogue("tousGuerriers", () => showDialogue("attaqueGenerale", () => { stage = "generalAttack"; render(state); }));
     } else if (stage === "warriors" && method === "assignProfessionToAll") {
       const village = state.players.red.villages[0];
       if (village.residents.filter((resident) => resident.profession === "guerrier").length === 3) {
@@ -321,10 +321,10 @@
       document.querySelectorAll('[data-slot-visual][data-player="red"][data-lane="0"]').forEach((element) => element.classList.add("tutorial-highlight"));
     }
     else if (stage === "harvest") { highlight('#residents-panel [data-select-resident][data-resident-state="disponible"]'); highlight('#residents-panel [data-resident-mission="agriculture"]'); }
-    else if (stage === "buildBergerie") highlight('#building-market [data-build="bergerie"]');
+    else if (stage === "buildBergerie") highlight('#owned-buildings [data-build="bergerie"]');
     else if (stage === "profession") { highlight('#residents-panel [data-select-resident][data-resident-state="agriculture"]'); highlight('#residents-panel [data-profession="agriculteur"]'); }
     else if (stage === "defend") { highlight(`#residents-panel [data-select-resident="${defenderResidentId}"]`); highlight('#residents-panel [data-resident-mission="attaque"]'); }
-    else if (stage === "buildArtisanat") highlight('#building-market [data-build="artisanat"]');
+    else if (stage === "buildArtisanat") highlight('#owned-buildings [data-build="artisanat"]');
     else if (stage === "warriors") highlight('#residents-panel [data-profession-all="guerrier"]');
     else if (stage === "generalAttack") highlight('#residents-panel [data-assign-all="attaque"]');
     renderedStage = stage;

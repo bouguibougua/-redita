@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),{test}=require('node:test'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 function fixture(){const context=vm.createContext({window:{},console});for(const name of ['config','biomes','crops','livestock','equipment','units','buildings','transport','animals','economy','board','combat','mythology-data','mythology-effects'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js',name+'.js'),'utf8'),context);
  const E=context.window.Eredita,s=E.Board.createState('simplified');s.phase='running';s.preparationRemaining=0;s.reinforcementEpoch='missions';E.MythologyEffects.init(s);
- for(const p of Object.values(s.players))for(const v of p.villages){v.biome='plaine';v.slots=E.Biomes.createSlots('plaine');v.buildings=[{type:'artisanat',level:1}];v.terrain={river:true};v.slots[0].content={category:'crop',type:'ble',hp:200,level:1};v.slots[1].content={category:'livestock',type:'chevre',hp:200,count:2,level:1};}
+ for(const p of Object.values(s.players))for(const v of p.villages){v.biome='plaine';v.slots=E.Biomes.createSlots('plaine');v.buildings=['artisanat','bergerie','boucherie'].map(type=>({type,level:1}));v.terrain={river:true};v.slots[0].content={category:'crop',type:'ble',hp:200,level:1};v.slots[1].content={category:'livestock',type:'chevre',hp:200,count:2,level:1};}
  const order=(r,mission,owner='red',lane=0)=>E.Economy.assignResidentMission(s,owner,lane,r.id,mission);
  return{E,s,v:s.players.red.villages[0],order};}
 function finish(E,s,r){for(let n=0;n<800&&r.unitId;n++)E.Combat.update(s,.1);assert.equal(r.unitId,null,'Retour terminé');}
@@ -22,7 +22,7 @@ test('both camps turn back immediately, stop attacking and remain vulnerable to 
 test('orders can change during return or cancel it; returning does not duplicate a unit or heal the resident',()=>{
  const {E,s,v,order}=fixture(),r=v.residents[0];r.profession='guerrier';r.tool='fer';r.armor='cuir';assert.ok(order(r,'attaque'));const u=s.units[0];u.position=20;u.hp-=13;const ratio=u.hp/u.maxHp;
  assert.ok(order(r,'agriculture'));assert.ok(order(r,'chasse'));assert.equal(r.pendingMission,'chasse');assert.ok(order(r,'attaque'));assert.equal(u.returningToVillage,false);assert.equal(r.pendingMission,undefined);assert.equal(s.units.length,1);
- assert.ok(order(r,'chasse'));finish(E,s,r);assert.equal(s.units.length,0);assert.equal(r.mission,'chasse');assert.equal(v.jobs.chasse,1);assert.equal(r.profession,'guerrier');assert.equal(r.tool,'fer');assert.equal(r.armor,'cuir');assert.equal(r.combatHealthRatio,ratio);
+ assert.ok(order(r,'chasse'));finish(E,s,r);assert.equal(s.units.length,0);assert.equal(r.mission,'chasse');assert.equal(v.jobs.chasse,1);assert.equal(r.profession,'chasseur');assert.equal(r.tool,'fer');assert.equal(r.armor,'cuir');assert.equal(r.combatHealthRatio,ratio);
  assert.ok(order(r,'attaque'));assert.equal(v.jobs.chasse,0);assert.equal(s.units.length,1);assert.equal(s.units[0].hp/s.units[0].maxHp,ratio);assert.equal(r.combatHealthRatio,undefined);
 });
 test('defenders can be reassigned and attack orders can return to their defensive post',()=>{

@@ -48,8 +48,9 @@ async function run() {
     const publicStock = host.next(m => m.type === 'mythology' && m.view.publicPlayers?.blue.count === 1);
     result = guest.next(m => m.type === 'mythology' && m.accepted === true); guest.send(request); const selected = await result;
     const publicBlue = (await publicStock).view.publicPlayers.blue;
-    assert.deepEqual(Object.keys(publicBlue).sort(), ['colors','count']);assert.equal(publicBlue.colors.length,1);
+    assert.deepEqual(Object.keys(publicBlue).sort(), ['colors','count','pendingColors']);assert.equal(publicBlue.colors.length,1);
     assert.match(publicBlue.colors[0],/^#[0-9a-f]{6}$/i);
+    assert.equal(publicBlue.pendingColors.length,2);assert.equal(publicBlue.pendingColors[0].length,2);assert.ok(publicBlue.pendingColors.flat().every(color=>/^#[0-9a-f]{6}$/i.test(color)));
     assert.equal(selected.view.selections.length, 1); assert.equal(selected.view.selections[0].status, 'awaiting-activation');
     assert.equal(selected.view.pendingCount, 2); assert.equal(selected.view.pending.id, blueAccumulated.queue[1].id);
     result = guest.next(m => m.type === 'mythology' && m.accepted === false); guest.send(request); assert.equal((await result).reason, 'offer-unavailable');

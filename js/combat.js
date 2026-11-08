@@ -94,7 +94,7 @@
     if ((unit.visualAttackTimer || 0) > 0) return;
     unit.visualAttackSequence = (unit.visualAttackSequence || 0) + 1;
     unit.visualAttackTimer = E.Config.visualEffects.unitAttackDuration;
-    if (target && attackRange(unit) > E.Config.combat.attackRange) {
+    if (target) {
       unit.visualAttackTarget = { position: target.position, lanePosition: target.lanePosition };
     }
   }
@@ -162,10 +162,40 @@
     return true;
   }
 
+  function recruitNearbyResidents(state) {
+    Object.values(state.players).forEach(player=>player.villages.forEach(village=>{
+      if(village.destroyed||E.MythologyEffects?.isBurned(state,village))return;
+      village.residents.forEach(resident=>{
+        if(resident.unitId||resident.isLegend||['attaque','defense'].includes(resident.mission))return;
+        // Le pêcheur est à la rive ; les autres métiers gardent leur position de travail.
+        const position=Number.isFinite(resident.workPosition)?resident.workPosition:
+          resident.mission==='peche'?E.Config.combat.fishingPositionByOwner[player.id]:
+          player.id==='red'?0:E.Config.movement.columnLength;
+        const scout={ownerId:player.id,lanePosition:village.lane,position,profession:resident.profession};
+        if(nearestEnemyUnit(state,scout))E.Economy.startProximityDefense(state,village,resident,position);
+      });
+    }));
+  }
+
+  function defendLocally(state,unit,damageEvents,completed,delta) {
+    const anchor=unit.autoDefense,range=Math.max(E.Config.combat.detectionRange,attackRange(unit));
+    const enemy=state.units.filter(other=>other.ownerId!==unit.ownerId&&other.hp>0&&
+      Math.abs(other.lanePosition-anchor.lanePosition)<.12&&Math.abs(other.position-anchor.position)<=range)
+      .sort((a,b)=>Math.abs(a.position-unit.position)-Math.abs(b.position-unit.position))[0];
+    if(enemy){
+      if(!tryAttackUnit(unit,enemy,damageEvents,delta))moveToward(state,unit,enemy.position,delta);
+    }else{
+      moveToward(state,unit,anchor.position,delta);
+      if(Math.abs(unit.position-anchor.position)<.001)completed.push(unit);
+    }
+  }
+
   function update(state, delta) {
     if (state.phase !== "running" || state.paused || state.preparationRemaining > 0 || !Number.isFinite(delta) || delta <= 0) return;
+    recruitNearbyResidents(state);
     E.Buildings.updateArtisanatBonuses(state);
     const damageEvents = [];
+    const completedDefenses = [];
     const completedRecalls = [];
     Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
       village.damageSmoke = Math.max(0, (village.damageSmoke || 0) - delta);
@@ -183,7 +213,7 @@
         const resident = E.Economy.getResident(state, unit.ownerId, unit.originLane, unit.residentId);
         const origin = state.players[unit.ownerId]?.villages[unit.originLane];
         if (!resident || !origin || origin.destroyed) { unit.returningToVillage = false; return; }
-        const destination = resident.pendingMission === 'defense' ? E.Config.combat.defensePositionByOwner[unit.ownerId] :
+        const destination = resident.pendingMission === 'defense' && (!resident.pendingProfession || resident.pendingProfession === resident.profession) ? E.Config.combat.defensePositionByOwner[unit.ownerId] :
           unit.ownerId === 'red' ? 0 : E.Config.movement.columnLength;
         if (Math.abs(unit.position - destination) > 0.001) moveToward(state, unit, destination, delta);
         else if (Math.abs(unit.lanePosition - unit.originLane) > 0.001) moveLaterally(state, unit, unit.originLane, delta);
@@ -202,9 +232,10 @@
         return; // Le follet récolte ; ses 0 dégâts ne déclenchent aucune attaque.
       }
 
+      if(unit.autoDefense){defendLocally(state,unit,damageEvents,completedDefenses,delta);return;}
       const enemyUnit = nearestEnemyUnit(state, unit);
       if (unit.stance === "defense") {
-        tryAttackUnit(unit, enemyUnit, damageEvents, delta);
+        tryAttackUnit(unit,enemyUnit,damageEvents,delta);
         return;
       }
 
@@ -219,7 +250,10 @@
 
       const targetVillage = state.players[enemyId(unit.ownerId)].villages[targetLane];
       if (attackCrop(state, unit, targetVillage, damageEvents, delta)) return;
-      if (!unit.structuresOnly && tryAttackUnit(unit, enemyUnit, damageEvents, delta)) return;
+      if (!unit.structuresOnly && enemyUnit) {
+        if(!tryAttackUnit(unit,enemyUnit,damageEvents,delta))moveToward(state,unit,enemyUnit.position,delta);
+        return;
+      }
       if ((unit.animalType || unit.role) === "chien" && unit.animalMission === "perturber") {
         const herd = E.Animals.targetHerd(state, unit, targetVillage);
         if (herd) {
@@ -259,6 +293,7 @@
     }));
 
     settleDeaths(state);
+    completedDefenses.filter(unit=>unit.hp>0&&state.units.includes(unit)).forEach(unit=>E.Economy.finishProximityDefense(state,unit));
     completedRecalls.filter(unit => unit.hp > 0 && state.units.includes(unit)).forEach(unit => E.Economy.completeRecall(state, unit));
   }
 

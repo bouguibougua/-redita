@@ -71,13 +71,13 @@ state.players.red.gold = E.Config.startingGold;
 resident.profession = "agriculteur";
 assert.equal(E.Economy.deployResident(state, "red", 0, resident.id, "attaque"), true);
 const unit = state.units[0];
-assert.equal(unit.role, "habitant", "Non-combat profession grants no combat specialty");
-assert.equal(unit.profession, "agriculteur", "Visual profession survives combat deployment");
+assert.equal(unit.role, "guerrier", "La tâche combat attribue le métier choisi");
+assert.equal(unit.profession, "guerrier", "Le modèle suit la tâche fusionnée");
 assert.equal(unit.tool, "fer");
 assert.equal(unit.armor, "fer");
-assert.equal(unit.hp, E.Config.units.habitant.hp + 50 + E.Config.building.artisanatBonus.hp);
+assert.equal(unit.hp, E.Config.units.guerrier.hp + 50 + E.Config.building.artisanatBonus.hp);
 assert.equal(unit.maxHp, unit.hp);
-assert.equal(unit.damage, E.Config.units.habitant.damage + 20 + E.Config.building.artisanatBonus.damage);
+assert.equal(unit.damage, E.Config.units.guerrier.damage + 20 + E.Config.building.artisanatBonus.damage);
 const combatBefore = {hp:unit.hp,maxHp:unit.maxHp};
 assert.ok(buy("armors", "cuir"), "Village equipment also applies during combat");
 assert.equal(unit.armor, "cuir");
@@ -89,14 +89,15 @@ assert.equal(warrior.damage, E.Config.units.guerrier.damage + 10);
 
 const fishing = setup("littoral");
 E.Buildings.buildT1(fishing.state, "red", 0, "artisanat");
+E.Buildings.buildT1(fishing.state, "red", 0, "boucherie");
 assert.ok(E.Equipment.buy(fishing.state,"red",0,"tools","bois"));
 for (const fisher of fishing.village.residents.slice(0, 2)) {
   assert.equal(E.Economy.assignResidentJob(fishing.state, "red", 0, fisher.id, "peche"), true);
 }
 E.Economy.updateProduction(fishing.state, 25);
-assert.equal(fishing.village.resources.poisson, 2, "The village tool speeds both fishers");
+assert.equal(fishing.village.resources.poisson, 2.6, "The village tool speeds both fishers");
 E.Economy.updateProduction(fishing.state, 5);
-assert.equal(fishing.village.resources.poisson, 2);
+assert.equal(fishing.village.resources.poisson, 2.6);
 assert.equal(E.Economy.unassignResidentJob(fishing.state, "red", 0, fishing.resident.id), true);
 assert.equal(fishing.resident.tool, "bois", "Equipment survives a mission change");
 
@@ -105,6 +106,7 @@ for (const tool of ["bois", "bronze", "fer"]) {
     const work = setup(mission === "peche" ? "littoral" : "plaine");
     work.resident.tool = tool;
     E.Buildings.buildT1(work.state, "red", 0, "bergerie");
+    const required=E.Config.jobs[mission].requires;if(required&&!E.Buildings.has(work.village,required))E.Buildings.buildT1(work.state,"red",0,required);
     if (mission === "agriculture") assert.equal(E.Crops.place(work.state, "red", 0, 0, "ble"), true);
     if (mission === "elevage") assert.equal(E.Livestock.place(work.state, "red", 0, 0, "chevre"), true);
     assert.equal(E.Economy.assignResidentJob(work.state, "red", 0, work.resident.id, mission), true);
@@ -116,7 +118,7 @@ for (const tool of ["bois", "bronze", "fer"]) {
       const duration = mission === "agriculture" ? E.Config.temporaryProduction.agricultureHarvestDuration / 1.1 : 30;
       E.Economy.updateProduction(work.state, duration / (1 + bonus.productionSpeed) + 0.0001);
       assert.equal(work.resident.workPhase, "toVillage", `${tool}: ${mission} completes its production cycle`);
-      const expected = (mission === "elevage" ? 1.1 : 1) * (1 + bonus.productionYield);
+      const expected = (mission === "elevage" ? 1.1 + E.Economy.workBonus(work.village,work.resident,mission) : 1) * (1 + bonus.productionYield);
       assert.equal(work.resident.carrying.amount, expected);
       const resource = work.resident.carrying.resource;
       assert.equal(work.village.resources[resource], 0, "Cargo must still return home before storage");
@@ -125,7 +127,7 @@ for (const tool of ["bois", "bronze", "fer"]) {
     } else {
       E.Economy.updateProduction(work.state, 30 / (1 + bonus.productionSpeed) + 0.0001);
       const resource = mission === "peche" ? "poisson" : "viande";
-      assert.equal(work.village.resources[resource], (mission === "peche" ? 1 : 3) * (1 + bonus.productionYield));
+      assert.equal(work.village.resources[resource], (mission === "peche" ? 1.3 : 5) * (1 + bonus.productionYield));
     }
   }
 }

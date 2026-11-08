@@ -37,7 +37,7 @@
   }
   function getPublicSummary(state, playerId) {
     const current = online() ? privateView?.epoch === state.reinforcementEpoch ? privateView : null : null;
-    return (online() ? current?.publicPlayers : localAuthority?.publicView())?.[playerId] || { count: 0, colors: [] };
+    return (online() ? current?.publicPlayers : localAuthority?.publicView())?.[playerId] || { count: 0, colors: [], pendingColors: [] };
   }
   // Le stock LÉGENDES dérive des confirmations privées, sans deuxième
   // inventaire. Toujours l’image normale, même après un choix à droite.

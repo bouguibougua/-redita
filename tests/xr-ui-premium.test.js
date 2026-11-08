@@ -12,6 +12,8 @@ let state = E.Board.createState("classic"); state.phase = "running";
 E.Network = { mode: "local", playerId: "red" };
 E.GameView.init({ getState: () => state, controller: {
   selectResident(id) { state.selectedResidentId = id; },
+  assignResidentMission(id, mission, choice) {const {playerId,lane}=state.selectedVillage;return E.Economy.assignResidentMission(state,playerId,lane,id,mission,choice);},
+  setCombatProfession(id, profession) {const {playerId,lane}=state.selectedVillage;return E.Economy.setCombatProfession(state,playerId,lane,id,profession);},
   setProfession(id, profession) { const { playerId, lane } = state.selectedVillage; return E.Economy.setProfession(state, playerId, lane, id, profession); },
   build(type) { const { playerId, lane } = state.selectedVillage; return E.Buildings.buildT1(state, playerId, lane, type); },
   upgradeCrop(index) { const { playerId, lane } = state.selectedVillage; return E.Crops.upgrade(state, playerId, lane, index); },
@@ -43,18 +45,19 @@ for (const id of ["jobs", "tasks", "buildings", "residents"]) assert.equal(paint
 assert.equal(painted.get("blue0").visible, false);
 assert.equal(painted.get("blueGold").visible, false);
 assert.equal(dashboard.targets.filter(t => t.userData.xrTarget.action?.type === "select-village").length, 4);
-assert.ok(painted.get("jobs").rows.flat().some(entry => entry[1]?.args?.[1] === "agriculteur"));
+assert.equal(painted.get("jobs").title,"Bâtiments");
+assert.ok(painted.get("jobs").rows.flat().some(entry => entry[0].includes("Bergerie")));
 assert.equal(painted.get("jobs").rows.flat().some(entry => entry[1]?.method === "changeJob"), false, "Métiers et tâches ne sont plus confondus");
 const red = state.players.red, v = red.villages[0], person = v.residents[0];
-let target = find(t => t.action?.method === "setProfession" && t.action.args[1] === "agriculteur");
+let target = find(t => t.action?.method === "assignResidentMission" && t.action.args[1] === "elevage");
 assert.equal(ui.activate(target), false); assert.match(feedback.at(-1).message, /Bergerie/);
 const gold = red.gold;
 assert.equal(ui.activate(find(t => t.action?.method === "build" && t.action.args[0] === "bergerie")), true);
 assert.equal(red.gold, gold - E.Config.building.T1.gold);
-const mission = person.mission;
-assert.equal(ui.activate(find(t => t.action?.method === "setProfession" && t.action.args[1] === "agriculteur")), true);
-assert.equal(person.profession, "agriculteur"); assert.equal(person.mission, mission, "Attribuer un métier préserve la tâche");
-assert.ok(painted.get("buildings").rows.flat().some(entry => entry[3]?.detail.includes("200 or + 100 ressources")), "Le coût moteur d'amélioration est affiché");
+v.slots[0].content={category:'livestock',type:'chevre',count:1,hp:25};ui.render();
+assert.equal(ui.activate(find(t => t.action?.method === "assignResidentMission" && t.action.args[1] === "elevage")), true);
+assert.equal(person.profession,"berger");assert.equal(person.mission,"elevage","La tâche attribue automatiquement le métier");
+assert.ok(painted.get("jobs").rows.flat().some(entry => entry[3]?.detail.includes("200 or + 100 ressources")), "Le coût moteur d'amélioration est affiché");
 assert.equal(ui.activate(find(t => t.action?.name === "settings")), true);
 assert.equal(painted.get("modal").options.variant, "settings");
 assert.equal(JSON.stringify(ui.activate(find(t => t.action?.type === "panels-scale" && t.action.direction === "grow"))), JSON.stringify({ type: "panels-scale", direction: "grow" }));
@@ -94,7 +97,7 @@ assert.equal(ui.modal.name, "sell", "La vente conserve la boutique ouverte pour 
 assert.equal(state.players.red.villages[firstVillage].resources.ble, 20);
 ui.shop(); assert.equal(ui.modal, null, "Y ferme aussi un sous-menu de boutique");
 ui.toggle(); ui.selectVillage("red", 2); assert.equal(painted.get("jobs").visible, true, "Un clic village réaffiche les quatre fenêtres");
-assert.equal([...painted.values()].filter(p => p.visible && ["Habitants", "Métiers", "Tâches", "Gestion"].some(prefix => p.title.startsWith(prefix))).length, 4);
+assert.equal([...painted.values()].filter(p => p.visible && ["Habitants", "Bâtiments", "Tâches", "Gestion"].some(prefix => p.title.startsWith(prefix))).length, 4);
 
 // Préparation sur un seul écran et lancement explicite en une action.
 state = E.Board.createState("classic"); E.Network.mode = "solo"; state.players.blue.setupConfirmed = true;

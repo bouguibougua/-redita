@@ -8,7 +8,7 @@
   let previousDesktopRender = 0;
   let pendingBulkTasks = [];
   const localViewMethods = new Set(["selectVillage", "selectResident"]);
-  const guestCommands = new Set(["toggleBiome", "confirmBiomes", "placeCrop", "placeLivestock", "upgradeCrop", "removeSlot", "slaughter", "changeJob", "assignResidentMission", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
+  const guestCommands = new Set(["toggleBiome", "confirmBiomes", "placeCrop", "placeLivestock", "upgradeCrop", "removeSlot", "slaughter", "changeJob", "assignResidentMission", "setCombatProfession", "assignAllResidents", "releaseResident", "releaseAllResidents", "build", "setProfession", "assignProfessionToAll", "setNextResidentMission", "setNextResidentProfession", "sell", "buyResident", "buyShopItem", "buyAnimal", "buyEquipment", "buySpecialAnimal", "orderAnimal", "slaughterSpecialAnimal", "upgrade", "deploy", "chooseRedirect"]);
 
   function addLog(message) {
     state.logs.unshift(message);
@@ -136,12 +136,12 @@
       E.UI.render(state);
     },
 
-    assignResidentMission(residentId, mission) {
+    assignResidentMission(residentId, mission, choice) {
       const { playerId, lane } = state.selectedVillage;
       const resident = E.Economy.getResident(state, playerId, lane, residentId);
       if (!resident) return;
 
-      const changed = E.Economy.assignResidentMission(state, playerId, lane, residentId, mission);
+      const changed = E.Economy.assignResidentMission(state, playerId, lane, residentId, mission, choice);
 
       if (changed) {
         pendingBulkTasks = pendingBulkTasks.filter(task => task.playerId !== playerId || task.lane !== lane || task.residentId !== residentId);
@@ -181,6 +181,11 @@
       E.UI.render(state);
     },
 
+    setCombatProfession(residentId, profession) {
+      const { playerId, lane } = state.selectedVillage;
+      if (E.Economy.setCombatProfession(state, playerId, lane, residentId, profession)) E.UI.render(state);
+    },
+
     setProfession(residentId, profession) {
       const { playerId, lane } = state.selectedVillage;
       if (E.Economy.setProfession(state, playerId, lane, residentId, profession)) {
@@ -205,9 +210,9 @@
       E.UI.render(state);
     },
 
-    setNextResidentMission(mission) {
+    setNextResidentMission(mission, choice) {
       const { playerId, lane } = state.selectedVillage;
-      if (E.Economy.setNextResidentMission(state, playerId, lane, mission)) E.UI.render(state);
+      if (E.Economy.setNextResidentMission(state, playerId, lane, mission, choice)) E.UI.render(state);
     },
 
     setNextResidentProfession(profession) {
@@ -215,7 +220,7 @@
       if (E.Economy.setNextResidentProfession(state, playerId, lane, profession)) E.UI.render(state);
     },
 
-    assignAllResidents(mission) {
+    assignAllResidents(mission, choice) {
       const { playerId, lane } = state.selectedVillage;
       if (state.phase !== "running" || state.paused || (!E.Config.jobs[mission] && !["attaque", "defense"].includes(mission))) return;
       if (E.Config.jobs[mission] && !E.Economy.canAssignJob(state, playerId, lane, mission)) return;
@@ -223,7 +228,8 @@
       const residentIds = E.Economy.availableResidentList(state, playerId, lane).slice(0, availableCount)
         .map((resident) => resident.id)
         .filter((id) => !pendingBulkTasks.some((task) => task.playerId === playerId && task.lane === lane && task.residentId === id));
-      queueBulkTasks(playerId, lane, residentIds, mission);
+      if (choice != null && !E.Config.combatProfessions.includes(choice)) return;
+      queueBulkTasks(playerId, lane, residentIds, mission, choice);
       if (residentIds.length) {
         const label = mission === "attaque" ? "attaquer" : mission === "defense" ? "défendre" : E.Config.jobs[mission]?.label.toLowerCase();
         addLog(`${residentIds.length} habitant${residentIds.length > 1 ? "s" : ""} du village ${lane + 1} reçoivent progressivement la mission : ${label}.`);
@@ -328,8 +334,8 @@
 
   // Les attributions groupées avancent aussi pendant la préparation, contrairement au temps de combat.
   const commandTime = () => state.elapsed + E.Config.preparation.duration - (state.preparationRemaining || 0);
-  function queueBulkTasks(playerId, lane, residentIds, mission) {
-    residentIds.forEach((residentId, index) => pendingBulkTasks.push({ playerId, lane, residentId, mission, due: commandTime() + index * E.Config.bulkTaskInterval }));
+  function queueBulkTasks(playerId, lane, residentIds, mission, choice) {
+    residentIds.forEach((residentId, index) => pendingBulkTasks.push({ playerId, lane, residentId, mission, choice, due: commandTime() + index * E.Config.bulkTaskInterval }));
     processBulkTasks();
   }
 
@@ -344,7 +350,7 @@
         ? E.Economy.unassignResidentJob(state, task.playerId, task.lane, task.residentId)
         : E.Config.jobs[task.mission]
           ? E.Economy.assignResidentJob(state, task.playerId, task.lane, task.residentId, task.mission)
-          : E.Economy.deployResident(state, task.playerId, task.lane, task.residentId, task.mission)) || changed;
+          : E.Economy.deployResident(state, task.playerId, task.lane, task.residentId, task.mission, task.choice)) || changed;
     });
     if (changed) E.UI.render(state);
   }

@@ -124,6 +124,7 @@
       E.Equipment.applyVillage(destination, person);
       delete person.combatHealthRatio;
       delete person.pendingMission;
+      delete person.pendingProfession;
       return false;
     });
   }

@@ -54,9 +54,9 @@ for (const profession of ["habitant", "guerrier", "ravageur"]) {
   const unit = state.units[0];
   assert.equal(unit.donkey, true);
   assert.equal(unit.animalType, null);
-  close(unit.speed, E.Config.units[profession].speed * 1.2, "Vitesse militaire avec âne");
-  assert.equal(unit.damage, E.Config.units[profession].damage + 20);
-  assert.equal(unit.hp, E.Config.units[profession].hp + 35);
+  close(unit.speed, E.Config.units[unit.role].speed * 1.2, "Vitesse militaire avec âne");
+  assert.equal(unit.damage, E.Config.units[unit.role].damage + 20);
+  assert.equal(unit.hp, E.Config.units[unit.role].hp + 35);
   unit.hp = 0;
   E.Combat.update(state, 0.1);
   assert.equal(village.residents.some((candidate) => candidate.id === resident.id), false);
@@ -92,6 +92,7 @@ const professions = { agriculture: "agriculteur", elevage: "berger", peche: "pec
 function worker(mission, donkey, tool = null) {
   const result = setup(mission === "peche" ? "littoral" : mission === "elevage" ? "montagne" : "plaine");
   const { state, resident } = result;
+  const required=E.Config.jobs[mission].requires;if(required&&!E.Buildings.has(result.village,required))result.village.buildings.push({type:required,level:1});
   resident.donkey = donkey;
   resident.tool = tool;
   resident.profession = professions[mission];

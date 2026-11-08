@@ -543,3 +543,90 @@ body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top
 .terrain-building.tier-3.terrain-artisanat { background-image: url('../assets/generated/artisanat_t3.png'); background-size: contain; background-position: center; }
 .terrain-building.tier-3.terrain-boucherie { background-image: url('../assets/generated/boucherie_t3.png'); background-size: contain; background-position: center; }
 .terrain-building.terrain-campfire.tier-3 { background-image: url('../assets/generated/feu_camp_t3.png'); }
+
+/* Une tâche attribue aussi son métier ; les bâtiments occupent l’ancien panneau Métiers. */
+#game-screen #building-panel { grid-area: jobs; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+#game-screen #building-panel .building-market { flex: 0 0 auto; }
+#game-screen #building-panel #owned-buildings { flex: 1; width: 100%; height: auto; min-height: 0; overflow: auto; }
+#game-screen #building-panel .building-table, #game-screen #building-panel .building-table tbody { display: block; }
+#game-screen #building-panel .building-table thead, #game-screen #building-panel .building-table colgroup { display: none; }
+#game-screen #building-panel .building-table tbody { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+#game-screen #building-panel .building-table-row { display: flex; flex-direction: column; min-width: 0; height: auto; }
+#game-screen #building-panel .building-table-row > th, #game-screen #building-panel .building-table-row > td { display: block; width: auto; }
+#game-screen #building-panel .building-action-cell { margin-top: auto; border-left: 0; border-top: 1px solid #9e824425; }
+#game-screen .combat-profession-picker { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: .62rem; }
+#game-screen .combat-profession-picker select { flex: 1; min-width: 0; min-height: 28px; border: 1px solid var(--line); border-radius: 5px; padding: 3px; background: #262117; color: var(--ink); }
+#game-screen .mission-profession { color: #e2c478; }
+@container buildings (max-width: 500px) {
+  #game-screen #building-panel .building-table tbody { grid-template-columns: 1fr; }
+}
+
+@media (min-width:801px), (orientation:landscape) {
+  #game-screen #building-panel { grid-area: auto; grid-column: 2; grid-row: 1; align-self: end; height: var(--layout-jobs-height,27%); }
+}
+
+/* Repères des personnages : métier au sol, équipement et PV. */
+#game-screen .selected-resident-stats { flex-shrink: 0; margin: 0; color: #e7d9b3; font-size: .59rem; }
+.character-floor { position: absolute; z-index: -1; left: 50%; bottom: -9px; transform: translateX(-50%); width: 39px; height: 27px; border: 2px solid var(--character-team); border-radius: 50%; background: color-mix(in srgb,var(--character-team) 23%,transparent); box-shadow: 0 0 6px var(--character-team),inset 0 0 7px var(--character-team); pointer-events: none; }
+.character-floor.allied,.character-hp.allied { --character-team: #42d8f0; }
+.character-floor.enemy,.character-hp.enemy { --character-team: #f06470; }
+.character-floor > b { display: block; font-size: 16px; line-height: 23px; text-align: center; opacity: .85; }
+.character-gear { position: absolute; left: -6px; bottom: -5px; display: flex; gap: 1px; }
+.character-gear svg { width: 12px; height: 12px; border-radius: 50%; background: #182238; box-shadow: 0 0 2px var(--character-team); }
+.character-hp { position: absolute; left: 50%; top: -12px; transform: translateX(-50%); width: 43px; height: 5px; border: 1px solid #11213d; border-radius: 4px; background: #23324a; pointer-events: none; }
+.character-hp > i { display: block; max-width: 100%; height: 100%; border-radius: inherit; background: var(--character-team); }
+.character-hp > b { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); color: #fff; text-shadow: -1px -1px #111,1px 1px #111; font: 800 8px/1.1 system-ui; white-space: nowrap; }
+.local-person,.unit { isolation: isolate; }
+
+#game-screen #building-panel .building-market { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
+#game-screen #building-panel .building-panel-heading { flex: 1; min-width: 0; }
+#game-screen #building-panel .building-resource-picker { margin: 0; max-width: 45%; }
+#game-screen #building-panel .building-table tbody th, #game-screen #building-panel .building-table tbody td { padding: 5px 6px; }
+@container buildings (max-width: 500px) {
+  #game-screen #building-panel .building-market { flex-wrap: wrap; gap: 3px; }
+  #game-screen #building-panel .building-resource-picker { flex: 1 0 100%; max-width: none; }
+  #game-screen #building-panel .building-panel-heading > small { display: none; }
+  #game-screen #building-panel .building-table-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(75px,.8fr); }
+  #game-screen #building-panel .building-action-cell { margin-top: 0; border-top: 0; border-left: 1px solid #9e824425; }
+  #game-screen #building-panel .building-row-title { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 4px; }
+  #game-screen #building-panel .building-thumbnail { width: 28px; height: 28px; }
+  #game-screen #building-panel .building-row-title strong { font-size: .62rem; overflow-wrap: anywhere; }
+  #game-screen #building-panel .building-tier { grid-column: 2; justify-self: start; }
+  #game-screen #building-panel .building-row-title small, #game-screen #building-panel .building-professions { display: none; }
+}
+
+/* Sélection directe du plateau et fiche d’action compacte. */
+#game-screen .battlefield-3d canvas { cursor: grab; touch-action: none; }
+#game-screen .map-selection { position: absolute; z-index: 35; top: 12px; left: 12px; width: min(245px,calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; padding: 10px; border: 1px solid #d7b452; border-radius: 12px; background: #211c14f5; box-shadow: 0 5px 20px #0008; color: #f0dfbb; font-size: .72rem; }
+#game-screen .map-selection[hidden] { display: none; }
+.map-selection header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.map-selection header button { width: 28px; min-width: 28px; padding: 2px; border: 1px solid #79623b; border-radius: 6px; background: #382d1d; color: #f0dfbb; font-size: 1.1rem; cursor: pointer; }
+.map-selection p { color: #c3b390; margin: 5px 0 8px; }
+.map-actions { display: grid; gap: 5px; }
+.map-actions button { min-height: 32px; padding: 7px; border: 1px solid #d7b452; border-radius: 7px; background: linear-gradient(110deg,#f3d78e,#ad843d); color: #241b0d; font-size: .72rem; font-weight: 700; text-align: left; cursor: pointer; }
+.map-actions button:disabled { opacity: .45; cursor: default; }
+.map-actions button small { display: block; font-size: .62rem; color: #49381d; margin-top: 3px; }
+.map-actions label { display: flex; align-items: center; gap: 8px; }
+.map-actions select { min-width: 0; flex: 1; }
+#game-screen .region, #game-screen .slot, #game-screen .terrain-building, #game-screen .local-person, #game-screen .unit { pointer-events: auto; cursor: pointer; }
+#game-screen .terrain-building-layer { display: flex; z-index: 6; }
+#game-screen .region.map-village-selected { outline: 2px solid #ffdc42; outline-offset: -2px; box-shadow: inset 0 0 14px #ffdc4266,0 0 8px #ffdc4266; }
+#game-screen .construction-site { display: grid; place-items: center; border: 1px dashed #c5a573; background: #78573299; border-radius: 4px; background-image: none; font-size: 1rem; }
+#game-screen .slot:focus-visible, #game-screen .terrain-building:focus-visible { outline: 2px solid #ffdc42; }
+@media (max-width:600px) { #game-screen .map-selection { top: 7px; left: 7px; max-width: 210px; padding: 7px; max-height: calc(100% - 14px); } }
+
+/* PV des cultures : jauge circulaire au sol, séparée du contour de sélection. */
+#game-screen .slot.crop { position: relative; overflow: visible; }
+#game-screen .slot.crop::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: conic-gradient(var(--crop-health-color,#77d580) var(--crop-health,100%),#263329 0); -webkit-mask: radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0); mask: radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0); pointer-events: none; }
+#game-screen .hud-crystal.pending-crystal path { stroke: #fff7; stroke-width: .6; }
+#game-screen .hud-crystal .gem-facets { fill: none; stroke: #fff9; }
+
+#game-screen .construction-site .site-sign { display: block; padding: 1px 3px; border: 2px solid #936d42; background: #dfc490; line-height: 1; font-style: normal; transform: translateY(-4px); }
+#game-screen .construction-site::after { content: ''; width: 55%; height: 3px; bottom: -2px; left: 3px; border: 0; border-radius: 0; background: #a17d52; box-shadow: 3px -3px #85613d,10px 1px 0 1px #999280; }
+
+/* Même indicateur de palier que le bandeau global, à côté du nom de l'habitant. */
+#game-screen .resident-details { flex: 1; min-width: 0; }
+#game-screen .resident-title { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 7px; min-width: 0; }
+#game-screen .resident-title strong { min-width: 0; flex: 0 1 auto; }
+#game-screen .resident-equipment { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; line-height: 1; }
+#game-screen .resident-equipment .hud-pip { width: clamp(7px,.7vw,11px); height: clamp(10px,.9vw,14px); }

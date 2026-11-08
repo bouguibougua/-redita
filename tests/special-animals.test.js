@@ -279,6 +279,8 @@ test("boars prioritize enemy crops over nearby troops and destroy the crop at ei
 
 test("boar village hits and retaliation occur each second and death credits only the origin village", () => {
   const { state, village, enemy } = scenario();
+  // Test de siège sans habitants défenseurs ; leur riposte est testée séparément.
+  state.players.blue.villages.forEach(v=>{v.residents=[];v.population=0;});
   const humansBefore = population(state);
   const { animal, unit } = deploy(state, "sanglier");
   unit.position = E.Config.movement.columnLength;

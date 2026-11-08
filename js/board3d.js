@@ -53,6 +53,8 @@
     import("./vendor/three.module.min.js").then((module) => {
       THREE = module;
       setup();
+      E.CharacterHUD?.init(THREE);
+      E.ConstructionSites?.init(THREE).then(loaded=>{if(loaded&&latestState)update(latestState,true);});
       ready = true;
       E.VillagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.FarmerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
@@ -150,7 +152,7 @@
     const z = owner === "red" ? -2.55 : 2.55;
     const group = new THREE.Group();
     group.position.set(laneX(village.lane), 0, z);
-    group.userData = { playerId: owner, lane: village.lane };
+    group.userData = { playerId: owner, lane: village.lane, mapTarget: {kind: "village", playerId: owner, lane: village.lane} };
 
     const terrainModel = { plaine: E.PlainTerrain, montagne: E.MountainTerrain, littoral: E.CoastTerrain }[village.biome];
     const importedTerrain = terrainModel?.create(terrainWidthScale(), village.burnUntil > latestState.elapsed, owner);
@@ -166,6 +168,8 @@
     if (village.biome === "plaine" && !importedTerrain) addPlainDetails(group, village.lane);
     if (village.biome === "littoral") addCoast(group, village, Boolean(importedTerrain));
     addMythologyTerrain(group, village);
+    const outline = selectionOutline(2.92 * terrainWidthScale(), 4.95);
+    outline.name = "village-selection-outline"; outline.position.y = .14; group.add(outline);
     addSlots(group, village);
     addVillageAndBuildings(group, village);
     // Espacer les éléments sans étirer les bâtiments, les cultures ou les animaux.
@@ -274,14 +278,26 @@
     const cfg = E.Config.villagePresentation;
     const positions = village.slots.length === 2 ? cfg.slotsTwo : cfg.slotsFour;
     village.slots.forEach((slot, index) => {
+      const first = group.children.length;
+      const target = {kind:"slot", playerId:village.ownerId, lane:village.lane, slotIndex:index};
       const [x, localZ] = positions[index];
       const z = localZ * (village.ownerId === "red" ? 1 : -1);
       const marker = mesh(new THREE.CylinderGeometry(0.35, 0.39, 0.06, 16), slot.type === "animal" ? 0x735f3c : 0x566744, { castShadow: false });
       marker.position.set(x, 0.1, z);
       marker.userData.xrTarget = { kind: "slot", playerId: village.ownerId, lane: village.lane, slotIndex: index };
       group.add(marker);
-      if (slot.content?.category === "crop") addCrop(group, slot.content.type, x, z, slot.content);
+      if (slot.content?.category === "crop") {
+        addCrop(group, slot.content.type, x, z, slot.content);
+        const health=new THREE.Group();health.name='crop-health-ring';health.userData.cropHealthSlot=index;
+        health.position.set(x,.145,z);health.rotation.x=-Math.PI/2;
+        const track=new THREE.Mesh(new THREE.RingGeometry(.405,.445,64),new THREE.MeshBasicMaterial({color:0x263329,side:THREE.DoubleSide,depthWrite:false}));
+        const fill=new THREE.Mesh(new THREE.RingGeometry(.409,.441,64),new THREE.MeshBasicMaterial({color:0x77d580,side:THREE.DoubleSide,depthWrite:false}));
+        fill.position.z=.002;fill.rotation.z=Math.PI/2;fill.name='crop-health-fill';health.add(track,fill);group.add(health);
+      }
       if (slot.content?.category === "livestock") addHerd(group, slot.content.type, slot.content.count, x, z);
+      group.children.slice(first).forEach(object => { object.userData.mapTarget = target; });
+      const highlight = selectionOutline(.80,.80);highlight.position.set(x,.16,z);
+      highlight.name='map-object-highlight';highlight.userData.highlightTarget=target;group.add(highlight);
     });
   }
 
@@ -348,23 +364,35 @@
     wall.position.set(0, cfg.elevation, (cfg.front + cfg.back) / 2);
     tagSelectable(wall, village.ownerId, village.lane);
     wall.userData.xrTarget = { kind: 'village', playerId: village.ownerId, lane: village.lane };
+    wall.userData.mapTarget = {kind:'village',playerId:village.ownerId,lane:village.lane};
     wall.userData.villageHp = village.hp; wall.userData.villageMaxHp = village.maxHp;
     estate.add(wall);
     function addBuilding(type, tier) {
-      const model = buildingModel(type, tier, village.ownerId);
+      const model = tier === 0 ? E.ConstructionSites.create(THREE,type) : buildingModel(type, tier, village.ownerId);
+      const target = {kind:type==='village'?'village':'building',playerId:village.ownerId,lane:village.lane,buildingType:type};
       const position = cfg.buildings[type];
-      model.name = type === 'village' ? 'hotel-village' : `batiment-${type}`;
+      model.name = type === 'village' ? 'hotel-village' : tier === 0 ? `chantier-${type}` : `batiment-${type}`;
       model.userData.buildingType = type; model.userData.buildingTier = tier;
+      if(tier===0)model.rotation.y=-Math.PI/2-estate.rotation.y;
       model.position.set(position[0] * width, cfg.elevation, position[1]);
       tagSelectable(model, village.ownerId, village.lane);
+      model.userData.mapTarget=target;
       estate.add(model);
+      if(type!=='village'){
+        const highlight=selectionOutline(.76,.64);highlight.position.copy(model.position);highlight.position.y+=.025;
+        highlight.name='map-object-highlight';highlight.userData.highlightTarget=target;estate.add(highlight);
+      }
     }
     addBuilding('village', village.level);
-    village.buildings.forEach(building => addBuilding(building.type, building.level));
+    E.Config.building.types.forEach(type=>{
+      const building=village.buildings.find(b=>b.type===type);
+      if(building||!village.destroyed)addBuilding(type,building?.level||0);
+    });
     const fire = E.VillageModels?.create(`feu_camp_t${village.level}`) || fallbackCampfire();
     fire.name = 'feu-de-camp'; fire.scale.setScalar(cfg.fireScale);
     fire.position.set(cfg.fire[0] * width, cfg.elevation, cfg.fire[1]);
     tagSelectable(fire, village.ownerId, village.lane);
+    fire.userData.mapTarget = {kind:'village',playerId:village.ownerId,lane:village.lane};
     fire.userData.campfireTier = village.level; fire.visible = !village.destroyed;
     estate.add(fire);
     if (village.destroyed) estate.traverse(item => {
@@ -512,7 +540,7 @@
       markSelected(figure, Boolean(unit.residentId && unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane));
       figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, combatZ(unit.position));
       figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
-      if (figure.userData.hunter && unit.visualAttackTarget && unit.attackCooldown > 0) {
+      if (unit.visualAttackTarget && unit.attackCooldown > 0) {
         figure.rotation.y = unit.visualAttackTarget.position >= unit.position ? 0 : Math.PI;
       }
       if (unit.mythologyRetreating || unit.returningToVillage) figure.rotation.y += Math.PI;
@@ -525,6 +553,8 @@
       figure.scale.setScalar(unit.mythologyScale || 1);
       updateMythologyAura(figure, appearance, unit.ownerId, state);
       syncUnitVisualState(figure, unit);
+      figure.userData.mapTarget = unit.residentId ? {kind:'resident',playerId:unit.ownerId,lane:unit.originLane,residentId:unit.residentId} : null;
+      E.CharacterHUD?.sync(figure, unit, unit.ownerId === viewerId(state));
       if (unit.residentId) deployedResidents.add(`${unit.ownerId}:${unit.residentId}`);
       if (unit.animalId != null) deployedAnimals.add(`${unit.ownerId}:${unit.animalId}`);
       active.add(key);
@@ -570,6 +600,8 @@
           figure.scale.setScalar((idleCount > cfg.crowdedThreshold ? cfg.crowdedIdleScale : cfg.idleScale) * (resident.mythologyScale || 1));
           figure.userData.aroundCampfire = true;
         }
+        figure.userData.mapTarget = {kind:'resident',playerId:player.id,lane:village.lane,residentId:resident.id};
+        E.CharacterHUD?.sync(figure, E.CharacterHUD.getStats(state,village,resident), player.id === viewerId(state));
         active.add(key);
       });
       let animalIndex = 0;
@@ -583,6 +615,7 @@
         figure.scale.setScalar(0.8);
         figure.rotation.y = facing === 1 ? 0 : Math.PI;
         figure.position.set(laneX(village.lane) + (-1 + column * 0.38) * terrainWidthScale(), 0.18, facing * (-2.55 - 0.67 + row * 0.31));
+        E.CharacterHUD?.sync(figure, {...animal,animalType:animal.type}, player.id === viewerId(state));
         active.add(key);
       });
     }));
@@ -643,6 +676,7 @@
       figure.rotation.set(0, event.ownerId === "red" ? 0 : Math.PI, 0);
       if (event.mythologyScale != null) figure.scale.setScalar(event.mythologyScale);
       figure.userData.dying = true;
+      if (figure.userData.characterHud) figure.userData.characterHud.group.visible = false;
       characterAnimation(figure)?.die();
       figure.userData.deathStartedAt = effectClock();
       figure.userData.deathBaseY = figure.position.y;
@@ -1015,6 +1049,22 @@
       visualsChanged = true;
     }
     terrainGroup.children.forEach(region => {
+      const selected = state.selectedVillage.playerId===region.userData.playerId && state.selectedVillage.lane===region.userData.lane;
+      const outline=region.getObjectByName('village-selection-outline');
+      if(outline)outline.visible=selected;
+      const target=E.MapInteraction?.selection;
+      region.traverse(object=>{
+        if(object.userData.cropHealthSlot!==undefined){
+          const crop=state.players[region.userData.playerId].villages[region.userData.lane].slots[object.userData.cropHealthSlot]?.content;
+          const ratio=crop?.category==='crop'?Math.max(0,Math.min(1,crop.hp/crop.maxHp)):0;
+          object.visible=ratio>0;object.userData.healthRatio=ratio;
+          const fill=object.getObjectByName('crop-health-fill');
+          fill.geometry.setDrawRange(0,Math.ceil(ratio*64)*6);
+          fill.material.color.setHex(ratio>.5?0x77d580:ratio>.25?0xeac15a:0xe86956);
+        }
+        const tag=object.userData.highlightTarget;
+        if(tag)object.visible=Boolean(target&&selected&&tag.kind===target.kind&&tag.slotIndex===target.slotIndex&&tag.buildingType===target.buildingType);
+      });
       const wall = region.getObjectByName('remparts');
       const village = state.players[region.userData.playerId]?.villages[region.userData.lane];
       if (wall && village) { wall.userData.villageHp = village.hp; wall.userData.villageMaxHp = village.maxHp; }
@@ -1063,6 +1113,7 @@
 
   function disposeObject(object) {
     characterAnimation(object)?.dispose();
+    E.CharacterHUD?.dispose(object);
     object.traverse((item) => {
       if (!item.userData.sharedGeometry) item.geometry?.dispose?.();
       if (Array.isArray(item.material)) item.material.forEach((entry) => entry.dispose?.());
@@ -1072,35 +1123,72 @@
 
   function bindControls() {
     const canvas = renderer.domElement;
-    canvas.addEventListener("pointerdown", (event) => {
-      pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
-      dragged = false;
-      canvas.setPointerCapture(event.pointerId);
+    canvas.addEventListener('pointerdown',event=>{
+      if(event.button!==0)return;
+      if(pointer){dragged=true;return;}
+      pointer={id:event.pointerId,x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY};
+      dragged=false;canvas.setPointerCapture(event.pointerId);
     });
-    canvas.addEventListener("pointermove", (event) => {
-      if (!pointer && E.MythologySession?.getTargeting()) {
-        const region = regionAt(event.clientX, event.clientY);
-        E.MythologySession.hoverRegion(region?.playerId, region?.lane);
+    canvas.addEventListener('pointermove',event=>{
+      if(!pointer){
+        if(E.MythologySession?.getTargeting()){
+          const region=regionAt(event.clientX,event.clientY);E.MythologySession.hoverRegion(region?.playerId,region?.lane);
+        }
+        canvas.style.cursor=E.MapInteraction?.selectable(targetAt(event.clientX,event.clientY),latestState)?'pointer':'grab';return;
       }
-      if (!pointer || pointer.id !== event.pointerId) return;
-      const dx = event.clientX - pointer.x;
-      const dy = event.clientY - pointer.y;
-      if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true;
-      orbit.angle -= dx * 0.007;
-      orbit.elevation = Math.max(0.35, Math.min(1.25, orbit.elevation + dy * 0.005));
-      pointer.x = event.clientX;
-      pointer.y = event.clientY;
+      if(pointer.id!==event.pointerId)return;
+      if(Math.hypot(event.clientX-pointer.startX,event.clientY-pointer.startY)>6)dragged=true;
+      if(dragged){
+        orbit.angle-=(event.clientX-pointer.x)*.007;
+        orbit.elevation=Math.max(.35,Math.min(1.25,orbit.elevation+(event.clientY-pointer.y)*.005));
+        canvas.style.cursor='grabbing';
+      }
+      pointer.x=event.clientX;pointer.y=event.clientY;
     });
-    canvas.addEventListener("pointerup", (event) => {
-      if (!dragged) selectAt(event.clientX, event.clientY);
-      pointer = null;
+    canvas.addEventListener('pointerup',event=>{
+      if(!pointer||pointer.id!==event.pointerId)return;
+      if(!dragged)selectAt(event.clientX,event.clientY);
+      pointer=null;if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);
+      canvas.style.cursor='grab';
     });
-    canvas.addEventListener('pointercancel', () => { pointer = null; });
-    canvas.addEventListener('pointerleave', () => E.MythologySession?.hoverRegion(null));
-    canvas.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      orbit.distance = Math.max(11, Math.min(27, orbit.distance + event.deltaY * 0.012));
-    }, { passive: false });
+    canvas.addEventListener('pointercancel',()=>{pointer=null;dragged=true;});
+    canvas.addEventListener('lostpointercapture',()=>{pointer=null;});
+    canvas.addEventListener('pointerleave',()=>E.MythologySession?.hoverRegion(null));
+    canvas.addEventListener('wheel',event=>{
+      event.preventDefault();orbit.distance=Math.max(11,Math.min(27,orbit.distance+event.deltaY*.012));
+    },{passive:false});
+  }
+
+  function targetAt(clientX,clientY) {
+    if(!ready)return null;
+    const rect=renderer.domElement.getBoundingClientRect();
+    const raycaster=new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2((clientX-rect.left)/rect.width*2-1,-(clientY-rect.top)/rect.height*2+1),camera);
+    world.updateMatrixWorld(true);
+    for(const hit of raycaster.intersectObjects([unitGroup,terrainGroup],true)){
+      let object=hit.object,target=null,visible=true;
+      while(object){
+        if(!object.visible||object.userData.dying){visible=false;break;}
+        target ||= object.userData.mapTarget;
+        object=object.parent;
+      }
+      if(visible&&target)return target;
+    }
+    return null;
+  }
+
+  function selectionOutline(width,depth) {
+    const group=new THREE.Group();group.visible=false;
+    for(const [thickness,opacity]of [[.10,.09],[.055,.22],[.022,.95]]){
+      const m=new THREE.MeshBasicMaterial({color:0xffdc42,transparent:true,opacity,depthTest:false,depthWrite:false});
+      for(const sign of [-1,1]){
+        const x=new THREE.Mesh(new THREE.BoxGeometry(width,.004,thickness),m.clone());x.position.z=sign*depth/2;
+        const z=new THREE.Mesh(new THREE.BoxGeometry(thickness,.004,depth),m.clone());z.position.x=sign*width/2;
+        for(const line of [x,z]){line.renderOrder=5;line.raycast=()=>{};group.add(line);}
+      }
+      m.dispose();
+    }
+    return group;
   }
 
   function regionAt(clientX, clientY) {
@@ -1123,10 +1211,13 @@
   }
 
   function selectAt(clientX, clientY) {
-    const region = regionAt(clientX, clientY);
-    if (!region) return;
-    if (E.MythologySession?.targetRegion(region.playerId, region.lane)) return;
-    onSelectVillage?.(region.playerId, region.lane);
+    if(E.MythologySession?.getTargeting()){
+      const region=regionAt(clientX,clientY);
+      if(region)E.MythologySession.targetRegion(region.playerId,region.lane);
+      return;
+    }
+    const target=targetAt(clientX,clientY);
+    if(target)E.MapInteraction?.select(target);
   }
 
   function updateCamera() {
@@ -1209,7 +1300,7 @@
   }
 
   E.Board3D = {
-    getBoardWidth: boardWidth, init, update, toggle, setMode, setXRPreview, resize,
+    getBoardWidth: boardWidth, targetAt, init, update, toggle, setMode, setXRPreview, resize,
     getXRContext: () => ready ? { THREE, renderer, scene, camera, world, terrainGroup,
       getBoardDimensions: () => ({ width: boardWidth(), depth: 11.05 }) } : null,
     get ready() { return ready; }, get enabled() { return enabled; }, get error() { return loadError; } };

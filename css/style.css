@@ -209,7 +209,9 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .slot.crop-chataignier .content-icon, .crop-preview-chataignier { background-image: url("../assets/generated/crop-chataignier-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
 .slot.crop-chataignier.crop-size-moyen .content-icon, .crop-preview-chataignier.crop-size-moyen { background-image: url("../assets/generated/crop-chataignier-moyen-v1.webp"); }
 .slot.crop-chataignier.crop-size-grand .content-icon, .crop-preview-chataignier.crop-size-grand { background-image: url("../assets/generated/crop-chataignier-grand-v1.webp"); }
-.slot.crop-ble .content-icon, .crop-preview-ble { background-image: url("../assets/generated/crop-ble-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.slot.crop-ble .content-icon, .crop-preview-ble { background-image: url("../assets/generated/crop-ble-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
+.slot.crop-ble.crop-size-moyen .content-icon, .crop-preview-ble.crop-size-moyen { background-image: url("../assets/generated/crop-ble-moyen-v1.webp"); }
+.slot.crop-ble.crop-size-grand .content-icon, .crop-preview-ble.crop-size-grand { background-image: url("../assets/generated/crop-ble-grand-v1.webp"); }
 .crop-preview-ble, .crop-preview-chataignier, .crop-preview-vignoble { display: inline-block; width: 30px; height: 30px; flex-shrink: 0; vertical-align: middle; }
 .slot.crop-vignoble .content-icon, .crop-preview-vignoble { background-image: url("../assets/generated/crop-vignoble-petit-v1.webp"); background-size: contain; background-position: center; background-repeat: no-repeat; }
 .slot.crop-vignoble.crop-size-moyen .content-icon, .crop-preview-vignoble.crop-size-moyen { background-image: url("../assets/generated/crop-vignoble-moyen-v1.webp"); }

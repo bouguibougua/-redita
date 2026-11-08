@@ -6,7 +6,7 @@
   const missionLabels = { agriculture: "Agriculture", elevage: "Élevage", peche: "Pêche", chasse: "Chasse", attaque: "Attaquer", defense: "Défendre", disponible: "Disponible" };
   const missionIcons = { agriculture: "🌾", elevage: "🐑", peche: "🎣", chasse: "🏹", attaque: "⚔", defense: "🛡", disponible: "👤" };
   const portraitIndices = { habitant: 0, agriculteur: 1, berger: 2, pecheur: 3, guerrier: 4, chasseur: 5, ravageur: 6 };
-  const panelLabels = { modal: "Menu et paramètres", residents: "Habitants", tasks: "Tâches", jobs: "Métiers", buildings: "Gestion du village",
+  const panelLabels = { modal: "Menu et paramètres", residents: "Habitants", tasks: "Tâches", jobs: "Bâtiments", buildings: "Gestion du village",
     ...Object.fromEntries(["red", "blue"].flatMap((team) => [0, 1, 2, 3].map((lane) => [`${team}${lane}`, `${team === "red" ? "Rouge" : "Bleu"} · Village ${lane + 1}`]))),
     redGold: "Or Rouge", blueGold: "Or Bleu", clock: "Chronomètre" };
   const textSizes = { normal: "Normal", large: "Grand", xlarge: "Très grand" };
@@ -50,56 +50,34 @@
       if (village()?.destroyed) return "Ce village est détruit.";
       return "";
     }
-    function professionReason(key, scope = "single", resident = selectedResident()) {
-      const locked = lockedReason(); if (locked) return locked;
-      const v = village(), def = E.Config.professions[key];
-      if (!def) return "Métier inconnu.";
-      // Les préférences futures sont mémorisables avant de construire leur bâtiment.
-      if (scope === "next") return "";
-      if (def.requires && !E.Buildings.has(v, def.requires)) return `${buildingLabels[def.requires]} requise.`;
-      if (scope === "all") {
-        return v.residents.some((item) => !item.unitId && !["attaque", "defense"].includes(item.mission) &&
-          (item.profession || "habitant") !== key && (key === "habitant" || (item.profession || "habitant") === "habitant") &&
-          E.Economy.canSetProfession(state(), selection().playerId, v.lane, item.id, key)) ? "" : "Aucun habitant éligible ; les métiers existants sont conservés.";
-      }
-      if (!resident) return "Sélectionnez un habitant.";
-      if (resident.unitId) return "Impossible de changer un métier pendant le combat.";
-      return E.Economy.canSetProfession(state(), selection().playerId, v.lane, resident.id, key) ? "" : "Métier indisponible pour cet habitant.";
-    }
     function missionReason(key, scope = "single", resident = selectedResident()) {
       const locked = lockedReason(); if (locked) return locked;
       const v = village(), s = state(), id = selection().playerId;
       if (scope === "next") return "";
       if (scope === "single") {
         if (!resident) return "Sélectionnez un habitant.";
-        if (E.Config.jobs[key] && !E.Economy.jobRequirementMet(v,key)) return key === "agriculture" ? "Placez d’abord une culture." : key === "elevage" ? "Placez d’abord un élevage." : "La pêche nécessite un Littoral ou une rivière.";
+        if (E.Config.jobs[key] && !E.Economy.jobRequirementMet(v,key)) return E.Economy.jobRequirementReason(v,key);
         return E.Economy.canAssignResidentMission(s,id,v.lane,resident.id,key) ? "" : "Cette tâche est déjà choisie ou indisponible.";
       }
       if (key === "disponible") return v.residents.some(item => E.Config.jobs[item.mission]) ? "" : "Aucun travailleur à libérer.";
       if (E.Config.jobs[key]) {
-        if (!E.Economy.jobRequirementMet(v, key)) return key === "agriculture" ? "Placez d’abord une culture dans ce village." : key === "elevage" ? "Placez d’abord un élevage dans ce village." : "La pêche nécessite un Littoral.";
+        if (!E.Economy.jobRequirementMet(v, key)) return E.Economy.jobRequirementReason(v,key);
         const allowed = scope === "all" ? E.Economy.canAssignJob(s, id, v.lane, key) : E.Economy.canAssignResidentJob(s, id, v.lane, resident.id, key);
         if (!allowed) return "Aucun habitant disponible pour cette tâche.";
       } else if (!["attaque", "defense"].includes(key)) return "Tâche inconnue.";
       else if (scope === "all" && E.Economy.getAvailableResidents(s, id, v.lane) < 1) return "Aucun habitant disponible.";
       return "";
     }
-    function professionButton(key, scope = "single") {
-      const def = E.Config.professions[key], resident = selectedResident(), v = village();
-      const reason = professionReason(key, scope);
-      const selected = scope === "next" ? (v.nextResidentProfession || "habitant") === key : scope === "single" && (resident?.profession || "habitant") === key;
-      const action = scope === "single" ? command("setProfession", resident?.id, key) : command(scope === "all" ? "assignProfessionToAll" : "setNextResidentProfession", key);
-      return button(def.label, action, !reason, { icon: def.icon, selected, reason,
-        detail: reason || (selected ? "Équipé" : scope === "next" ? "Choisir pour les prochains" : "Attribuer · Disponible") });
-    }
     function missionButton(key, scope = "single") {
       const resident = selectedResident(), reason = missionReason(key, scope);
       const selected = scope === "next" ? (village().nextResidentMission || "disponible") === key : scope === "single" && (resident?.pendingMission || resident?.mission) === key;
+      const choice = ['attaque','defense'].includes(key) ? E.Economy.combatProfession(resident) : undefined;
+      const profession = E.Economy.professionForMission(resident,key,choice);
       let action;
-      if (scope === "next") action = command("setNextResidentMission", key);
-      else if (scope === "all") action = key === "disponible" ? command("releaseAllResidents") : command("assignAllResidents", key);
-      else action = key === "disponible" ? command("releaseResident", resident?.id) : command("assignResidentMission", resident?.id, key);
-      return button(key === "disponible" && scope !== "next" ? "Libérer la tâche" : missionLabels[key], action, !reason,
+      if (scope === "next") action = command("setNextResidentMission", key, choice);
+      else if (scope === "all") action = key === "disponible" ? command("releaseAllResidents") : command("assignAllResidents", key, choice);
+      else action = key === "disponible" ? command("releaseResident", resident?.id) : command("assignResidentMission", resident?.id, key, choice);
+      return button(key === "disponible" && scope !== "next" ? "Libérer la tâche" : `${missionLabels[key]}${key !== 'disponible' ? ' · ★ '+E.Config.professions[profession].label : ''}`, action, !reason,
         { icon: missionIcons[key], selected, reason, detail: resident?.pendingMission && selected ? "Retour au village, puis nouvelle tâche" : reason || (selected ? "Tâche active" : E.Economy.isBoosted(resident, key) ? "Attribuer · Bonus métier" : "Attribuer") });
     }
     function buildReason(type) {
@@ -174,12 +152,11 @@
         const scope = name === "missions" ? "single" : "next";
         if (scope === "next") lines = ["Choix appliqué à chaque arrivée, si ses conditions sont réunies."];
         entries = Object.keys(missionLabels).map((key) => missionButton(key, scope));
-      } else if (["professions", "all-professions", "next-profession"].includes(name)) {
-        title = name === "professions" ? `Métier · ${selectedResident()?.name || "habitant"}` : name === "all-professions" ? "Métier pour tous" : "Métier du prochain";
-        const scope = name === "professions" ? "single" : name === "all-professions" ? "all" : "next";
-        if (scope === "next") lines = ["Choix appliqué à chaque arrivée, si son bâtiment est construit."];
-        if (scope === "all") lines = ["Les métiers existants sont conservés.", "Sans métier retire les spécialités hors combat."];
-        entries = Object.keys(E.Config.professions).map((key) => professionButton(key, scope));
+      } else if (name === 'combat-profession') {
+        title = 'Métier de combat';
+        entries = E.Config.combatProfessions.map(key=>button(E.Config.professions[key].label,
+          command('setCombatProfession',selectedResident()?.id,key),own && !selectedResident()?.isLegend,
+          {selected:E.Economy.combatProfession(selectedResident())===key,detail:key==='chasseur'?'Arc : portée 15':E.Config.professions[key].description}));
       } else if (name === "all-missions") {
         title = "Mission pour tous les disponibles";
         lines = ["Attribution progressive aux habitants sans tâche."];
@@ -321,11 +298,8 @@
       const available = v ? E.Economy.getAvailableResidents(s, p.id, v.lane) : 0;
       const resident = selectedResident();
       const pairs = (items) => { const rows = []; for (let i = 0; i < items.length; i += 2) rows.push(items.slice(i, i + 2)); return rows; };
-      dashboard.paint("jobs", "Métiers à assigner", [resident?.name || "Aucun habitant"], [
-        ...pairs(Object.keys(E.Config.professions).map((key) => professionButton(key))),
-        row(button("À tous", open("all-professions"), own, { reason: lockedReason() }), button("Aux prochains", open("next-profession"), own, { reason: lockedReason() }))
-      ], managerVisible);
       dashboard.paint("tasks", "Tâches à assigner", [resident?.name || "Aucun habitant"], [
+        row(button(`Combat · ${E.Config.professions[E.Economy.combatProfession(resident)].label}`,open('combat-profession'),own && !resident?.isLegend)),
         ...pairs(Object.keys(missionLabels).map((key) => missionButton(key))),
         row(button("À tous", open("all-missions"), own, { reason: lockedReason() }), button("Aux prochains", open("next-mission"), own, { reason: lockedReason() }))
       ], managerVisible);
@@ -344,7 +318,9 @@
             { icon: E.Config.villageShops[type].icon, detail: `Améliorer · ${q.cost}`, reason: q.reason })));
         });
       });
-      const buildingCards = buildingRows.flat(), buildingGrid = [];
+      const tradeRows = buildingRows.slice(1).flat();
+      dashboard.paint('jobs','Bâtiments',[],pairs(tradeRows),managerVisible);
+      const buildingCards = buildingRows.slice(0,1).flat(), buildingGrid = [];
       for (let i = 0; i < buildingCards.length; i += 2) buildingGrid.push(buildingCards.slice(i, i + 2));
       buildingGrid.push(row(button("Construire", open("build")), button("Parcelles", open("slots"))));
       buildingGrid.push(row(button("Boutique · Y", open("shop")), button("Vendre", open("sell"))));

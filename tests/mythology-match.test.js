@@ -137,18 +137,21 @@ test('activation reservation is private, one-use, retry-idempotent and never acc
   assert.equal(a.view('red').selections[0].status,'activated');assert.equal(a.view('blue').selections.length,0);
 });
 
-test('public stock shares only counts and colors, excludes unchosen offers and consumed legends', () => {
+test('public crystals expose pending color pairs, never offer IDs, and consume selected crystals once', () => {
   const {E,authority:a,state}=fixture();a.sync(state);
   assert.equal(a.publicView().blue.count,0);
+  const pending=a.view('blue').pending;
+  assert.deepEqual(Array.from(a.publicView().blue.pendingColors[0]),Array.from(pending.legendIds,id=>E.Mythology.get(id).visuals.primaryColor));
+  assert.ok(!JSON.stringify(a.publicView()).includes(pending.id));
   const selection=choose(a,'blue').selection;
   const summary=a.view('red').publicPlayers.blue;
-  assert.equal(summary.count,1);
+  assert.equal(summary.count,1);assert.equal(summary.pendingColors.length,0);
   assert.deepEqual(Array.from(summary.colors),[E.Mythology.get(selection.legendId).visuals.primaryColor]);
-  assert.deepEqual(Object.keys(summary).sort(),['colors','count']);
+  assert.deepEqual(Object.keys(summary).sort(),['colors','count','pendingColors']);
   assert.ok(!JSON.stringify(summary).includes(selection.offerId));
   summary.colors.push('#ffffff');assert.equal(a.publicView().blue.colors.length,1,'Views cannot mutate stock');
   const activation=a.requestActivation('blue',{epoch:state.reinforcementEpoch,offerId:selection.offerId,target:{}});
   assert.equal(activation.accepted,true);assert.equal(a.publicView().blue.count,1,'Pending activation remains in reserve');
   a.finishActivation(activation.execution.activationId,true);assert.equal(a.publicView().blue.count,0);
-  a.reset();assert.equal(a.publicView().blue.count,0);
+  a.reset();assert.equal(a.publicView().blue.count,0);assert.equal(a.publicView().blue.pendingColors.length,0);
 });

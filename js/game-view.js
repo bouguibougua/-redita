@@ -42,7 +42,7 @@
     canControl(playerId) {
       const mode = E.Network.mode;
       return mode === "local" ? ["red", "blue"].includes(playerId)
-        : mode === "solo" || mode === "host" ? playerId === "red"
+        : mode === "solo" || mode === "host" || mode === "tutorial" ? playerId === "red"
           : mode === "guest" ? playerId === "blue" : false;
     },
     command(method, ...args) {

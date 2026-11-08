@@ -21,6 +21,8 @@
       littoral_rouge: { src: "assets/models/littoral_rouge.glb?v=1" },
       littoral_bleu: { src: "assets/models/littoral_bleu.glb?v=1" }
     },
+    // Chantier Tripo commun aux bâtiments absents ; pictogrammes ajoutés en relief.
+    constructionSiteModel: { src: "assets/models/chantier-construction.glb?v=1-286e17f2fedb", emblemPosition: [0,.31,-.08], emblemScale: .8 },
     // Présentation du village : ni PV supplémentaires ni collision avec les remparts.
     villageModels: {
       artisanat_t3: { src: "assets/models/artisanat_t3.glb?v=1-6db2efa35ccb" },
@@ -56,7 +58,14 @@
     },
     // TEMP_BALANCE_VALUE — hauteur visuelle sur le marqueur du slot ; aucune règle de récolte.
     cropModels: {
-      ble: { src: "assets/models/ble.glb?v=1", elevation: 0.13 },
+      ble: {
+        elevation: 0.13,
+        variants: [
+          { id: "petit", label: "Champ de blé · Niveau 1", level: 1, src: "assets/models/ble_petit.glb?v=1" },
+          { id: "moyen", label: "Champ de blé · Niveau 2", level: 2, src: "assets/models/ble_moyen.glb?v=1" },
+          { id: "grand", label: "Champ de blé · Niveau 3", level: 3, src: "assets/models/ble_grand.glb?v=1" }
+        ]
+      },
       chataignier: {
         elevation: 0.13,
         // Le modèle représente le niveau de la culture dans ce slot.
@@ -229,8 +238,8 @@
       bergerieBonusByLevel: { 1: 0.1, 2: 0.2, 3: 0.3 },
       descriptions: {
         bergerie: { label: "Bergerie", icon: "🐑", purpose: "Récoltes et élevage", production: "Récolte, lait et reproduction" },
-        artisanat: { label: "Artisanat", icon: "⚒", purpose: "Équipement et combat" },
-        boucherie: { label: "Boucherie", icon: "🔪", purpose: "Chasse et transport" }
+        artisanat: { label: "Artisanat", icon: "⚒", purpose: "Chasse et équipement" },
+        boucherie: { label: "Boucherie", icon: "🔪", purpose: "Pêche et transport" }
       },
       artisanatBonus: { hp: 5, damage: 2 },
       types: ["bergerie", "artisanat", "boucherie"],
@@ -300,14 +309,15 @@
     // TEMP_BALANCE_VALUE — seul le meilleur bonus de revente applicable est retenu.
     saleBonusPerLevel: 0.05,
     saleBuildingResources: { bergerie: ["ble", "lait"], artisanat: ["ble", "chataigne", "raisin", "viande", "poisson", "lait"], boucherie: ["viande", "poisson"] },
+    combatProfessions: ["guerrier", "ravageur", "chasseur"],
     professions: {
       habitant: { label: "Sans métier", icon: "👤", missions: [], description: "Toutes les tâches, sans bonus" },
-      agriculteur: { label: "Agriculteur", icon: "🌾", requires: "bergerie", missions: ["agriculture"], speedBonus: 0.2, workBonus: 0.2, biome: "plaine", biomeBonus: 0.3, description: "+20 % récolte (+30 % en Plaine), +20 % vitesse" },
+      agriculteur: { label: "Agriculteur", icon: "🌾", missions: ["agriculture"], speedBonus: 0.2, workBonus: 0.2, biome: "plaine", biomeBonus: 0.3, description: "+20 % récolte (+30 % en Plaine), +20 % vitesse" },
       berger: { label: "Berger", icon: "🐑", requires: "bergerie", missions: ["elevage"], speedBonus: 0.3, workBonus: 0.2, biome: "montagne", biomeBonus: 0.3, description: "+20 % lait / reproduction (+30 % en Montagne), +30 % vitesse" },
-      pecheur: { label: "Pêcheur", icon: "🎣", requires: "artisanat", missions: ["peche"], workBonus: 0.2, biome: "littoral", biomeBonus: 0.3, description: "+20 % poisson (+30 % sur le Littoral)" },
-      guerrier: { label: "Guerrier", icon: "⚔", requires: "artisanat", missions: ["attaque", "defense"], description: "+20 PV, +5 dégâts, +10 % vitesse" },
-      ravageur: { label: "Ravageur", icon: "🪓", requires: "boucherie", missions: ["attaque"], description: "+10 PV, +2 dégâts, +35 % vitesse ; +5 contre village" },
-      chasseur: { label: "Chasseur", icon: "🏹", requires: "boucherie", missions: ["chasse"], speedBonus: 0.5, description: "5 viandes par chasse au lieu de 3, +50 % vitesse ; arc : portée 15" }
+      pecheur: { label: "Pêcheur", icon: "🎣", requires: "boucherie", missions: ["peche"], workBonus: 0.2, biome: "littoral", biomeBonus: 0.3, description: "+20 % poisson (+30 % sur le Littoral)" },
+      guerrier: { label: "Guerrier", icon: "⚔", missions: ["attaque", "defense"], description: "+20 PV, +5 dégâts, +10 % vitesse" },
+      ravageur: { label: "Ravageur", icon: "🪓", missions: ["attaque"], description: "+10 PV, +2 dégâts, +35 % vitesse ; +5 contre village" },
+      chasseur: { label: "Chasseur", icon: "🏹", requires: "artisanat", missions: ["chasse", "attaque", "defense"], speedBonus: 0.5, description: "5 viandes par chasse au lieu de 3, +50 % vitesse ; arc : portée 15" }
     },
     resourceSaleValues: {
       ble: 1,
@@ -387,10 +397,10 @@
       }
     },
     jobs: {
-      agriculture: { label: "Agriculture", role: "Agriculteur", icon: "🌾", requires: "bergerie" },
-      elevage: { label: "Élevage", role: "Berger", icon: "🐑", requires: "bergerie" },
-      peche: { label: "Pêche", role: "Pêcheur", icon: "🎣", requires: "artisanat" },
-      chasse: { label: "Chasse", role: "Chasseur", icon: "🏹", requires: "boucherie" }
+      agriculture: { label: "Agriculture", role: "Agriculteur", profession: "agriculteur", icon: "🌾" },
+      elevage: { label: "Élevage", role: "Berger", profession: "berger", icon: "🐑", requires: "bergerie" },
+      peche: { label: "Pêche", role: "Pêcheur", profession: "pecheur", icon: "🎣", requires: "boucherie" },
+      chasse: { label: "Chasse", role: "Chasseur", profession: "chasseur", icon: "🏹", requires: "artisanat" }
     },
     // TEMP_BALANCE_VALUE — coût et quantité initiale des élevages sont TBD.
     livestockPlacementCost: 0,
@@ -432,7 +442,7 @@
     },
     units: {
       habitant: { label: "Habitant", shortLabel: "H", hp: 50, damage: 5, speed: 5 },
-      guerrier: { label: "Guerrier", shortLabel: "G", hp: 70, damage: 10, speed: 5.5, requires: "artisanat" },
+      guerrier: { label: "Guerrier", shortLabel: "G", hp: 70, damage: 10, speed: 5.5 },
       // TEMP_BALANCE_VALUE — spécialisation du Ravageur contre les villages/bâtiments.
       ravageur: { label: "Ravageur", shortLabel: "R", hp: 60, damage: 7, speed: 6.75, villageDamageBonus: 5 },
       // TEMP_BALANCE_VALUE — vitesse terrestre 5 ; PV/dégâts fixés par le GDD.
@@ -455,6 +465,8 @@
       attackInterval: 1,
       // TEMP_BALANCE_VALUE — position logique de garde dans chaque territoire.
       defensePositionByOwner: { red: 25, blue: 75 },
+      // TEMP_BALANCE_VALUE — position de la rive, cohérente avec les pêcheurs visibles.
+      fishingPositionByOwner: { red: 23, blue: 77 },
       // TEMP_BALANCE_VALUE — vitesse du trajet latéral entre deux régions.
       redirectSpeed: 0.35
     },
@@ -481,6 +493,11 @@
     transportModels: {
       // Dimensions purement visuelles ; capacité, prix et vitesse restent dans maritime.
       barque: { src: "assets/models/barque.glb?v=1-e1ff6a2744b3", scale: 1 }
+    },
+    characterHud: {
+      ally: '#42d8f0', enemy: '#f06470', ringSize: .54,
+      healthWidth: .61, healthHeight: .19, healthGap: .11,
+      tiers: {0:'#626a76',1:'#a56b3f',2:'#c1c7cf',3:'#efd071'}
     },
     characterModels: {
       // TEMP_BALANCE_VALUE — échelle visuelle du GLB fourni pour les sans métier.

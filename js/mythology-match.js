@@ -73,7 +73,8 @@
     function publicView() {
       return Object.fromEntries(Object.entries(players).map(([id, player]) => {
         const stock = player.selections.filter(item => item.status !== 'activated');
-        return [id, { count: stock.length, colors: stock.map(item => E.Mythology.get(item.legendId).visuals.primaryColor) }];
+        return [id, { count: stock.length, colors: stock.map(item => E.Mythology.get(item.legendId).visuals.primaryColor),
+          pendingColors: player.queue.map(offer => offer.legendIds.map(legendId => E.Mythology.get(legendId).visuals.primaryColor)) }];
       }));
     }
     function view(playerId) {

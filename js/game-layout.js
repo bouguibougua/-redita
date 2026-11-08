@@ -10,11 +10,10 @@
     ['left','vertical','Largeur du panneau Habitants',1],
     ['right','vertical','Largeur des panneaux du village',-1],
     ['map','horizontal','Hauteur du terrain',1],
-    ['jobs','horizontal','Hauteur du panneau Métiers',-1],
+    ['jobs','horizontal','Hauteur du panneau Bâtiments',-1],
     ['village','horizontal','Hauteur du panneau Village',-1],
     ['people','horizontal','Répartition Habitants et Tâches',1],
     ['header','horizontal','Hauteur des fiches de villages',1],
-    ['buildings','horizontal','Hauteur du panneau Bâtiments',1],
     ['inspector','horizontal','Hauteur des emplacements',1]
   ].map(([key,orientation,label,sign]) => ({key,orientation,label,sign}));
   const clamp = (value,min,max) => Math.min(Math.max(value,min),Math.max(min,max));
@@ -57,7 +56,7 @@
       left=clamp(p.left*w,Math.min(120,w*.40),w-Math.min(120,w*.40)-gap);
       map=clamp(p.map*h,100,h-160-gap*3);
       const remaining=h-map-gap*3;
-      jobs=clamp(p.jobs*h,52,remaining-104);
+      jobs=clamp(p.jobs*h,Math.min(120,remaining-104),remaining-104);
       village=clamp(p.village*h,52,remaining-jobs-52);
       px('map-height',map);
     }
@@ -67,7 +66,7 @@
     const people=clamp(p.people*availablePeople,Math.min(80,availablePeople*.35),availablePeople-Math.min(125,availablePeople*.45));
     px('people-height',people);
     metrics={left:left/w,right:(right||0)/w,jobs:jobs/h,village:village/h,map:(map||0)/h,people:people/availablePeople,header:(rect('.game-topbar')?.height||0)/innerHeight};
-    for(const key of ['buildings','inspector']){
+    for(const key of ['inspector']){
       const selector={market:'#building-market',buildings:'#owned-buildings',inspector:'#village-inspector'}[key];
       if(Number.isFinite(p[key]))px(key==='buildings'?'buildings-height':key+'-height',clamp(p[key]*h,70,Math.max(90,h*.8)));
       else screen.style.removeProperty('--layout-'+(key==='buildings'?'buildings-height':key+'-height'));
@@ -84,7 +83,7 @@
     el.setAttribute('aria-valuemin','0');el.setAttribute('aria-valuemax','100');el.setAttribute('aria-valuenow',String(Math.round((metrics[key]||0)*100)));
   }
   function positionHandles(){
-    const g=grid.getBoundingClientRect(),people=rect('.character-panel'),board=rect('.board-panel'),jobs=rect('.management-professions'),village=rect('.management-village'),tools=rect('.side-panel'),residents=rect('.management-people'),header=rect('.game-topbar');
+    const g=grid.getBoundingClientRect(),people=rect('.character-panel'),board=rect('.board-panel'),jobs=rect('#building-panel'),village=rect('.management-village'),tools=rect('.side-panel'),residents=rect('.management-people'),header=rect('.game-topbar');
     if(!people||!board||!jobs||!village||!tools)return;
     const thickness=mode==='portrait'?12:10;
     place('left',people.right+(mode==='desktop'?(board.left-people.right):(tools.left-people.right))/2-thickness/2,people.top,thickness,people.height);
@@ -94,7 +93,7 @@
     place('village',village.left,village.top-thickness/2-3,village.width,thickness);
     if(residents)place('people',residents.left+4,residents.bottom-thickness/2,residents.width-8,thickness);
     place('header',header.left,header.bottom-thickness/2+4,header.width,thickness,mode==='desktop');
-    for(const key of ['buildings','inspector']){
+    for(const key of ['inspector']){
       const r=rect({market:'#building-market',buildings:'#owned-buildings',inspector:'#village-inspector'}[key]);
       const visible=r&&r.height>0&&r.bottom>tools.top+8&&r.bottom<tools.bottom-5;
       if(r)place(key,Math.max(r.left,tools.left)+5,r.bottom-thickness/2,Math.min(r.right,tools.right)-Math.max(r.left,tools.left)-10,thickness,visible);
