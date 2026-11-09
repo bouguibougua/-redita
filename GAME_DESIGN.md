@@ -801,7 +801,17 @@ Chaque Habitant vivant peut recevoir ou changer individuellement une mission loc
 
 Seules trois tâches exigent un bâtiment : **Élevage → Bergerie, Pêche → Boucherie, Chasse → Artisanat**, dès T1. Agriculture reste utilisable sans bâtiment, avec une culture vivante ; un troupeau et l’accès à l’eau restent nécessaires pour l’élevage et la pêche. Un ordre bloqué ne change ni la tâche, ni le métier, ni la cargaison. Attaquer et Défendre restent utilisables sans bâtiment.
 
-Un petit menu **Combat** permet de choisir Guerrier, Ravageur ou Chasseur à l’arc. Ce choix est appliqué au prochain ordre Attaquer/Défendre et peut aussi être transmis avec « Tous » ou « Prochains ». Il n’échange pas instantanément le métier d’un combattant déployé : un nouvel ordre peut le rappeler, avec son métier actuel jusqu’à l’arrivée, puis appliquer le nouveau rôle. Ses blessures sont conservées en proportion des PV maximum. Les statistiques et domaines des bonus restent ceux des classes existantes ; le Chasseur conserve sa portée d’arc de **15 unités**. Le Ravageur conserve son bonus de spécialité en attaque.
+Un petit menu **Mode de combat** permet de choisir **Guerrier, Ravageur ou Archer**. L’intitulé Archer correspond au rôle Chasseur à l’arc existant. Ce choix est appliqué au prochain ordre Attaquer/Défendre et peut aussi être transmis avec « Tous » ou « Prochains ». Il n’échange pas instantanément le métier d’un combattant déployé : un nouvel ordre peut le rappeler, avec son métier actuel jusqu’à l’arrivée, puis appliquer le nouveau rôle. Ses blessures sont conservées en proportion des PV maximum. Les statistiques et domaines des bonus restent ceux des classes existantes ; le Chasseur conserve sa portée d’arc de **15 unités**. Le Ravageur conserve son bonus de spécialité en attaque.
+
+Les boutons de tâche affichent seulement leur intitulé et, pour les activités
+économiques, **une étoile par niveau du bâtiment associé** : aucune sans bâtiment,
+★ en T1, ★★ en T2, ★★★ en T3. Agriculture et Élevage sont liés à la Bergerie,
+Chasse à l’Artisanat et Pêche à la Boucherie. Ces étoiles indiquent le niveau du
+bâtiment, indépendamment du métier courant de l’habitant. Les boutons Agriculture
+sont jaunes, Élevage blancs, Chasse verts, Pêche bleus et Rendre disponible marron ;
+les commandes Tous/Prochains reprennent cette couleur. Les pictogrammes et petits
+descriptifs, y compris la mention de riposte dans Attaquer, sont retirés des boutons.
+Les prérequis restent consultables au survol.
 
 Un changement de tâche attribue le métier adapté automatiquement, et « Rendre disponible » rend un habitant ordinaire sans métier après son retour. Les préférences de combat peuvent être conservées pour un prochain ordre. « Tous » continue à affecter seulement les habitants disponibles à 0,5 seconde d’intervalle ; « Prochains » mémorise ensemble tâche et métier pour les naissances et achats, en appliquant les mêmes prérequis. Les légendes ne reçoivent pas de profession ordinaire par ce mécanisme.
 
@@ -960,7 +970,7 @@ Dans ce mode, il reste sur le territoire et attaque les ennemis qui entrent dans
 
 Condition :
 
-Le rôle Guerrier se choisit dans le menu Combat et s’applique avec Attaquer ou Défendre, sans bâtiment requis.
+Le rôle Guerrier se choisit dans le menu Mode de combat et s’applique avec Attaquer ou Défendre, sans bâtiment requis.
 
 ---
 
@@ -974,7 +984,7 @@ Bonus actuels :
 
 Condition :
 
-Le rôle Ravageur se choisit dans le menu Combat et s’applique avec Attaquer ou Défendre, sans bâtiment requis. Son bonus de spécialité reste réservé à l’attaque.
+Le rôle Ravageur se choisit dans le menu Mode de combat et s’applique avec Attaquer ou Défendre, sans bâtiment requis. Son bonus de spécialité reste réservé à l’attaque.
 
 Bonus :
 
@@ -982,12 +992,12 @@ Bonus :
 
 Le Ravageur doit notamment servir à attaquer l'économie adverse.
 
-Une ambiguïté existe encore entre :
-
-* attaque des élevages ;
-* attaque uniquement des bâtiments.
-
-Cette règle doit être confirmée avant une implémentation définitive de son ciblage.
+**Priorité validée :** en attaque, le Ravageur se dirige d’abord vers les
+cultures ennemies vivantes de sa colonne, même si une troupe ennemie est proche.
+Il les frappe à sa cadence habituelle avec son bonus spécialisé de +5 dégâts.
+Une fois les cultures détruites, il reprend son ciblage des troupes puis du village.
+En défense, il conserve son poste ; les légendes ayant un rôle technique Ravageur,
+notamment U Lupu Mannaru, gardent leurs propres règles de ciblage.
 
 ---
 
@@ -1031,7 +1041,7 @@ Pendant sa mission, le chasseur est visible et se déplace continuellement vers 
 
 Condition :
 
-La tâche Chasse nécessite un **Artisanat T1** et attribue automatiquement le rôle Chasseur. Le rôle Chasseur à l’arc peut aussi se choisir dans le menu Combat pour Attaquer ou Défendre, sans bâtiment requis.
+La tâche Chasse nécessite un **Artisanat T1** et attribue automatiquement le rôle Chasseur. Le rôle Chasseur à l’arc peut aussi se choisir dans le menu Mode de combat pour Attaquer ou Défendre, sans bâtiment requis.
 
 ---
 
@@ -1861,9 +1871,16 @@ Ces effets réutilisent les calculs existants de production.
 
 # 68. U DIAVULE — TERRAIN
 
-Brûle les **deux territoires de la colonne**, allié et adverse :
-cultures, élevages et habitants présents sur le terrain sont détruits.
-Les habitants à l’intérieur des villages restent vivants.
+Brûle les **deux territoires de la colonne**, allié et adverse. Les unités,
+cultures et élevages présents sur les terrains reçoivent **10 dégâts dès
+l’invocation**, puis **6 dégâts par seconde** pendant les secondes suivantes.
+Le feu dure **66 secondes** : 66 impacts au total, à t=0 puis t=1 à t=65,
+soit **10 + 65 × 6 = 400 dégâts** pour une cible exposée pendant toute la durée.
+Les cibles qui entrent ou sortent du terrain brûlé sont prises en compte à chaque
+impact ; aucune destruction immédiate ne remplace les dégâts.
+Les habitants à l’intérieur des villages, les remparts et les bâtiments sont
+épargnés. Les morts, protections et transformations existantes sont résolues
+normalement ; une culture ou un élevage détruit libère son emplacement.
 
 La description affichée lors du choix et de l’utilisation est uniquement :
 **« Anéantit le village de votre adversaire. »**
@@ -1873,8 +1890,27 @@ La description mécanique complète reste dans les données.
 
 # 69. TERRAIN BRÛLÉ
 
-La règle existante est conservée : les deux régions sont brûlées pendant
-**120 secondes**, sans nouveaux placements pendant cette période.
+Les deux régions sont brûlées pendant **66 secondes**, sans nouveaux placements
+pendant cette période. Le délai commence à l’invocation, **y compris pendant la
+préparation**, et se fige en pause. Un nouvel usage sur la même colonne renouvelle
+le feu et son premier impact ; les dégâts périodiques de ces usages ne se cumulent
+pas. La répétition réseau d’une même activation n’ajoute ni impact ni apparition.
+
+**U Diavule apparaît du côté du joueur qui le lance**, sur la partie terrestre de
+la colonne choisie. Le modèle Tripo fourni (`diabule 3D.zip`) reprend la séquence
+de `ScreenRecording_11-08-2026 18.mov` : apparition translucide, flash de feu,
+ouverture ample des ailes, élévation avec le bras gauche levé et le coude droit fléchi, puis réception accroupie et reprise d’appui. La compression avant la poussée, les jambes repliées en suspension et le décalage des extrémités des ailes accentuent le mouvement. Le flash blanc-or, le halo, les rubans d’étincelles en volume et l’onde au sol sont synchronisés avec ces poses ; une brève lumière éclaire le modèle et le sol. Le personnage fait face au joueur au début de son apparition, puis conserve cette orientation pendant la séquence.
+Le clip `Invocation` dure environ **1,63 seconde**, suivi de `Battement` jusqu’au
+retrait visuel à 7 secondes. Le **son original** de la vidéo est extrait dans
+`assets/audio/diavule-invocation.wav` et joué une fois par activation, selon le
+réglage sonore. Le modèle est préchargé pour être disponible à l’invocation.
+Les sources Blender et `eredita3D/scripts/animate_diavule_invocation.py` permettent
+de régénérer `assets/models/diavule.glb`.
+
+Flammes, braises et étincelles marquent les deux terrains jusqu’à la fin des
+66 secondes. La cour des villages et l’eau restent dégagées. La vue 2D possède
+également son effet de feu. L’apparition est visuelle et n’ajoute aucune unité
+combattante ; le feu suit les données de l’activation confirmée pour les deux camps.
 
 ---
 
@@ -2084,11 +2120,11 @@ Le message « Préparation : attribuez vos tâches et métiers… » est retiré
 
 L’écran de jeu occupe une seule hauteur de fenêtre, sans défilement global : carte centrée, habitants et tâches fusionnées à gauche, tableau **3 · Bâtiments** en bas au centre à la place de l’ancien panneau Métiers, gestion du village en bas à droite. Le tableau présente Bergerie, Artisanat et Boucherie avec modèles, rôles, bonus, coûts et améliorations ; les trois fiches sont côte à côte sur grand écran, compactes et défilables sur petit écran. Leurs achats restent uniques par type et par village, avec les mêmes coûts et PV. Sous la boutique, à droite, restent les villages, emplacements et informations utiles. Les panneaux restent redimensionnables et les listes longues défilent à l’intérieur.
 
-Les tâches affichent automatiquement **★ et le nom du métier** correspondant, leurs bonus et les prérequis manquants. Le menu Combat conserve les trois choix Guerrier/Ravageur/Chasseur sans ajouter de série de boutons de métier. Les actions « Tous », « Retirer tous » et « Prochains » portent sur les tâches ; aucune commande groupée séparée de métier n’est affichée. Les boutons actifs sont signalés en jaune, avec le bonus actif marqué par un liseré bleu. Le choix Prochains est appliqué aux naissances et achats si ses conditions sont toujours réunies.
+Les tâches affichent leur nom, leur couleur et de zéro à trois étoiles selon le niveau du bâtiment associé, comme décrit au §28.1. Le menu Mode de combat propose Guerrier/Ravageur/Archer sans ajouter de série de boutons de métier. Les actions « Tous », « Retirer tous » et « Prochains » portent sur les tâches ; aucune commande groupée séparée de métier n’est affichée. La tâche active est signalée par un contour doré qui conserve sa couleur d’activité. Le choix Prochains est appliqué aux naissances et achats si ses conditions sont toujours réunies.
 
 Chaque personnage blessé (**PV courants inférieurs au maximum**) dispose d’une barre de **PV courants / maximum au-dessus de sa tête**. Cette barre est masquée à pleine santé et disparaît après un soin complet. Chaque personnage conserve son cercle lumineux doux à ses pieds : **bleu pour un allié du joueur qui regarde, rouge pour un ennemi**, quel que soit le camp Rouge/Bleu. Le cercle contient l’icône du métier. Deux petits pictogrammes épée et bouclier indiquent respectivement le tier d’outil et d’armure : **T1 marron, T2 gris, T3 doré** ; sans équipement, l’icône est atténuée. Les légendes gardent leurs règles d’équipement. Les PV se mettent à jour pendant les dégâts, soins, achats d’équipement et changements de rôle ; un marqueur disparaît à la mort. La sélection d’un habitant affiche aussi PV, dégâts et portée dans le panneau Tâches. Ces repères existent en 3D et en 2D, avec des textures de cercle partagées, sans effet sur les règles ni nouvelle divulgation des stocks des villages ennemis.
 
-La carte 2D/3D est interactive : un clic ou un toucher sélectionne un village du joueur, une parcelle, un habitant local ou déployé, un bâtiment ou son chantier. Le tour du village sélectionné brille en jaune ; la parcelle ou le bâtiment choisi reçoit aussi un repère jaune. Le glissement continue à orienter la caméra et ne déclenche pas de sélection. La fiche compacte sur la carte permet de planter ou améliorer une culture, construire ou améliorer un bâtiment, améliorer le feu du village, et accéder aux tâches de l’habitant sélectionné. Les panneaux et boutons de navigation existants restent utilisables. Les clics passent par les mêmes commandes, prix, prérequis et protections réseau ; ils ne donnent pas le contrôle des ennemis. Les pouvoirs mythologiques qui demandent de viser une région gardent la priorité. Chaque type de bâtiment absent est représenté par un petit chantier à son emplacement : un simple panneau en bois portant un pictogramme de foin pour la Bergerie, d’outils pour l’Artisanat ou de four en pierre pour la Boucherie, accompagné de quelques planches et pierres. Il ne représente pas un bâtiment déjà construit. Le chantier est purement visuel, sans délai ni paiement supplémentaire ; il disparaît dès la construction. Le modèle commun `assets/models/chantier-construction.glb` provient de Tripo P1 (tâche `ffc5e5bd-0336-4e6a-9c4e-9f565d888035`, 40 crédits) : 1 425 triangles, un matériau PBR, textures ramenées à 512 px, hauteur 0,44 et emprise inférieure à 0,65 × 0,55. Les trois pictogrammes sont ajoutés en relief, sur les deux faces, par le rendu local. Géométrie et textures du chantier sont partagées entre les villages ; chaque exemplaire conserve sa sélection et son remplacement indépendants. Le visuel simple reste disponible pendant le chargement ou si le GLB échoue. `scripts/prepare-construction-site.py` reproduit localement l’orientation et l’optimisation depuis le GLB source dans `eredita3D/exports/chantier-construction-tripo-original.glb`. Le temps restant apparaît en haut au centre de la carte. Dans le panneau latéral, un groupe unique de quatre boutons **Slot 1 à 4** remplace les listes séparées de cultures et d'élevages. Cliquer sur un slot ouvre juste sous ces boutons les cultures compatibles avec son biome et, si le slot l'autorise, les élevages disponibles. Un clic sur un type place directement le contenu et garde son panneau de Slot ouvert. Les cultures affichent leur niveau et le prix de plantation de 75 or. Un slot de culture donne accès aux améliorations N2/N3 et, pendant la préparation, à la vente remboursée à gauche de l’amélioration. Un slot occupé par un élevage donne accès au retrait gratuit pendant la préparation, à l’abattage d’une quantité choisie et à Tout abattre. Le retrait disparaît à la fin de la préparation, et l’action restante se replace à gauche. Le remplacement payant d’une culture est accessible dans le volet Changer de culture. Les slots inexistants sont grisés. Le Littoral ne possède toujours que deux slots.
+La carte 2D/3D est interactive : un clic ou un toucher sélectionne un village du joueur, une parcelle, un habitant local ou déployé, un bâtiment ou son chantier. Le tour du village sélectionné brille en jaune ; la parcelle ou le bâtiment choisi reçoit aussi un repère jaune. Le glissement continue à orienter la caméra et ne déclenche pas de sélection. La fiche compacte sur la carte permet de planter ou améliorer une culture, construire ou améliorer un bâtiment, améliorer le feu du village, et accéder aux tâches de l’habitant sélectionné. Les panneaux et boutons de navigation existants restent utilisables. Les clics passent par les mêmes commandes, prix, prérequis et protections réseau ; ils ne donnent pas le contrôle des ennemis. Les pouvoirs mythologiques qui demandent de viser une région gardent la priorité. Chaque type de bâtiment absent est représenté par un petit chantier à son emplacement : un simple panneau en bois portant un pictogramme de foin pour la Bergerie, d’outils pour l’Artisanat ou de four en pierre pour la Boucherie, accompagné de quelques planches et pierres. Il ne représente pas un bâtiment déjà construit. Le chantier est purement visuel, sans délai ni paiement supplémentaire ; il disparaît dès la construction. Le modèle commun `assets/models/chantier-construction.glb` provient de Tripo P1 (tâche `ffc5e5bd-0336-4e6a-9c4e-9f565d888035`, 40 crédits) : 1 425 triangles, un matériau PBR, textures ramenées à 512 px, hauteur 0,44 et emprise inférieure à 0,65 × 0,55. Les trois pictogrammes sont ajoutés en relief, sur les deux faces, par le rendu local. Les panneaux des chantiers s’orientent autour de leur axe vertical pour rester face à la caméra du joueur, y compris lorsque le plateau est tourné à la verticale et en XR ; ils restent ancrés à leur emplacement et conservent leur sélection. Géométrie et textures du chantier sont partagées entre les villages ; chaque exemplaire conserve sa sélection et son remplacement indépendants. Le visuel simple reste disponible pendant le chargement ou si le GLB échoue. `scripts/prepare-construction-site.py` reproduit localement l’orientation et l’optimisation depuis le GLB source dans `eredita3D/exports/chantier-construction-tripo-original.glb`. Le temps restant apparaît en haut au centre de la carte. Dans le panneau latéral, un groupe unique de quatre boutons **Slot 1 à 4** remplace les listes séparées de cultures et d'élevages. Cliquer sur un slot ouvre juste sous ces boutons les cultures compatibles avec son biome et, si le slot l'autorise, les élevages disponibles. Un clic sur un type place directement le contenu et garde son panneau de Slot ouvert. Les cultures affichent leur niveau et le prix de plantation de 75 or. Un slot de culture donne accès aux améliorations N2/N3 et, pendant la préparation, à la vente remboursée à gauche de l’amélioration. Un slot occupé par un élevage donne accès au retrait gratuit pendant la préparation, à l’abattage d’une quantité choisie et à Tout abattre. Le retrait disparaît à la fin de la préparation, et l’action restante se replace à gauche. Le remplacement payant d’une culture est accessible dans le volet Changer de culture. Les slots inexistants sont grisés. Le Littoral ne possède toujours que deux slots.
 
 Les fiches des villages du joueur sont placées tout en haut au centre de l’écran, hors du terrain : deux fiches côte à côte en Simplifié et quatre en Classique (deux colonnes sur téléphone). Chacune affiche les PV, la population, les habitants disponibles et les six stocks locaux. La fiche sélectionnée est mise en évidence. Aucune fiche adverse n’est affichée. En réseau, le joueur Bleu voit uniquement les fiches bleues. Le terrain profite de l’espace libéré par les anciennes superpositions pour être agrandi. Les boutons Pause, Vue 2D/3D et Réalité mixte sont retirés de l’écran de partie. Le tutoriel revient automatiquement en 3D après l’explication des biomes.
 
@@ -2736,7 +2772,7 @@ Le but est que la Corse ne soit pas seulement le décor du jeu.
 
 Le bouton Tutoriel lance une partie guidée distincte des modes normal, local et réseau. La future cinématique reste prévue mais n'est pas encore produite. Un narrateur temporaire guide le joueur au moyen d'une boîte de dialogue pleine largeur en bas de l'écran. Un clic termine instantanément l'affichage progressif d'une phrase sans valider simultanément le dialogue ; un second clic valide les phrases manuelles. Chaque réplique peut recevoir plus tard un fichier `tutoriel_xxxx.mp3` dans `assets/audio/tutorial/`, sans rendre l'audio obligatoire.
 
-Le tutoriel impose le territoire initial Plaine, Littoral, Montagne, Montagne. L'échange demandé transforme ensuite les régions 2 et 3 pour obtenir Plaine, Plaine, Littoral, Montagne. Le joueur doit réellement utiliser les mécaniques existantes : placer quatre champs de blé en Plaine 1, affecter un habitant à l'agriculture, construire une Bergerie, constater le métier Agriculteur et son étoile automatiquement attribués, repousser une attaque, construire un Artisanat, choisir Guerrier dans le menu Combat et lancer une attaque groupée. Les étapes ne demandent plus de cliquer dans un panneau Métiers séparé. Les actions étrangères à l'étape courante sont verrouillées et l'action attendue est entourée d'une animation jaune.
+Le tutoriel impose le territoire initial Plaine, Littoral, Montagne, Montagne. L'échange demandé transforme ensuite les régions 2 et 3 pour obtenir Plaine, Plaine, Littoral, Montagne. Le joueur doit réellement utiliser les mécaniques existantes : placer quatre champs de blé en Plaine 1, affecter un habitant à l'agriculture, construire une Bergerie, constater le métier Agriculteur et son étoile automatiquement attribués, repousser une attaque, construire un Artisanat, choisir Guerrier dans le menu Mode de combat et lancer une attaque groupée. Les étapes ne demandent plus de cliquer dans un panneau Métiers séparé. Les actions étrangères à l'étape courante sont verrouillées et l'action attendue est entourée d'une animation jaune.
 
 Le village Rouge de la première région commence avec cinq habitants. La génération automatique des habitants rouges est suspendue jusqu'à la destruction du premier village adverse. Le tutoriel n'a ni limite de temps ni Overtime. Après le premier village adverse détruit, toutes les restrictions sont levées, la génération normale reprend et une IA volontairement facile poursuit son économie ; elle attend environ 60 secondes entre ses attaques et ne lance pas plus de trois offensives supplémentaires.
 

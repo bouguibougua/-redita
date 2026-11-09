@@ -8,8 +8,16 @@ const {startStaticServer,startBrowser,delay}=require('../scripts/export-menu-gif
  assert.equal(await p.evaluate("document.querySelector('.management-professions')"),null);assert.equal(await p.evaluate("document.querySelector('[data-profession]')"),null);assert.equal(await p.evaluate("document.querySelector('#building-panel').parentElement.className"),'game-layout');
  const layout=await p.evaluate("(()=>{const b=document.querySelector('#building-panel').getBoundingClientRect(),m=document.querySelector('.board-panel').getBoundingClientRect();return {b:b.top,m:m.bottom,delta:Math.abs(b.x+b.width/2-m.x-m.width/2)}})()");assert.ok(layout.b>=layout.m&&layout.delta<2);
  for(const m of ['elevage','peche','chasse'])assert.equal(await p.evaluate(`document.querySelector('[data-resident-mission="${m}"]').disabled`),true);
- await p.click('[data-resident-mission="agriculture"]');assert.equal(await p.evaluate('fResident().profession'),'agriculteur');assert.match(await p.evaluate("document.querySelector('[data-resident-mission=agriculture]').textContent"),/★ Agriculteur/);
+ assert.equal(await p.evaluate("document.querySelectorAll('.mission-button small, .mission-button .mission-stars').length"),0);
+ assert.deepEqual(await p.evaluate("Array.from(document.querySelector('[data-combat-profession-select]').options,o=>o.textContent)"),['Guerrier','Ravageur','Archer']);
+ assert.equal(await p.evaluate("document.querySelector('[data-combat-profession-select]').getAttribute('aria-label')"),'Mode de combat');
+ assert.equal(await p.evaluate("/Riposte|🌾|🐑|🎣|🏹|⚔|🛡|↩/.test(document.querySelector('.management-tasks .mission-grid').textContent)"),false);
+ await p.click('[data-resident-mission="agriculture"]');assert.equal(await p.evaluate('fResident().profession'),'agriculteur');assert.equal(await p.evaluate("document.querySelector('[data-resident-mission=agriculture]').textContent.trim()"),'Agriculture');
  for(const [building,mission,profession]of[['artisanat','chasse','chasseur'],['boucherie','peche','pecheur'],['bergerie','elevage','berger']]){await p.click('[data-build="'+building+'"]');await p.click('[data-resident-mission="'+mission+'"]');assert.equal(await p.evaluate('fResident().profession'),profession);}
+ for(const tier of [1,2,3]){
+  if(tier>1){await p.evaluate('fState.players.red.villages[0].resources.ble=2000;Eredita.UI.render(fState)');for(let index=0;index<3;index++)await p.click('[data-upgrade="'+index+'"]');}
+  for(const job of ['agriculture','elevage','peche','chasse'])assert.equal(await p.evaluate(`document.querySelector('[data-resident-mission="${job}"] .mission-stars').textContent`),'★'.repeat(tier));
+ }
  await p.click('[data-next-mission="chasse"]');await p.evaluate("window.fBorn=Eredita.Economy.addResident(fState.players.red.villages[0],fState)");assert.equal(await p.evaluate('fBorn.profession'),'chasseur');assert.equal(await p.evaluate('fBorn.mission'),'chasse');
  await p.click('[data-assign-all="agriculture"]');await p.waitFor('fState.players.red.villages[0].jobs.agriculture===4');assert.ok(await p.evaluate("fState.players.red.villages[0].residents.filter(r=>r.mission==='agriculture').every(r=>r.profession==='agriculteur')"));
  await p.click('[data-release-all]');await p.waitFor("fState.players.red.villages[0].residents.every(r=>r.mission==='disponible')");await p.click('[data-next-mission="disponible"]');

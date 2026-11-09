@@ -1,0 +1,34 @@
+{
+  "source": "diabule 3D.zip",
+  "sha256": "21df94388a7458856c483bb76ae4912b99f26cd58ada431fa0a46a711cecdcae",
+  "triangles": 17292,
+  "wingVertices": {
+    "Left": 1253,
+    "Right": 1274
+  },
+  "wingBones": [
+    "Wing_Left",
+    "Wing_Right",
+    "WingTip_Left",
+    "WingTip_Right"
+  ],
+  "clips": [
+    "Battement",
+    "Invocation"
+  ],
+  "bytes": 2065592,
+  "tripoCredits": 0,
+  "reference": "ScreenRecording_11-08-2026 18.mov",
+  "invocationDuration": 1.6333333333333333,
+  "keyPoses": {
+    "ghost": 0,
+    "flash": 0.3,
+    "spreadWings": 0.5,
+    "raisedLeftArm": 0.7,
+    "landing": 1.44,
+    "takeoff": 0.43,
+    "apex": 1.04
+  },
+  "revision": 3,
+  "motion": "anticipation, wing-driven lift, raised arm, bent legs, grounded landing"
+}

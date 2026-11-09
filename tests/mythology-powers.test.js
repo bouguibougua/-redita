@@ -89,18 +89,46 @@ test('A Squadra d’Arozza resurrects only unclaimed human deaths in the last mi
   s.elapsed=70;const before=v.population;assert.equal(cast('squadra-arozza').accepted,true);assert.equal(v.population,before+1);
   assert.equal(v.residents.at(-1).tool,'fer');assert.notEqual(v.residents.at(-1).id,recent.id);assert.equal(cast('squadra-arozza').accepted,false);
 });
-test('U Diavule destroys field inhabitants, crops and livestock, sparing buildings and residents inside villages',()=>{
-  const {E,s,cast,deploy}=fixture();
-  const deployed=deploy('blue');deployed.position=80;
-  for(const id of ['red','blue']){const v=s.players[id].villages[0];v.buildings.push({type:'artisanat',level:1});E.Crops.place(s,id,0,0,'ble');
-    const worker=v.residents.find(r=>!r.unitId);worker.mission='agriculture';worker.workPosition=id==='red'?20:80;v.jobs.agriculture=1;}
-  const before=Object.fromEntries(['red','blue'].map(id=>[id,{hp:s.players[id].villages[0].hp,idle:s.players[id].villages[0].residents.filter(r=>r.mission==='disponible').map(r=>r.id)}]));
-  assert.equal(cast('u-diavulu',{lane:0}).accepted,true);assert.ok(!s.units.includes(deployed));
-  for(const id of ['red','blue']){const v=s.players[id].villages[0];assert.equal(v.hp,before[id].hp);assert.equal(v.buildings.length,1);
-    assert.ok(v.slots.every(slot=>!slot.content));assert.ok(before[id].idle.every(key=>v.residents.some(r=>r.id===key)));assert.equal(v.burnUntil,120);}
+test('U Diavule deals exactly 400 damage in 66 impacts to exposed targets of both camps',()=>{
+  const {E,s,cast,deploy}=fixture(),units=[],crops=[];
+  for(const owner of ['red','blue']){
+    const v=s.players[owner].villages[0],u=deploy(owner);u.position=owner==='red'?20:80;u.hp=u.maxHp=1000;units.push(u);
+    E.Crops.place(s,owner,0,0,'ble');v.slots[0].content.hp=v.slots[0].content.maxHp=1000;crops.push(v.slots[0].content);
+    v.slots[1].content={category:'livestock',type:'chevre',count:50,hp:1000,maxHp:1000};crops.push(v.slots[1].content);
+    const worker=v.residents.find(r=>!r.unitId);worker.mission='agriculture';worker.workPosition=owner==='red'?20:80;v.jobs.agriculture=1;
+    v.buildings.push({type:'artisanat',level:1});
+  }
+  units.forEach(u=>{u.hp=u.maxHp=1000;});
+  const idle=s.players.red.villages[0].residents.find(r=>r.mission==='disponible'),hp=s.players.red.villages[0].hp;
+  assert.equal(cast('u-diavulu',{lane:0}).accepted,true);
+  assert.ok([...units,...crops].every(t=>t.hp===990),'Only the first ten-damage hit is immediate');
+  assert.equal(s.players.red.villages[0].burn.casterId,'red');assert.equal(s.players.red.villages[0].burnUntil,66);
+  const pulse=t=>{s.elapsed=t;E.MythologyEffects.update(s,.1);};
+  pulse(.99);assert.ok(units.every(u=>u.hp===990));pulse(1);assert.ok(units.every(u=>u.hp===984));
+  s.paused=true;pulse(1);assert.ok(units.every(u=>u.hp===984));s.paused=false;
+  pulse(65);assert.ok([...units,...crops].every(t=>t.hp===600));pulse(66);pulse(100);assert.ok([...units,...crops].every(t=>t.hp===600),'No 67th hit');
+  for(const owner of ['red','blue']){const v=s.players[owner].villages[0];assert.equal(v.hp,hp);assert.equal(v.buildings.length,1);assert.equal(v.population,4);assert.equal(v.jobs.agriculture,0);}
+  assert.ok(s.players.red.villages[0].residents.includes(idle));assert.equal(E.MythologyEffects.isBurned(s,s.players.red.villages[0]),false);
+  assert.ok(E.Crops.canPlace(s,'red',0,2,'ble'));
   assert.equal(E.Mythology.get('u-diavule').gameplay.shortDescription,'Anéantit le village de votre adversaire.');
-  s.players.red.villages[0].destroyed=true;
-  assert.equal(cast('u-diavulu',{lane:0}).accepted,false,'The existing living source village requirement remains');
+  s.players.red.villages[0].destroyed=true;assert.equal(cast('u-diavulu',{lane:0}).accepted,false);
+});
+test('Diavule fire starts during preparation, pauses, expires at 66 seconds and protects home units and other columns',()=>{
+  const {E,s,cast}=fixture();s.preparationRemaining=60;
+  const add=(owner,lane,position)=>{const u=E.Units.create(owner,lane,'habitant');u.position=position;u.hp=u.maxHp=1000;s.units.push(u);return u;};
+  const exposed=add('blue',0,80),safe=add('red',0,0),other=add('blue',1,80);
+  cast('u-diavulu',{lane:0});assert.equal(exposed.hp,990);assert.equal(safe.hp,1000);assert.equal(other.hp,1000);
+  s.preparationRemaining=59;E.MythologyEffects.updateBurns(s);assert.equal(exposed.hp,984);
+  s.paused=true;E.MythologyEffects.updateBurns(s);assert.equal(exposed.hp,984);s.paused=false;
+  s.preparationRemaining=0;E.MythologyEffects.updateBurns(s);assert.equal(exposed.hp,630);
+  s.elapsed=5;E.MythologyEffects.update(s,.1);assert.equal(exposed.hp,600);
+  s.elapsed=6;E.MythologyEffects.update(s,.1);assert.equal(exposed.hp,600);assert.equal(E.MythologyEffects.isBurned(s,s.players.red.villages[0]),false);
+});
+test('Diavule damage remains idempotent and a new cast can restart the same column during preparation',()=>{
+ const {E,s,cast}=fixture();s.preparationRemaining=60;const u=E.Units.create('blue',0,'habitant');u.position=80;u.hp=u.maxHp=1000;s.units.push(u);
+ const first=cast('u-diavulu',{lane:0});const id=s.players.red.villages[0].burn.id;
+ E.MythologyEffects.activate(s,{epoch:s.reinforcementEpoch,playerId:'red',legendId:'u-diavulu',target:{lane:0},activationId:first.activationId});assert.equal(u.hp,990);
+ cast('u-diavulu',{lane:0},'blue');assert.equal(u.hp,980);assert.notEqual(s.players.red.villages[0].burn.id,id);assert.equal(s.players.red.villages[0].burn.casterId,'blue');
 });
 test('A Mumma turns only intruders back toward their home',()=>{
   const {E,s,cast,deploy}=fixture(),intruder=deploy('blue'),outside=deploy('blue',1),friendly=deploy('red',2);

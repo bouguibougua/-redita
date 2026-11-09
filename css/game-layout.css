@@ -557,6 +557,35 @@ body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top
 #game-screen .combat-profession-picker { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: .62rem; }
 #game-screen .combat-profession-picker select { flex: 1; min-width: 0; min-height: 28px; border: 1px solid var(--line); border-radius: 5px; padding: 3px; background: #262117; color: var(--ink); }
 #game-screen .mission-profession { color: #e2c478; }
+
+/* Tâches : couleur de l'activité et niveau du bâtiment, sans descriptif sous le titre. */
+#game-screen .mission-command[data-mission-kind="agriculture"] { --mission-color: #dfb83f; --mission-ink: #302609; --mission-accent: #f0ca58; --mission-star: #685011; }
+#game-screen .mission-command[data-mission-kind="elevage"] { --mission-color: #e8e6dd; --mission-ink: #343128; --mission-accent: #eeece5; --mission-star: #725716; }
+#game-screen .mission-command[data-mission-kind="chasse"] { --mission-color: #397543; --mission-ink: #f3f8ee; --mission-accent: #83be83; --mission-star: #ffe088; }
+#game-screen .mission-command[data-mission-kind="peche"] { --mission-color: #266b9f; --mission-ink: #f1f8ff; --mission-accent: #79b9ec; --mission-star: #ffe088; }
+#game-screen .mission-command[data-mission-kind="disponible"] { --mission-color: #705039; --mission-ink: #fff0dd; --mission-accent: #c59a71; --mission-star: #ffe088; }
+#game-screen .management-tasks .mission-command[data-mission-kind] .mission-button {
+  display: flex; align-items: center; justify-content: space-between; gap: 4px;
+  min-height: 36px; padding: 7px; border: 1px solid var(--mission-accent);
+  background: var(--mission-color); color: var(--mission-ink); box-shadow: none; font-weight: 700;
+}
+#game-screen .management-tasks .mission-command[data-mission-kind] .mission-button:disabled { opacity: .5; }
+#game-screen .management-tasks .mission-command[data-mission-kind] .mission-button.assigned {
+  outline: 2px solid #ffe086; outline-offset: 0; box-shadow: inset 0 0 0 1px #20170a55;
+}
+#game-screen .management-tasks .mission-command[data-mission-kind] .mission-button.assigned:disabled { opacity: .85; }
+#game-screen .mission-label { min-width: 0; text-align: left; }
+#game-screen .mission-stars { flex: 0 0 auto; white-space: nowrap; color: var(--mission-star); font-size: .64rem; letter-spacing: 1px; }
+#game-screen .management-tasks .mission-command[data-mission-kind] .command-actions button {
+  border-color: color-mix(in srgb, var(--mission-accent) 55%, #352c20);
+  background: color-mix(in srgb, var(--mission-color) 24%, #211c14); color: var(--mission-accent);
+}
+#game-screen .management-tasks .mission-command[data-mission-kind] .command-actions button:disabled { opacity: .45; }
+#game-screen .management-tasks .mission-command[data-mission-kind] .command-actions .active {
+  background: color-mix(in srgb, var(--mission-color) 52%, #211c14); box-shadow: inset 0 0 0 1px var(--mission-accent);
+}
+#game-screen .combat-profession-picker { flex-wrap: wrap; }
+#game-screen .combat-profession-picker select { flex-basis: 90px; }
 @container buildings (max-width: 500px) {
   #game-screen #building-panel .building-table tbody { grid-template-columns: 1fr; }
 }

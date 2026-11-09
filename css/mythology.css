@@ -418,5 +418,13 @@
 /* Effets de terrain et vision des renforts, communs au plateau 2D. */
 .mythology-terrain-overlays { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 .mythology-terrain-river { position: absolute; left: 3%; top: 44%; width: 86%; height: 5px; background: #50b2c9; transform: rotate(-11deg); border-radius: 40%; }
-.region.mythology-burned::after { content: "Terrain brûlé"; position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; background: #38170c88; color: #ffd08a; font-size: .75rem; pointer-events: none; }
+.region.mythology-burned::after { content: "Terrain brûlé"; position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; color: #ffd08a; text-shadow: 0 2px 4px #180900; font-size: .75rem; pointer-events: none; }
+.terrain-fire-2d { position: absolute; inset: 38% 5% 4%; z-index: 3; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse, #e85b1c55, #28120c66 65%, transparent 80%); }
+.region.blue .terrain-fire-2d { inset: 4% 5% 38%; }
+.region.littoral.red .terrain-fire-2d { bottom: 35%; }
+.region.littoral.blue .terrain-fire-2d { top: 35%; }
+.terrain-fire-2d i { position: absolute; left: calc(5% + mod(var(--flame), 4) * 25%); bottom: calc(mod(var(--flame), 3) * 24%); width: 21%; height: 45%; transform-origin: 50% 100%; border-radius: 65% 30% 50% 50%; background: radial-gradient(ellipse at 50% 85%, #fff5b9 3%, #ffd34d 16%, #ff7c19 35%, #e6391677 58%, transparent 69%); filter: blur(.6px); animation: terrain-flame 1.1s ease-in-out infinite alternate; animation-delay: calc(var(--flame) * -.21s); }
+@keyframes terrain-flame { from { transform: scale(.74,.8) rotate(-7deg); opacity: .65; } to { transform: scale(1.05,1.16) rotate(9deg); opacity: 1; } }
+#battlefield[data-effects-paused="true"] .terrain-fire-2d i { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .terrain-fire-2d i { animation: none; opacity: .75; } }
 .region.mythology-cursed { filter: hue-rotate(20deg); box-shadow: inset 0 0 28px #a173d388; }

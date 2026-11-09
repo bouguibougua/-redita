@@ -307,6 +307,7 @@
 
 
   function renderStatus(state) {
+    elements.battlefield.dataset.effectsPaused = String(state.paused || state.phase !== 'running');
     if (state.tutorial?.noTimer) {
       elements.clock.textContent = "∞";
       elements.phase.textContent = "Tutoriel libre";
@@ -501,6 +502,7 @@
       <div class="region-name"><span>${E.Biomes.labels[village.biome]}</span><span data-region-population>${village.population}/${village.populationMax} hab.</span></div>
       <div class="terrain-ramparts tier-${village.level} ${village.destroyed ? 'destroyed' : ''}" data-terrain-ramparts title="Remparts · ${Math.ceil(village.hp)} PV"></div>
       <div class="terrain-building-layer ${village.destroyed ? "destroyed" : ""} ${village.damageSmoke > 0 ? "under-attack" : ""}" aria-label="Village et bâtiments visibles sur le terrain">${terrainBuildings}</div>
+      ${village.burnUntil > state.elapsed ? '<div class="terrain-fire-2d" aria-hidden="true">'+Array.from({length:12},(_,i)=>`<i style="--flame:${i}"></i>`).join('')+'</div>' : ''}
       ${maritimeLayer}
       ${overlays}
       <div class="slot-grid">${slots}</div>
@@ -696,7 +698,7 @@
       <section class="management-column management-village panel-card"><h3>4 · Village</h3>
         <div class="village-overview dashboard-scroll" data-scroll-key="village">
           <div class="resident-purchase"><strong>Nouvel habitant</strong><small>50 or + 50 ressources</small><label>Ressource<select data-purchase-resource>${E.Config.resources.map((key) => `<option value="${key}" ${key === purchaseResource ? "selected" : ""}>${resourceLabels[key]}</option>`).join("")}</select></label><button type="button" class="button buy-resident-button" data-buy-resident>Acheter un habitant</button></div>
-          <div class="management-card building-card building-village"><img class="campfire-management-image" src="assets/generated/feu_camp_t${village.level}.png" alt="" width="80" height="80"><strong>Feu de camp T${village.level}</strong><small>${village.populationMax} habitants maximum</small><small>Améliore le village et ses remparts</small><small>Riposte : ${E.Config.combat.villageRetaliationDamagePerSecond} dégâts/s</small>${upgradeButton(state, player, village, "village")}</div>
+          <div class="management-card building-card building-village"><img class="campfire-management-image" src="assets/generated/feu_camp_t${village.level}.png" alt="" width="80" height="80"><strong>Feu de camp T${village.level}</strong><small>${village.populationMax} habitants maximum</small><small>Améliore le village et ses remparts</small>${upgradeButton(state, player, village, "village")}</div>
         </div>
       </section>
     </div>`;
@@ -909,26 +911,26 @@
     };
     const actions = (mission, allowed) => `<div class="command-actions"><button class="assign-all-button" type="button" data-assign-all="${mission}" ${attrs(mission)} ${allowed ? '' : 'disabled'} title="Attribuer à tous les habitants disponibles">Tous</button>${nextButton(mission)}</div>`;
     const economic = Object.entries(E.Config.jobs).map(([job, definition]) => {
-      const profession = E.Config.professions[definition.profession];
       const allowed = E.Economy.canAssignResidentMission(state, player.id, village.lane, resident.id, job);
       const assigned = activeMission === job;
       const reason = E.Economy.jobRequirementReason(village,job);
-      return `<div class="mission-command"><button class="mission-button ${assigned ? 'boosted assigned' : ''}" type="button" aria-pressed="${assigned}" data-resident-mission="${job}" data-resident-id="${resident.id}" ${!allowed ? 'disabled' : ''}>
-        ${definition.icon} ${definition.label}${assigned ? ' ✓' : ''}<small><span class="mission-profession">★ ${profession.label}</span> · ${reason || profession.description}</small>
+      const tier = village.destroyed ? 0 : Math.max(0,Math.min(3,village.buildings.find(building=>building.type===definition.boostBuilding)?.level || 0));
+      const stars = tier ? `<span class="mission-stars" aria-label="${buildingLabels[definition.boostBuilding]} niveau ${tier}">${'★'.repeat(tier)}</span>` : '';
+      const hint = [tier ? `${buildingLabels[definition.boostBuilding]} T${tier}` : '', reason].filter(Boolean).join(' · ');
+      return `<div class="mission-command" data-mission-kind="${job}"><button class="mission-button ${assigned ? 'assigned' : ''}" type="button" aria-pressed="${assigned}" data-resident-mission="${job}" data-resident-id="${resident.id}" ${hint ? `title="${hint}"` : ''} ${!allowed ? 'disabled' : ''}>
+        <span class="mission-label">${definition.label}</span>${stars}
       </button>${actions(job,hasAvailable && !locked && E.Economy.jobRequirementMet(village,job))}</div>`;
     }).join('');
     const combat = ['attaque','defense'].map(mission => {
       const profession = E.Economy.professionForMission(resident,mission,choice);
-      const definition = E.Config.professions[profession] || E.Config.professions.habitant;
-      const boosted = E.Economy.isBoosted({...resident,profession},mission);
       const assigned = activeMission === mission && (resident.pendingProfession || resident.profession) === profession;
       const allowed = !locked && (tutorialDefenseOrder || E.Economy.canAssignResidentMission(state,player.id,village.lane,resident.id,mission,choice));
-      return `<div class="mission-command"><button class="mission-button ${boosted && assigned ? 'boosted' : ''} ${assigned ? 'assigned' : ''}" type="button" aria-pressed="${assigned}" data-resident-mission="${mission}" data-resident-id="${resident.id}" ${attrs(mission)} ${allowed ? '' : 'disabled'}>${mission === 'attaque' ? '⚔ Attaquer' : '🛡 Défendre'}${assigned ? ' ✓' : ''}<small><span class="mission-profession">${boosted ? '★ ' : ''}${definition.label}</span> · ${profession === 'chasseur' ? 'Arc : portée 15' : boosted ? definition.description : 'Combat de base'}${mission === 'attaque' ? ' · Riposte : −5 PV/s' : ''}</small></button>${actions(mission,hasAvailable && !locked)}</div>`;
+      return `<div class="mission-command"><button class="mission-button ${assigned ? 'assigned' : ''}" type="button" aria-pressed="${assigned}" data-resident-mission="${mission}" data-resident-id="${resident.id}" ${attrs(mission)} ${allowed ? '' : 'disabled'}>${mission === 'attaque' ? 'Attaquer' : 'Défendre'}</button>${actions(mission,hasAvailable && !locked)}</div>`;
     }).join('');
     const release = !locked && E.Economy.canAssignResidentMission(state,player.id,village.lane,resident.id,'disponible');
     const releaseAll = !locked && village.residents.some(r=>Object.hasOwn(E.Config.jobs,r.mission));
-    const picker = resident.isLegend ? '' : `<label class="combat-profession-picker">Combat<select data-combat-profession-select data-resident-id="${resident.id}" ${locked ? 'disabled' : ''} aria-label="Métier utilisé pour attaquer ou défendre">${E.Config.combatProfessions.map(key=>`<option value="${key}" ${choice === key ? 'selected' : ''}>${E.Config.professions[key].label}${key === 'chasseur' ? ' · Arc' : ''}</option>`).join('')}</select></label>`;
-    return `<div class="mission-command"><button class="mission-button mission-release" type="button" data-release-resident="${resident.id}" ${release ? '' : 'disabled'}>↩ Rendre disponible<small>Retour au village · Sans métier</small></button><div class="command-actions"><button class="assign-all-button remove-all-button" type="button" data-release-all ${releaseAll ? '' : 'disabled'}>Retirer tous</button>${nextButton('disponible')}</div></div>${economic}${picker}${combat}`;
+    const picker = resident.isLegend ? '' : `<label class="combat-profession-picker">Mode de combat<select data-combat-profession-select data-resident-id="${resident.id}" ${locked ? 'disabled' : ''} aria-label="Mode de combat">${E.Config.combatProfessions.map(key=>`<option value="${key}" ${choice === key ? 'selected' : ''}>${key === 'chasseur' ? 'Archer' : E.Config.professions[key].label}</option>`).join('')}</select></label>`;
+    return `<div class="mission-command" data-mission-kind="disponible"><button class="mission-button mission-release ${activeMission === 'disponible' ? 'assigned' : ''}" type="button" data-release-resident="${resident.id}" ${release ? '' : 'disabled'}>Rendre disponible</button><div class="command-actions"><button class="assign-all-button remove-all-button" type="button" data-release-all ${releaseAll ? '' : 'disabled'}>Retirer tous</button>${nextButton('disponible')}</div></div>${economic}${picker}${combat}`;
   }
 
   function renderShop(state) {

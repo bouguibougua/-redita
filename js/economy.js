@@ -25,6 +25,21 @@
     return true;
   }
 
+  function residentStats(state, village, person) {
+    if (person.unitId) {
+      const unit = state.units.find(u=>u.id===person.unitId && u.hp>0);
+      if (unit) return unit;
+    }
+    const profession = person.profession || 'habitant';
+    const role = E.Config.professions[profession]?.missions.includes(person.mission) && E.Config.units[profession] ? profession : 'habitant';
+    const base = E.Config.units[role], gear = E.Equipment.bonuses(person.isLegend ? null : person);
+    const multiplier = person.mythologyStatMultiplier || 1;
+    const artisan = !person.isLegend && !village.destroyed && E.Buildings.has(village,'artisanat') ? E.Config.building.artisanatBonus : {hp:0,damage:0};
+    const maxHp = Math.max(1,(person.isLegend ? person.maxHp || person.hp || base.hp : (base.hp+gear.hp+artisan.hp)*multiplier)+(person.mythologyHpBonus||0));
+    return {...person, maxHp, hp:person.isLegend && Number.isFinite(person.hp) ? person.hp : maxHp*(Number.isFinite(person.combatHealthRatio)?person.combatHealthRatio:1),
+      damage:(person.isLegend ? person.mythologyDamage || base.damage : (base.damage+gear.damage+artisan.damage)*multiplier)+(person.mythologyDamageBonus||0)};
+  }
+
   function isBoosted(resident, mission) {
     return Boolean(resident && E.Config.professions[resident.profession || "habitant"]?.missions.includes(mission));
   }
@@ -694,7 +709,7 @@
 
   E.Economy = {
     cropCount, cropYield, animalCounts, dairyAnimalCount,
-    combatProfession, professionForMission, setCombatProfession, jobRequirementReason,
+    combatProfession, professionForMission, setCombatProfession, jobRequirementReason, residentStats,
     isBoosted, workBonus, canSetProfession, setProfession, assignProfessionToAll,
     setNextResidentMission, setNextResidentProfession, saleQuote, sell, deployResident,
     canAssignResidentMission, assignResidentMission, completeRecall, startProximityDefense, finishProximityDefense,

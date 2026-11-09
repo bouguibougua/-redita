@@ -152,8 +152,8 @@
         'Le loup-garou possède 60 PV et inflige 20 dégâts. Il adopte les propriétés du Ravageur et attaque uniquement les structures : il ne combat pas les unités ennemies.'
       ] }),
     entry('u-diavulu', 'U Diavule', 'terrain',
-      'Brûle les deux régions de la colonne et détruit cultures, élevages et habitants présents sur les terrains. Les habitants à l’intérieur des villages et les bâtiments sont épargnés.',
-      { burnDurationSeconds: param('burnDuration'), sparesResidentsInVillage: true, damagesBuildings: false }, '#d63843',
+      'Brûle les deux régions de la colonne pendant 66 secondes : 10 dégâts au premier impact, puis 6 par seconde, soit 400 au total. Les unités, cultures et élevages sur les terrains sont touchés ; les habitants à l’intérieur des villages et les bâtiments sont épargnés.',
+      { burnDurationSeconds: param('burnDuration'), firstDamage: param('burnFirstDamage'), tickDamage: param('burnTickDamage'), tickInterval: param('burnTickInterval'), sparesResidentsInVillage: true, damagesBuildings: false }, '#d63843',
       { aliases: ['u-diavule', 'U Diavulu'], targetMode: 'column', shortDescription: 'Anéantit le village de votre adversaire.',
         motion: { src: 'assets/mythology/u-diavulu-motion.mp4', type: 'video/mp4', width: 960, height: 640, frameRate: 30,
           gif: 'assets/mythology/u-diavulu-motion.gif' },

@@ -360,6 +360,7 @@
     if (state.preparationRemaining > 0) {
       const preparationDelta = Math.min(delta, state.preparationRemaining);
       state.preparationRemaining = Math.max(0, state.preparationRemaining - preparationDelta);
+      E.MythologyEffects?.updateBurns(state);
       processBulkTasks();
       if (E.Config.preparation.productionDuringPreparation) E.Economy.updateProduction(state, preparationDelta);
       // L’IA organise également ses villages ; toutes les unités restent immobiles.

@@ -33,6 +33,7 @@
     audio.addEventListener("error", () => releaseVoice(audio), { once:true });
     voices.push(audio);
     audio.play().catch(() => releaseVoice(audio));
+    return audio;
   }
   // Capture avant la navigation : les boutons peuvent masquer leur écran au clic.
   document.addEventListener("click", event => {

@@ -23,6 +23,10 @@
     },
     // Chantier Tripo commun aux bâtiments absents ; pictogrammes ajoutés en relief.
     constructionSiteModel: { src: "assets/models/chantier-construction.glb?v=1-286e17f2fedb", emblemPosition: [0,.31,-.08], emblemScale: .8 },
+    // Effets visuels du pouvoir uniquement ; durée et dégâts restent dans reinforcementPowers.
+    diavuleVisuals: { src: "assets/models/diavule.glb?v=3", modelScale: .76,
+      apparitionDuration: 7, invocationDuration: 49/30, spawnDepth: 1.45, coastSpawnDepth: 2.55,
+      flamesPerRegion: 44, embersPerRegion: 30 },
     // Présentation du village : ni PV supplémentaires ni collision avec les remparts.
     villageModels: {
       artisanat_t3: { src: "assets/models/artisanat_t3.glb?v=1-6db2efa35ccb" },
@@ -149,8 +153,7 @@
       // par le concepteur ; seuls ces réglages sont provisoires.
       orcuSpeed: .7, vampireSpeed: 8, fullettuSpeed: 12,
       fullettuGatherInterval: 3, fullettuGatherAmount: 1,
-      // Le terrain brûlé conserve la durée écrite existante (GDD §69).
-      burnDuration: 120,
+      burnDuration: 66, burnFirstDamage: 10, burnTickDamage: 6, burnTickInterval: 1,
       // TEMP_BALANCE_VALUE — emplacement d’une invocation dans une région choisie.
       regionSpawnByOwner: { red: 20, blue: 80 }
     },
@@ -161,7 +164,8 @@
         pageAdd: "assets/audio/interface/page-turn.wav",
         pageRemove: "assets/audio/interface/page-turn-reverse.wav",
         sword: "assets/audio/interface/sword.wav",
-        swordReverse: "assets/audio/interface/sword-reverse.wav"
+        swordReverse: "assets/audio/interface/sword-reverse.wav",
+        diavule: "assets/audio/diavule-invocation.wav"
       }
     },
     // TEMP_BALANCE_VALUE — révélation du logo du menu, sans effet sur la simulation.
@@ -316,7 +320,7 @@
       berger: { label: "Berger", icon: "🐑", requires: "bergerie", missions: ["elevage"], speedBonus: 0.3, workBonus: 0.2, biome: "montagne", biomeBonus: 0.3, description: "+20 % lait / reproduction (+30 % en Montagne), +30 % vitesse" },
       pecheur: { label: "Pêcheur", icon: "🎣", requires: "boucherie", missions: ["peche"], workBonus: 0.2, biome: "littoral", biomeBonus: 0.3, description: "+20 % poisson (+30 % sur le Littoral)" },
       guerrier: { label: "Guerrier", icon: "⚔", missions: ["attaque", "defense"], description: "+20 PV, +5 dégâts, +10 % vitesse" },
-      ravageur: { label: "Ravageur", icon: "🪓", missions: ["attaque"], description: "+10 PV, +2 dégâts, +35 % vitesse ; +5 contre village" },
+      ravageur: { label: "Ravageur", icon: "🪓", missions: ["attaque"], description: "+10 PV, +2 dégâts, +35 % vitesse ; +5 contre cultures et village" },
       chasseur: { label: "Chasseur", icon: "🏹", requires: "artisanat", missions: ["chasse", "attaque", "defense"], speedBonus: 0.5, description: "5 viandes par chasse au lieu de 3, +50 % vitesse ; arc : portée 15" }
     },
     resourceSaleValues: {
@@ -397,10 +401,10 @@
       }
     },
     jobs: {
-      agriculture: { label: "Agriculture", role: "Agriculteur", profession: "agriculteur", icon: "🌾" },
-      elevage: { label: "Élevage", role: "Berger", profession: "berger", icon: "🐑", requires: "bergerie" },
-      peche: { label: "Pêche", role: "Pêcheur", profession: "pecheur", icon: "🎣", requires: "boucherie" },
-      chasse: { label: "Chasse", role: "Chasseur", profession: "chasseur", icon: "🏹", requires: "artisanat" }
+      agriculture: { label: "Agriculture", role: "Agriculteur", profession: "agriculteur", icon: "🌾", boostBuilding: "bergerie" },
+      elevage: { label: "Élevage", role: "Berger", profession: "berger", icon: "🐑", requires: "bergerie", boostBuilding: "bergerie" },
+      peche: { label: "Pêche", role: "Pêcheur", profession: "pecheur", icon: "🎣", requires: "boucherie", boostBuilding: "boucherie" },
+      chasse: { label: "Chasse", role: "Chasseur", profession: "chasseur", icon: "🏹", requires: "artisanat", boostBuilding: "artisanat" }
     },
     // TEMP_BALANCE_VALUE — coût et quantité initiale des élevages sont TBD.
     livestockPlacementCost: 0,

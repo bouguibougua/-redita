@@ -8,7 +8,12 @@
   const humans = village => village.residents.filter(person => !person.isLegend);
   const isHuman = entity => !entity.isLegend && !entity.animalType && !['chien', 'sanglier'].includes(entity.role);
   const territory = position => position < E.Config.movement.columnLength / 2 ? 'red' : 'blue';
-  const isBurned = (state, village) => Boolean(village && village.burnUntil > state.elapsed);
+  // Cette horloge inclut la préparation : le feu commence dès l'invocation.
+  const burnClock = state => state.elapsed + E.Config.preparation.duration - (state.preparationRemaining || 0);
+  const burnAge = (state, village) => Math.max(0, village.burn ? burnClock(state) - village.burn.startedAt :
+    state.elapsed - ((village.burnUntil || 0) - cfg().burnDuration));
+  const isBurned = (state, village) => Boolean(village?.burnUntil && (village.burn ?
+    burnAge(state,village) < cfg().burnDuration : village.burnUntil > state.elapsed));
   const terrainVisualKey = village => String(Boolean(village.terrain?.river));
   function init(state) {
     state.mythology = { deaths: [], nextId: 1, executions: {}, resurrections: [] };
@@ -128,21 +133,52 @@
       return false;
     });
   }
-  function burnColumn(state, lane) {
+  function burnHit(state, village, amount) {
+    village.slots.forEach(slot => {
+      if (!['crop','livestock'].includes(slot.content?.category)) return;
+      slot.content.hp = Math.max(0,slot.content.hp-amount);
+      if (slot.content.hp <= 0) slot.content = null;
+    });
+    for (const resident of village.residents.slice()) {
+      if (resident.unitId || !['agriculture','elevage','peche','chasse'].includes(resident.mission)) continue;
+      if (resident.mission !== 'peche' && (!Number.isFinite(resident.workPosition) ||
+        Math.abs(resident.workPosition-home(village.ownerId)) <= E.Config.combat.attackRange)) continue;
+      const stats = E.Economy.residentStats(state,village,resident), hp = Math.max(0,stats.hp-amount);
+      if (resident.isLegend) resident.hp=hp;
+      else resident.combatHealthRatio=hp/stats.maxHp;
+      if (hp<=0 && !protectWorker(state,village,resident)) E.Economy.removeResident(state,village.ownerId,village.lane,resident.id);
+    }
+    for (const unit of state.units) {
+      if (unit.hp<=0 || unit.lane!==village.lane || territory(unit.position)!==village.ownerId ||
+        isHuman(unit) && Math.abs(unit.position-home(unit.ownerId))<=E.Config.combat.attackRange) continue;
+      unit.hp=Math.max(0,unit.hp-amount);
+      unit.visualHitSequence=(unit.visualHitSequence||0)+1;
+      unit.visualHitTimer=E.Config.visualEffects.unitHitFlashDuration;
+    }
+  }
+  function burnColumn(state, lane, casterId, activationId) {
     for (const ownerId of ['red', 'blue']) {
       const village = state.players[ownerId].villages[lane];
       village.burnUntil = state.elapsed + cfg().burnDuration;
-      village.slots.forEach(slot => { slot.content = null; });
-      for (const resident of village.residents.slice()) {
-        if (resident.unitId || !['agriculture', 'elevage', 'peche', 'chasse'].includes(resident.mission)) continue;
-        if (resident.mission !== 'peche' && (!Number.isFinite(resident.workPosition) ||
-          Math.abs(resident.workPosition - home(ownerId)) <= E.Config.combat.attackRange)) continue;
-        if (!protectWorker(state, village, resident)) E.Economy.removeResident(state, ownerId, lane, resident.id);
-      }
+      village.burn = { id:activationId, casterId, startedAt:burnClock(state), nextTick:cfg().burnTickInterval };
+      burnHit(state,village,cfg().burnFirstDamage);
     }
-    for (const unit of state.units) if (unit.hp > 0 && unit.lane === lane &&
-      !(isHuman(unit) && Math.abs(unit.position - home(unit.ownerId)) <= E.Config.combat.attackRange)) unit.hp = 0;
     E.Combat.settleDeaths(state);
+  }
+  function updateBurns(state) {
+    if (state.phase!=='running' || state.paused) return;
+    let damaged=false;
+    for (const player of Object.values(state.players)) for (const village of player.villages) {
+      const burn=village.burn;
+      if (!burn || !village.burnUntil) continue;
+      const age=burnAge(state,village);
+      // 66 impacts : 10 à t=0, puis 6 à t=1..65, soit exactement 400.
+      while (burn.nextTick<cfg().burnDuration && burn.nextTick<=age+1e-9) {
+        burnHit(state,village,cfg().burnTickDamage);burn.nextTick+=cfg().burnTickInterval;damaged=true;
+      }
+      village.burnUntil=state.elapsed+Math.max(0,cfg().burnDuration-age);
+    }
+    if (damaged) E.Combat.settleDeaths(state);
   }
   const handlers = {
     'u-mazzeru': (s, id) => { s.players[id].revealOffensive = true; },
@@ -158,7 +194,7 @@
         !p.unitId && (!p.profession || p.profession === 'habitant'));
       if (person) transformLupu(s, v, person); else v.nextLupuCharges = (v.nextLupuCharges || 0) + 1;
     },
-    'u-diavulu': (s, id, t) => burnColumn(s, t.lane),
+    'u-diavulu': (s, id, t, request) => burnColumn(s, t.lane, id, request.activationId),
     'a-stregha-bianca': (s, id) => { s.players[id].mythologyProtectionUntil = s.elapsed + cfg().biancaDuration; },
     'squadra-arozza': (s, id) => {
       eligibleDeaths(s, id).forEach(death => { death.revived = true; runtime(s).resurrections.push({ ownerId: id,
@@ -207,7 +243,7 @@
     if (!request || typeof request.activationId !== 'string' || !request.activationId || request.epoch !== state.reinforcementEpoch) return { accepted: false, reason: 'stale-match' };
     const legend = E.Mythology.get(request.legendId), check = quote(state, request.playerId, legend?.id, request.target);
     if (!check.allowed) return { accepted: false, reason: check.reason };
-    handlers[legend.id](state, request.playerId, check.target);
+    handlers[legend.id](state, request.playerId, check.target, request);
     const result = { accepted: true, activationId: request.activationId, legendId: legend.id };
     runtime(state).executions[request.activationId] = result;
     state.logs.unshift(`${state.players[request.playerId].name} invoque ${legend.name}.`);
@@ -233,6 +269,7 @@
   }
   function update(state, delta) {
     if (!state.mythology || state.phase !== 'running' || state.paused || state.preparationRemaining > 0) return;
+    updateBurns(state);
     restorePending(state);
     for (const unit of state.units) {
       if (unit.hp <= 0 || unit.mythologyLegendId !== 'u-fullettu' || Math.abs(unit.position - home(foe(unit.ownerId))) > E.Config.combat.attackRange) continue;
@@ -249,5 +286,5 @@
   }
   E.MythologyEffects = Object.freeze({ bindings, getBinding, init, targets, quote, activate, update, recordDeath,
     onResidentBorn, decorateUnit, preventDeath, protectWorker, onUnitDeath, protectionActive, deathCount, vision, canSeeStats, residentVisible, unitVisible,
-    productionMultiplier, isBurned, terrainVisualKey });
+    productionMultiplier, isBurned, burnAge, updateBurns, terrainVisualKey });
 }());

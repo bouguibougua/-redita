@@ -148,14 +148,15 @@
   }
 
   function attackCrop(state, unit, village, damageEvents, delta) {
-    if (!isBoar(unit) || !village || village.destroyed) return false;
+    const ravager = !unit.isLegend && !unit.mythologyLegendId && !unit.animalType && (unit.profession || unit.role) === 'ravageur';
+    if ((!isBoar(unit) && !ravager) || !village || village.destroyed) return false;
     const slot = village.slots.find((entry) => entry.content?.category === "crop" && entry.content.hp > 0);
     if (!slot) return false;
     const position = E.Config.temporaryProduction.agricultureFieldPositionByOwner[village.ownerId];
     if (Math.abs(unit.position - position) <= E.Config.combat.attackRange) {
       if (unit.attackCooldown <= 0) {
         triggerAttackVisual(unit);
-        damageEvents.push({ type: "crop", target: slot.content, amount: unit.damage });
+        damageEvents.push({ type: "crop", target: slot.content, amount: unit.damage + (ravager ? E.Config.units.ravageur.villageDamageBonus || 0 : 0) });
         unit.attackCooldown = attackInterval(unit);
       }
     } else moveToward(state, unit, position, delta);

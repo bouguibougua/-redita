@@ -25,6 +25,8 @@
   let loadError = null;
   let lastWarriorFrame = null;
   const unitModels = new Map();
+  const constructionSigns = [];
+  let signViewer, signLocal;
   const handledDeathEffects = new Set();
 
   let baseLanes = 0;
@@ -89,6 +91,7 @@
 
   function setup() {
     scene = new THREE.Scene();
+    signViewer = new THREE.Vector3(); signLocal = new THREE.Vector3();
     const backdrop = typeof getComputedStyle === "function"
       ? getComputedStyle(document.documentElement).getPropertyValue("--surface-deep").trim() || "#100e0b" : "#100e0b";
     scene.background = new THREE.Color(backdrop);
@@ -117,6 +120,7 @@
     terrainGroup = new THREE.Group();
     unitGroup = new THREE.Group();
     world.add(terrainGroup, unitGroup);
+    E.DiavuleEffects?.init(THREE, world);
     scene.add(world);
     addBoardBase();
     bindControls();
@@ -156,7 +160,7 @@
 
     const terrainModel = { plaine: E.PlainTerrain, montagne: E.MountainTerrain, littoral: E.CoastTerrain }[village.biome];
     const importedTerrain = terrainModel?.create(terrainWidthScale(), village.burnUntil > latestState.elapsed, owner);
-    const tile = importedTerrain || mesh(new THREE.BoxGeometry(2.82 * terrainWidthScale(), 0.22, 4.85), colors[village.biome], { castShadow: false });
+    const tile = importedTerrain || mesh(new THREE.BoxGeometry(2.82 * terrainWidthScale(), 0.22, 4.85), village.burnUntil > latestState.elapsed ? 0x3c2219 : colors[village.biome], { castShadow: false });
     if (!importedTerrain) tile.position.y = -0.08;
     group.add(tile);
 
@@ -187,10 +191,8 @@
       const river = mesh(new THREE.BoxGeometry(2.65, 0.025, 0.17), 0x49a4bf, { castShadow: false });
       river.name = "mythology-river"; river.position.set(0, 0.055, 0); river.rotation.y = 0.13; group.add(river);
     }
-    if (village.burnUntil > latestState.elapsed) {
-      const burned = mesh(new THREE.BoxGeometry(2.75, 0.035, 4.76), 0x3c2219, { castShadow: false });
-      burned.name = "mythology-burned-terrain"; burned.position.y = 0.07; group.add(burned);
-    }
+    // Les modèles de terrain gèrent la terre calcinée. Les flammes dynamiques sont
+    // séparées du terrain pour conserver leur animation lors d'une reconstruction.
     if (village.curseUntil > latestState.elapsed) {
       const curse = mesh(new THREE.BoxGeometry(2.76, 0.02, 4.77), 0x745296, { castShadow: false });
       curse.name = "mythology-cursed-terrain"; curse.position.y = 0.085; curse.material.transparent = true; curse.material.opacity = 0.3; group.add(curse);
@@ -282,7 +284,7 @@
       const target = {kind:"slot", playerId:village.ownerId, lane:village.lane, slotIndex:index};
       const [x, localZ] = positions[index];
       const z = localZ * (village.ownerId === "red" ? 1 : -1);
-      const marker = mesh(new THREE.CylinderGeometry(0.35, 0.39, 0.06, 16), slot.type === "animal" ? 0x735f3c : 0x566744, { castShadow: false });
+      const marker = mesh(new THREE.CylinderGeometry(0.35, 0.39, 0.06, 16), village.burnUntil > latestState.elapsed ? 0x332721 : slot.type === "animal" ? 0x735f3c : 0x566744, { castShadow: false });
       marker.position.set(x, 0.1, z);
       marker.userData.xrTarget = { kind: "slot", playerId: village.ownerId, lane: village.lane, slotIndex: index };
       group.add(marker);
@@ -373,7 +375,10 @@
       const position = cfg.buildings[type];
       model.name = type === 'village' ? 'hotel-village' : tier === 0 ? `chantier-${type}` : `batiment-${type}`;
       model.userData.buildingType = type; model.userData.buildingTier = tier;
-      if(tier===0)model.rotation.y=-Math.PI/2-estate.rotation.y;
+      if(tier===0) {
+        model.rotation.y=-Math.PI/2-estate.rotation.y;
+        constructionSigns.push(model);
+      }
       model.position.set(position[0] * width, cfg.elevation, position[1]);
       tagSelectable(model, village.ownerId, village.lane);
       model.userData.mapTarget=target;
@@ -1044,6 +1049,7 @@
     let visualsChanged = false;
     if (force || nextSignature !== structureSignature) {
       structureSignature = nextSignature;
+      constructionSigns.length = 0;
       clearGroup(terrainGroup);
       Object.values(state.players).forEach((player) => player.villages.forEach(terrainTile));
       visualsChanged = true;
@@ -1250,6 +1256,18 @@
     camera.updateProjectionMatrix();
   }
 
+  // Rotation autour de la verticale locale uniquement : les panneaux restent
+  // plantés dans le sol et lisibles en vue horizontale, verticale et en XR.
+  function faceConstructionSigns(viewCamera) {
+    viewCamera.getWorldPosition(signViewer);
+    for (const sign of constructionSigns) {
+      signLocal.copy(signViewer);
+      sign.parent.worldToLocal(signLocal).sub(sign.position);
+      if (signLocal.x * signLocal.x + signLocal.z * signLocal.z > 1e-6)
+        sign.rotation.y = Math.atan2(signLocal.x, signLocal.z);
+    }
+  }
+
   function animate(timestamp, xrFrame) {
     onFrame?.(timestamp);
     E.XR?.update(timestamp, xrFrame);
@@ -1258,6 +1276,9 @@
     if (!E.XR?.active && (E.MenuVR?.active || container.getClientRects().length === 0)) return;
     animateUnitEffects();
     if (!E.XR?.active) updateCamera();
+    const viewCamera = E.XR?.active ? renderer.xr.getCamera() : camera;
+    faceConstructionSigns(viewCamera);
+    E.DiavuleEffects?.update(latestState, laneX, terrainWidthScale(), viewCamera);
     renderer.render(scene, camera);
   }
 
