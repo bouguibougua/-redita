@@ -513,7 +513,7 @@
     const regionCount = state.players.red.villages.length;
     const combatUnits = state.units.filter(unit => !E.MythologyEffects || E.MythologyEffects.unitVisible(state, viewerId(state), unit)).map((unit) => {
       const stats = E.Config.units[unit.role];
-      const left = ((unit.lanePosition + 0.5) / regionCount) * 100;
+      const left = ((unit.lanePosition + 0.5 + (unit.terrainOffset||0)/E.Config.board.laneSpacing) / regionCount) * 100;
       const top = Math.max(1.2, Math.min(98.8, unit.position));
       const vessel = unit.waterTransport ? `<span class="unit-vessel" title="Transporté par ${E.Config.maritime.shop[unit.waterTransport].label.toLowerCase()}">${E.Config.maritime.shop[unit.waterTransport].icon}</span>` : "";
       const selected = unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane;

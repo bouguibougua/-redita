@@ -992,12 +992,11 @@ Bonus :
 
 Le Ravageur doit notamment servir à attaquer l'économie adverse.
 
-**Priorité validée :** en attaque, le Ravageur se dirige d’abord vers les
-cultures ennemies vivantes de sa colonne, même si une troupe ennemie est proche.
-Il les frappe à sa cadence habituelle avec son bonus spécialisé de +5 dégâts.
-Une fois les cultures détruites, il reprend son ciblage des troupes puis du village.
-En défense, il conserve son poste ; les légendes ayant un rôle technique Ravageur,
-notamment U Lupu Mannaru, gardent leurs propres règles de ciblage.
+**Priorité validée (nouvelle instruction du 12 novembre 2026) :** en attaque, le Ravageur et U Lupu Mannaru visent les cultures **et élevages** ennemis vivants de leur colonne. Chacun de ces emplacements possède une zone de contact correspondant à sa position sur le terrain. L’assaillant quitte le centre de sa ligne, rejoint le bord de cette zone, s’oriente vers la cible et ne frappe qu’au contact, à sa cadence habituelle. Le bonus spécialisé de +5 dégâts du rôle Ravageur reste appliqué à ces cibles ; Lupu conserve 20 dégâts de base et les propriétés de ce rôle.
+
+Une cible déjà poursuivie reste prioritaire tant qu’elle est vivante. À défaut, la cible économique la plus proche est choisie (égalité : numéro de slot). Sa destruction libère son emplacement. Après les champs et enclos, le Ravageur reprend le combat contre les troupes puis le village ; Lupu ignore toujours les unités et poursuit les structures. Un Ravageur en défense garde son poste.
+
+Cette instruction remplace l’ancienne exclusion de Lupu des champs. Les rayons de contact et la marge de frappe sont provisoires dans `Config.economicHitboxes` : culture 0,42, élevage 0,50, marge 0,10 en unités du plateau. Les emplacements viennent de la configuration centrale existante. Les déplacements latéraux et les cibles de frappe sont synchronisés dans l’état partagé, conservés pour les animations de mort, et les distances de combat tiennent compte de ce décalage. La préparation, la pause, les transports et la noyade continuent de s’appliquer. Le Sanglier conserve sa priorité historique sur les cultures.
 
 ---
 

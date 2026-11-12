@@ -155,7 +155,7 @@
         'Le vampire possède 40 PV et inflige 11 dégâts. Les deux formes appartiennent à la même invocation ; la mort du vampire met fin à sa présence sur le terrain.'
       ] }),
     entry('u-lupu-mannaru', 'U Lupu Mannaru', 'invocation',
-      'Transforme un habitant sans tâche ni métier, ou le prochain à naître, en loup-garou : 60 PV, 20 dégâts et les propriétés du ravageur. Il attaque uniquement les structures.',
+      'Transforme un habitant sans tâche ni métier, ou le prochain à naître, en loup-garou : 60 PV, 20 dégâts et les propriétés du ravageur. Il attaque les champs et élevages au contact, puis le village, sans combattre les unités.',
       { hp: param('lupuHp'), damage: param('lupuDamage'), structuresOnly: true, baseRole: 'ravageur' }, '#428bd6', { targetMode: 'allied-region', shortDescription: 'Un habitant devient loup-garou · 60 PV, 20 dégâts · structures uniquement.', lore: { subtitle: "Le loup-garou corse", paragraphs: [
           "U Lupu Mannaru correspond à la figure du loup-garou dans les traditions populaires corses.",
           "Il s'agit d'un être humain associé à une transformation animale, généralement en loup ou en créature possédant des caractéristiques lupines.",
@@ -166,7 +166,7 @@
         ] },
         menuDescription: [
         'Dans la région alliée choisie, U Lupu Mannaru transforme un habitant qui n’a ni tâche ni métier. Si aucun habitant ne remplit ces conditions, la transformation attend le prochain nouveau-né.',
-        'Le loup-garou possède 60 PV et inflige 20 dégâts. Il adopte les propriétés du Ravageur et attaque uniquement les structures : il ne combat pas les unités ennemies.'
+        'Le loup-garou possède 60 PV et inflige 20 dégâts. Il adopte les propriétés du Ravageur : priorité aux champs et élevages ennemis de sa colonne, atteints et frappés au contact, puis au village. Il ne combat pas les unités ennemies.'
       ] }),
     entry('u-diavulu', 'U Diavule', 'terrain',
       'Brûle les deux régions de la colonne pendant 66 secondes : 10 dégâts au premier impact, puis 6 par seconde, soit 400 au total. Les unités, cultures et élevages sur les terrains sont touchés ; les habitants à l’intérieur des villages et les bâtiments sont épargnés.',

@@ -11,6 +11,7 @@ async function run() {
   const THREE = await import(`data:text/javascript;base64,${Buffer.from(threeSource).toString("base64")}`);
   const context = vm.createContext({ window: {}, console });
   vm.runInContext(fs.readFileSync(path.join(root, "js/config.js"), "utf8"), context);
+  vm.runInContext(fs.readFileSync(path.join(root, "js/board.js"), "utf8"), context);
   const source = fs.readFileSync(path.join(root, "js/board3d.js"), "utf8").replace(
     "  E.Board3D = {",
     "  E.AnimalAppearanceTest = { useThree(module) { THREE = module; unitGroup = new THREE.Group(); }, animalModel, updateUnits, get models() { return unitModels; } };\n  E.Board3D = {"

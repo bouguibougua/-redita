@@ -149,7 +149,7 @@ achats de la boutique restent disponibles.
 | Le Lion de Roccapina | Invocation de 145 PV / 25 dégâts par coup ; regroupement des troupes militaires alliées à avancement identique. |
 | U Magu | Uniquement le prochain habitant de chaque village allié : statistiques ×2, taille ×1,5, aura violette et dorée. |
 | U Surpatore | Sanglier, puis vampire après sa mort : 40 PV / 11 dégâts, rapide. |
-| U Lupu Mannaru | Transforme un humain libre sans métier, sinon le prochain nouveau-né : 60 PV / 20 dégâts, structures seulement. |
+| U Lupu Mannaru | Transforme un humain libre sans métier, sinon le prochain nouveau-né : 60 PV / 20 dégâts de base. Champs et élevages au contact en priorité, puis village ; aucune attaque contre les troupes. |
 | U Diavule | Brûle les deux territoires de la colonne, cultures, élevages et habitants dehors. Bâtiments et habitants dans les villages épargnés. |
 | A Strega Bianca | Pendant les prochaines 60 s, sauve les humains qui devraient mourir : retour au début du terrain, pleine vie, tâche et équipement conservés, aura verte et dorée. Pas de timer affiché, pas de légendes ni de morts antérieures. |
 | A Squadra d’Arozza | Ressuscite les humains morts durant les dernières 60 s, sans double résurrection. |
@@ -276,3 +276,8 @@ Le test historique `mythology-browser.test.js` échoue sur son attente d’un GI
 ### Préparation du Lion armé
 
 `eredita3D/scripts/prepare_roccapina.py` importe les deux sources locales intactes, ignore la forme de contrôle Icosphere, conserve la pose de base, allège l’épée à 6 000 triangles, limite les textures à 1 024 pixels et crée les cinq clips avec Blender. Le GLB web complet fait environ 7 Mo, contre 67 Mo pour la seule épée originale. Les dimensions et durées visuelles restent dans `characterModels.roccapina`, sans changement des 145 PV, 25 dégâts ou du regroupement allié. Empreintes et mesures dans `eredita3D/logs/roccapina-animation-validation.json` ; aperçu comparatif Guerrier/Lion/repos/frappe dans `eredita3D/previews/roccapina-armed-comparison.png`.
+
+
+## Champs et enclos au contact — 12 novembre 2026
+
+Nouvelle règle du concepteur : le Ravageur et U Lupu Mannaru rejoignent physiquement les champs et élevages adverses de leur colonne avant de frapper. Cela remplace l’ancienne exclusion de Lupu de la priorité sur les cultures. Les zones de contact utilisent les positions réelles des slots en 3D ; les rayons provisoires restent centralisés dans `economicHitboxes`. Les coups suivent les animations et la cadence existantes, avec le bonus spécialisé +5 du rôle Ravageur. Après destruction des cibles économiques, retour au centre et progression habituelle ; Lupu ignore toujours les troupes. Le Sanglier garde son comportement précédent.

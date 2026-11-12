@@ -74,12 +74,22 @@
     return professionRange || E.Config.combat.attackRange;
   }
 
+  function unitDistance(state,a,b) {
+    if(!a.terrainOffset && !b.terrainOffset)return Math.abs(a.position-b.position);
+    const dx=((b.lanePosition-a.lanePosition)*E.Config.board.laneSpacing+(b.terrainOffset||0)-(a.terrainOffset||0))*E.Board.widthScale(state);
+    return Math.hypot(dx,E.Board.combatZ(b.position)-E.Board.combatZ(a.position))/E.Config.boardProjection.positionScale;
+  }
+  function moveTowardEnemy(state,unit,enemy,delta) {
+    if(unit.terrainOffset || enemy.terrainOffset)moveToFieldPoint(state,unit,{offset:enemy.terrainOffset||0,position:enemy.position},delta);
+    else moveToward(state,unit,enemy.position,delta);
+  }
+
   function nearestEnemyUnit(state, unit) {
     return state.units
       .filter((other) => other.ownerId !== unit.ownerId && other.hp > 0)
       .filter((other) => Math.abs(other.lanePosition - unit.lanePosition) < 0.12)
-      .filter((other) => Math.abs(other.position - unit.position) <= Math.max(E.Config.combat.detectionRange, attackRange(unit)))
-      .sort((a, b) => Math.abs(a.position - unit.position) - Math.abs(b.position - unit.position))[0] || null;
+      .filter((other) => unitDistance(state,unit,other) <= Math.max(E.Config.combat.detectionRange, attackRange(unit)))
+      .sort((a, b) => unitDistance(state,unit,a) - unitDistance(state,unit,b))[0] || null;
   }
 
   function attackInterval(unit) {
@@ -95,7 +105,7 @@
     unit.visualAttackSequence = (unit.visualAttackSequence || 0) + 1;
     unit.visualAttackTimer = E.Config.visualEffects.unitAttackDuration;
     if (target) {
-      unit.visualAttackTarget = { position: target.position, lanePosition: target.lanePosition };
+      unit.visualAttackTarget = { position: target.position, lanePosition: target.lanePosition, ...(target.terrainOffset!==undefined?{terrainOffset:target.terrainOffset}:{}) };
     }
   }
 
@@ -124,14 +134,15 @@
       ...(unit.mythologyLegendId ? { isLegend: unit.isLegend, mythologyLegendId: unit.mythologyLegendId } : {}),
       ...(unit.mythologyForm ? { mythologyForm: unit.mythologyForm } : {}),
       ...(unit.mythologyScale ? { mythologyScale: unit.mythologyScale } : {}),
+      terrainOffset: unit.terrainOffset || 0,
       lanePosition: unit.lanePosition,
       position: unit.position
     });
     state.unitDeathEffects = state.unitDeathEffects.slice(-32);
   }
 
-  function tryAttackUnit(unit, enemyUnit, damageEvents, delta) {
-    if (!enemyUnit || Math.abs(enemyUnit.position - unit.position) > attackRange(unit)) return false;
+  function tryAttackUnit(state, unit, enemyUnit, damageEvents, delta) {
+    if (!enemyUnit || unitDistance(state,unit,enemyUnit) > attackRange(unit)) return false;
     if (unit.attackCooldown <= 0) {
       triggerAttackVisual(unit, enemyUnit);
       damageEvents.push({ type: "unit", target: enemyUnit, amount: unit.damage });
@@ -149,7 +160,9 @@
 
   function attackCrop(state, unit, village, damageEvents, delta) {
     const ravager = !unit.isLegend && !unit.mythologyLegendId && !unit.animalType && (unit.profession || unit.role) === 'ravageur';
-    if ((!isBoar(unit) && !ravager) || !village || village.destroyed) return false;
+    const lupu = unit.mythologyLegendId === 'u-lupu-mannaru';
+    if (ravager || lupu) return attackEconomicSlot(state,unit,village,damageEvents,delta);
+    if (!isBoar(unit) || !village || village.destroyed) return false;
     const slot = village.slots.find((entry) => entry.content?.category === "crop" && entry.content.hp > 0);
     if (!slot) return false;
     const position = E.Config.temporaryProduction.agricultureFieldPositionByOwner[village.ownerId];
@@ -160,6 +173,42 @@
         unit.attackCooldown = attackInterval(unit);
       }
     } else moveToward(state, unit, position, delta);
+    return true;
+  }
+
+  function fieldDistance(state,unit,target) {
+    return Math.hypot((target.offset-(unit.terrainOffset||0))*E.Board.widthScale(state),E.Board.combatZ(target.position)-E.Board.combatZ(unit.position));
+  }
+  function moveToFieldPoint(state,unit,target,delta,stopRadius=0) {
+    const distance=fieldDistance(state,unit,target);
+    const step=unit.speed*E.Transport.movementMultiplier(unit)*E.Config.boardProjection.positionScale*delta;
+    const fraction=distance>0?Math.min(step,Math.max(0,distance-stopRadius))/distance:0;
+    unit.terrainOffset=(unit.terrainOffset||0)+(target.offset-(unit.terrainOffset||0))*fraction;
+    unit.position=E.Board.combatPosition(E.Board.combatZ(unit.position)+(E.Board.combatZ(target.position)-E.Board.combatZ(unit.position))*fraction);
+    E.Transport.updateUnitWaterState(state,unit);
+  }
+  function attackEconomicSlot(state,unit,village,events,delta) {
+    const targets=(!village || village.destroyed)?[]:village.slots.flatMap((slot,slotIndex)=>
+      ['crop','livestock'].includes(slot.content?.category)&&slot.content.hp>0?
+      [{...E.Board.slotHitbox(state,village,slotIndex),slotIndex,slot}]:[]);
+    const previous=unit.economicTarget;
+    const target=targets.find(t=>previous?.playerId===village.ownerId&&previous.lane===village.lane&&previous.slotIndex===t.slotIndex)||
+      targets.sort((a,b)=>fieldDistance(state,unit,a)-fieldDistance(state,unit,b)||a.slotIndex-b.slotIndex)[0];
+    if(!target) {
+      if(previous)unit.returningFromField=true;
+      delete unit.economicTarget;
+      if(unit.returningFromField && Math.abs(unit.terrainOffset||0)>.0001){moveToFieldPoint(state,unit,{offset:0,position:unit.position},delta);return true;}
+      delete unit.returningFromField;
+      return false;
+    }
+    unit.economicTarget={playerId:village.ownerId,lane:village.lane,slotIndex:target.slotIndex};
+    const reach=target.radius+E.Config.economicHitboxes.contactReach;
+    if(fieldDistance(state,unit,target)>reach+1e-9)moveToFieldPoint(state,unit,target,delta,reach);
+    else if(unit.attackCooldown<=0) {
+      triggerAttackVisual(unit,{position:target.position,lanePosition:village.lane,terrainOffset:target.offset});
+      events.push({type:target.slot.content.category,target:target.slot.content,amount:unit.damage+(E.Config.units.ravageur.villageDamageBonus||0)});
+      unit.attackCooldown=attackInterval(unit);
+    }
     return true;
   }
 
@@ -184,7 +233,7 @@
       Math.abs(other.lanePosition-anchor.lanePosition)<.12&&Math.abs(other.position-anchor.position)<=range)
       .sort((a,b)=>Math.abs(a.position-unit.position)-Math.abs(b.position-unit.position))[0];
     if(enemy){
-      if(!tryAttackUnit(unit,enemy,damageEvents,delta))moveToward(state,unit,enemy.position,delta);
+      if(!tryAttackUnit(state,unit,enemy,damageEvents,delta))moveTowardEnemy(state,unit,enemy,delta);
     }else{
       moveToward(state,unit,anchor.position,delta);
       if(Math.abs(unit.position-anchor.position)<.001)completed.push(unit);
@@ -210,6 +259,9 @@
       unit.visualHitTimer = Math.max(0, (unit.visualHitTimer || 0) - delta);
       if (!E.Transport.updateUnitWaterState(state, unit)) return;
 
+      if ((unit.returningToVillage || unit.mythologyRetreating) && Math.abs(unit.terrainOffset||0)>.0001) {
+        delete unit.economicTarget;moveToFieldPoint(state,unit,{offset:0,position:unit.position},delta);return;
+      }
       if (unit.returningToVillage) {
         const resident = E.Economy.getResident(state, unit.ownerId, unit.originLane, unit.residentId);
         const origin = state.players[unit.ownerId]?.villages[unit.originLane];
@@ -236,7 +288,7 @@
       if(unit.autoDefense){defendLocally(state,unit,damageEvents,completedDefenses,delta);return;}
       const enemyUnit = nearestEnemyUnit(state, unit);
       if (unit.stance === "defense") {
-        tryAttackUnit(unit,enemyUnit,damageEvents,delta);
+        tryAttackUnit(state,unit,enemyUnit,damageEvents,delta);
         return;
       }
 
@@ -252,7 +304,7 @@
       const targetVillage = state.players[enemyId(unit.ownerId)].villages[targetLane];
       if (attackCrop(state, unit, targetVillage, damageEvents, delta)) return;
       if (!unit.structuresOnly && enemyUnit) {
-        if(!tryAttackUnit(unit,enemyUnit,damageEvents,delta))moveToward(state,unit,enemyUnit.position,delta);
+        if(!tryAttackUnit(state,unit,enemyUnit,damageEvents,delta))moveTowardEnemy(state,unit,enemyUnit,delta);
         return;
       }
       if ((unit.animalType || unit.role) === "chien" && unit.animalMission === "perturber") {
@@ -264,6 +316,7 @@
         // Sans élevage, le chien attend ; il ne détruit pas le village à sa place.
         return;
       }
+      if(Math.abs(unit.terrainOffset||0)>.0001){moveToFieldPoint(state,unit,{offset:0,position:unit.position},delta);return;}
       const villagePosition = unit.ownerId === "red" ? E.Config.movement.columnLength : 0;
       if (targetVillage && !targetVillage.destroyed && targetVillage.hp > 0 && Math.abs(villagePosition - unit.position) <= attackRange(unit)) {
         if (Math.abs(villagePosition - unit.position) <= E.Config.combat.attackRange && unit.retaliationCooldown <= 0) {
@@ -289,7 +342,7 @@
 
     Object.values(state.players).forEach((player) => player.villages.forEach((village) => {
       village.slots.forEach((slot) => {
-        if (slot.content?.category === "crop" && slot.content.hp <= 0) slot.content = null;
+        if (["crop","livestock"].includes(slot.content?.category) && slot.content.hp <= 0) slot.content = null;
       });
     }));
 

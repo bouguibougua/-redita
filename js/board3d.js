@@ -450,11 +450,7 @@
   // Le milieu de la colonne (eau/frontière) conserve son repère. Les extrémités
   // visuelles aboutissent à la porte, tandis que portée, vitesse et PV restent logiques.
   function combatZ(position) {
-    const cfg = E.Config.villagePresentation, edge = cfg.regionCenter - cfg.front;
-    const transition = cfg.combatTransition, inner = -4.35 + transition * .087;
-    if (position < transition) return -edge + (inner + edge) * position / transition;
-    if (position > 100 - transition) return -inner + (edge + inner) * (position - (100 - transition)) / transition;
-    return -4.35 + position * .087;
+    return E.Board.combatZ(position);
   }
 
   function tagSelectable(object, playerId, lane) {
@@ -525,7 +521,7 @@
       const appearance = resident || unit;
       const swimming = (unit.animalType || unit.role) === "sanglier" && Boolean(unit.waterOwner);
       const figure = unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
-      figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, combatZ(unit.position));
+      figure.position.set(laneX(unit.lanePosition) + (unit.terrainOffset||0)*terrainWidthScale(), swimming ? -0.04 : 0.2, combatZ(unit.position));
       figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
       const moving = syncLocomotion(figure, true, !unit.waterTransport);
       figure.userData.farmer?.setHarvest(false);
@@ -539,7 +535,7 @@
         figure.userData.fullettu.setHarvest(gathering, unit.mythologyGatherTimer || 0, E.Config.reinforcementPowers.fullettuGatherInterval);
       }
       if (!moving && unit.visualAttackTarget && unit.attackCooldown > 0) {
-        figure.rotation.y = Math.atan2(laneX(unit.visualAttackTarget.lanePosition) - figure.position.x,
+        figure.rotation.y = Math.atan2(laneX(unit.visualAttackTarget.lanePosition)+(unit.visualAttackTarget.terrainOffset||0)*terrainWidthScale() - figure.position.x,
           combatZ(unit.visualAttackTarget.position) - figure.position.z);
       }
       figure.scale.setScalar(unit.mythologyScale || 1);
@@ -632,7 +628,7 @@
       figure.userData.attackStartedAt = now;
       const target = unit.visualAttackTarget;
       const targetPoint = target && Number.isFinite(target.position) && Number.isFinite(target.lanePosition)
-        ? new THREE.Vector3(laneX(target.lanePosition), .47, combatZ(target.position)) : null;
+        ? new THREE.Vector3(laneX(target.lanePosition)+(target.terrainOffset||0)*terrainWidthScale(), .47, combatZ(target.position)) : null;
       if (!figure.userData.locomotionMoving && targetPoint) {
         figure.rotation.y = Math.atan2(targetPoint.x - figure.position.x, targetPoint.z - figure.position.z);
       }
@@ -662,7 +658,7 @@
         figure = unitModel(deathKey, event.ownerId, event, event.waterTransport, swimming);
       }
       const swimming = (event.animalType || event.role) === "sanglier" && Boolean(event.waterOwner);
-      figure.position.set(laneX(event.lanePosition), swimming ? -0.04 : 0.2, combatZ(event.position));
+      figure.position.set(laneX(event.lanePosition) + (event.terrainOffset||0)*terrainWidthScale(), swimming ? -0.04 : 0.2, combatZ(event.position));
       figure.rotation.set(0, event.ownerId === "red" ? 0 : Math.PI, 0);
       if (event.mythologyScale != null) figure.scale.setScalar(event.mythologyScale);
       figure.userData.dying = true;

@@ -1,0 +1,113 @@
+Zones de contact économiques — 12 novembre 2026
+
+Nouvelle règle : Ravageur et Lupu attaquent les cultures et élevages adverses de leur colonne au contact. Le Sanglier conserve sa priorité précédente. Pas de coup à distance sur un emplacement situé de l’autre côté du terrain.
+
+État indépendant du rendu : cible de slot, décalage latéral, coordonnées de frappe et de mort ; positions partagées dans Board, utilisées par le moteur et le rendu 3D. Priorité conservée jusqu’à destruction, puis autre cible économique, puis recentrage et progression normale. Distance de combat corrigée pour les troupes décalées.
+
+TAP version 13
+# Subtest: classic red Ravageur contacts each crop/herd, destroys then resumes toward village
+ok 1 - classic red Ravageur contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 10.604958
+  type: 'test'
+  ...
+# Subtest: classic red Lupu contacts each crop/herd, destroys then resumes toward village
+ok 2 - classic red Lupu contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 5.397125
+  type: 'test'
+  ...
+# Subtest: classic blue Ravageur contacts each crop/herd, destroys then resumes toward village
+ok 3 - classic blue Ravageur contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 5.849084
+  type: 'test'
+  ...
+# Subtest: classic blue Lupu contacts each crop/herd, destroys then resumes toward village
+ok 4 - classic blue Lupu contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 4.090667
+  type: 'test'
+  ...
+# Subtest: simplified red Ravageur contacts each crop/herd, destroys then resumes toward village
+ok 5 - simplified red Ravageur contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 4.89625
+  type: 'test'
+  ...
+# Subtest: simplified red Lupu contacts each crop/herd, destroys then resumes toward village
+ok 6 - simplified red Lupu contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 3.963042
+  type: 'test'
+  ...
+# Subtest: simplified blue Ravageur contacts each crop/herd, destroys then resumes toward village
+ok 7 - simplified blue Ravageur contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 4.996416
+  type: 'test'
+  ...
+# Subtest: simplified blue Lupu contacts each crop/herd, destroys then resumes toward village
+ok 8 - simplified blue Lupu contacts each crop/herd, destroys then resumes toward village
+  ---
+  duration_ms: 4.099083
+  type: 'test'
+  ...
+# Subtest: opposite-side slot is not hit remotely; target coordinates and corpse keep their offset
+ok 9 - opposite-side slot is not hit remotely; target coordinates and corpse keep their offset
+  ---
+  duration_ms: 1.521417
+  type: 'test'
+  ...
+# Subtest: no hits or movement during pause/preparation/defense; ordinary warriors and allied fields unaffected
+ok 10 - no hits or movement during pause/preparation/defense; ordinary warriors and allied fields unaffected
+  ---
+  duration_ms: 1.962375
+  type: 'test'
+  ...
+# Subtest: contact geometry mirrors both sides, handles two-slot coasts and projection round trips
+ok 11 - contact geometry mirrors both sides, handles two-slot coasts and projection round trips
+  ---
+  duration_ms: 1.074
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 53.723458
+
+Navigateur :
+[
+  {
+    "legend": null,
+    "distance": 0.5200000000000004,
+    "reach": 0.52,
+    "hp": 188,
+    "sequence": 1,
+    "action": "Coup_Hache",
+    "targetX": -2.415,
+    "markerX": -2.415,
+    "face": 0.5200000000000005
+  },
+  {
+    "legend": "u-lupu-mannaru",
+    "distance": 0.6000000000000004,
+    "reach": 0.6,
+    "hp": 75,
+    "sequence": 1,
+    "action": "Griffes_Croisees",
+    "targetX": 1.035,
+    "markerX": 1.035,
+    "face": 0.6000000000000003
+  }
+]
+Contacts 3D vérifiés sur les vrais marqueurs : Ravageur sur champ, Lupu sur élevage, orientation et animation de frappe.
+
+163 contrôles : marche et orientation aller/retour, diagonales, deux camps, métiers/légendes/animaux, arrêt, pause et rendu sans mutation validés.
+
+npm test : réussi, avec les nouveaux scénarios intégrés. Les captures proviennent d’un scénario contrôlé simulé via les vraies fonctions de combat, pas d’une partie utilisateur ni d’un test réseau à deux clients.

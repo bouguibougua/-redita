@@ -107,5 +107,28 @@
     };
   }
 
-  E.Board = { createState, getFormat };
+  function combatZ(position) {
+    const cfg=E.Config.villagePresentation,p=E.Config.boardProjection,edge=cfg.regionCenter-cfg.front;
+    const t=cfg.combatTransition,inner=p.originZ+t*p.positionScale;
+    if(position<t)return -edge+(inner+edge)*position/t;
+    if(position>100-t)return -inner+(edge+inner)*(position-(100-t))/t;
+    return p.originZ+position*p.positionScale;
+  }
+  function combatPosition(z) {
+    const cfg=E.Config.villagePresentation,p=E.Config.boardProjection,edge=cfg.regionCenter-cfg.front;
+    const t=cfg.combatTransition,inner=p.originZ+t*p.positionScale;
+    if(z<inner)return (z+edge)*t/(inner+edge);
+    if(z>-inner)return 100-t+(z+inner)*t/(edge+inner);
+    return (z-p.originZ)/p.positionScale;
+  }
+  function widthScale(state) { return getFormat(state).regions===E.Config.formats.simplified.regions ? E.Config.board.simplifiedWidthScale : 1; }
+  function slotHitbox(state,village,index) {
+    const cfg=E.Config.villagePresentation,slots=village.slots.length===2?cfg.slotsTwo:cfg.slotsFour;
+    if(!slots[index])return null;
+    const [offset,z]=slots[index],sign=village.ownerId==='red'?1:-1;
+    return {offset,position:combatPosition(sign*(-cfg.regionCenter+z)),
+      radius:village.slots[index].content?.category==='livestock'?E.Config.economicHitboxes.livestockRadius:E.Config.economicHitboxes.cropRadius};
+  }
+  E.Board = { createState, getFormat, combatZ, combatPosition, widthScale, slotHitbox };
+
 }());

@@ -462,6 +462,9 @@
     startingPopulation: 5,
     // TEMP_BALANCE_VALUE — achat immédiat d'un habitant dans le village sélectionné.
     residentPurchase: { gold: 50, resourceAmount: 50 },
+    // TEMP_BALANCE_VALUE — zones de contact économiques en unités du plateau 3D.
+    economicHitboxes: { cropRadius: .42, livestockRadius: .50, contactReach: .10 },
+    boardProjection: { originZ: -4.35, positionScale: .087 },
     combat: {
       villageRetaliationDamagePerSecond: 5,
       // TEMP_BALANCE_VALUE — portée, détection et vitesse d'attaque sont TBD.
