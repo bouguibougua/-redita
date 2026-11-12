@@ -1,0 +1,156 @@
+Validation du 12 novembre 2026
+
+npm test : réussi après ajout du cas de noyade.
+TAP version 13
+# Subtest: all seventeen powers have an independent implementation and do not load the retired card/deck engine
+ok 1 - all seventeen powers have an independent implementation and do not load the retired card/deck engine
+  ---
+  duration_ms: 5.07275
+  type: 'test'
+  ...
+# Subtest: A Strega and U Stregu apply separate timed yield modifiers on the match clock
+ok 2 - A Strega and U Stregu apply separate timed yield modifiers on the match clock
+  ---
+  duration_ms: 1.98825
+  type: 'test'
+  ...
+# Subtest: A Fata creates a river and speeds fishing by exactly 25 percent
+ok 3 - A Fata creates a river and speeds fishing by exactly 25 percent
+  ---
+  duration_ms: 1.864166
+  type: 'test'
+  ...
+# Subtest: L’Orcu and U Surpatore have the specified stats; the boar becomes one vampire on death
+ok 4 - L’Orcu and U Surpatore have the specified stats; the boar becomes one vampire on death
+  ---
+  duration_ms: 2.29825
+  type: 'test'
+  ...
+# Subtest: U Magu buffs only the next true newborn in every surviving allied village
+ok 5 - U Magu buffs only the next true newborn in every surviving allied village
+  ---
+  duration_ms: 1.885333
+  type: 'test'
+  ...
+# Subtest: U Lupu Mannaru transforms only a free untrained human, otherwise the next newborn; structures only
+ok 6 - U Lupu Mannaru transforms only a free untrained human, otherwise the next newborn; structures only
+  ---
+  duration_ms: 2.295083
+  type: 'test'
+  ...
+# Subtest: Anima in Pena creates one task-capable, profession-locked 1 HP / 1 DPS soul per allied column death
+ok 7 - Anima in Pena creates one task-capable, profession-locked 1 HP / 1 DPS soul per allied column death
+  ---
+  duration_ms: 1.482375
+  type: 'test'
+  ...
+# Subtest: A Strega Bianca prevents upcoming human deaths for one minute and preserves task and gear, never legends
+ok 8 - A Strega Bianca prevents upcoming human deaths for one minute and preserves task and gear, never legends
+  ---
+  duration_ms: 1.678708
+  type: 'test'
+  ...
+# Subtest: A Squadra d’Arozza resurrects only unclaimed human deaths in the last minute, once, with equipment
+ok 9 - A Squadra d’Arozza resurrects only unclaimed human deaths in the last minute, once, with equipment
+  ---
+  duration_ms: 1.806166
+  type: 'test'
+  ...
+# Subtest: U Diavule deals exactly 400 damage in 66 impacts to exposed targets of both camps
+ok 10 - U Diavule deals exactly 400 damage in 66 impacts to exposed targets of both camps
+  ---
+  duration_ms: 2.491791
+  type: 'test'
+  ...
+# Subtest: Diavule fire starts during preparation, pauses, expires at 66 seconds and protects home units and other columns
+ok 11 - Diavule fire starts during preparation, pauses, expires at 66 seconds and protects home units and other columns
+  ---
+  duration_ms: 2.081041
+  type: 'test'
+  ...
+# Subtest: Diavule damage remains idempotent and a new cast can restart the same column during preparation
+ok 12 - Diavule damage remains idempotent and a new cast can restart the same column during preparation
+  ---
+  duration_ms: 1.463917
+  type: 'test'
+  ...
+# Subtest: A Mumma turns only intruders back toward their home
+ok 13 - A Mumma turns only intruders back toward their home
+  ---
+  duration_ms: 1.547292
+  type: 'test'
+  ...
+# Subtest: I Lacramanti counts cumulative allied column deaths, buffs own humans only, including later deployments
+ok 14 - I Lacramanti counts cumulative allied column deaths, buffs own humans only, including later deployments
+  ---
+  duration_ms: 1.551291
+  type: 'test'
+  ...
+# Subtest: both camps stay fully visible before and after the legacy vision powers
+ok 15 - both camps stay fully visible before and after the legacy vision powers
+  ---
+  duration_ms: 1.648375
+  type: 'test'
+  ...
+# Subtest: U Fullettu summons five fast units; enemy bank transfers conserve resources and stop on pause
+ok 16 - U Fullettu summons five fast units; enemy bank transfers conserve resources and stop on pause
+  ---
+  duration_ms: 1.304792
+  type: 'test'
+  ...
+# Subtest: follets appear on dry allied ground even at a coastal random boundary
+ok 17 - follets appear on dry allied ground even at a coastal random boundary
+  ---
+  duration_ms: 1.561459
+  type: 'test'
+  ...
+# Subtest: activation is idempotent, validates target and epoch, and refuses pause
+ok 18 - activation is idempotent, validates target and epoch, and refuses pause
+  ---
+  duration_ms: 1.39575
+  type: 'test'
+  ...
+# Subtest: Sainte-Lucie reveals every enemy village statistic only to its owner until match end
+ok 19 - Sainte-Lucie reveals every enemy village statistic only to its owner until match end
+  ---
+  duration_ms: 1.641125
+  type: 'test'
+  ...
+# Subtest: Roccapina regroups only allied deployed military, preserving longitudinal position and origin in both formats
+ok 20 - Roccapina regroups only allied deployed military, preserving longitudinal position and origin in both formats
+  ---
+  duration_ms: 6.342041
+  type: 'test'
+  ...
+# Subtest: Roccapina rejects pause, bad targets and stale matches without moving units
+ok 21 - Roccapina rejects pause, bad targets and stale matches without moving units
+  ---
+  duration_ms: 1.559
+  type: 'test'
+  ...
+# Subtest: Roccapina deals 25 per hit using the existing combat cadence, including on enemy-side invocation
+ok 22 - Roccapina deals 25 per hit using the existing combat cadence, including on enemy-side invocation
+  ---
+  duration_ms: 1.449792
+  type: 'test'
+  ...
+# Subtest: Roccapina re-evaluates coastal transport and preserves resident origin on death
+ok 23 - Roccapina re-evaluates coastal transport and preserves resident origin on death
+  ---
+  duration_ms: 1.446167
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 58.992959
+
+Navigateur spécifique :
+Roccapina : GLB, illustration, fiche, invocation 145/25, regroupement, hauteur, animation provisoire et pause validés.
+
+Catalogue historique : échec sur le GIF optionnel préexistant manquant de U Diavule ; test spécifique du récit/MP4 du Lion réussi.

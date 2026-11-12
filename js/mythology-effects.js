@@ -187,6 +187,22 @@
     'a-fata': (s, id, t) => { const v = s.players[t.playerId].villages[t.lane]; v.terrain ||= {}; v.terrain.river = true; v.fataFishingMultiplier = cfg().fataFishingSpeed; },
     'l-orcu': (s, id, t) => summon(s, id, t.lane, 'l-orcu', { hp: cfg().orcuHp, damage: cfg().orcuDamage,
       speed: cfg().orcuSpeed, mythologyScale: 1.8 }, cfg().regionSpawnByOwner[t.playerId]),
+    'lion-roccapina': (s, id, t) => {
+      for (const unit of s.units) {
+        if (unit.ownerId !== id || unit.hp <= 0 || unit.isLegend || unit.animalType || unit.autoDefense ||
+          !E.Config.combatProfessions.includes(unit.profession || unit.role)) continue;
+        const changedLane = unit.lane !== t.lane || unit.lanePosition !== t.lane;
+        unit.lane = unit.lanePosition = t.lane;
+        unit.redirectTarget = unit.redirectOrigin = null;
+        unit.waitingForRedirect = false;
+        // Les bateaux ne se téléportent pas : le transport est réévalué par la boucle existante.
+        if (changedLane) { unit.waterOwner = unit.waterTransport = unit.transportHomeId = null; unit.swimming = false; }
+      }
+      s.pendingRedirects = s.pendingRedirects.filter(request => s.units.some(unit => unit.hp > 0 &&
+        unit.ownerId === request.playerId && unit.lane === request.fromLane && unit.waitingForRedirect));
+      summon(s, id, t.lane, 'lion-roccapina', { hp: cfg().roccapinaHp, damage: cfg().roccapinaDamage,
+        speed: cfg().roccapinaSpeed }, cfg().regionSpawnByOwner[t.playerId]);
+    },
     'u-magu': (s, id) => { s.players[id].villages.filter(v => !v.destroyed).forEach(v => { v.nextMaguCharges = (v.nextMaguCharges || 0) + cfg().maguResidentsPerVillage; }); },
     'u-surpatore': (s, id, t) => summon(s, id, t.lane, 'u-surpatore', { role: 'sanglier', mythologyForm: 'boar' }),
     'u-lupu-mannaru': (s, id, t) => {

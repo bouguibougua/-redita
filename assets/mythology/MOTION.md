@@ -40,3 +40,8 @@ comme l’export du menu, sans dépendance du site.
 
 Les autres légendes peuvent recevoir leur animation dans le même champ
 facultatif `visuals.motion`, sans changer le composant.
+
+
+## Lion de Roccapina
+
+Vidéo fournie : `gemini_generated_video_7d268ef3.mp4`, copiée sans réencodage en `lion-roccapina-motion.mp4`. Le grimoire la lit muette avec les règles de visibilité et de mouvement réduit existantes. Le poster `lion-roccapina.webp` (1280×720) est extrait à t=1s via AVFoundation puis converti en WebP dans Canvas. Le modèle fourni `Roccapina 3d.glb` est intégré séparément au plateau. Aucune génération nouvelle.

@@ -64,6 +64,7 @@
       E.HunterModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.RavagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.WarriorModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.RoccapinaModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.OrcuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.FullettuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.LupuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
@@ -747,7 +748,7 @@
   }
 
   function characterAnimation(figure) {
-    return figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.shepherd || figure.userData.hunter || figure.userData.ravager;
+    return figure.userData.roccapina || figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.shepherd || figure.userData.hunter || figure.userData.ravager;
   }
 
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
@@ -758,19 +759,20 @@
     const armor = appearance.armor || null;
     const donkey = !animalType && Boolean(appearance.donkey);
     if (animalType === "sanglier") waterTransport = null;
+    const isRoccapina = appearance.mythologyLegendId === 'lion-roccapina';
     const isOrcu = appearance.mythologyLegendId === 'l-orcu';
     const isFullettu = appearance.mythologyLegendId === 'u-fullettu';
     const isLupu = appearance.mythologyLegendId === 'u-lupu-mannaru';
     const isSurpatore = appearance.mythologyLegendId === 'u-surpatore' && appearance.mythologyForm === 'vampire';
     const importedRavager = !animalType && !appearance.mythologyLegendId && profession === 'ravageur' && E.RavagerModel?.ready;
-    const asset = isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : importedRavager ? 'ravageur-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'berger' && E.ShepherdModel?.ready ? 'berger-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
+    const asset = isRoccapina && E.RoccapinaModel?.ready ? 'roccapina-glb' : isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : importedRavager ? 'ravageur-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'berger' && E.ShepherdModel?.ready ? 'berger-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
     const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}${waterTransport === 'barque' ? E.RowboatModel?.ready ? ':barque-glb' : ':barque-simple' : ''}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
       figure.removeFromParent();
       disposeObject(figure);
     }
-    figure = isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : importedRavager ? E.RavagerModel.create(owner, tool, armor) : null;
+    figure = isRoccapina && E.RoccapinaModel?.ready ? E.RoccapinaModel.create(owner) : isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : importedRavager ? E.RavagerModel.create(owner, tool, armor) : null;
     if (figure) addHumanTransport(figure, owner, waterTransport, importedRavager && donkey);
     else figure = animalType ? animalModel(owner, animalType, waterTransport, swimming) : personModel(owner, profession, tool, armor, waterTransport, donkey);
     Object.assign(figure.userData, { visualKey: key, visualSignature, profession: animalType ? null : profession, animalType, tool, armor, waterTransport, donkey, swimming });

@@ -3,15 +3,15 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const root=path.join(__dirname,'..');
 function fixture(){const context=vm.createContext({window:{},console});for(const name of ['config','mythology-data','mythology-effects','mythology-match','mythology-ui'])vm.runInContext(fs.readFileSync(path.join(root,'js',name+'.js'),'utf8'),context);return context.window.Eredita;}
 const json=x=>JSON.parse(JSON.stringify(x));
-test('one catalog contains the sixteen confirmed powers with stable IDs and all requested aliases',()=>{
- const E=fixture();assert.equal(E.Mythology.all.length,16);assert.equal(new Set(E.Mythology.all.map(x=>x.id)).size,16);
+test('one catalog contains the seventeen confirmed powers with stable IDs and all requested aliases',()=>{
+ const E=fixture();assert.equal(E.Mythology.all.length,17);assert.equal(new Set(E.Mythology.all.map(x=>x.id)).size,17);
  for(const alias of ['A Strega','A Stregha'])assert.equal(E.Mythology.get(alias).id,'a-stregha');
  assert.equal(E.Mythology.get('u-diavule').id,'u-diavulu');assert.equal(E.Mythology.get('I Lacramanti').id,'i-lacrimenti');assert.equal(E.Mythology.get('Ochju di Santa Lucia').id,'oeil-sainte-lucie');
  for(const legend of E.Mythology.all){assert.equal(legend.gameplay.status,'confirmed');assert.ok(E.Mythology.categories.includes(legend.gameplay.category));assert.ok(E.MythologyMatch.activatable(legend));assert.equal(E.MythologyEffects.getBinding(legend.id).entryPoint,'MythologyEffects.activate');}
  assert.equal(E.Cards,undefined);assert.equal(E.CardGame,undefined);
 });
-test('sixteen real high-definition individual illustrations replace all missing assets',()=>{
- const E=fixture(),r=E.Mythology.report();assert.equal(r.missingNormal.length,0);assert.equal(r.cssMirrorFallback.length,16);assert.equal(r.missingReversed.length,16);
+test('seventeen real high-definition individual illustrations replace all missing assets',()=>{
+ const E=fixture(),r=E.Mythology.report();assert.equal(r.missingNormal.length,0);assert.equal(r.cssMirrorFallback.length,17);assert.equal(r.missingReversed.length,17);
  for(const legend of E.Mythology.all){const a=legend.visuals.normal,bytes=fs.readFileSync(path.join(root,a.src));assert.equal(bytes.subarray(8,12).toString(),'WEBP');
   const type=bytes.subarray(12,16).toString();let width,height;
   if(type==='VP8X'){width=bytes.readUIntLE(24,3)+1;height=bytes.readUIntLE(27,3)+1;}else{assert.equal(type,'VP8 ');width=bytes.readUInt16LE(26)&0x3fff;height=bytes.readUInt16LE(28)&0x3fff;}

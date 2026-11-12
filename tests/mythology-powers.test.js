@@ -18,8 +18,8 @@ function fixture() {
   const setRandom=value=>vm.runInContext('Math.random=()=>'+JSON.stringify(value),context);
   return {E,s,cast,deploy,kill,setRandom};
 }
-test('all sixteen powers have an independent implementation and do not load the retired card/deck engine',()=>{
-  const {E}=fixture();assert.equal(E.Mythology.all.length,16);
+test('all seventeen powers have an independent implementation and do not load the retired card/deck engine',()=>{
+  const {E}=fixture();assert.equal(E.Mythology.all.length,17);
   for(const legend of E.Mythology.all) assert.equal(E.MythologyMatch.activatable(legend),true,legend.name);
   assert.equal(E.Cards,undefined);assert.equal(E.CardGame,undefined);assert.equal(E.CardEffects,undefined);
 });
@@ -197,4 +197,53 @@ test('Sainte-Lucie reveals every enemy village statistic only to its owner until
   const snapshot=JSON.parse(JSON.stringify(s));assert.equal(E.MythologyEffects.canSeeStats(snapshot,'red','blue'),true);
   assert.equal(E.MythologyEffects.canSeeStats(E.Board.createState('simplified'),'red','blue'),false);
   assert.equal(E.MythologyEffects.canSeeStats(s,'intruder','blue'),false);
+});
+
+test('Roccapina regroups only allied deployed military, preserving longitudinal position and origin in both formats',()=>{
+  for(const format of ['classic','simplified'])for(const owner of ['red','blue']){
+    const {E,s}=fixture();Object.assign(s,E.Board.createState(format),{phase:'running',preparationRemaining:0,reinforcementEpoch:'lion'});E.MythologyEffects.init(s);
+    for(const p of Object.values(s.players))for(const v of p.villages){v.biome='plaine';v.slots=E.Biomes.createSlots('plaine');}
+    const count=s.players[owner].villages.length,targetLane=count-1,foe=owner==='red'?'blue':'red';
+    const troops=['guerrier','ravageur','chasseur'].map((profession,i)=>{
+      const v=s.players[owner].villages[0],r=v.residents[i];
+      assert.equal(E.Economy.deployResident(s,owner,0,r.id,i===2?'defense':'attaque',profession),true);
+      const u=s.units.find(x=>x.residentId===r.id);u.position=17+i*21;u.hp-=3;return u;
+    });
+    const enemies=E.Units.create(foe,0,'guerrier'),animal=E.Units.create(owner,0,'chien'),worker=E.Units.create(owner,0,'habitant',{profession:'chasseur'});worker.autoDefense=true;
+    const dead=E.Units.create(owner,0,'guerrier');dead.hp=0;
+    const legend=E.Units.create(owner,0,'ravageur');legend.isLegend=true;
+    const unaffected=[enemies,animal,worker,dead,legend];s.units.push(...unaffected);
+    const before=troops.map(u=>({...u})),others=JSON.stringify(unaffected),villages=JSON.stringify(s.players);
+    troops[0].redirectTarget=1;troops[0].redirectOrigin=0;troops[0].waitingForRedirect=true;
+    s.pendingRedirects=[{key:owner+'-0',playerId:owner,fromLane:0,candidates:[1]}];
+    const request={epoch:'lion',playerId:owner,legendId:'lion-roccapina',target:{playerId:owner,lane:targetLane},activationId:'roar'};
+    assert.equal(E.MythologyEffects.activate(s,request).accepted,true);
+    troops.forEach((u,i)=>{assert.equal(u.lane,targetLane);assert.equal(u.lanePosition,targetLane);for(const key of ['position','originLane','residentId','hp','maxHp','damage','stance','profession','tool','armor'])assert.equal(u[key],before[i][key],key);assert.equal(u.redirectTarget,null);assert.equal(u.waitingForRedirect,false);});
+    assert.equal(JSON.stringify(s.players),villages);assert.equal(JSON.stringify(unaffected),others);assert.equal(s.pendingRedirects.length,0);
+    const lion=s.units.find(u=>u.mythologyLegendId==='lion-roccapina');assert.equal(lion.hp,145);assert.equal(lion.damage,25);assert.equal(lion.ownerId,owner);
+    const after=JSON.stringify(s.units);assert.equal(E.MythologyEffects.activate(s,request).accepted,true);assert.equal(JSON.stringify(s.units),after,'replay never invokes/regroups twice');
+  }
+});
+test('Roccapina rejects pause, bad targets and stale matches without moving units',()=>{
+  const {E,s,deploy}=fixture();deploy();const before=JSON.stringify(s.units);
+  const request={epoch:s.reinforcementEpoch,playerId:'red',legendId:'lion-roccapina',target:{playerId:'red',lane:0},activationId:'lion-refusal'};
+  s.paused=true;assert.equal(E.MythologyEffects.activate(s,request).accepted,false);s.paused=false;
+  for(const target of [{playerId:'red',lane:-1},{playerId:'red',lane:.5},{lane:0},{playerId:'red',lane:0,extra:true}])assert.equal(E.MythologyEffects.activate(s,{...request,target}).accepted,false);
+  assert.equal(E.MythologyEffects.activate(s,{...request,epoch:'old'}).accepted,false);assert.equal(JSON.stringify(s.units),before);
+});
+test('Roccapina deals 25 per hit using the existing combat cadence, including on enemy-side invocation',()=>{
+  const {E,s,cast}=fixture();cast('lion-roccapina',{playerId:'blue',lane:0});const lion=s.units[0];
+  const enemy=E.Units.create('blue',0,'habitant');enemy.position=lion.position+.5;s.units.push(enemy);
+  E.Combat.update(s,.01);assert.equal(enemy.hp,25);assert.equal(lion.damage,25);
+  E.Combat.update(s,.01);assert.equal(enemy.hp,25,'no second hit before cooldown');
+});
+
+test('Roccapina re-evaluates coastal transport and preserves resident origin on death',()=>{
+ const {E,s,cast,deploy}=fixture(),u=deploy();const position=(E.Config.maritime.waterRanges.red.min+E.Config.maritime.waterRanges.red.max)/2;u.position=position;u.waterTransport='barque';u.transportHomeId=s.players.red.villages[0].id;
+ s.players.red.villages[1].biome='littoral';
+ cast('lion-roccapina',{playerId:'red',lane:1});
+ assert.equal(u.waterTransport,null);assert.equal(u.originLane,0);assert.equal(u.position,position);
+ const population=s.players.red.villages[0].population,otherPopulation=s.players.red.villages[1].population;
+ E.Combat.update(s,.01);
+ assert.equal(u.drowned,true);assert.equal(s.players.red.villages[0].population,population-1);assert.equal(s.players.red.villages[1].population,otherPopulation);
 });

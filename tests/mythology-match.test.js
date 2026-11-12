@@ -111,7 +111,7 @@ test('end, clock rewind, restart and old requests do not generate or reuse offer
 });
 test('only configured legends are eligible; explicit development mode safely includes unknown powers', () => {
   const { E, state } = fixture();
-  const configured = E.Mythology.all.filter(E.MythologyMatch.activatable); assert.equal(configured.length, 16);
+  const configured = E.Mythology.all.filter(E.MythologyMatch.activatable); assert.equal(configured.length, 17);
   for (let seed = 0; seed < 50; seed++) {
     const a = E.MythologyMatch.createAuthority({ random: () => seed / 50, log() {} }); a.sync(state);
     for (const id of ['red', 'blue']) for (const legendId of a.view(id).pending.legendIds) assert.ok(configured.some(l => l.id === legendId));

@@ -16,7 +16,7 @@ async function run() {
     await page.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await page.send('Page.navigate', { url: site.url + '?intro=0' });
     await page.waitFor("document.readyState==='complete' && window.Eredita?.MenuScene?.diagnostics.ready && Eredita.GameView?.getState()");
-    assert.equal(await page.evaluate('Eredita.Mythology.all.length'), 16);
+    assert.equal(await page.evaluate('Eredita.Mythology.all.length'), 17);
     assert.equal(await page.evaluate('Eredita.Cards'), undefined);
     assert.equal(await page.evaluate("document.querySelectorAll('.mythology-card').length"), 0, 'No new interface mounted automatically');
     const before = await page.evaluate('JSON.stringify(Eredita.GameView.getState())');
@@ -70,7 +70,7 @@ async function run() {
     await page.evaluate('mythologyPreview.close();mythologyPreview.remove()');
     await page.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await page.click('[data-menu-screen="legends"]');
-    assert.equal(await page.evaluate("document.querySelectorAll('.mythology-collection .mythology-card').length"), 16);
+    assert.equal(await page.evaluate("document.querySelectorAll('.mythology-collection .mythology-card').length"), 17);
     assert.match(await page.evaluate("getComputedStyle(document.querySelector('.legends-screen')).backgroundImage"), /\/-redita\/assets\/deck-library\.webp/);
     assert.equal(await page.evaluate("document.querySelectorAll('.mythology-codex-description p').length"), 2, 'Le grimoire présente les effets et leurs limites en paragraphes');
     await page.waitFor("document.querySelector('.mythology-codex-feature img').complete");
@@ -258,7 +258,7 @@ async function run() {
       assert.deepEqual(item.paragraphs, item.expected.paragraphs, 'Récit complet et correctement associé : ' + item.id);
       assert.doesNotMatch(item.paragraphs.join(' '), /Sources?\s*:|Université de Corse|corse-evasion\.fr|Corsicatheque|Corsica Linea|\+1/);
     }
-    assert.equal(await page.evaluate("document.querySelectorAll('.mythology-codex-crystal canvas').length"), 1, 'Une seule instance 3D pour les seize légendes');
+    assert.equal(await page.evaluate("document.querySelectorAll('.mythology-codex-crystal canvas').length"), 1, 'Une seule instance 3D pour les dix-sept légendes');
     await page.send('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
     await page.click('.mythology-roster-card[data-legend-id="u-mazzeru"]');
     await page.evaluate(`document.querySelector('${control}').click();document.querySelector('.mythology-roster-card[data-legend-id="u-stregu"]').click()`);

@@ -142,6 +142,9 @@
       streguDuration: 120, streguMultiplier: 2,
       fataFishingSpeed: 1.25,
       orcuHp: 200, orcuDamage: 30,
+      roccapinaHp: 145, roccapinaDamage: 25,
+      // TEMP_BALANCE_VALUE — vitesse du Lion non précisée par le concepteur.
+      roccapinaSpeed: 5,
       maguStatMultiplier: 2, maguScale: 1.5, maguResidentsPerVillage: 1,
       vampireHp: 40, vampireDamage: 11,
       lupuHp: 60, lupuDamage: 20,
@@ -537,6 +540,9 @@
         clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Droit", "Revers"], death: "Mort" }
       },
       // TEMP_BALANCE_VALUE — échelle et rythme d'animation purement visuels.
+      // TEMP_BALANCE_VALUE — dimensions et mouvements visuels du modèle fourni sans clips.
+      roccapina: { src: "assets/models/lion-roccapina.glb", height: 1.05, markerRadius: .18,
+        attackDuration: .65, attackLean: .2, walkFrequency: 8, walkBob: .018, maxFrameDelta: .05 },
       orcu: {
         src: "assets/models/orcu.glb?v=1-9b79e8bc4d1e", scale: 0.31,
         attackDuration: 0.9, walkTimeScale: 0.35, crossFade: 0.08,

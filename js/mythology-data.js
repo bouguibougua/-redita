@@ -10,9 +10,9 @@
     return value;
   }
   const configRef = path => ({ configRef: path });
-  // Illustrations individuelles générées à partir de la direction fournie.
+  // Illustrations individuelles ; Roccapina utilise une image de la vidéo fournie.
   // Aucun lien avec le catalogue historique de cartes ; miroir uniquement sur l’art.
-  const art = id => ({ src: `assets/mythology/${id}.webp`, kind: 'illustration', width: 1536, height: 1024,
+  const art = id => ({ src: `assets/mythology/${id}.webp`, kind: 'illustration', width: id === 'lion-roccapina' ? 1280 : 1536, height: id === 'lion-roccapina' ? 720 : 1024,
     crop: { x: 0, y: 0, width: 1, height: 1 } });
   const param = key => configRef('reinforcementPowers.' + key);
   function entry(id, name, category, description, parameters, primary, options = {}) {
@@ -25,7 +25,7 @@
         // Texte développé du grimoire ; les choix en partie conservent leur résumé.
         menuDescription: options.menuDescription || [options.displayDescription || description],
         shortDescription: options.shortDescription || description, parameters, targetMode: options.targetMode || 'none',
-        source: { document: 'GAME_DESIGN.md', section: 62, decision: 'mythology-2026-10-20' } },
+        source: options.source || { document: 'GAME_DESIGN.md', section: 62, decision: 'mythology-2026-10-20' } },
       implementation: { status: 'implemented', effectKey: id, engine: 'MythologyEffects.activate' } };
   }
   const entries = [
@@ -111,6 +111,23 @@
         'L’Orcu entre sur le terrain dans la région que vous désignez. Cette créature dispose de 200 PV et inflige 30 dégâts, mais se déplace extrêmement lentement.',
         'Le choix de son point d’apparition est donc essentiel : sa puissance s’accompagne d’un long trajet s’il est invoqué loin des combats. Cliquez sur une région pour y placer l’invocation.'
       ] }),
+    entry('lion-roccapina', 'Le Lion de Roccapina', 'invocation',
+      'Invoque le Lion de Roccapina : 145 PV et 25 dégâts par coup. Regroupe vos guerriers, ravageurs et archers déployés dans sa colonne, sans changer leur avancement.',
+      { hp: param('roccapinaHp'), damage: param('roccapinaDamage'), speed: param('roccapinaSpeed') }, '#d9ad48',
+      { aliases: ['Lion de Roccapina', 'Lion de Rocapina'], targetMode: 'any-region',
+        source: { document: 'GAME_DESIGN.md', section: 73, decision: 'roccapina-2026-11-12' },
+        motion: { src: 'assets/mythology/lion-roccapina-motion.mp4', type: 'video/mp4', width: 1280, height: 720, frameRate: 24 },
+        shortDescription: '145 PV · 25 dégâts par coup · Regroupe vos troupes dans sa colonne.',
+        lore: { subtitle: 'Le protecteur des amours impossibles', paragraphs: [
+          'Au temps des attaques sarrasines sur les côtes corses, un seigneur courageux, dont la chevelure évoquait une crinière, avait reçu le surnom de « Lion ».',
+          'Il tomba amoureux d’une femme qu’il ne pouvait épouser : selon les versions, elle était promise à un autre homme ou appartenait à un clan ennemi.',
+          'Accablé de chagrin, il rejoignit le promontoire d’où il surveillait la mer et demanda à être changé en pierre. Les forces mystérieuses de l’île firent de lui un immense lion de granit, tourné vers les côtes.',
+          'On raconte que son rugissement résonne les nuits de pleine lune. Le Lion de Roccapina veille depuis sur les amours impossibles.'
+        ] },
+        menuDescription: [
+          'Placez le Lion dans une région : cette invocation possède 145 PV et inflige 25 dégâts par coup.',
+          'À son arrivée, vos guerriers, ravageurs et archers déjà déployés sont téléportés dans sa colonne, à la même position d’avancement. Ils conservent leurs blessures, leur équipement, leurs ordres et leur village d’origine. Les ennemis, travailleurs et autres invocations ne sont pas regroupés.'
+        ] }),
     entry('u-magu', 'U Magu', 'enchantement',
       'Le prochain habitant de chaque village allié reçoit des statistiques doublées et une taille augmentée de 50 %, avec une aura violette et dorée.',
       { statMultiplier: param('maguStatMultiplier'), scaleMultiplier: param('maguScale'), residentsPerVillage: param('maguResidentsPerVillage') }, '#b45ae0', { secondary: '#dfbc62', shortDescription: 'Prochain habitant de chaque village : statistiques ×2 et taille +50 %.', lore: { subtitle: "Le magicien", paragraphs: [

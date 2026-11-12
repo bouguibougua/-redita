@@ -326,8 +326,8 @@
     const codex = element('section', 'mythology-codex');
     codex.setAttribute('aria-label', 'Le grimoire des légendes de Corse');
     const intro = element('div', 'mythology-codex-intro');
-    intro.append(element('p', '', 'Seize présences. Une île. Des pouvoirs à découvrir.'),
-      element('span', 'mythology-codex-seal', 'XVI · LÉGENDES'));
+    intro.append(element('p', '', `${E.Mythology.all.length} présences. Une île. Des pouvoirs à découvrir.`),
+      element('span', 'mythology-codex-seal', `${E.Mythology.all.length} · LÉGENDES`));
     const feature = element('section', 'mythology-codex-feature');
     feature.setAttribute('aria-label', 'Présentation de la légende');
     const navigation = element('div', 'mythology-codex-navigation');
@@ -335,7 +335,7 @@
     const filters = element('div', 'mythology-codex-filters');
     filters.setAttribute('role', 'group'); filters.setAttribute('aria-label', 'Filtrer les légendes par catégorie');
     const collection = element('section', 'mythology-collection');
-    collection.setAttribute('aria-label', 'Les seize légendes de Corse');
+    collection.setAttribute('aria-label', `Les ${E.Mythology.all.length} légendes de Corse`);
     const entries = new Map();
     const timings = E.Config.mythology.codex;
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -442,7 +442,7 @@
       card.classList.add('mythology-codex-portrait');
       card.querySelector('.mythology-category').prepend(categoryIcon(legend.gameplay.category));
       card.querySelector('img')?.setAttribute('loading', 'eager');
-      const index = element('p', 'mythology-codex-index', 'LÉGENDE ' + String(E.Mythology.all.findIndex(item => item.id === id) + 1).padStart(2, '0') + ' / 16');
+      const index = element('p', 'mythology-codex-index', 'LÉGENDE ' + String(E.Mythology.all.findIndex(item => item.id === id) + 1).padStart(2, '0') + ' / ' + E.Mythology.all.length);
       card.querySelector('.mythology-heading').prepend(index);
       headingTemplate = card.querySelector('.mythology-heading'); parametersTemplate = card.querySelector('.mythology-parameters');
       currentArt = card.querySelector('.mythology-illustration'); currentCopy = createCopy();

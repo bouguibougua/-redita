@@ -1,6 +1,6 @@
 # Renforts mythologiques — Eredità
 
-Les seize pouvoirs confirmés sont intégrés à la partie. Le catalogue existant,
+Les dix-sept pouvoirs confirmés sont intégrés à la partie. Le catalogue existant,
 le cristal, les rayons, le délai de 500 ms et les deux choix symétriques sont
 réutilisés. L’ancien constructeur de decks, la main, la pioche et les anciens
 déblocages mythologiques à 5/10 minutes sont supprimés du dépôt.
@@ -39,7 +39,7 @@ Le mode local sur un seul écran suit le camp sélectionné ; ce n’est pas une
 protection contre la personne qui partage physiquement cet écran.
 
 Pour consulter les illustrations sans démarrer : **LÉGENDES** au menu principal.
-Le grimoire présente une grande fiche et une galerie des seize légendes en
+Le grimoire présente une grande fiche et une galerie des dix-sept légendes en
 parallélogrammes. Cliquer sur une miniature affiche son illustration et son
 pouvoir ; les filtres limitent la galerie à une catégorie. Le clavier permet
 également de parcourir les miniatures. Sur téléphone, l’image apparaît au-dessus
@@ -118,7 +118,7 @@ besoin du relais WebSocket existant.
 | `js/mythology-data.js` | Unique catalogue : identités, alias, illustrations, couleurs, catégories, descriptions, paramètres, cibles et état. |
 | `js/mythology-effects.js` | Validation de cible, effets, morts, résurrections, vision, unicité d’exécution et mise à jour sur l’horloge du jeu. |
 | `js/mythology-crystal.js` | Rendu Three.js existant du cristal, rayons et éclairs ; indépendant des pouvoirs. |
-| `js/mythology-ui.js`, `css/mythology.css` | Choix, collection des seize légendes, stock et commandes d’utilisation. |
+| `js/mythology-ui.js`, `css/mythology.css` | Choix, collection des dix-sept légendes, stock et commandes d’utilisation. |
 | `js/mythology-match.js` | Autorité : tirage, FIFO privée, sélection, réservation et confirmation d’activation. |
 | `js/mythology-session.js` | Raccordement à une partie, compteur, choix et stock du joueur courant. |
 | `server-mythology.js`, `server.js`, `js/network.js` | Même catalogue/règles dans le relais, messages privés et exécution de l’hôte. |
@@ -146,6 +146,7 @@ achats de la boutique restent disponibles.
 | A Fata | Rivière et vitesse de pêche +25 % dans la région choisie. |
 | Anima in Pena | Une âme par mort allié de la colonne, 1 PV / 1 DPS, tâches possibles mais métiers interdits. |
 | L’Orcu | Invocation de 200 PV / 30 dégâts, très lente. |
+| Le Lion de Roccapina | Invocation de 145 PV / 25 dégâts par coup ; regroupement des troupes militaires alliées à avancement identique. |
 | U Magu | Uniquement le prochain habitant de chaque village allié : statistiques ×2, taille ×1,5, aura violette et dorée. |
 | U Surpatore | Sanglier, puis vampire après sa mort : 40 PV / 11 dégâts, rapide. |
 | U Lupu Mannaru | Transforme un humain libre sans métier, sinon le prochain nouveau-né : 60 PV / 20 dégâts, structures seulement. |
@@ -213,7 +214,7 @@ la légende obtenue. L’aperçu ne l’émet pas.
 `MythologySession.getObtainedLegends()` dérive le stock des confirmations privées.
 
 `Config.reinforcements` conserve `intervalSeconds: 120`, `pendingPolicy: 'fifo'`
-et le mode développement. Les seize pouvoirs étant implémentés, aucune fiche
+et le mode développement. Les dix-sept pouvoirs étant implémentés, aucune fiche
 ne reste « non configurée ». Si une future fiche est incomplète, son test visuel
 reste possible sans activation :
 `Eredita.Config.reinforcements.development.includeUnconfigured = true`
@@ -232,7 +233,7 @@ npm run test:menu
 npm run test:xr
 ```
 
-Les tests métier couvrent les seize effets, les statistiques, la durée et les
+Les tests métier couvrent les dix-sept effets, les statistiques, la durée et les
 cibles, la conservation des ressources, les résurrections, la vision et
 l’unicité. Les tests navigateur couvrent le catalogue sous `/-redita/`,
 les images normales/inversées, le délai de 500 ms, la symétrie, le FIFO
@@ -257,3 +258,16 @@ Captures facultatives :
   pas encore dans les panneaux WebXR immersifs. Pas de validation matérielle Quest.
 * Les ressources et la visibilité du monde restent dans le snapshot partagé,
   comme avant ; seules files et sélections sont privées côté relais.
+
+
+## Lion de Roccapina — ajout du 12 novembre 2026
+
+Dix-septième renfort demandé par le concepteur : invocation de **145 PV et 25 dégâts par coup**. À son placement, seuls les guerriers, ravageurs et archers alliés déjà déployés rejoignent sa colonne ; leur avancement longitudinal, leurs blessures, leur équipement et leur village d’origine sont conservés. Les troupes adverses, travailleurs en défense automatique, animaux et autres légendes restent en place. La redirection courante est annulée ; les règles existantes de rappel, bateau et noyade s’appliquent ensuite. La vitesse 5 reste provisoire dans `Config.reinforcementPowers.roccapinaSpeed`.
+
+Le récit fourni évoque le guerrier transformé en lion de granit après un amour impossible (source transmise : Pozzo di Borgo). Le GLB fourni est copié dans `assets/models/lion-roccapina.glb` ; aucun clip n’y est présent. `roccapina-model.js` normalise sa hauteur, partage ses géométries/textures et donne à chaque instance ses matériaux et son squelette. Ses mouvements de groupe pour marche, frappe et mort sont provisoires et respectent la pause.
+
+La vidéo fournie est conservée dans `assets/mythology/lion-roccapina-motion.mp4`. Le poster WebP 1280×720 est extrait à une seconde de cette vidéo. Aucun asset généré ni crédit Tripo consommé. La fiche est disponible dans le grimoire, les propositions aléatoires et le stock existants.
+
+Validation : `npm test`, `npm run test:roccapina` et test navigateur spécifique du grimoire du Lion. Le test spécifique utilise des états contrôlés pour vérifier les trois métiers, les deux camps/formats, la conservation des origines, les refus/rejeux, le dégât exact, la pause, le GLB, les illustrations et la vidéo du récit. Captures dans `eredita3D/previews/roccapina-*.png`. Aucun test physique Quest ni multijoueur visuel à deux clients réalisé pour ce nouveau modèle ; les validations d’autorité existantes font partie des tests généraux.
+
+Le test historique `mythology-browser.test.js` échoue sur son attente d’un GIF de U Diavule : la référence actuelle associe déjà un MP4 au grimoire, et le GIF optionnel manque dans les assets locaux. Cet échec, extérieur au Lion, est conservé explicitement ; le scénario spécifique vérifie la vidéo, le récit et les compteurs à 17.

@@ -1709,7 +1709,7 @@ bâtiments et combats conservent leurs voies directes existantes.
 Les fichiers, paramètres, styles, illustrations et tests de cet ancien système
 sont supprimés. Les fonctions encore actives sont conservées dans les modules
 de bâtiments et de renforts mythologiques.
-Le menu principal propose désormais **LÉGENDES**, catalogue des seize renforts.
+Le menu principal propose désormais **LÉGENDES**, catalogue des dix-sept renforts.
 Il les présente dans un grimoire : grande fiche illustrée, galerie en
 parallélogrammes et filtres par catégorie. Ce menu de consultation utilise
 le catalogue existant, sans effet sur les stocks ou les pouvoirs en partie.
@@ -1721,7 +1721,7 @@ particules magiques flottent en permanence ; au survol, des éclairs longent
 ses arêtes et font le tour de sa surface. Au clic, il éclate puis se reforme
 de l’autre côté de l’illustration : l’image glisse à gauche pour révéler
 l’histoire à droite, puis à droite pour retrouver le pouvoir à gauche.
-Les seize récits fournis sont consultables sans leurs sources. Cette bascule
+Les récits fournis sont consultables dans le grimoire. Cette bascule
 fonctionne aussi au clavier et au toucher, avec un mode de mouvement réduit.
 Lorsqu’une vidéo propre à une légende est configurée, le passage à l’histoire
 remplace l’illustration par cette animation muette en boucle, avec un léger
@@ -1841,7 +1841,7 @@ entièrement autoritaire.
 # 65. CATÉGORIES ET CONFIGURATION
 
 Les catégories des renforts sont **invocation**, **enchantement**, **terrain**
-et **vision**. Les seize fiches résident dans `mythology-data.js` :
+et **vision**. Les dix-sept fiches résident dans `mythology-data.js` :
 identifiants stables, alias, illustrations, couleurs, descriptions, cibles,
 paramètres et état d’implémentation. Les effets restent dans
 `mythology-effects.js`, l’interface dans `mythology-ui.js`.
@@ -1952,6 +1952,7 @@ La protection utilise une lueur verte et dorée.
 | --- | --- | --- |
 | A Fata | terrain | Place une rivière dans la région choisie ; vitesse de pêche +25 %. |
 | L’Orcu | invocation | 200 PV, 30 dégâts, extrêmement lent, dans la région choisie. |
+| Le Lion de Roccapina | invocation | 145 PV, 25 dégâts par coup ; regroupe les guerriers, ravageurs et archers alliés déployés dans sa colonne, à avancement identique. |
 | U Magu | enchantement | Uniquement le prochain habitant de chaque village allié : statistiques ×2, taille +50 %, aura violette et dorée. |
 | U Surpatore | invocation | Sanglier qui, à sa mort, devient un vampire de 40 PV et 11 dégâts, rapide. |
 | U Lupu Mannaru | invocation | Transforme un habitant sans tâche ni métier, sinon le prochain nouveau-né ; 60 PV, 20 dégâts, propriétés du Ravageur, structures uniquement. |
@@ -1960,6 +1961,14 @@ La protection utilise une lueur verte et dorée.
 | I Lacramanti | enchantement | Humains alliés présents sur la colonne : +2 PV et +1 dégât par mort allié depuis le début sur cette colonne ; pas les légendes. |
 | U Fullettu | invocation | Cinq follets aléatoirement sur les terres alliées, 20 PV, 0 dégât, très rapides ; ressources ennemies transférées directement à la banque locale alliée. |
 | Œil de Sainte-Lucie | vision | Révèle toutes les statistiques des villages ennemis jusqu’à la fin de la partie : population, disponibilités, stocks, niveau et bâtiments. |
+
+## Ajout du concepteur — 12 novembre 2026 : Lion de Roccapina
+
+**Le Lion de Roccapina** est une invocation de **145 PV**, infligeant **25 dégâts par coup** à la cadence de combat existante. Il apparaît dans la région choisie. À son placement, **uniquement les troupes de son invocateur** déjà déployées en Guerrier, Ravageur ou Archer sont téléportées dans sa colonne, en conservant leur position longitudinale, leurs PV, leur équipement, leur ordre et leur village d’origine. L’Archer correspond au métier interne `chasseur` en combat. Les travailleurs, animaux, autres légendes et ennemis ne sont pas regroupés. Le regroupement se produit une seule fois à l’invocation ; les futurs déploiements ne sont pas attirés en permanence.
+
+Les redirections en cours sont annulées pour les troupes regroupées. Le retour au village d’origine et les règles de transport/noyade existantes continuent de s’appliquer ; les embarcations ne sont pas déplacées avec les troupes. Sa vitesse, non précisée, reste **temporaire** dans `config.js` (5). Le point d’apparition utilise le réglage provisoire commun des invocations.
+
+Son récit fourni par le concepteur raconte un guerrier corse surnommé « Lion », changé en granit après un amour impossible. Il veille sur les côtes et les amours impossibles ; son rugissement résonnerait à la pleine lune. Source du récit transmise : Pozzo di Borgo. Le modèle `Roccapina 3d.glb` fourni est intégré en `assets/models/lion-roccapina.glb`. Il ne contient pas de clips d’animation : la marche, la frappe et la mort ont des mouvements de groupe provisoires. La vidéo fournie sert au grimoire ; son illustration est une image extraite de cette vidéo, sans génération d’asset.
 
 Les invocations utilisent les unités et déplacements existants. Les vitesses
 non chiffrées par le concepteur restent temporaires dans la configuration.
@@ -2439,7 +2448,7 @@ Les anciens aménagements accessibles uniquement par cartes sont retirés du pro
 
 ## ÉTAPE 10 — Pouvoirs mythologiques
 
-Les seize pouvoirs sont définis dans le catalogue central. Les propositions
+Les dix-sept pouvoirs sont définis dans le catalogue central. Les propositions
 s’accumulent en FIFO dès le début, puis toutes les deux minutes de combat.
 La sélection et l’activation manuelle unique suivent les sections 60 à 73.
 
@@ -2846,7 +2855,7 @@ Les prompts et chemins finaux sont dans `assets/mythology/generation.json`.
 Ce sont des interprétations de la référence, pas des extractions de son fichier.
 Aucune variante inversée distincte n’est fournie ; seul l’art est retourné en CSS
 à droite. La planche contient aussi A Mazzera, absente de la liste des seize :
-aucun pouvoir ni dix-septième renfort n’a été inventé.
+aucun pouvoir pour A Mazzera n’a été inventé. Le dix-septième renfort, le Lion de Roccapina, a ensuite été ajouté sur demande explicite du concepteur, avec sa vidéo et son modèle fournis.
 
 L’ancien moteur de cartes, son constructeur, la main, la pioche et les
 déblocages à 5/10 minutes sont supprimés du dépôt, avec leurs styles, paramètres,
