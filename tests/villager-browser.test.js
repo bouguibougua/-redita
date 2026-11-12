@@ -11,6 +11,8 @@ async function run() {
     await page.send('Page.navigate', { url: site.url + '?intro=0' });
     await page.waitFor("document.readyState==='complete' && window.Eredita?.Board3D?.ready && Eredita.GameView?.getState()");
     await page.waitFor('Eredita.VillagerModel?.ready || Eredita.VillagerModel?.diagnostics.error', 30000);
+    // Le plateau doit être visible pour que sa boucle d’animation rende les impacts.
+    await page.click('[data-menu-screen="play"]'); await page.click('#training-button');
     const diagnostics = await page.evaluate('Eredita.VillagerModel.diagnostics');
     assert.equal(diagnostics.error, null);
     assert.equal(diagnostics.ready, true);

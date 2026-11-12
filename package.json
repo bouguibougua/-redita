@@ -67,7 +67,8 @@
     "test:proximity": "node tests/proximity-combat.test.js && node tests/proximity-map-browser.test.js",
     "test:construction": "node tests/construction-sites-browser.test.js",
     "test:diavule": "node tests/mythology-powers.test.js && node tests/diavule-browser.test.js",
-    "test:roccapina": "node tests/mythology-powers.test.js && node tests/roccapina-browser.test.js"
+    "test:roccapina": "node tests/mythology-powers.test.js && node tests/roccapina-browser.test.js",
+    "test:locomotion": "node tests/locomotion-browser.test.js"
   },
   "engines": {
     "node": ">=18"

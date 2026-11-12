@@ -2,6 +2,7 @@
   'use strict';
   const E = window.Eredita = window.Eredita || {};
   let THREE, template, loading, error = null, triangles = 0;
+  const walkingGeometries = new WeakMap();
   const config = () => E.Config.characterModels.villager;
 
   function init(three) {
@@ -41,6 +42,46 @@
       };
       part.material = Array.isArray(part.material) ? part.material.map(clone) : clone(part.material);
     });
+    // Squelette de marche léger pour le GLB statique : deux jambes indépendantes.
+    // Les positions, UV et textures d’origine restent partagés entre les instances.
+    const legs = [], skeletons = [], meshes = [];
+    model.traverse(part => { if (part.isMesh) meshes.push(part); });
+    for (const part of meshes) {
+      let geometry = walkingGeometries.get(part.geometry);
+      const cfg = E.Config.characterLocomotion;
+      const hip = cfg.villagerHip;
+      if (!geometry) {
+        geometry = part.geometry.clone();
+        const positions = geometry.attributes.position, indices = new Uint16Array(positions.count * 4), weights = new Float32Array(positions.count * 4);
+        for (let i = 0; i < positions.count; i++) {
+          const weight = THREE.MathUtils.clamp((hip - positions.getY(i)) / cfg.villagerBlend, 0, 1);
+          indices[i * 4] = 0; indices[i * 4 + 1] = positions.getX(i) < 0 ? 1 : 2;
+          weights[i * 4] = 1 - weight; weights[i * 4 + 1] = weight;
+        }
+        geometry.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(indices, 4));
+        geometry.setAttribute('skinWeight', new THREE.Float32BufferAttribute(weights, 4));
+        walkingGeometries.set(part.geometry, geometry);
+      }
+      const root = new THREE.Bone(), left = new THREE.Bone(), right = new THREE.Bone();
+      root.name = 'marche-racine'; left.name = 'marche-jambe-gauche'; right.name = 'marche-jambe-droite';
+      left.position.set(-cfg.villagerLegOffset, hip, 0); right.position.set(cfg.villagerLegOffset, hip, 0);root.add(left, right);
+      const skin = new THREE.SkinnedMesh(geometry, part.material);
+      skin.name = part.name; skin.position.copy(part.position);skin.quaternion.copy(part.quaternion);skin.scale.copy(part.scale);
+      skin.userData.sharedGeometry = true;skin.castShadow = skin.receiveShadow = true;skin.frustumCulled = false;
+      const skeleton = new THREE.Skeleton([root, left, right]);skin.add(root);skin.bind(skeleton);
+      part.parent.add(skin);part.removeFromParent();legs.push(left, right);skeletons.push(skeleton);
+    }
+    let moving = false, phase = 0;
+    group.userData.villager = {
+      setMoving(value) { moving = Boolean(value); }, attack() {}, die() {},
+      tick(delta, paused, dead) {
+        if (paused) return;
+        const cfg = E.Config.characterLocomotion;
+        if (moving && !dead) phase += Math.min(delta, cfg.maxFrameDelta) * cfg.frequency;
+        legs.forEach((leg,i) => { leg.rotation.x = moving && !dead ? Math.sin(phase) * cfg.limbSwing * (i % 2 ? -1 : 1) : 0; });
+      },
+      dispose() { skeletons.forEach(skeleton => skeleton.dispose()); }
+    };
     group.add(model);
 
     const part = (name, geometry, color, x, y, z, options = {}) => {

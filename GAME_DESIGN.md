@@ -1968,7 +1968,7 @@ La protection utilise une lueur verte et dorée.
 
 Les redirections en cours sont annulées pour les troupes regroupées. Le retour au village d’origine et les règles de transport/noyade existantes continuent de s’appliquer ; les embarcations ne sont pas déplacées avec les troupes. Sa vitesse, non précisée, reste **temporaire** dans `config.js` (5). Le point d’apparition utilise le réglage provisoire commun des invocations.
 
-Son récit fourni par le concepteur raconte un guerrier corse surnommé « Lion », changé en granit après un amour impossible. Il veille sur les côtes et les amours impossibles ; son rugissement résonnerait à la pleine lune. Source du récit transmise : Pozzo di Borgo. Le modèle `Roccapina 3d.glb` fourni est intégré en `assets/models/lion-roccapina.glb`. Il ne contient pas de clips d’animation : la marche, la frappe et la mort ont des mouvements de groupe provisoires. La vidéo fournie sert au grimoire ; son illustration est une image extraite de cette vidéo, sans génération d’asset.
+Son récit fourni par le concepteur raconte un guerrier corse surnommé « Lion », changé en granit après un amour impossible. Il veille sur les côtes et les amours impossibles ; son rugissement résonnerait à la pleine lune. Source du récit transmise : Pozzo di Borgo. Le modèle `Roccapina 3d.glb` fourni est intégré en `assets/models/lion-roccapina.glb`. Il ne contient pas de clips d’animation : la marche utilise une animation procédurale des jambes du squelette fourni ; la frappe et la mort gardent des mouvements de groupe provisoires. La vidéo fournie sert au grimoire ; son illustration est une image extraite de cette vidéo, sans génération d’asset.
 
 Les invocations utilisent les unités et déplacements existants. Les vitesses
 non chiffrées par le concepteur restent temporaires dans la configuration.
@@ -2153,8 +2153,7 @@ dans les portraits et la vue 2D. Le choix du modèle dépend du métier réel,
 y compris pendant une tâche économique ou une mission militaire ; attribuer
 un métier restaure l’apparence de cette spécialité. Les équipements achetés,
 la sélection, les transports et les effets de combat restent visibles.
-Ce modèle ne contient pas de squelette ni de clips ; il utilise les effets
-visuels existants du plateau. La tenue du modèle ne donne aucun bonus
+Le fichier source ne contient pas de squelette ni de clips ; le rendu ajoute désormais un squelette de marche léger à deux jambes, sans modifier le GLB fourni. La tenue du modèle ne donne aucun bonus
 supplémentaire aux statistiques.
 
 Le Guerrier 3D utilise le modèle GLB **final** fourni par le concepteur
@@ -2880,3 +2879,8 @@ le tutoriel scénarisé reste sans tirage supplémentaire.
 Les vérifications et le parcours de test réel sont documentés dans
 `MYTHOLOGY.md`. Les modes hors ligne restent compatibles avec le chemin
 `/-redita/` sur GitHub Pages ; le multijoueur exige le relais WebSocket existant.
+
+
+## Correction visuelle — orientation et marche, 12 novembre 2026
+
+Toutes les troupes et tous les travailleurs s’orientent selon leur déplacement réel sur le plateau (aller, retour et diagonales), indépendamment du camp. À l’arrêt, un travailleur conserve la direction de son dernier déplacement ; les unités à l’attaque regardent leur cible. Les clips de marche existants restent utilisés. Les habitants sans métier reçoivent un squelette visuel simple pour faire alterner leurs jambes ; les personnages et animaux procéduraux utilisent une marche légère des membres. Les embarcations s’orientent selon le trajet sans faire marcher leurs occupants. La pause fige les animations. Les réglages visuels sont centralisés dans `characterLocomotion` ; les trajets, vitesses, temps de récolte et règles de combat ne changent pas.

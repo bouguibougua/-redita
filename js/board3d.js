@@ -525,12 +525,9 @@
       const appearance = resident || unit;
       const swimming = (unit.animalType || unit.role) === "sanglier" && Boolean(unit.waterOwner);
       const figure = unitModel(key, unit.ownerId, appearance, unit.waterTransport, swimming);
-      const previousPosition = figure.userData.previousUnitPosition;
-      const moving = !unit.waterTransport && (
-        previousPosition !== undefined && Math.abs(unit.position - previousPosition) > E.Config.characterModels.warrior.movementEpsilon ||
-        figure.userData.previousLanePosition !== undefined &&
-        Math.abs(unit.lanePosition - figure.userData.previousLanePosition) > E.Config.characterModels.warrior.movementEpsilon);
-      characterAnimation(figure)?.setMoving(moving);
+      figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, combatZ(unit.position));
+      figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
+      const moving = syncLocomotion(figure, true, !unit.waterTransport);
       figure.userData.farmer?.setHarvest(false);
       figure.userData.shepherd?.setHarvest(false);
       if (figure.userData.fullettu) {
@@ -541,21 +538,10 @@
           destination && !destination.destroyed && E.Config.resources.some(resource => source?.resources[resource] > 0);
         figure.userData.fullettu.setHarvest(gathering, unit.mythologyGatherTimer || 0, E.Config.reinforcementPowers.fullettuGatherInterval);
       }
-      figure.userData.previousUnitPosition = unit.position;
-      figure.userData.previousLanePosition = unit.lanePosition;
-      markSelected(figure, Boolean(unit.residentId && unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane));
-      figure.position.set(laneX(unit.lanePosition), swimming ? -0.04 : 0.2, combatZ(unit.position));
-      figure.rotation.y = unit.ownerId === "red" ? 0 : Math.PI;
-      if (unit.visualAttackTarget && unit.attackCooldown > 0) {
-        figure.rotation.y = unit.visualAttackTarget.position >= unit.position ? 0 : Math.PI;
+      if (!moving && unit.visualAttackTarget && unit.attackCooldown > 0) {
+        figure.rotation.y = Math.atan2(laneX(unit.visualAttackTarget.lanePosition) - figure.position.x,
+          combatZ(unit.visualAttackTarget.position) - figure.position.z);
       }
-      if (unit.mythologyRetreating || unit.returningToVillage) figure.rotation.y += Math.PI;
-      if (unit.returningToVillage && previousPosition !== undefined) {
-        const dx = laneX(unit.lanePosition) - laneX(figure.userData.previousRecallLane ?? unit.lanePosition);
-        const dz = combatZ(unit.position) - combatZ(previousPosition);
-        if (Math.abs(dx) + Math.abs(dz) > E.Config.characterModels.warrior.movementEpsilon) figure.rotation.y = Math.atan2(dx,dz);
-      }
-      figure.userData.previousRecallLane = unit.lanePosition;
       figure.scale.setScalar(unit.mythologyScale || 1);
       updateMythologyAura(figure, appearance, unit.ownerId, state);
       syncUnitVisualState(figure, unit);
@@ -580,11 +566,8 @@
         markSelected(figure, resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane);
         figure.userData.aroundCampfire = false;
         const isWorker = ["agriculture", "elevage", "chasse"].includes(resident.mission) && Number.isFinite(resident.workPosition);
-        characterAnimation(figure)?.setMoving(isWorker && figure.userData.previousWorkPosition !== undefined &&
-          Math.abs(resident.workPosition - figure.userData.previousWorkPosition) > E.Config.characterModels.warrior.movementEpsilon);
         figure.userData.farmer?.setHarvest(isWorker && resident.mission === 'agriculture' && resident.workPhase === 'harvesting');
         figure.userData.shepherd?.setHarvest(isWorker && resident.mission === 'elevage' && resident.workPhase === 'harvesting');
-        figure.userData.previousWorkPosition = resident.workPosition;
         figure.scale.setScalar((isWorker ? 0.78 : 0.65) * (resident.mythologyScale || 1));
         updateMythologyAura(figure, resident, player.id, state);
         figure.rotation.y = facing === 1 ? 0 : Math.PI;
@@ -606,6 +589,7 @@
           figure.scale.setScalar((idleCount > cfg.crowdedThreshold ? cfg.crowdedIdleScale : cfg.idleScale) * (resident.mythologyScale || 1));
           figure.userData.aroundCampfire = true;
         }
+        syncLocomotion(figure, isWorker, true);
         figure.userData.mapTarget = {kind:'resident',playerId:player.id,lane:village.lane,residentId:resident.id};
         E.CharacterHUD?.sync(figure, E.CharacterHUD.getStats(state,village,resident), player.id === viewerId(state));
         active.add(key);
@@ -649,8 +633,8 @@
       const target = unit.visualAttackTarget;
       const targetPoint = target && Number.isFinite(target.position) && Number.isFinite(target.lanePosition)
         ? new THREE.Vector3(laneX(target.lanePosition), .47, combatZ(target.position)) : null;
-      if (figure.userData.hunter && targetPoint) {
-        figure.rotation.y = target.position >= unit.position ? 0 : Math.PI;
+      if (!figure.userData.locomotionMoving && targetPoint) {
+        figure.rotation.y = Math.atan2(targetPoint.x - figure.position.x, targetPoint.z - figure.position.z);
       }
       characterAnimation(figure)?.attack(attackSequence, targetPoint);
     }
@@ -735,7 +719,7 @@
 
       const attackProgress = figure.userData.attackStartedAt === undefined ? 1 :
         (now - figure.userData.attackStartedAt) / (effects.unitAttackDuration * 1000);
-      figure.rotation.x = !characterAnimation(figure) && attackProgress >= 0 && attackProgress < 1 ? Math.sin(attackProgress * Math.PI) * effects.unitAttackTilt : 0;
+      figure.rotation.x = (!characterAnimation(figure) || figure.userData.simpleWalk || figure.userData.villager) && attackProgress >= 0 && attackProgress < 1 ? Math.sin(attackProgress * Math.PI) * effects.unitAttackTilt : 0;
       figure.rotation.z = 0;
 
       const hitProgress = figure.userData.hitStartedAt === undefined ? 1 :
@@ -747,8 +731,47 @@
     });
   }
 
+  // Direction et animation communes à toutes les figurines ; aucun état logique modifié.
+  function syncLocomotion(figure, canMove, canWalk) {
+    const previous = figure.userData.locomotionPosition;
+    const dx = previous ? figure.position.x - previous.x : 0;
+    const dz = previous ? figure.position.z - previous.z : 0;
+    const moving = canMove && Math.hypot(dx, dz) > E.Config.characterModels.warrior.movementEpsilon;
+    if (moving) figure.userData.locomotionHeading = Math.atan2(dx, dz);
+    if (canMove && figure.userData.locomotionHeading !== undefined) figure.rotation.y = figure.userData.locomotionHeading;
+    if (!canMove) delete figure.userData.locomotionHeading;
+    figure.userData.locomotionPosition = {x:figure.position.x, z:figure.position.z};
+    figure.userData.locomotionMoving = moving;
+    characterAnimation(figure)?.setMoving(moving && canWalk);
+    return moving;
+  }
+
+  function addSimpleWalk(figure) {
+    const cfg = E.Config.characterLocomotion;
+    const parts = figure.children.filter(p => !/equipe|barque|voilier|bateau|sillage/i.test(p.name)).map(part =>
+      ({part, y:part.position.y, x:part.rotation.x, z:part.rotation.z}));
+    let moving = false, phase = 0;
+    figure.userData.simpleWalk = {
+      setMoving(value) { moving = Boolean(value); },
+      attack() {}, die() {}, dispose() {},
+      tick(delta, paused, dead) {
+        if (paused) return;
+        if (moving && !dead) phase += Math.min(delta, cfg.maxFrameDelta) * cfg.frequency;
+        for (const {part,y,x,z} of parts) {
+          const step = moving && !dead ? Math.sin(phase) : 0;
+          part.position.y = y + Math.abs(step) * cfg.bob;
+          if (/jambe|patte|bras/.test(part.name)) {
+            const side = part.position.x < 0 ? -1 : 1;
+            const end = part.position.z < 0 ? -1 : 1;
+            part.rotation.x = x + step * cfg.limbSwing * side * end;
+          } else part.rotation.z = z + step * cfg.sway;
+        }
+      }
+    };
+  }
+
   function characterAnimation(figure) {
-    return figure.userData.roccapina || figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.shepherd || figure.userData.hunter || figure.userData.ravager;
+    return figure.userData.villager || figure.userData.simpleWalk || figure.userData.roccapina || figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.shepherd || figure.userData.hunter || figure.userData.ravager;
   }
 
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
@@ -775,6 +798,7 @@
     figure = isRoccapina && E.RoccapinaModel?.ready ? E.RoccapinaModel.create(owner) : isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : importedRavager ? E.RavagerModel.create(owner, tool, armor) : null;
     if (figure) addHumanTransport(figure, owner, waterTransport, importedRavager && donkey);
     else figure = animalType ? animalModel(owner, animalType, waterTransport, swimming) : personModel(owner, profession, tool, armor, waterTransport, donkey);
+    if (!characterAnimation(figure)) addSimpleWalk(figure);
     Object.assign(figure.userData, { visualKey: key, visualSignature, profession: animalType ? null : profession, animalType, tool, armor, waterTransport, donkey, swimming });
     unitModels.set(key, figure);
     unitGroup.add(figure);

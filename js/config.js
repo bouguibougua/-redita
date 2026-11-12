@@ -506,6 +506,8 @@
       healthWidth: .61, healthHeight: .19, healthGap: .11,
       tiers: {0:'#626a76',1:'#a56b3f',2:'#c1c7cf',3:'#efd071'}
     },
+    // TEMP_BALANCE_VALUE — marche visuelle des figurines sans clips, sans incidence logique.
+    characterLocomotion: { frequency: 9, bob: .012, sway: .035, limbSwing: .55, maxFrameDelta: .05, villagerHip: .88, villagerBlend: .2, villagerLegOffset: .12 },
     characterModels: {
       // TEMP_BALANCE_VALUE — échelle visuelle du GLB fourni pour les sans métier.
       villager: { src: "assets/models/habitant.glb?v=1-151656a63b68", scale: 0.31 },

@@ -1,0 +1,14 @@
+Correction de marche et d’orientation — 12 novembre 2026
+
+Cause : orientation imposée par camp aux travailleurs et à la plupart des déplacements militaires ; retour vers le village non pris en compte, diagonales partiellement traitées.
+Correction : direction planaire réelle, maintien de la dernière direction à l’arrêt, marche déclenchée par le déplacement et désactivée en bateau. Squelette léger à deux jambes sur le modèle statique des habitants ; géométries/textures partagées et squelettes individuels. Marche simple pour les personnages/animaux procéduraux. Aucun changement de règles ou trajectoires.
+
+npm test : réussi.
+163 contrôles : marche et orientation aller/retour, diagonales, deux camps, métiers/légendes/animaux, arrêt, pause et rendu sans mutation validés.
+Agriculteur : récolte accroupie, pieds au sol, phases, pause, équipement, transport et nettoyage validés.
+Berger fourni : provenance, 80 os, repos, marche, traite pieds au sol, frappe, mort, pause, équipements, transports, portrait et nettoyage validés.
+Villageois GLB : modèle allégé, géométrie et textures partagées, matériaux indépendants, missions sans métier, changement de métier, équipement, transport, sélection, flash et nettoyage validés.
+
+Le test villageois ouvrait auparavant son plateau sous le menu masqué : test rendu visible en Entraînement avant ses contrôles d’impact.
+
+Le Lion de Roccapina utilise aussi les jambes et genoux du squelette fourni, avec alternance procédurale et pause vérifiées pour les deux camps.
