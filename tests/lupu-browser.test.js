@@ -15,8 +15,8 @@ async function run() {
     assert.deepEqual(diagnostics.clips.sort(), ['Griffes_Croisees', 'Mort', 'Quatre_Pattes', 'Repos']);
     await page.click('[data-menu-screen="play"]'); await page.click('#training-button');
     await page.waitFor("Eredita.Network.mode==='solo'");
-    await page.click('[data-setup-action="keep"][data-player="red"]'); await page.click('#start-game');
-    await page.waitFor("Eredita.GameView.getState().phase==='running'"); await page.click('#pause-game');
+    await page.evaluate("Eredita.GameView.command('confirmBiomes','red','keep')"); await page.click('#start-game');
+    await page.waitFor("Eredita.GameView.getState().phase==='running'"); await page.evaluate("Eredita.GameView.command('togglePause')");
     const transformed = await page.evaluate(`(() => {
       const E=Eredita,s=window.lState=E.GameView.getState();s.phase='running';s.paused=false;s.preparationRemaining=0;s.elapsed=0;s.units=[];s.unitDeathEffects=[];
       s.reinforcementEpoch='lupu-model';E.MythologyEffects.init(s);
@@ -88,7 +88,7 @@ async function run() {
     assert.deepEqual(lateral, { action: 'Quatre_Pattes', rest: 'Repos', sameFigure: true });
     const ignored = await page.evaluate(`(() => {
       const E=Eredita,s=lState,u=s.units.find(u=>u.ownerId==='red');
-      const human=E.Units.create('blue',0,'habitant',{stance:'defense'});human.position=u.position+.5;human.attackCooldown=99;s.units.push(human);
+      const human=E.Units.create('blue',0,'habitant',{stance:'defense'});human.position=u.position+.5;human.terrainOffset=.3;human.attackCooldown=99;s.units.push(human);
       const position=u.position,hp=human.hp;s.paused=false;E.Combat.update(s,.01);s.paused=true;
       const result={before:position,after:u.position,hpBefore:hp,hpAfter:human.hp,sequence:u.visualAttackSequence};
       s.units=s.units.filter(item=>item!==human);return result;

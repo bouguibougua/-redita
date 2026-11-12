@@ -71,7 +71,8 @@
     "test:locomotion": "node tests/locomotion-browser.test.js",
     "test:economic-contact": "node tests/economic-hitboxes.test.js && node tests/economic-hitboxes-browser.test.js",
     "test:mazzeru": "node tests/bad-omen.test.js && node tests/mazzeru-browser.test.js",
-    "test:character-ai": "node tests/character-ai.test.js && node tests/character-ai-browser.test.js"
+    "test:character-ai": "node tests/character-ai.test.js && node tests/character-ai-browser.test.js",
+    "test:legend-motion": "node tests/legend-motion-browser.test.js"
   },
   "engines": {
     "node": ">=18"

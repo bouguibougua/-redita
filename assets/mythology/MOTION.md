@@ -61,3 +61,22 @@ et les pictogrammes d’équipement restent visibles autour.
 Les originaux fournis ne sont pas modifiés. Aucune génération Tripo ou image
 ni aucun crédit n’est utilisé. Rapport :
 `eredita3D/logs/mazzeru-archery-validation.json`.
+
+
+## Lupu, Mazzeru et Lion — fluidité et taille
+
+Retouche locale dans Blender : `eredita3D/scripts/polish_legend_motion.py`.
+À lancer après les préparations initiales et, pour Mazzeru, après
+`animate_mazzeru_attack.py`. Le script reconnaît les modèles déjà retouchés
+pour éviter de multiplier les amplitudes lors d’un second lancement.
+
+- Taille visuelle augmentée de 10 %, réglée dans `Config.legendMotion`.
+- Boucles de repos/marche raccordées ; interpolation sphérique des rotations
+  et rééchantillonnage à 60 Hz pour les trois rigs.
+- Lupu : foulées plus amples à quatre pattes, appuis au sol et levée progressive.
+- Mazzeru et Lion : foulées plus amples ; garde du Lion moins raide.
+- Fondus entre gestes de 0,16 s ; lecture par sous-pas pour les images longues.
+- Textures originales conservées sans recompression ; aucun appel Tripo payant.
+
+Rapport : `eredita3D/logs/legend-motion-polish.json`.
+Aperçu comparatif : `eredita3D/previews/legends-fluid-motion.png`.

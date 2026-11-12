@@ -13,7 +13,7 @@ const {startStaticServer,startBrowser}=require('../scripts/export-menu-gif');
   const poster=await page.evaluate(`(async()=>{const img=new Image();img.src=Eredita.Mythology.get('lion-roccapina').visuals.normal.src;await img.decode();return [img.naturalWidth,img.naturalHeight]})()`);assert.deepEqual(poster,[1280,720]);
   await page.click('[data-menu-screen="play"]');await page.click('#training-button');
   await page.waitFor("Eredita.Network.mode==='solo'");
-  await page.click('[data-setup-action="keep"][data-player="red"]');await page.click('#start-game');
+  await page.evaluate("Eredita.GameView.command('confirmBiomes','red','keep')");await page.click('#start-game');
   await page.waitFor("Eredita.GameView.getState().phase==='running'");
   const result=await page.evaluate(`(()=>{
    const E=Eredita,s=E.GameView.getState();s.paused=false;s.preparationRemaining=0;s.units=[];s.reinforcementEpoch='lion-browser';E.MythologyEffects.init(s);
@@ -73,6 +73,6 @@ const {startStaticServer,startBrowser}=require('../scripts/export-menu-gif');
   assert.ok(await page.evaluate("document.querySelector('.mythology-codex-index').textContent.endsWith('/ 17')"));
   const story=await page.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(folder,'roccapina-story.png'),Buffer.from(story.data,'base64'));
   assert.equal(page.errors.length,0,JSON.stringify(page.errors));assert.equal(page.badResponses.length,0,JSON.stringify(page.badResponses));
-  console.log('Roccapina : GLB, illustration, fiche, invocation 145/25, regroupement, taille réduite, épée fournie liée à la main, marche, frappe droite/revers sur coup réel et pause validés.');
+  console.log('Roccapina : GLB, illustration, fiche, invocation 145/25, regroupement, taille cohérente, épée fournie liée à la main, marche, frappe droite/revers sur coup réel et pause validés.');
  }finally{if(browser)await browser.close();await new Promise(r=>site.server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

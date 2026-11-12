@@ -24,7 +24,7 @@
     const group = new THREE.Group();
     const model = cloneSkeleton(template);
     model.name = 'u-lupu-mannaru-modele';
-    model.scale.setScalar(config().scale);
+    model.scale.setScalar(config().scale * E.Config.legendMotion.scaleMultiplier);
     group.add(model);
     const ownedMaterials = new Map(), skeletons = new Set();
     let canonicalSkeleton;
@@ -67,12 +67,12 @@
       const next = actions.get(name);
       if (!next) return;
       const previous = active;
-      active?.fadeOut(config().crossFade);
+      active?.fadeOut(E.Config.legendMotion.blendDuration);
       next.reset().setEffectiveWeight(1).setEffectiveTimeScale(name === config().clips.walk ? config().walkTimeScale : 1);
       next.clampWhenFinished = attack;
       next.setLoop(attack ? THREE.LoopOnce : THREE.LoopRepeat, attack ? 1 : Infinity);
       if (attack) next.setDuration(duration);
-      if (previous) next.fadeIn(config().crossFade);
+      if (previous) next.fadeIn(E.Config.legendMotion.blendDuration);
       next.play();
       active = next;
     }
@@ -100,7 +100,9 @@
         if (disposed || paused) return;
         if (dead) die();
         if (!dying && !config().clips.attacks.includes(active?.getClip().name)) change(moving ? config().clips.walk : config().clips.idle);
-        mixer.update(Math.min(delta, config().maxFrameDelta));
+        // Rattraper une image longue sans ralentir artificiellement les jambes ; sous-pas pour les fondus.
+        let remaining=Math.min(Math.max(0,delta),E.Config.legendMotion.maxCatchUp);
+        while(remaining>1e-8){const step=Math.min(remaining,E.Config.legendMotion.frameStep);mixer.update(step);remaining-=step;}
       },
       dispose() {
         if (disposed) return;

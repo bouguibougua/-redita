@@ -524,6 +524,8 @@
     },
     // TEMP_BALANCE_VALUE — marche visuelle des figurines sans clips, sans incidence logique.
     characterLocomotion: { frequency: 9, bob: .012, sway: .035, limbSwing: .55, maxFrameDelta: .05, villagerHip: .88, villagerBlend: .2, villagerLegOffset: .12 },
+    // TEMP_BALANCE_VALUE — retouche visuelle des trois légendes, sans effet sur leurs statistiques.
+    legendMotion: { scaleMultiplier: 1.1, blendDuration: .16, maxCatchUp: .15, frameStep: 1 / 60 },
     characterModels: {
       // TEMP_BALANCE_VALUE — échelle visuelle du GLB fourni pour les sans métier.
       villager: { src: "assets/models/habitant.glb?v=1-151656a63b68", scale: 0.31 },
@@ -558,14 +560,14 @@
         clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Droit", "Revers"], death: "Mort" }
       },
       // TEMP_BALANCE_VALUE — échelles et transitions visuelles des invocations, sans effet sur leurs statistiques.
-      mazzeru: { src: "assets/models/mazzeru.glb?v=archery-2", height: .60, canonicalHeight: 1.8, markerRadius: .12,
+      mazzeru: { src: "assets/models/mazzeru.glb?v=fluid-3", height: .60, canonicalHeight: 1.8, markerRadius: .12,
         attackDuration: 1.25,
         // Réglages visuels de l'encoche, de la corde et de la lueur ; cadence et dégâts inchangés.
         bowVisual: { arrowLength: .28, stringPull: .30, stringBand: .025, glowSize: .12, releaseFlash: .12 },
-        walkTimeScale: 1, crossFade: .08, maxFrameDelta: .05,
+        walkTimeScale: 1.4,
         clips: { idle: "Repos", walk: "Marche", attacks: ["Tir"], death: "Mort" } },
-      roccapina: { src: "assets/models/lion-roccapina.glb?v=armed-1", height: .60, canonicalHeight: 1.8, markerRadius: .12,
-        attackDuration: .72, walkTimeScale: 1, crossFade: .08, maxFrameDelta: .05,
+      roccapina: { src: "assets/models/lion-roccapina.glb?v=fluid-2", height: .60, canonicalHeight: 1.8, markerRadius: .12,
+        attackDuration: .72, walkTimeScale: 1.4,
         clips: { idle: "Repos", walk: "Marche", attacks: ["Frappe_Droite", "Frappe_Revers"], death: "Mort" } },
       orcu: {
         src: "assets/models/orcu.glb?v=1-9b79e8bc4d1e", scale: 0.31,
@@ -581,9 +583,8 @@
       },
       // TEMP_BALANCE_VALUE — rythme visuel des griffes ; dégâts et cadence du combat inchangés.
       lupu: {
-        src: "assets/models/lupu_mannaru.glb?v=1-f708c7a3a231", scale: 0.31,
-        attackDuration: 0.9, walkTimeScale: 1, crossFade: 0.08,
-        maxFrameDelta: 0.05,
+        src: "assets/models/lupu_mannaru.glb?v=fluid-2", scale: 0.31,
+        attackDuration: 0.9, walkTimeScale: 1.6,
         clips: { idle: "Repos", walk: "Quatre_Pattes", attacks: ["Griffes_Croisees"], death: "Mort" }
       },
       // TEMP_BALANCE_VALUE — rendu de la forme vampire ; statistiques dans reinforcementPowers.
