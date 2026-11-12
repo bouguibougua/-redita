@@ -1,0 +1,98 @@
+U Mazzeru / Mauvais Présage — 12 novembre 2026
+
+Nouvelle invocation 45 PV / 15 dégâts / 9 s. Portée globale et immobilité face au plus proche non marqué, travailleurs compris ; tous marqués, portée de l’archer et progression habituelle. Les tirs touchent après vol et ne changent pas de victime si celle-ci meurt avant impact. Seuil rouge inclusif à 15 % des PV max, logo fourni au sol, effet conservé entre tâches et déploiements. Mort marquée de toute cause : +15 PV maximum sans soin, avec pulsation rouge.
+
+Surpatore vampire : applique la même marque et garde sa victime jusqu’à sa mort. La forme sanglier ne marque pas. Protections et mort/résurrection existantes conservées.
+
+Cas non précisé par le concepteur : partage entre plusieurs Mazzeri. Réglage provisoire central growthRecipients = living-allied-mazzeri, documenté dans le GDD. Vitesse de marche et paramètres de vol/animation restent temporaires ; PV/dégâts/cadence/seuil/gain demandés sont fixes dans la configuration centrale.
+
+TAP version 13
+# Subtest: Mazzeru replaces vision, stays at spawn, shoots globally, hits after flight and respects nine seconds
+ok 1 - Mazzeru replaces vision, stays at spawn, shoots globally, hits after flight and respects nine seconds
+  ---
+  duration_ms: 11.775292
+  type: 'test'
+  ...
+# Subtest: nearest unmarked across columns takes priority over closer marked opponents; all marked permits advancing
+ok 2 - nearest unmarked across columns takes priority over closer marked opponents; all marked permits advancing
+  ---
+  duration_ms: 2.070375
+  type: 'test'
+  ...
+# Subtest: 15 percent execution is inclusive, max-only growth applies for any marked death once to living allied Mazzeri
+ok 3 - 15 percent execution is inclusive, max-only growth applies for any marked death once to living allied Mazzeri
+  ---
+  duration_ms: 2.141666
+  type: 'test'
+  ...
+# Subtest: workers are global targets; marks survive deployment/recall, threshold follows current max HP
+ok 4 - workers are global targets; marks survive deployment/recall, threshold follows current max HP
+  ---
+  duration_ms: 3.258667
+  type: 'test'
+  ...
+# Subtest: vampire applies omen, keeps the same target even if a closer unmarked target appears, and retargets on death
+ok 5 - vampire applies omen, keeps the same target even if a closer unmarked target appears, and retargets on death
+  ---
+  duration_ms: 2.173792
+  type: 'test'
+  ...
+# Subtest: pause/preparation freeze arrows, effects and growth; dead targets are not replaced mid-flight; no attack duplicates
+ok 6 - pause/preparation freeze arrows, effects and growth; dead targets are not replaced mid-flight; no attack duplicates
+  ---
+  duration_ms: 2.029916
+  type: 'test'
+  ...
+# Subtest: Bianca prevents execution rewards while protection is active, then marked death pays once
+ok 7 - Bianca prevents execution rewards while protection is active, then marked death pays once
+  ---
+  duration_ms: 1.722125
+  type: 'test'
+  ...
+# Subtest: local resident death by another cause grants max HP; unmarked deaths and dead Mazzeri gain nothing
+ok 8 - local resident death by another cause grants max HP; unmarked deaths and dead Mazzeri gain nothing
+  ---
+  duration_ms: 1.469084
+  type: 'test'
+  ...
+# Subtest: mark does not stack, the threshold updates with max HP, and a newborn unmarked target stops the archer
+ok 9 - mark does not stack, the threshold updates with max HP, and a newborn unmarked target stops the archer
+  ---
+  duration_ms: 2.196209
+  type: 'test'
+  ...
+# Subtest: vampire boar form cannot apply omen; projectile target identity survives a worker deployment
+ok 10 - vampire boar form cannot apply omen; projectile target identity survives a worker deployment
+  ---
+  duration_ms: 3.317083
+  type: 'test'
+  ...
+# Subtest: ordinary archer mode retains nine-second cadence and deals village damage on impact without marking buildings
+ok 11 - ordinary archer mode retains nine-second cadence and deals village damage on impact without marking buildings
+  ---
+  duration_ms: 3.43
+  type: 'test'
+  ...
+# Subtest: marked independent animal execution rewards only once and is never registered as a human death
+ok 12 - marked independent animal execution rewards only once and is never registered as a human death
+  ---
+  duration_ms: 2.312167
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 42.960042
+
+Mazzeru : modèle et arc fournis, Tir, flèche en vol, impact, marques travailleurs/troupes, logo, seuil rouge 15 %, gain max seul et pause validés.
+
+173 contrôles : marche et orientation aller/retour, diagonales, deux camps, métiers/légendes/animaux, arrêt, pause et rendu sans mutation validés.
+
+npm test : réussi. Tests navigateur en scénario contrôlé avec fonctions réelles, pas une validation multijoueur visuelle à deux clients ni sur casque physique.
+
+Modèle et arc fournis préparés localement dans Blender : arc 1 947 043 → 6 000 triangles ; GLB complet environ 1,8 Mo, quatre clips. Originaux inchangés, empreintes vérifiées par script. Aucun crédit Tripo ni génération d’image.

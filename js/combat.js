@@ -69,6 +69,7 @@
   }
 
   function attackRange(unit) {
+    if(unit.mythologyLegendId==='u-mazzeru')return E.Config.combat.professionAttackRanges.chasseur;
     const professionRange = !unit.animalType && !unit.isLegend && !unit.mythologyLegendId &&
       E.Config.combat.professionAttackRanges[unit.profession || unit.role];
     return professionRange || E.Config.combat.attackRange;
@@ -93,6 +94,7 @@
   }
 
   function attackInterval(unit) {
+    if(unit.mythologyLegendId==='u-mazzeru')return E.Config.badOmen.shotInterval;
     return (unit.animalType || unit.role) === "chien" ? E.Config.specialAnimals.chien.attackInterval : E.Config.combat.attackInterval;
   }
 
@@ -144,8 +146,9 @@
   function tryAttackUnit(state, unit, enemyUnit, damageEvents, delta) {
     if (!enemyUnit || unitDistance(state,unit,enemyUnit) > attackRange(unit)) return false;
     if (unit.attackCooldown <= 0) {
-      triggerAttackVisual(unit, enemyUnit);
-      damageEvents.push({ type: "unit", target: enemyUnit, amount: unit.damage });
+      if(unit.mythologyLegendId==='u-mazzeru' && E.BadOmen){
+        const target=E.BadOmen.characters(state).find(t=>t.kind==='unit'&&t.entity===enemyUnit);if(target)E.BadOmen.shoot(state,unit,target);
+      }else{triggerAttackVisual(unit, enemyUnit);damageEvents.push({ type: "unit", target: enemyUnit, amount: unit.damage });}
       unit.attackCooldown = attackInterval(unit);
     }
     return true;
@@ -240,8 +243,25 @@
     }
   }
 
+  function vampireTurn(state,unit,events,delta) {
+    if(!E.BadOmen)return false;
+    let target=E.BadOmen.find(state,unit.vampireTargetKey);
+    if(!target || target.ownerId===unit.ownerId) {
+      target=E.BadOmen.characters(state).filter(t=>t.ownerId!==unit.ownerId&&E.BadOmen.distance(state,unit,t.point)<=Math.max(E.Config.combat.detectionRange,attackRange(unit)))
+        .sort((a,b)=>E.BadOmen.distance(state,unit,a.point)-E.BadOmen.distance(state,unit,b.point))[0];
+      unit.vampireTargetKey=target?.key||null;
+    }
+    if(!target)return false;
+    const point=target.point;
+    if(Math.abs(unit.lanePosition-point.lanePosition)>.001){moveLaterally(state,unit,point.lanePosition,delta);E.Transport.updateUnitWaterState(state,unit);return true;}
+    if(E.BadOmen.distance(state,unit,point)>attackRange(unit)){moveToFieldPoint(state,unit,{offset:point.terrainOffset||0,position:point.position},delta);return true;}
+    if(unit.attackCooldown<=0){triggerAttackVisual(unit,point);events.push({type:'omen',ownerId:unit.ownerId,key:target.key,amount:unit.damage});unit.attackCooldown=attackInterval(unit);}
+    return true;
+  }
+
   function update(state, delta) {
     if (state.phase !== "running" || state.paused || state.preparationRemaining > 0 || !Number.isFinite(delta) || delta <= 0) return;
+    E.BadOmen?.updateProjectiles(state,delta);
     recruitNearbyResidents(state);
     E.Buildings.updateArtisanatBonuses(state);
     const damageEvents = [];
@@ -254,6 +274,7 @@
     state.units.forEach((unit) => {
       if (unit.hp <= 0) return;
       unit.attackCooldown = Math.max(0, unit.attackCooldown - delta);
+      if(unit.omenGrowthTimer>0)unit.omenGrowthTimer=Math.max(0,unit.omenGrowthTimer-delta);
       unit.retaliationCooldown = Math.max(0, (unit.retaliationCooldown || 0) - delta);
       unit.visualAttackTimer = Math.max(0, (unit.visualAttackTimer || 0) - delta);
       unit.visualHitTimer = Math.max(0, (unit.visualHitTimer || 0) - delta);
@@ -285,6 +306,8 @@
         return; // Le follet récolte ; ses 0 dégâts ne déclenchent aucune attaque.
       }
 
+      if(unit.mythologyLegendId==='u-mazzeru' && E.BadOmen?.mazzeruTurn(state,unit))return;
+      if(unit.mythologyLegendId==='u-surpatore' && unit.mythologyForm==='vampire' && vampireTurn(state,unit,damageEvents,delta))return;
       if(unit.autoDefense){defendLocally(state,unit,damageEvents,completedDefenses,delta);return;}
       const enemyUnit = nearestEnemyUnit(state, unit);
       if (unit.stance === "defense") {
@@ -324,8 +347,9 @@
           unit.retaliationCooldown = 1;
         }
         if (unit.attackCooldown <= 0) {
-          triggerAttackVisual(unit, { position: villagePosition, lanePosition: targetLane });
-          damageEvents.push({ type: "village", target: targetVillage, amount: unit.damage + (E.Config.units[unit.role].villageDamageBonus || 0) });
+          if(unit.mythologyLegendId==='u-mazzeru'&&E.BadOmen)E.BadOmen.shoot(state,unit,E.BadOmen.villageTarget(state,targetVillage.ownerId,targetLane));
+          else {triggerAttackVisual(unit, { position: villagePosition, lanePosition: targetLane });
+          damageEvents.push({ type: "village", target: targetVillage, amount: unit.damage + (E.Config.units[unit.role].villageDamageBonus || 0) });}
           unit.attackCooldown = attackInterval(unit);
         }
         return;
@@ -335,6 +359,7 @@
     });
 
     damageEvents.forEach((event) => {
+      if(event.type==='omen'){E.BadOmen.hit(state,event.ownerId,event.key,event.amount);return;}
       event.target.hp = Math.max(0, event.target.hp - event.amount);
       if (event.type === "unit" && event.amount > 0) triggerHitVisual(event.target);
       if (event.type === "village" && event.amount > 0) event.target.damageSmoke = E.Config.visualEffects.structureSmokeDuration;
@@ -352,6 +377,7 @@
   }
 
   function settleDeaths(state) {
+    E.BadOmen?.enforce(state);
     state.units.filter((unit) => unit.hp <= 0).forEach((unit) => {
       const originVillage = state.players[unit.ownerId].villages[unit.originLane];
       if (!originVillage) return;
@@ -375,6 +401,7 @@
       player.villages.forEach((village) => {
         if (!village.destroyed && village.hp <= 0) {
           village.residents.filter(resident => !resident.unitId).forEach(resident => E.MythologyEffects?.recordDeath(state, village, resident));
+          (village.animals||[]).filter(a=>!a.unitId).forEach(a=>E.BadOmen?.onDeath(state,a,player.id));
           E.Animals?.onVillageDestroyed(village);
           village.destroyed = true;
           village.population = 0;

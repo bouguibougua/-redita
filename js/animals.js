@@ -92,6 +92,7 @@
       unit.position = fieldPosition(village);
     } else if (mission === "perturber") targetHerd(state, unit, villageAt(state, enemyId(playerId), lane));
     animal.mission = mission;
+    if(animal.badOmen)unit.badOmen=animal.badOmen;
     animal.unitId = unit.id;
     state.units.push(unit);
     return unit;
@@ -101,6 +102,7 @@
     const village = villageAt(state, playerId, lane);
     const animal = village?.animals?.find((entry) => entry.id === animalId);
     if (inactiveReason(state, village) || !animal || animal.type !== "sanglier" || animal.unitId || animal.mission !== "disponible") return false;
+    E.BadOmen?.onDeath(state,animal,playerId);
     village.animals = village.animals.filter((entry) => entry !== animal);
     const meat = definition("sanglier").meatAtDeath;
     village.resources.viande += meat;

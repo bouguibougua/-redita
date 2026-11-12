@@ -6,7 +6,7 @@ try{
  browser=await startBrowser();const p=browser.page;
  await p.send('Page.navigate',{url:site.url+'?intro=0'});
  await p.waitFor('window.Eredita?.Board3D?.ready && Eredita.GameView?.getState()');
- await p.waitFor("['Farmer','Shepherd','Warrior','Hunter','Ravager','Villager','Orcu','Lupu','Surpatore','Fullettu','Roccapina'].every(n=>Eredita[n+'Model']?.ready)",30000);
+ await p.waitFor("['Mazzeru','Farmer','Shepherd','Warrior','Hunter','Ravager','Villager','Orcu','Lupu','Surpatore','Fullettu','Roccapina'].every(n=>Eredita[n+'Model']?.ready)",30000);
  const result=await p.evaluate(`(()=>{
   const E=Eredita,s=window.walkState=E.GameView.getState();s.phase='running';s.paused=true;s.preparationRemaining=0;s.units=[];
   for(const player of Object.values(s.players))for(const v of player.villages){v.biome='plaine';v.residents=[];v.animals=[];}
@@ -23,10 +23,10 @@ try{
    if(profession==='chasseur'){r.workLaneOffset+=.1;update();check(owner+' lateral worker',heading(f,1,0)>.99);}
    const rotation=f.rotation.y;update();check(owner+profession+' stop keeps direction',f.rotation.y===rotation);anim.tick(.05,false);check(owner+profession+' stops walking',anim.action==='Repos');
   }
-  const models=[['guerrier'],['ravageur'],['chasseur'],['habitant'],['pecheur'],['chien'],['sanglier'],['habitant','l-orcu'],['habitant','lion-roccapina'],['habitant','u-fullettu'],['habitant','u-lupu-mannaru'],['habitant','u-surpatore']];
+  const models=[['guerrier'],['ravageur'],['chasseur'],['habitant'],['pecheur'],['chien'],['sanglier'],['habitant','u-mazzeru'],['habitant','l-orcu'],['habitant','lion-roccapina'],['habitant','u-fullettu'],['habitant','u-lupu-mannaru'],['habitant','u-surpatore']];
   for(const owner of ['red','blue'])for(const [profession,legend] of models){
    const role=E.Config.units[profession]?profession:'habitant',u=E.Units.create(owner,0,role,{profession});u.position=35;u.mythologyLegendId=legend;u.isLegend=!!legend;if(legend==='u-surpatore')u.mythologyForm='vampire';
-   s.units.push(u);update();const f=get('unit-'+u.id);const a=f.userData.villager||f.userData.simpleWalk||f.userData.roccapina||f.userData.orcu||f.userData.fullettu||f.userData.lupu||f.userData.surpatore||f.userData.warrior||f.userData.hunter||f.userData.ravager;
+   s.units.push(u);update();const f=get('unit-'+u.id);const a=f.userData.mazzeru||f.userData.villager||f.userData.simpleWalk||f.userData.roccapina||f.userData.orcu||f.userData.fullettu||f.userData.lupu||f.userData.surpatore||f.userData.warrior||f.userData.hunter||f.userData.ravager;
    check(owner+profession+legend+' has locomotion',!!a);
    for(const direction of [1,-1]){u.position+=direction;update();check(owner+profession+legend+' heading '+direction,heading(f,0,direction)>.99);}
    const x=f.position.x,z=f.position.z;u.lanePosition=.25;u.position+=1;update();const dx=f.position.x-x,dz=f.position.z-z;check(owner+profession+legend+' diagonal',heading(f,dx,dz)/Math.hypot(dx,dz)>.999);

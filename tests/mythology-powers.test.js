@@ -4,7 +4,7 @@ const fs = require('node:fs'), path = require('node:path'), vm = require('node:v
 function fixture() {
   const context = vm.createContext({ window: {}, console });
   for (const name of ['config','biomes','crops','livestock','units','buildings','transport','equipment','animals','economy','board','combat',
-    'mythology-data','mythology-effects','mythology-match']) {
+    'bad-omen','mythology-data','mythology-effects','mythology-match']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js',name+'.js'),'utf8'),context,{filename:name+'.js'});
   }
   const E=context.window.Eredita, s=E.Board.createState('classic');
@@ -154,7 +154,7 @@ test('both camps stay fully visible before and after the legacy vision powers',(
     assert.equal(E.MythologyEffects.residentVisible(s,viewer,v,civilian),true);
     assert.equal(E.MythologyEffects.unitVisible(s,viewer,attack),true);
   }
-  assert.equal(cast('u-mazzeru').accepted,true);
+  assert.equal(cast('u-mazzeru',{playerId:'red',lane:0}).accepted,true);
   assert.equal(cast('oeil-sainte-lucie').accepted,true);
   s.elapsed=700;
   assert.equal(E.MythologyEffects.unitVisible(s,'red',attack),true);

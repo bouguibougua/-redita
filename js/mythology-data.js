@@ -29,16 +29,16 @@
       implementation: { status: 'implemented', effectKey: id, engine: 'MythologyEffects.activate' } };
   }
   const entries = [
-    entry('u-mazzeru', 'U Mazzeru', 'vision',
-      'Les habitants adverses sont déjà visibles : aucun dévoilement supplémentaire dans cette version.',
-      { until: 'match-end', target: 'enemy-offensive-humans' }, '#c73d4d', { lore: { subtitle: "Le chasseur de morts", paragraphs: [
+    entry('u-mazzeru', 'U Mazzeru', 'invocation',
+      'Invoque un archer de 45 PV : 15 dégâts à l’impact, un tir toutes les 9 s et Mauvais Présage. Il vise le plus proche ennemi non marqué sur toute la carte. Chaque mort marquée donne +15 PV maximum aux Mazzeri alliés vivants.',
+      { hp: param('mazzeruHp'), damage: param('mazzeruDamage') }, '#c73d4d', { targetMode:'allied-region', shortDescription:'45 PV · 15 dégâts / 9 s · Portée globale sur les non marqués · Mauvais Présage.', source:{document:'GAME_DESIGN.md',section:66,decision:'mazzeru-bad-omen-2026-11-12'}, lore: { subtitle: "Le chasseur de morts", paragraphs: [
           "U Mazzeru est l'une des figures les plus emblématiques de la mythologie corse. Il s'agit d'un individu possédant un don surnaturel qui lui permet de pressentir la mort d'une personne à travers ses rêves.",
           "Pendant son sommeil, son esprit participe à une chasse nocturne au cours de laquelle il poursuit et tue un animal, généralement un sanglier ou un autre gibier. Lorsqu'il s'approche de sa proie, il découvre que celle-ci possède le visage d'une personne qu'il connaît. Selon la croyance, cette personne est destinée à mourir prochainement.",
           "Le Mazzeru n'est pas nécessairement malveillant. Son pouvoir est souvent involontaire et peut être vécu comme une malédiction. Certaines traditions évoquent également des affrontements entre groupes de Mazzeri, notamment lors des Mandrache, associés au destin des communautés."
         ] },
         menuDescription: [
-        'U Mazzeru avait un pouvoir de révélation des habitants offensifs adverses. Le brouillard de guerre est désormais retiré : ces habitants sont visibles dès le début.',
-        'Tous les terrains, habitants et unités des deux camps sont visibles en permanence. Ce pouvoir ne donne donc pas de visibilité supplémentaire et aucun autre bonus ne lui est attribué.'
+        'U Mazzeru reste immobile tant qu’il existe un personnage ennemi sans Mauvais Présage, travailleurs compris. Il vise le plus proche sans limite de portée et tire toutes les 9 secondes : 15 dégâts à l’impact, puis une marque permanente.',
+        'Mauvais Présage colore en rouge les 15 % gauches de la barre de vie et exécute le personnage à ce seuil. Chaque ennemi marqué qui meurt, quelle que soit la cause, donne +15 PV maximum aux Mazzeri alliés vivants, sans soin immédiat. Quand tous les ennemis sont marqués, il avance et combat à la portée de l’archer, toujours à 15 dégâts et un tir toutes les 9 secondes.'
       ] }),
     entry('a-stregha', 'A Strega', 'enchantement',
       'Maudit une région ennemie pendant 2 minutes : son rendement est divisé par deux.',
@@ -142,8 +142,8 @@
         'Une aura violette et dorée permet de reconnaître ces habitants. Le sort ne renforce pas la population déjà présente et ne concerne pas toutes les naissances suivantes. Cliquez sur le terrain pour préparer cette bénédiction dans vos villages.'
       ] }),
     entry('u-surpatore', 'U Surpatore', 'invocation',
-      'Invoque un sanglier qui, à sa mort, devient U Surpatore : un vampire rapide de 40 PV et 11 dégâts.',
-      { vampireHp: param('vampireHp'), vampireDamage: param('vampireDamage'), vampireSpeed: param('vampireSpeed') }, '#d44351', { targetMode: 'allied-region', shortDescription: 'Un sanglier devient à sa mort un vampire rapide · 40 PV, 11 dégâts.', lore: { subtitle: "Le vampire corse", paragraphs: [
+      'Invoque un sanglier qui devient un vampire rapide de 40 PV et 11 dégâts. Ses coups appliquent Mauvais Présage et il conserve sa victime jusqu’à sa mort.',
+      { vampireHp: param('vampireHp'), vampireDamage: param('vampireDamage'), vampireSpeed: param('vampireSpeed') }, '#d44351', { targetMode: 'allied-region', shortDescription: 'Sanglier puis vampire · 40 PV, 11 dégâts · Mauvais Présage et cible verrouillée.', lore: { subtitle: "Le vampire corse", paragraphs: [
           "U Surpatore, également appelé U Surpadori, est l'une des créatures les plus inquiétantes du folklore corse.",
           "Il s'agit d'un être surnaturel, généralement masculin, qui s'introduit dans les habitations après minuit afin de s'attaquer aux jeunes enfants.",
           "Selon la tradition, il entaille le petit doigt de ses victimes pour en aspirer le sang. Cette caractéristique le rapproche des vampires présents dans d'autres mythologies européennes.",
@@ -152,7 +152,7 @@
         ] },
         menuDescription: [
         'U Surpatore apparaît d’abord sous la forme d’un sanglier dans la région alliée choisie. Lorsque le sanglier meurt, il laisse place à sa seconde forme : un vampire rapide.',
-        'Le vampire possède 40 PV et inflige 11 dégâts. Les deux formes appartiennent à la même invocation ; la mort du vampire met fin à sa présence sur le terrain.'
+        'Le vampire possède 40 PV et inflige 11 dégâts. Ses coups appliquent Mauvais Présage : sa victime meurt dès qu’elle atteint 15 % de ses PV maximum. Il conserve la même victime jusqu’à sa mort. La mort du vampire met fin à l’invocation.'
       ] }),
     entry('u-lupu-mannaru', 'U Lupu Mannaru', 'invocation',
       'Transforme un habitant sans tâche ni métier, ou le prochain à naître, en loup-garou : 60 PV, 20 dégâts et les propriétés du ravageur. Il attaque les champs et élevages au contact, puis le village, sans combattre les unités.',

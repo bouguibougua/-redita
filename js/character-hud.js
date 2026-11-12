@@ -1,14 +1,14 @@
 (function () {
   'use strict';
   const E = window.Eredita = window.Eredita || {};
-  let THREE, planeGeometry;
+  let THREE, planeGeometry, omenTexture;
   const rings = new Map();
   const tierOf = (item, armor = false) => (armor ? {cuir:1,maille:2,fer:3} : {bois:1,bronze:2,fer:3})[item] || 0;
-  const iconOf = person => E.Config.specialAnimals[person.animalType]?.icon || E.Config.professions[person.profession || 'habitant']?.icon || '👤';
+  const iconOf = person => person.mythologyLegendId==='u-mazzeru'?'🏹':E.Config.specialAnimals[person.animalType]?.icon || E.Config.professions[person.profession || 'habitant']?.icon || '👤';
 
   const getStats = (state, village, person) => E.Economy.residentStats(state, village, person);
 
-  function init(three) { THREE=three; planeGeometry=new THREE.PlaneGeometry(1,1); }
+  function init(three) { THREE=three; planeGeometry=new THREE.PlaneGeometry(1,1);omenTexture=new THREE.TextureLoader().load(E.Config.badOmen.icon);omenTexture.colorSpace=THREE.SRGBColorSpace; }
   function texture(canvas) {
     const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;map.generateMipmaps=false;map.minFilter=THREE.LinearFilter;return map;
   }
@@ -34,13 +34,15 @@
     weapon(c,-80,90,cfg.tiers[tool],false);weapon(c,-36,90,cfg.tiers[armor],true);
     const map=texture(canvas);rings.set(key,map);return map;
   }
-  function drawHealth(hud,hp,maxHp,allied) {
-    const key=`${Math.ceil(hp)}/${Math.ceil(maxHp)}:${allied}`;if(hud.healthKey===key)return;hud.healthKey=key;
+  function drawHealth(hud,hp,maxHp,allied,person) {
+    const key=`${Math.ceil(hp)}/${Math.ceil(maxHp)}:${allied}:${Boolean(person.badOmen)}:${Math.ceil((person.omenGrowthTimer||0)*20)}`;if(hud.healthKey===key)return;hud.healthKey=key;
     const c=hud.canvas.getContext('2d'),color=allied?E.Config.characterHud.ally:E.Config.characterHud.enemy;c.clearRect(0,0,256,80);
     c.font='bold 27px system-ui';c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.strokeStyle='#101427';c.lineWidth=7;
     c.strokeText(`${Math.ceil(Math.max(0,hp))}/${Math.ceil(maxHp)}`,128,22);c.fillStyle='#fff';c.fillText(`${Math.ceil(Math.max(0,hp))}/${Math.ceil(maxHp)}`,128,22);
     c.beginPath();c.roundRect(9,43,238,25,12);c.fillStyle='#17243c';c.fill();c.lineWidth=4;c.strokeStyle='#091322';c.stroke();
     const width=Math.max(0,Math.min(1,hp/maxHp))*230;if(width){c.beginPath();c.roundRect(13,47,Math.max(2,width),17,8);c.fillStyle=color;c.fill();}
+    if(person.badOmen){c.fillStyle='#e5232f';c.fillRect(13,47,230*E.Config.badOmen.thresholdRatio,17);c.strokeStyle='#ffbbbd';c.lineWidth=2;c.beginPath();c.moveTo(13+230*E.Config.badOmen.thresholdRatio,44);c.lineTo(13+230*E.Config.badOmen.thresholdRatio,66);c.stroke();}
+    if(person.omenGrowthTimer>0){const pulse=.3+.7*Math.abs(Math.sin(person.omenGrowthTimer*10));c.save();c.globalAlpha=pulse;c.strokeStyle='#ff2839';c.shadowColor='#ff2839';c.shadowBlur=14;c.lineWidth=5;c.strokeRect(8,42,240,27);c.font='bold 18px system-ui';c.fillStyle='#ff5965';c.textAlign='right';c.fillText('+'+E.Config.badOmen.maxHpPerDeath+' PV max',250,10);c.restore();}
     hud.health.material.map.needsUpdate=true;
   }
   function sync(figure,person,allied) {
@@ -54,13 +56,14 @@
       const canvas=document.createElement('canvas');canvas.width=256;canvas.height=80;
       const health=new THREE.Sprite(new THREE.SpriteMaterial({map:texture(canvas),transparent:true,depthWrite:false,depthTest:false}));
       health.name='character-health';health.userData.sharedGeometry=true;health.scale.set(cfg.healthWidth,cfg.healthHeight,1);health.renderOrder=25;
-      group.add(floor,health);figure.add(group);hud={group,floor,health,canvas,height};figure.userData.characterHud=hud;
+      const omen=new THREE.Mesh(planeGeometry,new THREE.MeshBasicMaterial({map:omenTexture,transparent:true,depthWrite:false,side:THREE.DoubleSide}));omen.name='mauvais-presage-logo';omen.userData.sharedGeometry=true;omen.rotation.x=-Math.PI/2;omen.position.y=.024;omen.scale.setScalar(cfg.ringSize);omen.renderOrder=4;
+      group.add(floor,omen,health);figure.add(group);hud={group,floor,omen,health,canvas,height};figure.userData.characterHud=hud;
     }
     hud.group.visible=!figure.userData.dying;hud.group.quaternion.copy(figure.quaternion).invert();hud.group.scale.set(1/figure.scale.x,1/figure.scale.y,1/figure.scale.z);
     hud.floor.material.map=ringTexture(person,allied);hud.health.position.y=hud.height*figure.scale.y+cfg.healthGap;
-    const maxHp=Math.max(1,Number(person.maxHp)||1),hp=Math.max(0,Number(person.hp)||0);hud.health.visible=hp>0&&hp<maxHp-.0001;
-    if(hud.health.visible)drawHealth(hud,hp,maxHp,allied);
-    Object.assign(hud.group.userData,{allied,profession:person.profession||'habitant',hp,maxHp,toolTier:person.isLegend?0:tierOf(person.tool),armorTier:person.isLegend?0:tierOf(person.armor,true)});
+    const maxHp=Math.max(1,Number(person.maxHp)||1),hp=Math.max(0,Number(person.hp)||0);hud.omen.visible=Boolean(person.badOmen);hud.floor.visible=!person.badOmen;hud.health.visible=hp>0&&(Boolean(person.badOmen)||hp<maxHp-.0001||person.omenGrowthTimer>0);
+    if(hud.health.visible)drawHealth(hud,hp,maxHp,allied,person);
+    Object.assign(hud.group.userData,{allied,badOmen:Boolean(person.badOmen),omenThreshold:person.badOmen?maxHp*E.Config.badOmen.thresholdRatio:0,profession:person.profession||'habitant',hp,maxHp,toolTier:person.isLegend?0:tierOf(person.tool),armorTier:person.isLegend?0:tierOf(person.armor,true)});
   }
   function dispose(figure) { figure.userData.characterHud?.health.material.map.dispose(); }
   function svg(shield,color) {
@@ -68,7 +71,7 @@
   }
   function html(person,allied) {
     const cfg=E.Config.characterHud,maxHp=Math.max(1,Number(person.maxHp)||1),hp=Math.max(0,Number(person.hp)||0),tool=person.isLegend?0:tierOf(person.tool),armor=person.isLegend?0:tierOf(person.armor,true);
-    return `<span class="character-floor ${allied?'allied':'enemy'}" aria-hidden="true"><b>${iconOf(person)}</b><i class="character-gear">${svg(false,cfg.tiers[tool])}${svg(true,cfg.tiers[armor])}</i></span>${hp>0&&hp<maxHp-.0001?`<span class="character-hp ${allied?'allied':'enemy'}" role="meter" aria-label="Points de vie" aria-valuenow="${Math.ceil(hp)}" aria-valuemax="${Math.ceil(maxHp)}"><b>${Math.ceil(hp)}/${Math.ceil(maxHp)}</b><i style="width:${Math.min(1,hp/maxHp)*100}%"></i></span>`:''}`;
+    return `<span class="character-floor ${allied?'allied':'enemy'}" aria-hidden="true"><b>${person.badOmen?`<img class="omen-logo" src="${E.Config.badOmen.icon}" alt="Mauvais Présage">`:iconOf(person)}</b><i class="character-gear">${svg(false,cfg.tiers[tool])}${svg(true,cfg.tiers[armor])}</i></span>${hp>0&&(person.badOmen||hp<maxHp-.0001||person.omenGrowthTimer>0)?`<span class="character-hp ${allied?'allied':'enemy'} ${person.omenGrowthTimer>0?'omen-growth':''}" role="meter" aria-label="Points de vie" aria-valuenow="${Math.ceil(hp)}" aria-valuemax="${Math.ceil(maxHp)}"><b>${Math.ceil(hp)}/${Math.ceil(maxHp)}</b><i style="width:${Math.min(1,hp/maxHp)*100}%"></i>${person.badOmen?`<em class="omen-threshold" style="width:${E.Config.badOmen.thresholdRatio*100}%"></em>`:""}</span>`:''}`;
   }
   E.CharacterHUD={init,getStats,sync,dispose,html,tierOf};
 }());

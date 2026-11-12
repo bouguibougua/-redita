@@ -64,6 +64,7 @@
       E.HunterModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.RavagerModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.WarriorModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
+      E.MazzeruModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.RoccapinaModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.OrcuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
       E.FullettuModel?.init(THREE).then(loaded => { if (loaded && latestState) update(latestState, true); });
@@ -436,15 +437,7 @@
   }
 
   function idlePosition(index, count) {
-    const cfg = E.Config.villagePresentation;
-    const outerCount = count > 12 ? Math.ceil(count * .57) : count;
-    const inner = index >= outerCount;
-    const ringCount = inner ? count - outerCount : outerCount;
-    const ringIndex = inner ? index - outerCount : index;
-    const radius = count <= 12 ? .76 : inner ? .64 : 1;
-    const angle = 2 * Math.PI * ringIndex / Math.max(1, ringCount) + (inner ? .19 : 0);
-    return { x: cfg.fire[0] + Math.cos(angle) * cfg.idleRadiusX * radius,
-      z: cfg.fire[1] + Math.sin(angle) * cfg.idleRadiusZ * radius };
+    return E.Board.idlePosition(index,count);
   }
 
   // Le milieu de la colonne (eau/frontière) conserve son repère. Les extrémités
@@ -605,6 +598,7 @@
         active.add(key);
       });
     }));
+    syncOmenProjectiles(state);
     syncDeathModels(state, active);
     unitModels.forEach((figure, key) => {
       if (active.has(key)) return;
@@ -613,6 +607,27 @@
       figure.removeFromParent();
       disposeObject(figure);
     });
+  }
+
+  const omenArrows = new Map();
+  function syncOmenProjectiles(state) {
+    const active=new Set(),cfg=E.Config.badOmen;
+    for(const shot of state.badOmen?.projectiles||[]) {
+      const progress=1-shot.remaining/shot.duration;
+      if(progress<0)continue;
+      active.add(shot.id);let arrow=omenArrows.get(shot.id);
+      if(!arrow){arrow=new THREE.Group();arrow.name='fleche-mauvais-presage';
+        const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.004,.004,.22,5),new THREE.MeshBasicMaterial({color:0xd53636}));shaft.rotation.x=Math.PI/2;
+        const tip=new THREE.Mesh(new THREE.ConeGeometry(.015,.045,4),new THREE.MeshBasicMaterial({color:0xf0b7a5}));tip.rotation.x=Math.PI/2;tip.position.z=.13;arrow.add(shaft,tip);unitGroup.add(arrow);omenArrows.set(shot.id,arrow);
+      }
+      const target=E.BadOmen?.find(state,shot.targetKey),targetFigure=target&&unitModels.get(target.renderKey);
+      const from=new THREE.Vector3(laneX(shot.from.lanePosition)+(shot.from.terrainOffset||0)*terrainWidthScale(),cfg.projectileHeight,combatZ(shot.from.position));
+      const point=shot.target,to=targetFigure?targetFigure.position.clone().add(new THREE.Vector3(0,cfg.projectileHeight*.5,0)):
+        new THREE.Vector3(laneX(point.lanePosition)+(point.terrainOffset||0)*terrainWidthScale(),cfg.projectileHeight,combatZ(point.position));
+      arrow.position.copy(from).lerp(to,Math.max(0,Math.min(1,progress)));arrow.position.y+=Math.sin(progress*Math.PI)*cfg.projectileArc;
+      arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),to.clone().sub(from).normalize());
+    }
+    omenArrows.forEach((arrow,id)=>{if(!active.has(id)){arrow.removeFromParent();disposeObject(arrow);omenArrows.delete(id);}});
   }
 
   function effectClock() {
@@ -767,7 +782,7 @@
   }
 
   function characterAnimation(figure) {
-    return figure.userData.villager || figure.userData.simpleWalk || figure.userData.roccapina || figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.shepherd || figure.userData.hunter || figure.userData.ravager;
+    return figure.userData.mazzeru || figure.userData.villager || figure.userData.simpleWalk || figure.userData.roccapina || figure.userData.surpatore || figure.userData.lupu || figure.userData.fullettu || figure.userData.orcu || figure.userData.warrior || figure.userData.farmer || figure.userData.shepherd || figure.userData.hunter || figure.userData.ravager;
   }
 
   function unitModel(key, owner, appearance, waterTransport = null, swimming = false) {
@@ -778,20 +793,21 @@
     const armor = appearance.armor || null;
     const donkey = !animalType && Boolean(appearance.donkey);
     if (animalType === "sanglier") waterTransport = null;
+    const isMazzeru = appearance.mythologyLegendId === 'u-mazzeru';
     const isRoccapina = appearance.mythologyLegendId === 'lion-roccapina';
     const isOrcu = appearance.mythologyLegendId === 'l-orcu';
     const isFullettu = appearance.mythologyLegendId === 'u-fullettu';
     const isLupu = appearance.mythologyLegendId === 'u-lupu-mannaru';
     const isSurpatore = appearance.mythologyLegendId === 'u-surpatore' && appearance.mythologyForm === 'vampire';
     const importedRavager = !animalType && !appearance.mythologyLegendId && profession === 'ravageur' && E.RavagerModel?.ready;
-    const asset = isRoccapina && E.RoccapinaModel?.ready ? 'roccapina-glb' : isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : importedRavager ? 'ravageur-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'berger' && E.ShepherdModel?.ready ? 'berger-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
+    const asset = isMazzeru && E.MazzeruModel?.ready ? 'mazzeru-glb' : isRoccapina && E.RoccapinaModel?.ready ? 'roccapina-glb' : isSurpatore && E.SurpatoreModel?.ready ? 'surpatore-glb' : isLupu && E.LupuModel?.ready ? 'lupu-glb' : isFullettu && E.FullettuModel?.ready ? 'fullettu-glb' : isOrcu && E.OrcuModel?.ready ? 'orcu-glb' : importedRavager ? 'ravageur-glb' : profession === 'guerrier' && E.WarriorModel?.ready ? 'guerrier-glb' : !animalType && profession === 'chasseur' && E.HunterModel?.ready ? 'chasseur-glb' : !animalType && profession === 'agriculteur' && E.FarmerModel?.ready ? 'agriculteur-glb' : !animalType && profession === 'berger' && E.ShepherdModel?.ready ? 'berger-glb' : !animalType && profession === 'habitant' && E.VillagerModel?.ready ? 'habitant-glb' : 'procedural';
     const visualSignature = `${owner}:${animalType || profession}:${tool || "none"}:${armor || "none"}:${waterTransport || "land"}:${donkey}:${swimming}:${appearance.mythologyLegendId || ''}:${appearance.mythologyForm || ''}:${asset}${waterTransport === 'barque' ? E.RowboatModel?.ready ? ':barque-glb' : ':barque-simple' : ''}`;
     if (figure && figure.userData.visualSignature === visualSignature) return figure;
     if (figure) {
       figure.removeFromParent();
       disposeObject(figure);
     }
-    figure = isRoccapina && E.RoccapinaModel?.ready ? E.RoccapinaModel.create(owner) : isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : importedRavager ? E.RavagerModel.create(owner, tool, armor) : null;
+    figure = isMazzeru && E.MazzeruModel?.ready ? E.MazzeruModel.create(owner) : isRoccapina && E.RoccapinaModel?.ready ? E.RoccapinaModel.create(owner) : isSurpatore && E.SurpatoreModel?.ready ? E.SurpatoreModel.create(owner) : isLupu && E.LupuModel?.ready ? E.LupuModel.create(owner) : isFullettu && E.FullettuModel?.ready ? E.FullettuModel.create(owner) : isOrcu && E.OrcuModel?.ready ? E.OrcuModel.create(owner) : importedRavager ? E.RavagerModel.create(owner, tool, armor) : null;
     if (figure) addHumanTransport(figure, owner, waterTransport, importedRavager && donkey);
     else figure = animalType ? animalModel(owner, animalType, waterTransport, swimming) : personModel(owner, profession, tool, armor, waterTransport, donkey);
     if (!characterAnimation(figure)) addSimpleWalk(figure);

@@ -659,3 +659,10 @@ body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top
 #game-screen .resident-title strong { min-width: 0; flex: 0 1 auto; }
 #game-screen .resident-equipment { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; line-height: 1; }
 #game-screen .resident-equipment .hud-pip { width: clamp(7px,.7vw,11px); height: clamp(10px,.9vw,14px); }
+
+.character-floor .omen-logo { width:100%;height:100%;object-fit:contain; }
+.character-hp .omen-threshold { position:absolute;left:0;top:0;height:100%;background:#e5232f;border-right:1px solid #ffc8cc; }
+.character-hp.omen-growth { animation:omen-health-gain .35s ease-in-out infinite alternate; }
+@keyframes omen-health-gain { to { border-color:#ff233b;box-shadow:0 0 12px 4px #ff233baa; } }
+[data-effects-paused="true"] .omen-growth { animation-play-state:paused; }
+@media(prefers-reduced-motion:reduce) { .character-hp.omen-growth { animation:none;border-color:#ff233b; } }

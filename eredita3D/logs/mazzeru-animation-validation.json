@@ -1,0 +1,17 @@
+{
+  "sources": {
+    "/Users/robin/Downloads/mazzeru 3d.glb": "9b91b2b90996f0c6d0950ab3c94d1690f48f9d6f17b48a22ab62e792c1f13ee6",
+    "/Users/robin/Downloads/arc 3d.glb": "bda59b584f490e8feff9a632c1f414b16eab6d6c4d6539b96f9b60c6fc96f0cf"
+  },
+  "weapon_source_triangles": 1947043,
+  "weapon_triangles": 6000,
+  "bytes": 1860432,
+  "canonical_height": 1.8,
+  "clips": [
+    "Marche",
+    "Mort",
+    "Repos",
+    "Tir"
+  ],
+  "sha256": "8abb5e6a52c23383d11ee7ca4e9e3e930aba733ce407821f4e8a153e25fb6ca6"
+}

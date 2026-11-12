@@ -140,7 +140,7 @@ achats de la boutique restent disponibles.
 
 | Légende | Effet |
 | --- | --- |
-| U Mazzeru | Ancien pouvoir de vision ; les deux camps sont désormais toujours visibles, sans bonus de remplacement. |
+| U Mazzeru | Archer invoqué : 45 PV, 15 dégâts, un tir toutes les 9 s. Vise globalement le plus proche non marqué ; Mauvais Présage exécute à 15 % des PV max. Chaque mort marquée donne +15 PV max aux Mazzeri alliés vivants. |
 | A Strega | Rendement d’une région ennemie ×0,5 pendant 120 s. |
 | U Stregu | Rendement d’une région alliée ×2 pendant 120 s. |
 | A Fata | Rivière et vitesse de pêche +25 % dans la région choisie. |
@@ -148,7 +148,7 @@ achats de la boutique restent disponibles.
 | L’Orcu | Invocation de 200 PV / 30 dégâts, très lente. |
 | Le Lion de Roccapina | Invocation de 145 PV / 25 dégâts par coup ; regroupement des troupes militaires alliées à avancement identique. |
 | U Magu | Uniquement le prochain habitant de chaque village allié : statistiques ×2, taille ×1,5, aura violette et dorée. |
-| U Surpatore | Sanglier, puis vampire après sa mort : 40 PV / 11 dégâts, rapide. |
+| U Surpatore | Sanglier puis vampire : 40 PV / 11 dégâts. Le vampire marque et conserve sa victime jusqu’à sa mort ; le sanglier ne marque pas. |
 | U Lupu Mannaru | Transforme un humain libre sans métier, sinon le prochain nouveau-né : 60 PV / 20 dégâts de base. Champs et élevages au contact en priorité, puis village ; aucune attaque contre les troupes. |
 | U Diavule | Brûle les deux territoires de la colonne, cultures, élevages et habitants dehors. Bâtiments et habitants dans les villages épargnés. |
 | A Strega Bianca | Pendant les prochaines 60 s, sauve les humains qui devraient mourir : retour au début du terrain, pleine vie, tâche et équipement conservés, aura verte et dorée. Pas de timer affiché, pas de légendes ni de morts antérieures. |
@@ -281,3 +281,12 @@ Le test historique `mythology-browser.test.js` échoue sur son attente d’un GI
 ## Champs et enclos au contact — 12 novembre 2026
 
 Nouvelle règle du concepteur : le Ravageur et U Lupu Mannaru rejoignent physiquement les champs et élevages adverses de leur colonne avant de frapper. Cela remplace l’ancienne exclusion de Lupu de la priorité sur les cultures. Les zones de contact utilisent les positions réelles des slots en 3D ; les rayons provisoires restent centralisés dans `economicHitboxes`. Les coups suivent les animations et la cadence existantes, avec le bonus spécialisé +5 du rôle Ravageur. Après destruction des cibles économiques, retour au centre et progression habituelle ; Lupu ignore toujours les troupes. Le Sanglier garde son comportement précédent.
+
+
+## U Mazzeru et Mauvais Présage — nouvelle règle du 12 novembre 2026
+
+L’invocation remplace l’ancien pouvoir de vision sous le même identifiant `u-mazzeru`. Le concepteur a confirmé les travailleurs comme cibles et le gain à toute mort marquée, quelle qu’en soit la cause. Tir global prioritaire sur le plus proche non marqué, immobilité durant cette phase, 45 PV/15 dégâts/9 s ; tous marqués : déplacement et portée habituelle de l’archer, cadence toujours 9 s. L’impact applique dégâts et marque, puis l’exécution au seuil inclusif de 15 % des PV max. Aucun cumul de marques ni soin gratuit avec le gain de +15 PV max. Les morts marquées par le vampire ouvrent également le gain. Pour plusieurs Mazzeri, le partage actuel à tous les alliés vivants est un réglage provisoire centralisé (`growthRecipients`), non une règle définitive ajoutée.
+
+`bad-omen.js` gère identités, cibles locales et déployées, flèches en vol, exécutions et gains ; le moteur de combat conserve les protections et morts existantes. Le vampire verrouille sa victime jusqu’à son décès, sans changer de cible parce qu’une autre n’a pas de marque. Le logo fourni s’affiche au sol et la barre conserve une zone rouge fixe à gauche ; les gains de Mazzeru ont une pulsation rouge. Les paramètres temporaires restent dans `config.js`.
+
+Modèle et arc fournis, sans génération nouvelle : `prepare_mazzeru.py` produit un GLB d’environ 1,8 Mo, arc 6 000 triangles et quatre clips. Tests : `npm run test:mazzeru`, suite générale et contrôle de marche. Captures et mesures dans `eredita3D/previews/mazzeru-*` et `eredita3D/logs/mazzeru-animation-validation.json`.

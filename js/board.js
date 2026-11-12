@@ -129,6 +129,12 @@
     return {offset,position:combatPosition(sign*(-cfg.regionCenter+z)),
       radius:village.slots[index].content?.category==='livestock'?E.Config.economicHitboxes.livestockRadius:E.Config.economicHitboxes.cropRadius};
   }
-  E.Board = { createState, getFormat, combatZ, combatPosition, widthScale, slotHitbox };
+  function idlePosition(index,count) {
+    const cfg=E.Config.villagePresentation,outer=count>12?Math.ceil(count*.57):count,inner=index>=outer;
+    const total=inner?count-outer:outer,number=inner?index-outer:index,radius=count<=12?.76:inner?.64:1;
+    const angle=2*Math.PI*number/Math.max(1,total)+(inner?.19:0);
+    return {x:cfg.fire[0]+Math.cos(angle)*cfg.idleRadiusX*radius,z:cfg.fire[1]+Math.sin(angle)*cfg.idleRadiusZ*radius};
+  }
+  E.Board = { createState, getFormat, combatZ, combatPosition, widthScale, slotHitbox, idlePosition };
 
 }());

@@ -16,6 +16,7 @@
     burnAge(state,village) < cfg().burnDuration : village.burnUntil > state.elapsed));
   const terrainVisualKey = village => String(Boolean(village.terrain?.river));
   function init(state) {
+    E.BadOmen?.init(state);
     state.mythology = { deaths: [], nextId: 1, executions: {}, resurrections: [] };
   }
   function runtime(state) { if (!state.mythology) init(state); return state.mythology; }
@@ -54,6 +55,7 @@
     const live = state.units.find(unit => unit.residentId === resident.id || unit === resident);
     const identity = `${village.ownerId}:${resident.residentId || resident.id}:${resident.mythologyForm || ''}`;
     if (runtime(state).deaths.some(death => death.identity === identity)) return;
+    E.BadOmen?.onDeath(state, live || resident, village.ownerId, resident);
     const person = live ? { ...resident, ...live, id: resident.id } : resident;
     runtime(state).deaths.push({ identity, ownerId: village.ownerId, originLane: village.lane,
       lane: live?.lane ?? village.lane, at: state.elapsed, human: isHuman(person), revived: false,
@@ -66,6 +68,7 @@
       mythologyMagu: Boolean(resident.mythologyMagu) });
     unit.maxHp = unit.hp = (resident.isLegend ? resident.maxHp : unit.maxHp * multiplier) + (resident.mythologyHpBonus || 0);
     unit.damage = (resident.isLegend ? resident.mythologyDamage : unit.damage * multiplier) + (resident.mythologyDamageBonus || 0);
+    if(resident.badOmen)unit.badOmen=resident.badOmen;
     unit.speed *= multiplier;
   }
   function summon(state, playerId, lane, id, stats = {}, position = null) {
@@ -181,7 +184,7 @@
     if (damaged) E.Combat.settleDeaths(state);
   }
   const handlers = {
-    'u-mazzeru': (s, id) => { s.players[id].revealOffensive = true; },
+    'u-mazzeru': (s,id,t) => summon(s,id,t.lane,'u-mazzeru',{hp:cfg().mazzeruHp,damage:cfg().mazzeruDamage,speed:cfg().mazzeruSpeed}),
     'a-stregha': (s, id, t) => { s.players[t.playerId].villages[t.lane].curseUntil = s.elapsed + cfg().stregaDuration; },
     'u-stregu': (s, id, t) => { s.players[t.playerId].villages[t.lane].blessingUntil = s.elapsed + cfg().streguDuration; },
     'a-fata': (s, id, t) => { const v = s.players[t.playerId].villages[t.lane]; v.terrain ||= {}; v.terrain.river = true; v.fataFishingMultiplier = cfg().fataFishingSpeed; },
