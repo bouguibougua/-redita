@@ -14,7 +14,7 @@ test('individual tasks replace active work even with no available residents; cou
 });
 test('both camps turn back immediately, stop attacking and remain vulnerable to enemy fire',()=>{
  for(const owner of ['red','blue']){const {E,s}=fixture(),v=s.players[owner].villages[0],r=v.residents[0];r.profession='guerrier';assert.ok(E.Economy.assignResidentMission(s,owner,0,r.id,'attaque'));const u=s.units[0];u.position=owner==='red'?80:20;u.visualAttackTimer=1;u.visualAttackTarget={position:90};
- const enemy=E.Units.create(owner==='red'?'blue':'red',0,'habitant',{stance:'defense'});enemy.position=u.position;s.units.push(enemy);E.Buildings.updateArtisanatBonuses(s);const hp=u.hp,enemyHp=enemy.hp,pos=u.position;
+ const enemy=E.Units.create(owner==='red'?'blue':'red',0,'habitant',{stance:'defense'});enemy.position=u.position;enemy.terrainOffset=.2;s.units.push(enemy);E.Buildings.updateArtisanatBonuses(s);const hp=u.hp,enemyHp=enemy.hp,pos=u.position;
  assert.ok(E.Economy.assignResidentMission(s,owner,0,r.id,'chasse'));assert.equal(r.pendingMission,'chasse');assert.equal(u.returningToVillage,true);assert.equal(u.visualAttackTimer,0);assert.equal(u.visualAttackTarget,null);
  E.Combat.update(s,.1);assert.ok(owner==='red'?u.position<pos:u.position>pos);assert.equal(enemy.hp,enemyHp);assert.equal(u.hp,hp-enemy.damage);assert.equal(u.visualAttackSequence,0);assert.equal(v.jobs.chasse,0);
  }
@@ -44,7 +44,7 @@ test('invalid orders and pause are atomic; a lost prerequisite falls back to ava
  const saved=JSON.parse(JSON.stringify(s));assert.equal(E.Economy.assignResidentMission(saved,'red',0,r.id,'chasse'),true);
 });
 test('incoming damage on the arrival frame can kill a recalled resident before any new task begins',()=>{
- const {E,s,v,order}=fixture(),r=v.residents[0];assert.ok(order(r,'attaque'));const u=s.units[0];u.position=.01;u.hp=1;assert.ok(order(r,'chasse'));const enemy=E.Units.create('blue',0,'habitant',{stance:'defense'});enemy.position=0;s.units.push(enemy);E.Combat.update(s,.1);assert.ok(!v.residents.includes(r));assert.equal(v.jobs.chasse,0);assert.ok(!s.units.some(unit=>unit.residentId===r.id));
+ const {E,s,v,order}=fixture(),r=v.residents[0];assert.ok(order(r,'attaque'));const u=s.units[0];u.position=.01;u.hp=1;assert.ok(order(r,'chasse'));const enemy=E.Units.create('blue',0,'habitant',{stance:'defense'});enemy.position=0;enemy.terrainOffset=.2;s.units.push(enemy);E.Combat.update(s,.1);assert.ok(!v.residents.includes(r));assert.equal(v.jobs.chasse,0);assert.ok(!s.units.some(unit=>unit.residentId===r.id));
 });
 
 test('a recalled resident who is resurrected returns with full health and no stale recall order',()=>{

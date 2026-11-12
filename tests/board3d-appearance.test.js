@@ -51,7 +51,7 @@ async function run() {
   const hunter = resident(4, "habitant", "chasse", { workPosition: 20, workLaneOffset: 0.2 });
   const state = {
     units: [{ id: 7, residentId: 2, ownerId: "red", originLane: 0, lanePosition: 0, position: 45, hp: 50, role: "habitant", waterTransport: "barque" }],
-    players: { red: { id: "red", villages: [{ lane: 0, biome: "littoral", residents: [farmer, fighter, fisher, hunter] }] } }
+    players: { red: { id: "red", villages: [{ ownerId: "red", lane: 0, biome: "littoral", residents: [farmer, fighter, fisher, hunter] }] } }
   };
   renderer.updateUnits(state);
   assert.equal(renderer.models.size, 4, "Chaque habitant apparaît une seule fois, combat compris.");

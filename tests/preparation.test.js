@@ -63,6 +63,7 @@ controller.setProfession(farmer.id, "agriculteur");
 controller.assignResidentMission(farmer.id, "agriculture");
 controller.assignResidentMission(soldier.id, "attaque");
 controller.assignAllResidents("chasse");
+const farmerStart=farmer.workPosition;
 const unit = game.state.units.find(item => item.residentId === soldier.id);
 assert.ok(unit); assert.equal(farmer.profession, "agriculteur");
 E.Combat.update(game.state, 1);
@@ -72,7 +73,7 @@ assert.equal(game.state.preparationRemaining, 59);
 assert.equal(village.residents.filter(item => item.mission === "chasse").length, 3, "Les commandes groupées avancent toutes les 0,5 seconde");
 game.advance(58);
 assert.equal(game.state.preparationRemaining, 1); assert.equal(game.state.elapsed, 0);
-assert.equal(unit.position, 0); assert.equal(farmer.workPosition, 0);
+assert.equal(unit.position, 0); assert.equal(farmer.workPosition, farmerStart);
 assert.equal(village.resources.ble, 0); assert.equal(village.resources.viande, 0);
 assert.equal(village.population, 5); assert.equal(village.populationTimer, 0);
 assert.equal(game.state.overtimeAccumulator, 0);
@@ -84,7 +85,7 @@ assert.equal(game.state.preparationRemaining, 0); assert.equal(game.state.elapse
 assert.equal(game.sounds.filter(track => track === "game").length, 1, "La fin de préparation ne relance pas la musique");
 game.advance(0.0625);
 assert.equal(game.state.elapsed, 0.0625);
-assert.ok(unit.position > 0); assert.ok(farmer.workPosition > 0);
+assert.ok(unit.position > 0); assert.ok(farmer.workPosition > farmerStart);
 assert.equal(village.populationTimer, 0.0625);
 assert.equal(E.Config.normalDuration, 750); assert.equal(E.Config.overtime.start, 750);
 
@@ -110,8 +111,9 @@ const productionVillage = production.state.players.red.villages[0];
 productionVillage.biome = "plaine"; productionVillage.slots = production.E.Biomes.createSlots("plaine");
 production.controller.placeCrop("ble", 0);
 production.controller.assignResidentMission(productionVillage.residents[0].id, "agriculture");
+const productionStart=productionVillage.residents[0].workPosition;
 production.advance(1);
-assert.ok(productionVillage.residents[0].workPosition > 0);
+assert.ok(productionVillage.residents[0].workPosition > productionStart);
 assert.equal(productionVillage.populationTimer, 0); assert.equal(production.state.elapsed, 0);
 
 // L'IA prépare son économie avec le même compteur et sans faire avancer ses troupes.

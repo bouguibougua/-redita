@@ -99,6 +99,7 @@ function worker(mission, donkey, tool = null) {
   if (mission === "agriculture") assert.equal(E.Crops.place(state, "red", 0, 0, "ble"), true);
   if (mission === "elevage") assert.equal(E.Livestock.place(state, "red", 0, 0, "chevre"), true);
   assert.equal(E.Economy.assignResidentJob(state, "red", 0, resident.id, mission), true);
+  result.village.residents=[resident]; // Isoler la vitesse des contournements de foule.
   return result;
 }
 
@@ -107,11 +108,18 @@ for (const mission of ["agriculture", "elevage", "chasse"]) {
   const plain = worker(mission, false);
   const mounted = worker(mission, true);
   for (const sample of [plain, mounted]) {
+    sample.start=E.CharacterAI.residentPoint(sample.state,sample.village,sample.resident);
+    if(mission!=='chasse') {
+      const b=E.Board.slotHitbox(sample.state,sample.village,0);
+      sample.resident.targetSlotIndex=0;
+      sample.resident.aiGoal={position:b.position,lanePosition:0,terrainOffset:b.offset};
+    }
     sample.resident.huntTargetPosition = 30;
     sample.resident.huntTargetLaneOffset = 0.3;
     E.Economy.updateProduction(sample.state, 0.5);
   }
-  close(mounted.resident.workPosition, plain.resident.workPosition * 1.2, `${mission} : vitesse après le métier`);
+  const travelled=sample=>E.CharacterAI.distance(sample.state,sample.start,E.CharacterAI.residentPoint(sample.state,sample.village,sample.resident));
+  close(travelled(mounted),travelled(plain)*1.2,`${mission} : vitesse après le métier`);
   if (mission === "chasse") close(mounted.resident.workLaneOffset, plain.resident.workLaneOffset * 1.2, "Vitesse latérale de chasse");
 }
 

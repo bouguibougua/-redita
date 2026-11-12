@@ -194,7 +194,7 @@
     offerId = pending?.id || null; ownerId = current?.playerId || player(state);
     widget = document.createElement('aside'); widget.className = 'mythology-match-widget';
     widget.setAttribute('aria-label', 'Renfort mythologique'); widget.dataset.owner = ownerId;
-    component = E.MythologyUI.createCrystalPreview({ leftId: pending?.legendIds[0], rightId: pending?.legendIds[1], mode: 'match' });
+    component = E.MythologyUI.createCrystalPreview({ leftId: pending?.legendIds[0], rightId: pending ? pending.legendIds[1] || null : undefined, mode: 'match' });
     const stage = component.element.querySelector('.mythology-crystal-stage');
     counter = document.createElement('span'); counter.className = 'mythology-match-count'; counter.setAttribute('aria-hidden', 'true');
     const ns = 'http://www.w3.org/2000/svg', sparks = document.createElementNS(ns, 'svg');

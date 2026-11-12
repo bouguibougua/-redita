@@ -143,7 +143,7 @@
     E.MythologyEffects?.decorateUnit(state, resident, unit);
     resident.mission = mission;
     resident.unitId = unit.id;
-    state.units.push(unit);
+    state.units.push(unit); E.CharacterAI.spawn(state,unit);
     E.Buildings.updateArtisanatBonuses(state);
     if (Number.isFinite(resident.combatHealthRatio)) {
       unit.hp *= Math.max(0, Math.min(1, resident.combatHealthRatio));
@@ -203,7 +203,8 @@
       residentId:resident.id,profession:resident.profession,tool:resident.tool,armor:resident.armor,donkey:resident.donkey,stance:'defense'
     });
     E.MythologyEffects?.decorateUnit(state,resident,unit);
-    unit.position=position;unit.autoDefense={position,lanePosition:village.lane};
+    const point=E.CharacterAI.residentPoint(state,village,resident);
+    unit.position=point.position;unit.terrainOffset=point.terrainOffset;unit.autoDefense={...point};
     resident.unitId=unit.id;state.units.push(unit);
     E.Buildings.updateArtisanatBonuses(state);
     if(Number.isFinite(resident.combatHealthRatio)){unit.hp*=Math.max(0,Math.min(1,resident.combatHealthRatio));delete resident.combatHealthRatio;}
@@ -321,10 +322,16 @@
     const village = state.players[playerId].villages[lane];
     const resident = getResident(state, playerId, lane, residentId);
     if (!resident.isLegend) resident.profession = professionForMission(resident, job);
+    // Figer les places locales avant de retirer un habitant du cercle du village.
+    for(const other of village.residents) if(!other.unitId && !Number.isFinite(other.workPosition)) other.bodyPoint=E.CharacterAI.residentPoint(state,village,other);
+    const start=E.CharacterAI.residentPoint(state,village,resident);
+    delete resident.bodyPoint; delete resident.aiGoal; delete resident.workHome;
     resident.mission = job;
     resident.workTimer = 0;
     if (job === "agriculture" || job === "elevage") {
-      resident.workPosition = villagePosition(playerId);
+      resident.workPosition = start.position;
+      resident.workTerrainOffset = start.terrainOffset;
+      resident.workHome = {...start};
       resident.workLaneOffset = 0;
       resident.workPhase = "toField";
       resident.workTimer = 0;
@@ -373,6 +380,7 @@
     village.jobs[resident.mission] = Math.max(0, village.jobs[resident.mission] - 1);
     resident.mission = "disponible";
     if (!resident.isLegend) resident.profession = "habitant";
+    delete resident.aiGoal; delete resident.workHome; delete resident.bodyPoint;
     resident.workPosition = null;
     resident.workPhase = null;
     resident.workTimer = 0;
@@ -490,17 +498,6 @@
     return E.Config.building.bergerieBonusByLevel[Math.max(...levels)] || 0;
   }
 
-  function moveWorker(resident, target, speed, delta) {
-    const distance = target - resident.workPosition;
-    const step = speed * delta;
-    if (Math.abs(distance) <= step) {
-      resident.workPosition = target;
-      return true;
-    }
-    resident.workPosition += Math.sign(distance) * step;
-    return false;
-  }
-
   function cropCount(village, type) {
     return village.slots.filter((slot) => slot.content?.category === "crop" && slot.content.type === type && slot.content.hp > 0).length;
   }
@@ -523,7 +520,7 @@
     return Object.entries(animalCounts(village)).reduce((sum, [type, count]) => sum + (E.Config.livestock[type].milkInterval ? count : 0), 0);
   }
 
-  function chooseWorkSlot(village, resident, workerIndex) {
+  function chooseWorkSlot(village, resident) {
     const slots = village.slots
       .map((slot, index) => ({ slot, index }))
       .filter(({ slot }) => slot.content?.hp > 0 && (resident.mission === "agriculture"
@@ -531,22 +528,29 @@
         : slot.content.category === "livestock" && E.Livestock.get(slot.content.type)?.milkInterval));
     if (!slots.length) return null;
     const current = slots.find(({ index }) => index === resident.targetSlotIndex);
-    return current || slots[workerIndex % slots.length];
+    return current || slots[Math.floor(Math.random() * slots.length)];
   }
 
-  function updateWorkerTrip(village, resident, workerIndex, delta) {
-    const target = chooseWorkSlot(village, resident, workerIndex);
-    const home = villagePosition(village.ownerId);
-    if (resident.workPosition === null) resident.workPosition = home;
+  function updateWorkerTrip(state, village, resident, delta) {
+    const target = chooseWorkSlot(village, resident);
+    let home = resident.workHome || {position:villagePosition(village.ownerId),lanePosition:village.lane,terrainOffset:0};
+    if (resident.workPosition === null) resident.workPosition = home.position;
     const config = E.Config.temporaryProduction;
-    const field = config.agricultureFieldPositionByOwner[village.ownerId];
     const farming = resident.mission === "agriculture";
     const profession = E.Config.professions[resident.profession || "habitant"];
     const movementSpeed = E.Config.movement.inhabitantSpeed * (resident.mythologyStatMultiplier || 1) * (1 + (isBoosted(resident, resident.mission) ? profession.speedBonus || 0 : 0)) * donkeyMultiplier(resident, "movementBonus");
 
+    if(resident.workPhase==='toVillage' || !target) {
+      if(!E.CharacterAI.free(state,home,resident)) {
+        const replacement=E.CharacterAI.sample(state,resident,home,0,E.Config.characterAI.homeSearchRadius);
+        if(!replacement)return;
+        home=resident.workHome=replacement;
+      }
+      resident.aiGoal={...home};
+    }
     // Une récolte déjà chargée reste livrée même si sa source disparaît.
     if (resident.workPhase === "toVillage") {
-      if (moveWorker(resident, home, movementSpeed, delta)) {
+      if (E.CharacterAI.moveResident(state,village,resident,home,movementSpeed,delta)) {
         if (resident.carrying?.resource) village.resources[resident.carrying.resource] += resident.carrying.amount;
         resident.carrying = null;
         resident.workPhase = "villageStop";
@@ -560,22 +564,30 @@
       if (resident.workTimer >= config.agricultureVillageStopDuration) {
         resident.workTimer = 0;
         resident.workPhase = "toField";
+        resident.targetSlotIndex = null; delete resident.aiGoal;
       }
       return;
     }
 
     if (!target) {
       resident.workTimer = 0;
-      resident.targetSlotIndex = null;
-      resident.workPhase = moveWorker(resident, home, movementSpeed, delta) ? "waitingForWork" : "toVillage";
+      resident.targetSlotIndex = null; delete resident.aiGoal;
+      resident.workPhase = E.CharacterAI.moveResident(state,village,resident,home,movementSpeed,delta) ? "waitingForWork" : "toVillage";
       return;
     }
-    if (resident.targetSlotIndex !== target.index) resident.workTimer = 0;
+    if (resident.targetSlotIndex !== target.index) {
+      resident.workTimer = 0; resident.workPhase = 'toField'; delete resident.aiGoal;
+    }
+    if(!resident.aiGoal || resident.workPhase==='toField'&&!E.CharacterAI.free(state,resident.aiGoal,resident)) {
+      const hitbox=E.Board.slotHitbox(state,village,target.index);
+      resident.aiGoal=E.CharacterAI.sample(state,resident,{position:hitbox.position,lanePosition:village.lane,terrainOffset:hitbox.offset},0,
+        hitbox.radius*E.Config.characterAI.workAreaRatio);
+    }
     resident.targetSlotIndex = target.index;
     if (!resident.workPhase || resident.workPhase === "waitingForWork") resident.workPhase = "toField";
 
     if (resident.workPhase === "toField") {
-      if (moveWorker(resident, field, movementSpeed, delta)) {
+      if (resident.aiGoal && E.CharacterAI.moveResident(state,village,resident,resident.aiGoal,movementSpeed,delta)) {
         resident.workPhase = "harvesting";
         resident.workTimer = 0;
       }
@@ -604,10 +616,10 @@
 
   }
 
-  function updateWorkerTrips(village, delta) {
+  function updateWorkerTrips(state, village, delta) {
     ["agriculture", "elevage"].forEach((mission) => village.residents
       .filter((resident) => resident.mission === mission && !resident.unitId)
-      .forEach((resident, index) => updateWorkerTrip(village, resident, index, delta)));
+      .forEach((resident) => updateWorkerTrip(state, village, resident, delta)));
   }
 
   function updateFishing(village, delta) {
@@ -659,7 +671,7 @@
     resident.huntTargetLaneOffset = (Math.random() * 2 - 1) * config.huntingLaneOffset;
   }
 
-  function updateHunting(village, delta) {
+  function updateHunting(state, village, delta) {
     const config = E.Config.temporaryProduction;
     village.residents.filter((resident) => resident.mission === "chasse" && !resident.unitId).forEach((resident) => {
       if (!Number.isFinite(resident.workPosition)) resident.workPosition = villagePosition(village.ownerId);
@@ -667,12 +679,9 @@
       if (!Number.isFinite(resident.huntTargetPosition) || !Number.isFinite(resident.huntTargetLaneOffset)) chooseHuntTarget(village, resident);
 
       const movementSpeed = (isBoosted(resident, "chasse") ? E.Config.movement.hunterSpeed : E.Config.movement.inhabitantSpeed) * (resident.mythologyStatMultiplier || 1) * donkeyMultiplier(resident, "movementBonus");
-      const reachedPosition = moveWorker(resident, resident.huntTargetPosition, movementSpeed, delta);
-      const lateralDistance = resident.huntTargetLaneOffset - resident.workLaneOffset;
-      const lateralStep = config.huntingLateralSpeed * donkeyMultiplier(resident, "movementBonus") * delta;
-      const reachedLane = Math.abs(lateralDistance) <= lateralStep;
-      resident.workLaneOffset = reachedLane ? resident.huntTargetLaneOffset : resident.workLaneOffset + Math.sign(lateralDistance) * lateralStep;
-      if (reachedPosition && reachedLane) chooseHuntTarget(village, resident);
+      const goal={lanePosition:village.lane,terrainOffset:resident.huntTargetLaneOffset*2.7,
+        position:E.Board.combatPosition(E.Config.boardProjection.originZ+resident.huntTargetPosition*E.Config.boardProjection.positionScale)};
+      if(E.CharacterAI.moveResident(state,village,resident,goal,movementSpeed,delta))chooseHuntTarget(village,resident);
 
       const equipment = E.Equipment.bonuses(resident);
       resident.workTimer += delta * (1 + equipment.productionSpeed);
@@ -685,14 +694,16 @@
   }
 
   function updateProduction(state, delta) {
+    if(state.phase!=="running" || state.paused || !Number.isFinite(delta) || delta<=0)return;
+    E.CharacterAI.resolve(state);
     Object.values(state.players).forEach((player) => {
       player.villages.filter((village) => !village.destroyed).forEach((village) => {
         village.productionMultiplier = E.MythologyEffects?.productionMultiplier(state, village) ?? 1;
         E.Transport.maritimeState(village).productionMultiplier = village.productionMultiplier;
-        updateWorkerTrips(village, delta);
+        updateWorkerTrips(state, village, delta);
         updateFishing(village, delta);
         E.Transport.updateFishingNets(village, delta);
-        updateHunting(village, delta);
+        updateHunting(state, village, delta);
         village.slots.forEach((slot, slotIndex) => {
           if (slot.content?.category !== "livestock") return;
           const penalty = E.Animals?.harassment(state, village, slotIndex)?.penalty || 0;

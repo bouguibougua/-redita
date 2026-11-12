@@ -428,3 +428,8 @@
 #battlefield[data-effects-paused="true"] .terrain-fire-2d i { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .terrain-fire-2d i { animation: none; opacity: .75; } }
 .region.mythology-cursed { filter: hue-rotate(20deg); box-shadow: inset 0 0 28px #a173d388; }
+/* Une seule légende encore disponible : une seule carte centrée. */
+.mythology-crystal-preview[data-single="true"] .mythology-pair { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.mythology-crystal-preview[data-single="true"] .mythology-choice { width: min(45%, 600px); }
+.mythology-crystal-preview[data-single="true"][data-started="true"] .mythology-crystal-stage { pointer-events: none; }
+.mythology-crystal-preview[data-single="true"] .mythology-crystal-results::after { display: none; }

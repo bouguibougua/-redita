@@ -32,8 +32,8 @@ test('workers are global targets; marks survive deployment/recall, threshold fol
 });
 test('vampire applies omen, keeps the same target even if a closer unmarked target appears, and retargets on death',()=>{
  const{E,s,cast,add}=fixture();const v=cast('u-surpatore');v.hp=0;E.Combat.settleDeaths(s);assert.equal(v.mythologyForm,'vampire');
- const first=add();v.position=50;first.position=51;E.Combat.update(s,.05);assert.ok(first.badOmen);const key=v.vampireTargetKey;
- const next=add();next.position=50.1;v.attackCooldown=0;E.Combat.update(s,.05);assert.equal(v.vampireTargetKey,key);assert.equal(first.hp,78);assert.equal(next.hp,100);
+ const first=add();v.position=50;first.position=52.3;E.Combat.update(s,.05);assert.ok(first.badOmen);const key=v.vampireTargetKey;
+ const next=add();next.position=50.5;next.terrainOffset=-.17;v.attackCooldown=0;E.Combat.update(s,.05);assert.equal(v.vampireTargetKey,key);assert.equal(first.hp,78);assert.equal(next.hp,100);
  first.hp=0;E.Combat.settleDeaths(s);v.attackCooldown=0;E.Combat.update(s,.05);assert.notEqual(v.vampireTargetKey,key);assert.ok(next.badOmen);
 });
 test('pause/preparation freeze arrows, effects and growth; dead targets are not replaced mid-flight; no attack duplicates',()=>{

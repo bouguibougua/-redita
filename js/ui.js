@@ -410,7 +410,7 @@
         crystals.dataset.signature = colorsKey;
         const facets='<path class="gem-facets" d="M10 1v26M2 9h16M2 19h16M10 1 6 9v10l4 8m0-26 4 8v10l-4 8"/>';
         crystals.innerHTML = stock.colors.map(color => `<svg viewBox="0 0 20 28" class="hud-crystal" style="--gem-color:${color}" role="img" aria-label="Cristal choisi"><path d="m10 1 8 8v10l-8 8-8-8V9Z"/>${facets}</svg>`).join('') +
-          (stock.pendingColors || []).map(pair => `<svg viewBox="0 0 20 28" class="hud-crystal pending-crystal" role="img" aria-label="Cristal en attente de choix"><path style="fill:${pair[0]}" d="M10 1v26l-8-8V9Z"/><path style="fill:${pair[1]}" d="m10 1 8 8v10l-8 8Z"/>${facets}</svg>`).join('');
+          (stock.pendingColors || []).map(pair => `<svg viewBox="0 0 20 28" class="hud-crystal pending-crystal" role="img" aria-label="Cristal en attente de choix"><path style="fill:${pair[0]}" d="M10 1v26l-8-8V9Z"/><path style="fill:${pair[1] || pair[0]}" d="m10 1 8 8v10l-8 8Z"/>${facets}</svg>`).join('');
       }
       for (const village of player.villages) {
         const popup = elements.mapVillagePopups.querySelector(`[data-map-village][data-player="${playerId}"][data-lane="${village.lane}"]`);
@@ -514,7 +514,7 @@
     const combatUnits = state.units.filter(unit => !E.MythologyEffects || E.MythologyEffects.unitVisible(state, viewerId(state), unit)).map((unit) => {
       const stats = E.Config.units[unit.role];
       const left = ((unit.lanePosition + 0.5 + (unit.terrainOffset||0)/E.Config.board.laneSpacing) / regionCount) * 100;
-      const top = Math.max(1.2, Math.min(98.8, unit.position));
+      const top = Math.max(1.2, Math.min(98.8,(E.Board.combatZ(unit.position)-E.Config.boardProjection.originZ)/E.Config.boardProjection.positionScale));
       const vessel = unit.waterTransport ? `<span class="unit-vessel" title="Transporté par ${E.Config.maritime.shop[unit.waterTransport].label.toLowerCase()}">${E.Config.maritime.shop[unit.waterTransport].icon}</span>` : "";
       const selected = unit.residentId === state.selectedResidentId && unit.ownerId === state.selectedVillage.playerId && unit.originLane === state.selectedVillage.lane;
       const label = E.Mythology?.get(unit.mythologyLegendId)?.name || stats.label;
@@ -528,11 +528,12 @@
     const workers = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
       village.residents
         .filter((resident) => (E.MythologyEffects ? E.MythologyEffects.residentVisible(state, viewerId(state), village, resident) : vision(state, village).people)
-          && ["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null)
+          && !resident.unitId && ["agriculture", "elevage", "chasse"].includes(resident.mission) && resident.workPosition !== null)
         .map((resident) => {
-          const laneOffset = resident.mission === "chasse" ? 0.5 + (resident.workLaneOffset || 0) : resident.mission === "elevage" ? 0.62 : 0.45;
+          const point=E.CharacterAI.residentPoint(state,village,resident);
+          const laneOffset = .5 + (point.terrainOffset||0)/E.Config.board.laneSpacing;
           const left = ((village.lane + laneOffset) / regionCount) * 100;
-          const top = Math.max(1.2, Math.min(98.8, resident.workPosition));
+          const top = Math.max(1.2, Math.min(98.8,(E.Board.combatZ(point.position)-E.Config.boardProjection.originZ)/E.Config.boardProjection.positionScale));
           const carrying = resident.carrying ? " carrying" : "";
           const selected = resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane;
           return `<div class="unit worker ${player.id}${carrying} ${selected ? "selected-resident" : ""}" data-worker-mission="${resident.mission}" data-map-resident="${resident.id}" data-player="${player.id}" data-lane="${village.lane}" style="left:${left}%;top:${top}%" title="${resident.name} · ${farmerPhaseLabel(resident)}${resident.carrying ? ` · ${formatNumber(resident.carrying.amount)} ${resourceLabels[resident.carrying.resource]}` : ""}">
@@ -548,15 +549,9 @@
         const idleCount = visible.filter(r => r.mission !== "peche").length;
         return visible.filter(resident => !E.MythologyEffects || E.MythologyEffects.residentVisible(state, viewerId(state), village, resident)).map((resident, index) => {
           const fishing = resident.mission === "peche";
-          const narrow = window.innerWidth < 720;
-          const fisherColumns = narrow ? 4 : 7;
-          const fishingSlot = fishing ? fisherIndex++ : 0;
-          const angle = 2 * Math.PI * (fishing ? 0 : idleIndex++) / Math.max(1, idleCount);
-          const left = fishing
-            ? ((village.lane + (fishingSlot % fisherColumns + 0.5) / fisherColumns) / regionCount) * 100
-            : ((village.lane + .5 + Math.cos(angle) * .31) / regionCount) * 100;
-          const distance = fishing ? 23 + Math.floor(fishingSlot / fisherColumns) * (narrow ? 1.9 : 3) : 10.5 + Math.sin(angle) * 2.6;
-          const top = player.id === "red" ? distance : 100 - distance;
+          const point=E.CharacterAI.residentPoint(state,village,resident);
+          const left=((village.lane+.5+(point.terrainOffset||0)/E.Config.board.laneSpacing)/regionCount)*100;
+          const top=Math.max(1.2,Math.min(98.8,(E.Board.combatZ(point.position)-E.Config.boardProjection.originZ)/E.Config.boardProjection.positionScale));
           const selected = resident.id === state.selectedResidentId && player.id === state.selectedVillage.playerId && village.lane === state.selectedVillage.lane;
           return `<div class="local-person ${player.id} ${fishing ? "fishing" : ""} ${selected ? "selected-resident" : ""}" data-local-resident="${resident.id}" data-map-resident="${resident.id}" data-player="${player.id}" data-lane="${village.lane}" style="left:${left}%;top:${top}%" title="${resident.name} · ${E.Config.professions[resident.profession || "habitant"].label}">${residentAppearance(resident, "unit-body")}${E.CharacterHUD?.html(E.CharacterHUD.getStats(state,village,resident),player.id === viewerId(state)) || ''}</div>`;
         });
@@ -564,9 +559,10 @@
     )).join("");
     const localAnimals = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
       village.destroyed || !vision(state, village).all ? [] : (village.animals || []).filter((animal) => !animal.unitId).map((animal, index) => {
-        const left = ((village.lane + 0.22 + (index % 4) * 0.17) / regionCount) * 100;
-        const distance = 18 + Math.floor(index / 4) * 2;
-        return `<div class="local-person ${player.id}" data-local-animal="${animal.id}" style="left:${left}%;top:${player.id === "red" ? distance : 100 - distance}%" title="${E.Config.specialAnimals[animal.type].label}">${animalAppearance(animal.type, "unit-body")}</div>`;
+        const point=E.CharacterAI.animalPoint(state,village,animal);
+        const left=((village.lane+.5+point.terrainOffset/E.Config.board.laneSpacing)/regionCount)*100;
+        const top=(E.Board.combatZ(point.position)-E.Config.boardProjection.originZ)/E.Config.boardProjection.positionScale;
+        return `<div class="local-person ${player.id}" data-local-animal="${animal.id}" style="left:${left}%;top:${top}%" title="${E.Config.specialAnimals[animal.type].label}">${animalAppearance(animal.type, "unit-body")}</div>`;
       })
     )).join("");
     elements.units.innerHTML = combatUnits + workers + locals + localAnimals;

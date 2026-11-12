@@ -230,7 +230,7 @@ test("guard and frontier dogs hold position and strike for seven at the configur
     herd(state, "red");
     const { unit } = deploy(state, "chien", mission, 0);
     const enemy = E.Units.create("blue", 0, "habitant", { stance: "defense" });
-    enemy.position = unit.position + 1;
+    enemy.position = E.Board.combatPosition(E.Board.combatZ(unit.position) + .22);
     enemy.damage = 0;
     state.units.push(enemy);
     const position = unit.position;
@@ -250,7 +250,7 @@ test("boars prioritize enemy crops over nearby troops and destroy the crop at ei
   assert.equal(E.Economy.assignResidentJob(state, "blue", 0, enemy.residents[0].id, "agriculture"), true);
   const { unit } = deploy(state, "sanglier");
   const soldier = E.Units.create("blue", 0, "habitant", { stance: "defense" });
-  soldier.position = unit.position = 10;
+  soldier.position = unit.position = 10; soldier.terrainOffset=.23;
   soldier.damage = 0;
   state.units.push(soldier);
   E.Combat.update(state, 0.1);
@@ -395,7 +395,7 @@ test("boars swim at half speed, recover land speed, and never take a boat seat",
   const humansBefore = population(state);
   unit.position = 42;
   const dogs = Array.from({ length: 2 }, () => deploy(state).unit);
-  for (const dog of dogs) dog.position = 42;
+  for (const [index,dog] of dogs.entries()) { dog.position = 42; dog.terrainOffset=(index?1:-1)*.25; }
   E.Combat.update(state, 0.1);
   near(unit.position, 42 + E.Config.specialAnimals.sanglier.speed * 0.5 * 0.1, "Swimming step");
   assert.equal(unit.hp, 80);

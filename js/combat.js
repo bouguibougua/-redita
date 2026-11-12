@@ -54,18 +54,10 @@
   }
 
   function moveLaterally(state, unit, targetLane, delta) {
-    const distance = targetLane - unit.lanePosition;
     const donkeySpeed = unit.donkey ? 1 + E.Config.specialAnimals.ane.movementBonus : 1;
-    const step = E.Config.combat.redirectSpeed * donkeySpeed * E.Transport.movementMultiplier(unit) * delta;
-    if (Math.abs(distance) <= step) {
-      unit.lanePosition = targetLane;
-      unit.lane = targetLane;
-      unit.redirectTarget = null;
-      unit.redirectOrigin = null;
-      return true;
-    }
-    unit.lanePosition += Math.sign(distance) * step;
-    return false;
+    const reached=E.CharacterAI.moveLane(state,unit,targetLane,E.Config.combat.redirectSpeed*donkeySpeed*E.Transport.movementMultiplier(unit),delta);
+    if(reached){unit.lanePosition=targetLane;unit.lane=targetLane;unit.redirectTarget=null;unit.redirectOrigin=null;}
+    return reached;
   }
 
   function attackRange(unit) {
@@ -76,21 +68,26 @@
   }
 
   function unitDistance(state,a,b) {
-    if(!a.terrainOffset && !b.terrainOffset)return Math.abs(a.position-b.position);
-    const dx=((b.lanePosition-a.lanePosition)*E.Config.board.laneSpacing+(b.terrainOffset||0)-(a.terrainOffset||0))*E.Board.widthScale(state);
-    return Math.hypot(dx,E.Board.combatZ(b.position)-E.Board.combatZ(a.position))/E.Config.boardProjection.positionScale;
+    return E.CharacterAI.distance(state,a,b)/E.Config.boardProjection.positionScale;
   }
   function moveTowardEnemy(state,unit,enemy,delta) {
-    if(unit.terrainOffset || enemy.terrainOffset)moveToFieldPoint(state,unit,{offset:enemy.terrainOffset||0,position:enemy.position},delta);
-    else moveToward(state,unit,enemy.position,delta);
+    const key = 'unit:' + enemy.id;
+    const reach = Math.max(attackRange(unit) * E.Config.boardProjection.positionScale * E.Config.characterAI.attackContactRatio,
+      E.CharacterAI.radius(unit)+E.CharacterAI.radius(enemy)+E.Config.characterAI.gap);
+    if (unit.aiTarget !== key || !unit.aiGoal || E.CharacterAI.distance(state,unit.aiGoal,enemy) > reach * E.Config.characterAI.goalTrackingRatio ||
+      !E.CharacterAI.free(state,unit.aiGoal,unit)) {
+      unit.aiTarget = key;
+      unit.aiGoal = E.CharacterAI.sample(state,unit,{...enemy,lanePosition:unit.lanePosition,
+        terrainOffset:((enemy.lanePosition-unit.lanePosition)*E.Config.board.laneSpacing)+(enemy.terrainOffset||0)},reach,reach);
+    }
+    if(unit.aiGoal)moveToFieldPoint(state,unit,{offset:unit.aiGoal.terrainOffset,position:unit.aiGoal.position},delta);
   }
 
   function nearestEnemyUnit(state, unit) {
     return state.units
-      .filter((other) => other.ownerId !== unit.ownerId && other.hp > 0)
-      .filter((other) => Math.abs(other.lanePosition - unit.lanePosition) < 0.12)
-      .filter((other) => unitDistance(state,unit,other) <= Math.max(E.Config.combat.detectionRange, attackRange(unit)))
-      .sort((a, b) => unitDistance(state,unit,a) - unitDistance(state,unit,b))[0] || null;
+      .filter(other => other.ownerId !== unit.ownerId && other.hp > 0)
+      .filter(other => unitDistance(state,unit,other) <= Math.max(E.Config.combat.detectionRange, attackRange(unit)))
+      .sort((a,b) => unitDistance(state,unit,a) - unitDistance(state,unit,b))[0] || null;
   }
 
   function attackInterval(unit) {
@@ -144,7 +141,9 @@
   }
 
   function tryAttackUnit(state, unit, enemyUnit, damageEvents, delta) {
-    if (!enemyUnit || unitDistance(state,unit,enemyUnit) > attackRange(unit)) return false;
+    if (!enemyUnit) return false;
+    const contact=(E.CharacterAI.radius(unit)+E.CharacterAI.radius(enemyUnit)+E.Config.characterAI.gap+E.Config.characterAI.arrivalEpsilon)/E.Config.boardProjection.positionScale;
+    if(unitDistance(state,unit,enemyUnit)>Math.max(attackRange(unit),contact)+1e-7)return false;
     if (unit.attackCooldown <= 0) {
       if(unit.mythologyLegendId==='u-mazzeru' && E.BadOmen){
         const target=E.BadOmen.characters(state).find(t=>t.kind==='unit'&&t.entity===enemyUnit);if(target)E.BadOmen.shoot(state,unit,target);
@@ -155,9 +154,10 @@
   }
 
   function moveToward(state, unit, target, delta) {
-    const distance = target - unit.position;
-    const step = unit.speed * E.Transport.movementMultiplier(unit) * delta;
-    unit.position += Math.sign(distance) * Math.min(Math.abs(distance), step);
+    const step=unit.speed*E.Transport.movementMultiplier(unit)*delta;
+    const logical=unit.position+Math.sign(target-unit.position)*Math.min(Math.abs(target-unit.position),step);
+    const physicalSpeed=Math.abs(E.Board.combatZ(logical)-E.Board.combatZ(unit.position))/E.Config.boardProjection.positionScale/delta;
+    E.CharacterAI.moveUnit(state,unit,{position:target,lanePosition:unit.lanePosition,terrainOffset:unit.terrainOffset||0},physicalSpeed,delta);
     E.Transport.updateUnitWaterState(state, unit);
   }
 
@@ -183,20 +183,21 @@
     return Math.hypot((target.offset-(unit.terrainOffset||0))*E.Board.widthScale(state),E.Board.combatZ(target.position)-E.Board.combatZ(unit.position));
   }
   function moveToFieldPoint(state,unit,target,delta,stopRadius=0) {
-    const distance=fieldDistance(state,unit,target);
-    const step=unit.speed*E.Transport.movementMultiplier(unit)*E.Config.boardProjection.positionScale*delta;
-    const fraction=distance>0?Math.min(step,Math.max(0,distance-stopRadius))/distance:0;
-    unit.terrainOffset=(unit.terrainOffset||0)+(target.offset-(unit.terrainOffset||0))*fraction;
-    unit.position=E.Board.combatPosition(E.Board.combatZ(unit.position)+(E.Board.combatZ(target.position)-E.Board.combatZ(unit.position))*fraction);
+    const distance=fieldDistance(state,unit,target), fraction=distance>0?Math.max(0,distance-stopRadius)/distance:0;
+    const destination={lanePosition:unit.lanePosition,terrainOffset:(unit.terrainOffset||0)+(target.offset-(unit.terrainOffset||0))*fraction,
+      position:E.Board.combatPosition(E.Board.combatZ(unit.position)+(E.Board.combatZ(target.position)-E.Board.combatZ(unit.position))*fraction)};
+    E.CharacterAI.moveUnit(state,unit,destination,unit.speed*E.Transport.movementMultiplier(unit),delta);
     E.Transport.updateUnitWaterState(state,unit);
   }
+
   function attackEconomicSlot(state,unit,village,events,delta) {
     const targets=(!village || village.destroyed)?[]:village.slots.flatMap((slot,slotIndex)=>
       ['crop','livestock'].includes(slot.content?.category)&&slot.content.hp>0?
       [{...E.Board.slotHitbox(state,village,slotIndex),slotIndex,slot}]:[]);
     const previous=unit.economicTarget;
+    const visible=targets.filter(t=>fieldDistance(state,unit,t)<=t.radius+Math.max(E.Config.combat.detectionRange,attackRange(unit))*E.Config.boardProjection.positionScale);
     const target=targets.find(t=>previous?.playerId===village.ownerId&&previous.lane===village.lane&&previous.slotIndex===t.slotIndex)||
-      targets.sort((a,b)=>fieldDistance(state,unit,a)-fieldDistance(state,unit,b)||a.slotIndex-b.slotIndex)[0];
+      visible.sort((a,b)=>fieldDistance(state,unit,a)-fieldDistance(state,unit,b)||a.slotIndex-b.slotIndex)[0];
     if(!target) {
       if(previous)unit.returningFromField=true;
       delete unit.economicTarget;
@@ -206,7 +207,14 @@
     }
     unit.economicTarget={playerId:village.ownerId,lane:village.lane,slotIndex:target.slotIndex};
     const reach=target.radius+E.Config.economicHitboxes.contactReach;
-    if(fieldDistance(state,unit,target)>reach+1e-9)moveToFieldPoint(state,unit,target,delta,reach);
+    const key=`slot:${village.ownerId}:${village.lane}:${target.slotIndex}`;
+    if(unit.aiTarget!==key || !unit.aiGoal || !E.CharacterAI.free(state,unit.aiGoal,unit)) {
+      unit.aiTarget=key;
+      unit.aiGoal=E.CharacterAI.sample(state,unit,{lanePosition:village.lane,terrainOffset:target.offset,position:target.position},reach*E.Config.characterAI.economicContactRatio,reach*E.Config.characterAI.economicContactRatio);
+    }
+    if(fieldDistance(state,unit,target)>reach+1e-9) {
+      if(unit.aiGoal)moveToFieldPoint(state,unit,{offset:unit.aiGoal.terrainOffset,position:unit.aiGoal.position},delta);
+    }
     else if(unit.attackCooldown<=0) {
       triggerAttackVisual(unit,{position:target.position,lanePosition:village.lane,terrainOffset:target.offset});
       events.push({type:target.slot.content.category,target:target.slot.content,amount:unit.damage+(E.Config.units.ravageur.villageDamageBonus||0)});
@@ -220,12 +228,12 @@
       if(village.destroyed||E.MythologyEffects?.isBurned(state,village))return;
       village.residents.forEach(resident=>{
         if(resident.unitId||resident.isLegend||['attaque','defense'].includes(resident.mission))return;
-        // Le pêcheur est à la rive ; les autres métiers gardent leur position de travail.
-        const position=Number.isFinite(resident.workPosition)?resident.workPosition:
-          resident.mission==='peche'?E.Config.combat.fishingPositionByOwner[player.id]:
-          player.id==='red'?0:E.Config.movement.columnLength;
-        const scout={ownerId:player.id,lanePosition:village.lane,position,profession:resident.profession};
-        if(nearestEnemyUnit(state,scout))E.Economy.startProximityDefense(state,village,resident,position);
+        const point=E.CharacterAI.residentPoint(state,village,resident);
+        const scout={...point,ownerId:player.id,profession:resident.profession};
+        const threatened=state.units.some(other=>other.ownerId!==player.id&&other.hp>0&&!other.structuresOnly&&
+          unitDistance(state,scout,other)<=Math.max(E.Config.combat.detectionRange,attackRange(scout),attackRange(other)));
+        if(threatened)E.Economy.startProximityDefense(state,village,resident,point.position);
+
       });
     }));
   }
@@ -233,13 +241,15 @@
   function defendLocally(state,unit,damageEvents,completed,delta) {
     const anchor=unit.autoDefense,range=Math.max(E.Config.combat.detectionRange,attackRange(unit));
     const enemy=state.units.filter(other=>other.ownerId!==unit.ownerId&&other.hp>0&&
-      Math.abs(other.lanePosition-anchor.lanePosition)<.12&&Math.abs(other.position-anchor.position)<=range)
+      unitDistance(state,anchor,other)<=range)
       .sort((a,b)=>Math.abs(a.position-unit.position)-Math.abs(b.position-unit.position))[0];
     if(enemy){
       if(!tryAttackUnit(state,unit,enemy,damageEvents,delta))moveTowardEnemy(state,unit,enemy,delta);
     }else{
-      moveToward(state,unit,anchor.position,delta);
-      if(Math.abs(unit.position-anchor.position)<.001)completed.push(unit);
+      moveToFieldPoint(state,unit,{position:anchor.position,offset:anchor.terrainOffset||0},delta);
+      if(unitDistance(state,unit,anchor)<E.Config.characterAI.arrivalEpsilon/E.Config.boardProjection.positionScale &&
+        !state.units.some(other=>other.ownerId!==unit.ownerId&&other.hp>0&&!other.structuresOnly&&
+          unitDistance(state,unit,other)<=Math.max(E.Config.combat.detectionRange,attackRange(other))))completed.push(unit);
     }
   }
 
@@ -261,6 +271,7 @@
 
   function update(state, delta) {
     if (state.phase !== "running" || state.paused || state.preparationRemaining > 0 || !Number.isFinite(delta) || delta <= 0) return;
+    E.CharacterAI.resolve(state);
     E.BadOmen?.updateProjectiles(state,delta);
     recruitNearbyResidents(state);
     E.Buildings.updateArtisanatBonuses(state);
@@ -280,9 +291,6 @@
       unit.visualHitTimer = Math.max(0, (unit.visualHitTimer || 0) - delta);
       if (!E.Transport.updateUnitWaterState(state, unit)) return;
 
-      if ((unit.returningToVillage || unit.mythologyRetreating) && Math.abs(unit.terrainOffset||0)>.0001) {
-        delete unit.economicTarget;moveToFieldPoint(state,unit,{offset:0,position:unit.position},delta);return;
-      }
       if (unit.returningToVillage) {
         const resident = E.Economy.getResident(state, unit.ownerId, unit.originLane, unit.residentId);
         const origin = state.players[unit.ownerId]?.villages[unit.originLane];
@@ -339,10 +347,12 @@
         // Sans élevage, le chien attend ; il ne détruit pas le village à sa place.
         return;
       }
-      if(Math.abs(unit.terrainOffset||0)>.0001){moveToFieldPoint(state,unit,{offset:0,position:unit.position},delta);return;}
+      if(!unit.aiTarget?.startsWith('unit:village:')) {delete unit.aiGoal; delete unit.aiTarget;}
       const villagePosition = unit.ownerId === "red" ? E.Config.movement.columnLength : 0;
-      if (targetVillage && !targetVillage.destroyed && targetVillage.hp > 0 && Math.abs(villagePosition - unit.position) <= attackRange(unit)) {
-        if (Math.abs(villagePosition - unit.position) <= E.Config.combat.attackRange && unit.retaliationCooldown <= 0) {
+      const gate={position:villagePosition,lanePosition:targetLane,terrainOffset:0};
+      const gateDistance=unitDistance(state,unit,gate);
+      if (targetVillage && !targetVillage.destroyed && targetVillage.hp > 0 && gateDistance <= attackRange(unit)) {
+        if (gateDistance <= E.Config.combat.attackRange && unit.retaliationCooldown <= 0) {
           damageEvents.push({ type: "unit", target: unit, amount: E.Config.combat.villageRetaliationDamagePerSecond });
           unit.retaliationCooldown = 1;
         }
@@ -355,7 +365,12 @@
         return;
       }
 
-      moveToward(state, unit, villagePosition, delta);
+      // Les remparts occupent la largeur de la colonne : une formation décalée
+      // voit leur façade et rejoint une place autour de la porte.
+      const facadeRadius=E.Config.characterAI.columnHalfWidth*E.Board.widthScale(state)/E.Config.boardProjection.positionScale;
+      if(gateDistance <= Math.max(E.Config.combat.detectionRange,attackRange(unit))+facadeRadius) {
+        moveTowardEnemy(state,unit,{...gate,id:'village:'+targetLane},delta);
+      } else moveToward(state, unit, villagePosition, delta);
     });
 
     damageEvents.forEach((event) => {
@@ -371,6 +386,7 @@
       });
     }));
 
+    E.CharacterAI.resolve(state);
     settleDeaths(state);
     completedDefenses.filter(unit=>unit.hp>0&&state.units.includes(unit)).forEach(unit=>E.Economy.finishProximityDefense(state,unit));
     completedRecalls.filter(unit => unit.hp > 0 && state.units.includes(unit)).forEach(unit => E.Economy.completeRecall(state, unit));

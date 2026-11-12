@@ -11,18 +11,11 @@
   for(const u of s.units)if(u.hp>0)out.push({key:unitKey(u),ownerId:u.ownerId,kind:'unit',entity:u,renderKey:'unit-'+u.id,
    point:{position:u.position,lanePosition:u.lanePosition,terrainOffset:u.terrainOffset||0}});
   for(const p of Object.values(s.players))for(const v of p.villages){if(v.destroyed)continue;
-   const cfg=E.Config.villagePresentation,sign=p.id==='red'?1:-1;
-   const idleCount=v.residents.filter(r=>!r.unitId&&(!r.mission||r.mission==='disponible')&&!(r.hp<=0)).length;
-   let localIndex=0,fisherIndex=0,animalIndex=0;
-   for(const r of v.residents){if(r.unitId||r.hp<=0)continue;const index=v.residents.indexOf(r),working=['agriculture','elevage','chasse'].includes(r.mission)&&Number.isFinite(r.workPosition);
-    let offset,z;
-    if(working){offset=r.mission==='chasse'?(r.workLaneOffset||0)*2.7:index%2?.3:-.3;z=E.Config.boardProjection.originZ+r.workPosition*E.Config.boardProjection.positionScale;}
-    else if(r.mission==='peche'){const row=Math.floor(fisherIndex/7),column=fisherIndex++%7,bank=v.biome==='littoral'?.36-row*.34:.18+row*.17;offset=-1.08+column*.36;z=sign*(-cfg.regionCenter+bank);}
-    else {const point=E.Board.idlePosition(localIndex++,idleCount);offset=point.x*sign;z=sign*(-cfg.regionCenter+point.z);}
-    out.push({key:keyOf(p.id,'resident',r.id),ownerId:p.id,kind:'resident',village:v,entity:r,renderKey:`resident-${p.id}-${r.id}`,point:{position:E.Board.combatPosition(z),lanePosition:v.lane,terrainOffset:offset}});
+   for(const r of v.residents){if(r.unitId||r.hp<=0)continue;
+    out.push({key:keyOf(p.id,'resident',r.id),ownerId:p.id,kind:'resident',village:v,entity:r,renderKey:`resident-${p.id}-${r.id}`,point:E.CharacterAI.residentPoint(s,v,r)});
    }
-   for(const animal of v.animals||[])if(!animal.unitId&&animal.hp>0){const row=Math.floor(animalIndex/6),column=animalIndex++%6;
-    out.push({key:keyOf(p.id,'animal',animal.id),ownerId:p.id,kind:'animal',village:v,entity:animal,renderKey:`animal-${p.id}-${animal.id}`,point:{position:E.Board.combatPosition(sign*(-cfg.regionCenter-.67+row*.31)),lanePosition:v.lane,terrainOffset:-1+column*.38}});
+   for(const animal of v.animals||[])if(!animal.unitId&&animal.hp>0){
+    out.push({key:keyOf(p.id,'animal',animal.id),ownerId:p.id,kind:'animal',village:v,entity:animal,renderKey:`animal-${p.id}-${animal.id}`,point:E.CharacterAI.animalPoint(s,v,animal)});
    }
   }
   return out.filter(t=>stats(s,t).hp>0);

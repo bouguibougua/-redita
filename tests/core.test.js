@@ -220,7 +220,7 @@ const hunter = huntingVillage.residents[0];
 assert.equal(E.Economy.setProfession(huntingState, "red", 0, hunter.id, "chasseur"), true);
 assert.equal(E.Economy.assignResidentJob(huntingState, "red", 0, hunter.id, "chasse"), true);
 E.Economy.updateProduction(huntingState, 1);
-assert.equal(hunter.workPosition, E.Config.movement.hunterSpeed);
+assert.ok(hunter.workPosition > 0 && hunter.workPosition <= E.Config.movement.hunterSpeed); // Le trajet inclut désormais la composante latérale.
 assert.ok(hunter.huntTargetPosition >= E.Config.temporaryProduction.huntingAreaByOwner.red.min);
 assert.ok(hunter.huntTargetPosition <= E.Config.temporaryProduction.huntingAreaByOwner.red.max);
 assert.equal(E.Transport.waterOwnerAt(huntingState, 0, hunter.huntTargetPosition), null);
@@ -320,9 +320,12 @@ assert.equal(E.Economy.setProfession(roleState, "red", 0, specialist.id, "agricu
 assert.equal(E.Economy.assignResidentJob(roleState, "red", 0, specialist.id, "agriculture"), true);
 assert.equal(E.Economy.workBonus(roleVillage, specialist, "agriculture"), 0.3);
 assert.equal(E.Economy.workBonus(roleVillage, specialist, "peche"), 0);
-for (let tick = 0; tick < 44; tick++) E.Economy.updateProduction(roleState, 0.1);
-assert.equal(specialist.workPhase, "harvesting");
-assert.equal(novice.workPhase, "harvesting");
+let specialistHarvested=false,noviceHarvested=false;
+for(let tick=0;tick<2000&&!(specialistHarvested&&noviceHarvested);tick++) {
+  E.Economy.updateProduction(roleState,.1);
+  specialistHarvested ||= specialist.workPhase==='harvesting';noviceHarvested ||= novice.workPhase==='harvesting';
+}
+assert.ok(specialistHarvested&&noviceHarvested);
 assert.equal(E.Economy.unassignResidentJob(roleState,"red",0,specialist.id),true);
 assert.equal(specialist.profession,"habitant");
 assert.equal(E.Economy.assignResidentJob(roleState,"red",0,specialist.id,"chasse"),false);
@@ -418,6 +421,7 @@ for (const fieldCount of [1, 2]) {
   E.Crops.place(harvest, "red", 1, 0, "ble");
   const worker = home.residents[0];
   E.Economy.assignResidentJob(harvest, "red", 0, worker.id, "agriculture");
+  worker.targetSlotIndex=0; // Vérifier le rendement du blé avec une destination fixée.
   produceUntil(harvest, () => worker.workPhase === "toVillage");
   assert.deepEqual(worker.carrying, { resource: "ble", amount: fieldCount });
   assert.equal(home.resources.ble, 0);
@@ -451,7 +455,7 @@ for (const dairyCount of [1, 2]) {
   assert.equal(home.resources.lait, 0);
   produceUntil(dairy, () => worker.workPhase === "villageStop");
   assert.ok(Math.abs(home.resources.lait - dairyCount * 1.3) < 1e-9);
-  assert.equal(worker.workPosition, 100);
+  assert.equal(worker.workPosition, worker.workHome.position);
   assert.equal(dairy.players.red.villages[0].resources.lait, 0);
   const beforeBirth = E.Economy.animalCounts(home).chevre;
   produceUntil(dairy, () => E.Economy.animalCounts(home).chevre > beforeBirth);

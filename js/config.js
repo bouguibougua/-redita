@@ -473,6 +473,12 @@
     residentPurchase: { gold: 50, resourceAmount: 50 },
     // TEMP_BALANCE_VALUE — zones de contact économiques en unités du plateau 3D.
     economicHitboxes: { cropRadius: .42, livestockRadius: .50, contactReach: .10 },
+    // TEMP_BALANCE_VALUE — dimensions et évitement provisoires, en unités du plateau 3D.
+    characterAI: { bodyRadius: .075, animalRadius: .09, gap: .012, columnHalfWidth: 1.3,
+      homeSearchRadius: .4, moveStep: .045, arrivalEpsilon: .0001, separationPasses: 32,
+      placementAttempts: 48, sampleAngle: 2.399963229728653,
+      steeringAngles: [0, Math.PI / 4, -Math.PI / 4, Math.PI / 2, -Math.PI / 2],
+      workAreaRatio: .72, attackContactRatio: .85, economicContactRatio: .98, goalTrackingRatio: 1.1 },
     boardProjection: { originZ: -4.35, positionScale: .087 },
     combat: {
       villageRetaliationDamagePerSecond: 5,

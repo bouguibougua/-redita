@@ -94,7 +94,7 @@
     animal.mission = mission;
     if(animal.badOmen)unit.badOmen=animal.badOmen;
     animal.unitId = unit.id;
-    state.units.push(unit);
+    state.units.push(unit); E.CharacterAI.spawn(state,unit);
     return unit;
   }
 

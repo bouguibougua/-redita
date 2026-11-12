@@ -69,7 +69,7 @@ for (const type of ["ble", "chataignier", "vignoble"]) {
   E.Crops.place(state, "red", 1, 0, "ble"); E.Crops.upgrade(state, "red", 1, 0);
   assert.equal(E.Economy.cropCount(village, "ble"), 2); assert.equal(E.Economy.cropYield(village, "ble"), 4);
   const worker = village.residents[0]; E.Economy.assignResidentJob(state, "red", 0, worker.id, "agriculture");
-  function until(test) { for (let i = 0; i < 2000 && !test(); i++) E.Economy.updateProduction(state, .1); assert.ok(test()); }
+  function until(test) { for (let i = 0; i < 2000 && !test(); i++) { if(worker.workPhase==='toField'&&!worker.aiGoal)worker.targetSlotIndex=0; E.Economy.updateProduction(state, .1); } assert.ok(test()); }
   until(() => worker.workPhase === "toVillage"); assert.deepEqual(worker.carrying, { resource: "ble", amount: 4 });
   E.Crops.upgrade(state, "red", 0, 1);
   assert.equal(worker.carrying.amount, 4, "La cargaison déjà chargée reste fixe");

@@ -52,6 +52,7 @@ async function run() {
     assert.match(publicBlue.colors[0],/^#[0-9a-f]{6}$/i);
     assert.equal(publicBlue.pendingColors.length,2);assert.equal(publicBlue.pendingColors[0].length,2);assert.ok(publicBlue.pendingColors.flat().every(color=>/^#[0-9a-f]{6}$/i.test(color)));
     assert.equal(selected.view.selections.length, 1); assert.equal(selected.view.selections[0].status, 'awaiting-activation');
+    assert.ok(selected.view.queue.every(offer=>!offer.legendIds.includes(request.legendId)), 'The relay removes the chosen legend from all queued offers of its owner');
     assert.equal(selected.view.pendingCount, 2); assert.equal(selected.view.pending.id, blueAccumulated.queue[1].id);
     result = guest.next(m => m.type === 'mythology' && m.accepted === false); guest.send(request); assert.equal((await result).reason, 'offer-unavailable');
     assert.ok(host.messages.filter(m => m.type === 'mythology').every(m =>

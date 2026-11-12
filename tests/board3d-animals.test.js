@@ -52,7 +52,7 @@ async function run() {
   const resident = { id: 1, profession: "agriculteur", mission: "disponible", donkey: false, unitId: null };
   const dog = { id: 1, type: "chien", mission: "disponible", hp: 40, unitId: null };
   const boar = { id: 2, type: "sanglier", mission: "disponible", hp: 80, unitId: null };
-  const village = { lane: 0, biome: "littoral", residents: [resident], animals: [dog, boar] };
+  const village = { ownerId: "red", lane: 0, biome: "littoral", residents: [resident], animals: [dog, boar] };
   const state = { units: [], players: { red: { id: "red", villages: [village] } } };
   renderer.updateUnits(state);
   assert.equal(renderer.models.size, 3, "Les animaux disponibles apparaissent au village avec les habitants.");
@@ -70,7 +70,7 @@ async function run() {
   resident.workPosition = 23;
   renderer.updateUnits(state);
   assert.equal(renderer.models.get("resident-red-1"), withDonkey, "L'âne suit son habitant au travail.");
-  assert.ok(Math.abs(withDonkey.position.z - (-4.35 + 23 / 100 * 8.7)) < 0.00001);
+  assert.ok(Math.abs(withDonkey.position.z - context.window.Eredita.Board.combatZ(23)) < 0.00001);
 
   resident.profession = "guerrier";
   resident.armor = "fer";

@@ -28,6 +28,28 @@
       unavailableDue.clear();
     }
     reset();
+    function available(player) {
+      const chosen = new Set(player.selections.map(item => item.legendId));
+      return E.Mythology.all.filter(item => !chosen.has(item.id) && (includeUnconfigured || activatable(item)));
+    }
+    function draw(pool, size = 2) {
+      const remaining = pool.map(item => item.id), ids = [];
+      while (remaining.length && ids.length < size) {
+        const index = Math.max(0, Math.min(remaining.length - 1, Math.floor(random() * remaining.length)));
+        ids.push(remaining.splice(index, 1)[0]);
+      }
+      return ids;
+    }
+    function repairQueue(player) {
+      const pool = available(player), allowed = new Set(pool.map(item => item.id));
+      player.queue = player.queue.flatMap(offer => {
+        const ids = offer.legendIds.filter(id => allowed.has(id));
+        const replacements = draw(pool.filter(item => !ids.includes(item.id)), 2 - ids.length);
+        const legendIds = [...ids, ...replacements];
+        return legendIds.length ? [{ ...offer, legendIds,
+          developmentOnly: legendIds.some(id => !activatable(E.Mythology.get(id))) }] : [];
+      });
+    }
     function sync(state) {
       if (!state || !['setup', 'running', 'ended'].includes(state.phase) || !Number.isFinite(state.elapsed) || state.elapsed < 0) return false;
       if (state.phase === 'setup') {
@@ -44,14 +66,13 @@
       if (phase !== state.phase || paused !== Boolean(state.paused)) revision++;
       phase = state.phase; paused = Boolean(state.paused); elapsed = state.elapsed;
       if (phase !== 'running' || paused) return false;
-      let pool;
       let changed = false;
       for (const [playerId, player] of Object.entries(players)) {
         if (elapsed < player.nextAt) continue;
-        pool ||= E.Mythology.all.filter(item => includeUnconfigured || activatable(item));
-        if (pool.length < 2) {
+        const pool = available(player);
+        if (!pool.length) {
           if (unavailableDue.get(playerId) !== player.nextAt) {
-            log({ reason: 'not-enough-configured-legends', playerId, due: player.nextAt });
+            log({ reason: player.selections.length ? 'legend-pool-exhausted' : 'not-enough-configured-legends', playerId, due: player.nextAt });
             unavailableDue.set(playerId, player.nextAt);
           }
           continue; // Garder l’échéance à traiter : aucune proposition n’est perdue si les données sont réparées.
@@ -59,9 +80,7 @@
         unavailableDue.delete(playerId);
         const count = Math.floor((elapsed - player.nextAt) / cfg.intervalSeconds) + 1;
         for (let i = 0; i < count; i++) {
-          const index = size => Math.max(0, Math.min(size - 1, Math.floor(random() * size)));
-          const leftIndex = index(pool.length), remaining = pool.filter((_, i) => i !== leftIndex);
-          const ids = [pool[leftIndex].id, remaining[index(remaining.length)].id];
+          const ids = draw(pool);
           player.queue.push({ id: `${epoch}:${playerId}:${++player.sequence}`, legendIds: ids, availableAt: player.nextAt,
             developmentOnly: ids.some(id => !activatable(E.Mythology.get(id))) });
           player.nextAt += cfg.intervalSeconds;
@@ -90,12 +109,13 @@
       if (phase !== 'running' || paused) return reject('match-inactive');
       const pending = player.queue[0];
       if (!pending || pending.id !== request.offerId) return reject('offer-unavailable');
+      if (player.selections.some(item => item.legendId === request.legendId)) return reject('legend-already-selected');
       if (!pending.legendIds.includes(request.legendId)) return reject('legend-not-offered');
       const developmentOnly = !activatable(E.Mythology.get(request.legendId));
       if (developmentOnly && !includeUnconfigured) return reject('legend-not-configured');
       const selection = { offerId: pending.id, legendId: request.legendId, selectedAt: elapsed,
         status: developmentOnly ? 'development-only' : 'awaiting-activation', developmentOnly };
-      player.selections.push(selection); player.queue.shift(); revision++;
+      player.selections.push(selection); player.queue.shift(); repairQueue(player); revision++;
       return { accepted: true, offerId: selection.offerId, selection: copy(selection) };
     }
     function requestActivation(playerId, request) {

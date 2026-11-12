@@ -5,8 +5,8 @@ function fixture(owner='red'){
  const E=ctx.window.Eredita,s=E.Board.createState('simplified');s.phase='running';s.preparationRemaining=0;s.reinforcementEpoch='proximity';E.MythologyEffects.init(s);
  for(const p of Object.values(s.players))for(const v of p.villages){v.biome='plaine';v.slots=E.Biomes.createSlots('plaine');v.terrain={};v.residents=[];v.population=0;}
  const v=s.players[owner].villages[0],r=E.Economy.addResident(v);E.Crops.place(s,owner,0,0,'ble');E.Economy.assignResidentMission(s,owner,0,r.id,'agriculture');
- const position=owner==='red'?2:98;r.workPosition=position;r.workPhase='toVillage';r.carrying={resource:'ble',amount:3};r.workTimer=.7;
- const enemy=E.Units.create(owner==='red'?'blue':'red',0,'habitant',{stance:'defense'});enemy.position=owner==='red'?3:97;s.units.push(enemy);
+ const position=owner==='red'?2:98;r.workPosition=position;r.workTerrainOffset=0;r.workHome={position:owner==='red'?0:100,lanePosition:0,terrainOffset:0};r.workPhase='toVillage';r.carrying={resource:'ble',amount:3};r.workTimer=.7;
+ const enemy=E.Units.create(owner==='red'?'blue':'red',0,'habitant',{stance:'defense'});enemy.position=owner==='red'?6:94;s.units.push(enemy);
  return {E,s,v,r,enemy};
 }
 for(const owner of ['red','blue'])test(`${owner}: farmer interrupts delivery, fights back, then resumes with cargo and wounds`,()=>{
@@ -18,7 +18,7 @@ for(const owner of ['red','blue'])test(`${owner}: farmer interrupts delivery, fi
 });
 test('leash prevents pursuit across the map; no production or engagement during pause/preparation',()=>{
  const {E,s,r,enemy}=fixture();s.paused=true;const before=JSON.stringify(s);E.Combat.update(s,1);assert.equal(JSON.stringify(s),before);s.paused=false;s.preparationRemaining=10;E.Combat.update(s,1);assert.equal(r.unitId,null);s.preparationRemaining=0;
- enemy.position=20;E.Combat.update(s,.1);assert.equal(r.unitId,null);enemy.position=6;E.Combat.update(s,.1);assert.ok(r.unitId);const u=s.units.find(u=>u.id===r.unitId);assert.ok(u.position>2);enemy.position=25;
+ enemy.position=20;E.Combat.update(s,.1);assert.equal(r.unitId,null);enemy.position=8;E.Combat.update(s,.1);assert.ok(r.unitId);const u=s.units.find(u=>u.id===r.unitId);assert.ok(u.position>2);enemy.position=25;
  for(let i=0;i<20&&r.unitId;i++)E.Combat.update(s,.1);assert.equal(r.unitId,null);assert.equal(r.workPosition,2);
 });
 test('new orders override automatic defense without duplicated units or stale job counts',()=>{

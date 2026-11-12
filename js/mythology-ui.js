@@ -123,7 +123,7 @@
       element('h2', '', 'Cristal des renforts'),
       element('p', '', 'Ouvrez le cristal, puis choisissez votre renfort.'));
     const selectors = element('div', 'mythology-crystal-selectors'), selects = [];
-    [leftId, rightId].forEach((id, index) => {
+    [leftId, rightId || leftId].forEach((id, index) => {
       const label = element('label', '', index ? 'Renfort de droite' : 'Renfort de gauche');
       const select = document.createElement('select'); select.dataset.side = index ? 'right' : 'left';
       E.Mythology.all.forEach(legend => {
@@ -152,6 +152,7 @@
     const notices = element('p', 'mythology-crystal-notices');
     root.append(heading, composition, status, selectors, controls, paletteInfo, notices);
     if (mode === 'match') { selectors.hidden = controls.hidden = paletteInfo.hidden = true; }
+    let single = mode === 'match' && rightId === null;
     let lastStatus = '', lastExposed = null, lastRun = 0, selected = null;
     let selectionLocked = false, selectionConfirmed = false, interactionEnabled = true;
     function clearChoice() {
@@ -165,6 +166,8 @@
       results.replaceChildren(); paletteInfo.replaceChildren();
       clearChoice();
       if (palette.left && palette.right) results.append(createPair(palette.left.id, { rightId: palette.right.id, variant: 'choice' }));
+      if (single) results.querySelector('[data-side="right"]')?.remove();
+      root.dataset.single = String(single);
       for (const side of ['left', 'right']) {
         const color = palette[side]; if (!color) continue;
         const row = element('p', '');
@@ -207,8 +210,8 @@
       stage.setAttribute('aria-disabled', String(!interactionEnabled || !state.ready || state.started)); stage.tabIndex = interactionEnabled && state.ready && !state.started ? 0 : -1;
       const text = state.error || (!state.palette.ready ? state.palette.issues.map(issue => issue.message).join(' ') :
         selectionLocked && selected ? (selectionConfirmed ? 'Renfort retenu : ' : 'Validation du choix : ') + E.Mythology.get(selected.legendId).name :
-        state.phase === 'loading' ? 'Préparation de l’aperçu…' : !state.started ? 'Cliquez sur le cristal pour découvrir les deux renforts' :
-        state.paused ? 'Animation en pause' : !state.playing ? 'Les deux renforts sont révélés' :
+        state.phase === 'loading' ? 'Préparation de l’aperçu…' : !state.started ? (single ? 'Découvrez votre dernier renfort disponible' : 'Cliquez sur le cristal pour découvrir les deux renforts') :
+        state.paused ? 'Animation en pause' : !state.playing ? (single ? 'Dernier renfort disponible' : 'Les deux renforts sont révélés') :
         state.cardsProgress >= 1 ? 'Choisissez un renfort' : state.seconds < state.cardsAppearAt ? 'Les deux énergies se rassemblent…' : 'Les cartes se déploient…');
       if (text !== lastStatus) { status.textContent = text; lastStatus = text; }
       stage.dataset.phase = state.phase;
@@ -244,7 +247,8 @@
     return { element: root, crystal, get selection() { return selected; },
       // La partie réarme la même instance : aucun nouveau renderer à chaque tête FIFO.
       setPair(left, right) {
-        const a = E.Mythology.get(left), b = E.Mythology.get(right);
+        single = right == null;
+        const a = E.Mythology.get(left), b = E.Mythology.get(right || left);
         if (!a || !b) throw new TypeError('Paire mythologique inconnue');
         selects[0].value = a.id; selects[1].value = b.id; change();
       },

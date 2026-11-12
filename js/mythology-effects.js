@@ -77,7 +77,7 @@
     if (!unit) throw new Error('Archétype d’invocation absent : ' + role);
     Object.assign(unit, stats, { isLegend: true, mythologyLegendId: id, maxHp: stats.hp ?? unit.maxHp,
       position: position ?? cfg().regionSpawnByOwner[playerId] });
-    state.units.push(unit); return unit;
+    state.units.push(unit); E.CharacterAI.spawn(state,unit); return unit;
   }
   function transformLupu(state, village, person) {
     village.residents = village.residents.filter(item => item !== person); village.population = humans(village).length;

@@ -14,7 +14,7 @@ for(const format of ['classic','simplified'])for(const owner of ['red','blue'])f
   assert.equal(v.hp,initial,'economic targets before village');
  }
  assert.ok(firstHit&&hits>=8);assert.ok(v.slots.every(x=>!x.content),'all four slots cleared');
- for(let i=0;i<1600&&v.hp===initial;i++)E.Combat.update(s,.05);assert.ok(v.hp<initial);assert.ok(Math.abs(u.terrainOffset)<.0001);
+ for(let i=0;i<1600&&v.hp===initial;i++)E.Combat.update(s,.05);assert.ok(v.hp<initial);assert.ok(Math.abs(u.terrainOffset)<=E.Config.characterAI.columnHalfWidth); // Place libre autour de la porte, dans la même colonne.
  assert.doesNotThrow(()=>JSON.stringify(s));
 });
 test('opposite-side slot is not hit remotely; target coordinates and corpse keep their offset',()=>{

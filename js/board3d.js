@@ -578,6 +578,8 @@
           figure.scale.setScalar((idleCount > cfg.crowdedThreshold ? cfg.crowdedIdleScale : cfg.idleScale) * (resident.mythologyScale || 1));
           figure.userData.aroundCampfire = true;
         }
+        const bodyPoint=E.CharacterAI.residentPoint(state,village,resident);
+        figure.position.set(laneX(bodyPoint.lanePosition)+(bodyPoint.terrainOffset||0)*terrainWidthScale(),.18,E.Board.combatZ(bodyPoint.position));
         syncLocomotion(figure, isWorker, true);
         figure.userData.mapTarget = {kind:'resident',playerId:player.id,lane:village.lane,residentId:resident.id};
         E.CharacterHUD?.sync(figure, E.CharacterHUD.getStats(state,village,resident), player.id === viewerId(state));
@@ -594,6 +596,8 @@
         figure.scale.setScalar(0.8);
         figure.rotation.y = facing === 1 ? 0 : Math.PI;
         figure.position.set(laneX(village.lane) + (-1 + column * 0.38) * terrainWidthScale(), 0.18, facing * (-2.55 - 0.67 + row * 0.31));
+        const bodyPoint=E.CharacterAI.animalPoint(state,village,animal);
+        figure.position.set(laneX(bodyPoint.lanePosition)+(bodyPoint.terrainOffset||0)*terrainWidthScale(),.18,E.Board.combatZ(bodyPoint.position));
         E.CharacterHUD?.sync(figure, {...animal,animalType:animal.type}, player.id === viewerId(state));
         active.add(key);
       });

@@ -155,3 +155,29 @@ test('public crystals expose pending color pairs, never offer IDs, and consume s
   a.finishActivation(activation.execution.activationId,true);assert.equal(a.publicView().blue.count,0);
   a.reset();assert.equal(a.publicView().blue.count,0);assert.equal(a.publicView().blue.pendingColors.length,0);
 });
+
+test('chosen legends disappear from queued and future offers only for their owner, including after activation',()=>{
+ const {authority:a,state}=fixture();state.elapsed=240;a.sync(state);
+ const blue=JSON.stringify(a.view('blue')),old=a.view('red'),chosen=old.pending.legendIds[0];
+ assert.ok(choose(a,'red').accepted);
+ assert.ok(a.view('red').queue.every(o=>!o.legendIds.includes(chosen)));
+ assert.deepEqual(Array.from(a.view('red').queue,o=>o.id),Array.from(old.queue.slice(1),o=>o.id),'repair keeps FIFO identities');
+ assert.equal(JSON.stringify(a.view('blue').queue),JSON.stringify(JSON.parse(blue).queue));
+ const result=a.requestActivation('red',{epoch:old.epoch,offerId:old.pending.id,target:{playerId:'red',lane:0}});
+ assert.equal(result.accepted,true);a.finishActivation(result.execution.activationId,true);
+ state.elapsed=360;a.sync(state);assert.ok(a.view('red').queue.every(o=>!o.legendIds.includes(chosen)));
+ const head=a.view('red').pending;assert.equal(choose(a,'red',{offerId:head.id,legendId:chosen}).reason,'legend-already-selected');
+});
+test('all eligible legends can be selected once, the last offer has one choice, exhaustion stops offers and reset clears history',()=>{
+ const {E,authority:a,state}=fixture();a.sync(state);const seen=new Set(),total=E.Mythology.all.filter(E.MythologyMatch.activatable).length;
+ for(let i=0;i<total;i++) {
+  const v=a.view('red');assert.ok(v.pending);if(i===total-1)assert.equal(v.pending.legendIds.length,1);
+  const result=choose(a,'red');assert.ok(result.accepted);assert.ok(!seen.has(result.selection.legendId));seen.add(result.selection.legendId);
+  state.elapsed+=120;a.sync(state);
+ }
+ assert.equal(seen.size,total);assert.equal(a.view('red').pending,null);
+ state.elapsed+=1200;a.sync(state);assert.equal(a.view('red').pending,null);
+ assert.ok(a.view('blue').queue.length>0);
+ a.sync({...state,phase:'setup',elapsed:0});a.sync({...state,elapsed:0,reinforcementEpoch:'match-two'});
+ assert.equal(a.view('red').selections.length,0);assert.equal(a.view('red').pending.legendIds.length,2);
+});
