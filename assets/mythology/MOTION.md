@@ -45,3 +45,19 @@ facultatif `visuals.motion`, sans changer le composant.
 ## Lion de Roccapina
 
 Vidéo fournie : `gemini_generated_video_7d268ef3.mp4`, copiée sans réencodage en `lion-roccapina-motion.mp4`. Le grimoire la lit muette avec les règles de visibilité et de mouvement réduit existantes. Le poster `lion-roccapina.webp` (1280×720) est extrait à t=1s via AVFoundation puis converti en WebP dans Canvas. Le modèle fourni `Roccapina 3d.glb` est intégré séparément au plateau. Aucune génération nouvelle.
+
+
+## U Mazzeru — tir à l’arc amélioré
+
+Le clip `Tir` de `assets/models/mazzeru.glb` est refait localement par
+`eredita3D/scripts/animate_mazzeru_attack.py`, après `prepare_mazzeru.py`.
+Les deux bras sont résolus par cinématique inverse : montée de l’arc,
+encoche, corde tirée vers la joue, visée, décoche et retour. Les pieds restent
+plantés. Le clip dure 1,25 s et la décoche intervient à 0,75 s.
+L’arc fourni est redressé ; le rendu ajoute une corde qui se tend, une flèche
+en main et une lueur rouge brève, synchronisées avec le projectile réel.
+Le logo de Mauvais Présage reste petit sous les pieds ; l’anneau d’équipe
+et les pictogrammes d’équipement restent visibles autour.
+Les originaux fournis ne sont pas modifiés. Aucune génération Tripo ou image
+ni aucun crédit n’est utilisé. Rapport :
+`eredita3D/logs/mazzeru-archery-validation.json`.

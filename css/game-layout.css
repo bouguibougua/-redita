@@ -666,3 +666,6 @@ body:has(#game-screen:not([hidden])) .mythology-match-widget:not(.is-open) { top
 @keyframes omen-health-gain { to { border-color:#ff233b;box-shadow:0 0 12px 4px #ff233baa; } }
 [data-effects-paused="true"] .omen-growth { animation-play-state:paused; }
 @media(prefers-reduced-motion:reduce) { .character-hp.omen-growth { animation:none;border-color:#ff233b; } }
+.character-floor.has-omen > b { display:flex;align-items:center;justify-content:center;height:23px; }
+.character-floor.has-omen .omen-logo { width:18px;height:18px; }
+.character-hp.omen-growth::after { content:attr(data-gain);position:absolute;left:50%;bottom:18px;transform:translateX(-50%);color:#ff626f;text-shadow:0 1px 3px #260107;font:bold 9px/1.1 system-ui;white-space:nowrap; }

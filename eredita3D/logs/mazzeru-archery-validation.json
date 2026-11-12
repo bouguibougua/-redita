@@ -1,0 +1,15 @@
+{
+  "clips": [
+    "Marche",
+    "Mort",
+    "Repos",
+    "Tir"
+  ],
+  "attack_frames": 30,
+  "fps": 24,
+  "duration": 1.25,
+  "release_seconds": 0.75,
+  "sha256": "8b9d6f7957ed2f80a5f20b33d73c1139ce2a528977739354597c6adb84471d2d",
+  "bytes": 1887084,
+  "method": "baked two-bone IK, draw/aim/release/recovery"
+}

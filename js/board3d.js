@@ -625,7 +625,11 @@
         const tip=new THREE.Mesh(new THREE.ConeGeometry(.015,.045,4),new THREE.MeshBasicMaterial({color:0xf0b7a5}));tip.rotation.x=Math.PI/2;tip.position.z=.13;arrow.add(shaft,tip);unitGroup.add(arrow);omenArrows.set(shot.id,arrow);
       }
       const target=E.BadOmen?.find(state,shot.targetKey),targetFigure=target&&unitModels.get(target.renderKey);
-      const from=new THREE.Vector3(laneX(shot.from.lanePosition)+(shot.from.terrainOffset||0)*terrainWidthScale(),cfg.projectileHeight,combatZ(shot.from.position));
+      if(!arrow.userData.launchOrigin){
+        const source=unitModels.get('unit-'+shot.sourceId),grip=source?.userData.mazzeru?.getShotOrigin();
+        arrow.userData.launchOrigin=grip?unitGroup.worldToLocal(grip):new THREE.Vector3(laneX(shot.from.lanePosition)+(shot.from.terrainOffset||0)*terrainWidthScale(),cfg.projectileHeight,combatZ(shot.from.position));
+      }
+      const from=arrow.userData.launchOrigin;
       const point=shot.target,to=targetFigure?targetFigure.position.clone().add(new THREE.Vector3(0,cfg.projectileHeight*.5,0)):
         new THREE.Vector3(laneX(point.lanePosition)+(point.terrainOffset||0)*terrainWidthScale(),cfg.projectileHeight,combatZ(point.position));
       arrow.position.copy(from).lerp(to,Math.max(0,Math.min(1,progress)));arrow.position.y+=Math.sin(progress*Math.PI)*cfg.projectileArc;

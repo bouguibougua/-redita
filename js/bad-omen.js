@@ -27,12 +27,17 @@
   return Math.hypot(((b.lanePosition-a.lanePosition)*spacing+(b.terrainOffset||0)-(a.terrainOffset||0))*width,E.Board.combatZ(b.position)-E.Board.combatZ(a.position))/E.Config.boardProjection.positionScale;
  }
  function setHp(s,t,hp){const st=stats(s,t);if(t.kind==='resident'&&!t.entity.isLegend)t.entity.combatHealthRatio=Math.max(0,hp)/st.maxHp;else t.entity.hp=Math.max(0,hp);}
- function applyMark(s,t,owner){const old=markOf(s,t);const mark=old||{ownerId:owner};t.entity.badOmen=mark;const c=canonical(s,t);if(c)c.badOmen=mark;}
+ function sourceInfo(s,source){
+  if(typeof source==='string')return {ownerId:source}; // Ancien snapshot : aucun auteur ne peut être deviné.
+  const unit=source.sourceKey?null:source.id!==undefined?source:s.units.find(u=>u.id===source.sourceId&&u.ownerId===source.ownerId);
+  return {ownerId:source.ownerId,sourceKey:source.sourceKey||(unit?unitKey(unit):null)};
+ }
+ function applyMark(s,t,source){const old=markOf(s,t);const mark=old||sourceInfo(s,source);t.entity.badOmen=mark;const c=canonical(s,t);if(c)c.badOmen=mark;}
  function onDeath(s,entity,ownerId,fallback){const mark=entity.badOmen||fallback?.badOmen;if(!mark)return;
   delete entity.badOmen;if(fallback)delete fallback.badOmen;
-  for(const u of s.units)if(cfg().growthRecipients==='living-allied-mazzeri'&&u.hp>0&&u.ownerId===mark.ownerId&&u.ownerId!==ownerId&&u.mythologyLegendId==='u-mazzeru'){
-   u.maxHp+=cfg().maxHpPerDeath;u.omenGrowthTimer=cfg().growthPulseDuration;u.omenGrowthSequence=(u.omenGrowthSequence||0)+1;
-  }
+  const source=s.units.find(u=>u.hp>0&&u.ownerId===mark.ownerId&&u.ownerId!==ownerId&&unitKey(u)===mark.sourceKey&&
+   (u.mythologyLegendId==='u-mazzeru'||u.mythologyLegendId==='u-surpatore'&&u.mythologyForm==='vampire'));
+  if(source){source.maxHp+=cfg().maxHpPerDeath;source.omenGrowthTimer=cfg().growthPulseDuration;source.omenGrowthSequence=(source.omenGrowthSequence||0)+1;}
  }
  function removeLocal(s,t){
   if(t.kind==='resident')E.Economy.removeResident(s,t.ownerId,t.village.lane,t.entity.id);
@@ -48,8 +53,8 @@
    }
   }
  }
- function hit(s,sourceOwner,targetKey,amount){const t=find(s,targetKey);if(!t)return false;
-  const hp=stats(s,t).hp;if(t.kind==='village'){t.entity.hp=Math.max(0,hp-amount);t.entity.damageSmoke=E.Config.visualEffects.structureSmokeDuration;return true;}applyMark(s,t,sourceOwner);setHp(s,t,hp-amount);
+ function hit(s,source,targetKey,amount){const t=find(s,targetKey);if(!t)return false;
+  const hp=stats(s,t).hp;if(t.kind==='village'){t.entity.hp=Math.max(0,hp-amount);t.entity.damageSmoke=E.Config.visualEffects.structureSmokeDuration;return true;}applyMark(s,t,source);setHp(s,t,hp-amount);
   t.entity.visualHitSequence=(t.entity.visualHitSequence||0)+1;t.entity.visualHitTimer=E.Config.visualEffects.unitHitFlashDuration;
   if(t.kind!=='unit'&&hp-amount<=0){
    if(t.kind==='resident'&&E.MythologyEffects?.protectWorker(s,t.village,t.entity)&&E.MythologyEffects.protectionActive(s,t.ownerId)){delete t.entity.combatHealthRatio;return true;}
@@ -58,11 +63,11 @@
   return true;
  }
  function shoot(s,u,t){if(!s.badOmen)init(s);const duration=Math.max(cfg().minFlightDuration,distance(s,u,t.point)/cfg().projectileSpeed);
-  s.badOmen.projectiles.push({id:s.badOmen.nextProjectileId++,sourceId:u.id,ownerId:u.ownerId,targetKey:t.key,from:{position:u.position,lanePosition:u.lanePosition,terrainOffset:u.terrainOffset||0},target:{...t.point},duration,remaining:duration+cfg().releaseDelay,damage:u.damage});
+  s.badOmen.projectiles.push({id:s.badOmen.nextProjectileId++,sourceId:u.id,sourceKey:unitKey(u),ownerId:u.ownerId,targetKey:t.key,from:{position:u.position,lanePosition:u.lanePosition,terrainOffset:u.terrainOffset||0},target:{...t.point},duration,remaining:duration+cfg().releaseDelay,damage:u.damage});
   u.visualAttackSequence=(u.visualAttackSequence||0)+1;u.visualAttackTimer=E.Config.visualEffects.unitAttackDuration;u.visualAttackTarget={...t.point};u.attackCooldown=cfg().shotInterval;
  }
  function updateProjectiles(s,delta){if(!s.badOmen)return;
-  for(const p of s.badOmen.projectiles){const t=find(s,p.targetKey);if(!t){p.remaining=0;continue;}p.target={...t.point};p.remaining-=delta;if(p.remaining<=1e-9)hit(s,p.ownerId,p.targetKey,p.damage);}
+  for(const p of s.badOmen.projectiles){const t=find(s,p.targetKey);if(!t){p.remaining=0;continue;}p.target={...t.point};p.remaining-=delta;if(p.remaining<=1e-9)hit(s,p,p.targetKey,p.damage);}
   s.badOmen.projectiles=s.badOmen.projectiles.filter(p=>p.remaining>1e-9);
  }
  function mazzeruTurn(s,u){

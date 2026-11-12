@@ -138,11 +138,9 @@
       development: { includeUnconfigured: false, logs: true }
     },
     badOmen: { thresholdRatio: .15, maxHpPerDeath: 15, shotInterval: 9,
-      // TEMP_BALANCE_VALUE — partage entre plusieurs Mazzeri non précisé : tous les alliés vivants.
-      growthRecipients: "living-allied-mazzeri",
       // TEMP_BALANCE_VALUE — vitesse et durée minimum de vol ; aucun impact instantané.
-      projectileSpeed: 80, minFlightDuration: .2, releaseDelay: .4, growthPulseDuration: 1.1,
-      icon: "assets/mythology/mauvais-presage.png", projectileHeight: .48, projectileArc: .15 },
+      projectileSpeed: 80, minFlightDuration: .2, releaseDelay: .75, growthPulseDuration: 1.1,
+      icon: "assets/mythology/mauvais-presage.png", markerSize: .28, projectileHeight: .48, projectileArc: .15 },
     reinforcementPowers: {
       mazzeruHp: 45, mazzeruDamage: 15,
       // TEMP_BALANCE_VALUE — vitesse de marche non précisée, cadence fixée à 9 s.
@@ -559,9 +557,12 @@
         movementEpsilon: 0.0001,
         clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Droit", "Revers"], death: "Mort" }
       },
-      // TEMP_BALANCE_VALUE — échelle et transitions visuelles du Lion armé, sans effet sur ses statistiques.
-      mazzeru: { src: "assets/models/mazzeru.glb?v=omen-1", height: .60, canonicalHeight: 1.8, markerRadius: .12,
-        attackDuration: .8, walkTimeScale: 1, crossFade: .08, maxFrameDelta: .05,
+      // TEMP_BALANCE_VALUE — échelles et transitions visuelles des invocations, sans effet sur leurs statistiques.
+      mazzeru: { src: "assets/models/mazzeru.glb?v=archery-2", height: .60, canonicalHeight: 1.8, markerRadius: .12,
+        attackDuration: 1.25,
+        // Réglages visuels de l'encoche, de la corde et de la lueur ; cadence et dégâts inchangés.
+        bowVisual: { arrowLength: .28, stringPull: .30, stringBand: .025, glowSize: .12, releaseFlash: .12 },
+        walkTimeScale: 1, crossFade: .08, maxFrameDelta: .05,
         clips: { idle: "Repos", walk: "Marche", attacks: ["Tir"], death: "Mort" } },
       roccapina: { src: "assets/models/lion-roccapina.glb?v=armed-1", height: .60, canonicalHeight: 1.8, markerRadius: .12,
         attackDuration: .72, walkTimeScale: 1, crossFade: .08, maxFrameDelta: .05,

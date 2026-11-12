@@ -56,12 +56,12 @@
       const canvas=document.createElement('canvas');canvas.width=256;canvas.height=80;
       const health=new THREE.Sprite(new THREE.SpriteMaterial({map:texture(canvas),transparent:true,depthWrite:false,depthTest:false}));
       health.name='character-health';health.userData.sharedGeometry=true;health.scale.set(cfg.healthWidth,cfg.healthHeight,1);health.renderOrder=25;
-      const omen=new THREE.Mesh(planeGeometry,new THREE.MeshBasicMaterial({map:omenTexture,transparent:true,depthWrite:false,side:THREE.DoubleSide}));omen.name='mauvais-presage-logo';omen.userData.sharedGeometry=true;omen.rotation.x=-Math.PI/2;omen.position.y=.024;omen.scale.setScalar(cfg.ringSize);omen.renderOrder=4;
+      const omen=new THREE.Mesh(planeGeometry,new THREE.MeshBasicMaterial({map:omenTexture,transparent:true,depthWrite:false,side:THREE.DoubleSide}));omen.name='mauvais-presage-logo';omen.userData.sharedGeometry=true;omen.rotation.x=-Math.PI/2;omen.position.y=.024;omen.scale.setScalar(E.Config.badOmen.markerSize);omen.renderOrder=4;
       group.add(floor,omen,health);figure.add(group);hud={group,floor,omen,health,canvas,height};figure.userData.characterHud=hud;
     }
     hud.group.visible=!figure.userData.dying;hud.group.quaternion.copy(figure.quaternion).invert();hud.group.scale.set(1/figure.scale.x,1/figure.scale.y,1/figure.scale.z);
     hud.floor.material.map=ringTexture(person,allied);hud.health.position.y=hud.height*figure.scale.y+cfg.healthGap;
-    const maxHp=Math.max(1,Number(person.maxHp)||1),hp=Math.max(0,Number(person.hp)||0);hud.omen.visible=Boolean(person.badOmen);hud.floor.visible=!person.badOmen;hud.health.visible=hp>0&&(Boolean(person.badOmen)||hp<maxHp-.0001||person.omenGrowthTimer>0);
+    const maxHp=Math.max(1,Number(person.maxHp)||1),hp=Math.max(0,Number(person.hp)||0);hud.omen.visible=Boolean(person.badOmen);hud.floor.visible=true;hud.health.visible=hp>0&&(Boolean(person.badOmen)||hp<maxHp-.0001||person.omenGrowthTimer>0);
     if(hud.health.visible)drawHealth(hud,hp,maxHp,allied,person);
     Object.assign(hud.group.userData,{allied,badOmen:Boolean(person.badOmen),omenThreshold:person.badOmen?maxHp*E.Config.badOmen.thresholdRatio:0,profession:person.profession||'habitant',hp,maxHp,toolTier:person.isLegend?0:tierOf(person.tool),armorTier:person.isLegend?0:tierOf(person.armor,true)});
   }
@@ -71,7 +71,7 @@
   }
   function html(person,allied) {
     const cfg=E.Config.characterHud,maxHp=Math.max(1,Number(person.maxHp)||1),hp=Math.max(0,Number(person.hp)||0),tool=person.isLegend?0:tierOf(person.tool),armor=person.isLegend?0:tierOf(person.armor,true);
-    return `<span class="character-floor ${allied?'allied':'enemy'}" aria-hidden="true"><b>${person.badOmen?`<img class="omen-logo" src="${E.Config.badOmen.icon}" alt="Mauvais Présage">`:iconOf(person)}</b><i class="character-gear">${svg(false,cfg.tiers[tool])}${svg(true,cfg.tiers[armor])}</i></span>${hp>0&&(person.badOmen||hp<maxHp-.0001||person.omenGrowthTimer>0)?`<span class="character-hp ${allied?'allied':'enemy'} ${person.omenGrowthTimer>0?'omen-growth':''}" role="meter" aria-label="Points de vie" aria-valuenow="${Math.ceil(hp)}" aria-valuemax="${Math.ceil(maxHp)}"><b>${Math.ceil(hp)}/${Math.ceil(maxHp)}</b><i style="width:${Math.min(1,hp/maxHp)*100}%"></i>${person.badOmen?`<em class="omen-threshold" style="width:${E.Config.badOmen.thresholdRatio*100}%"></em>`:""}</span>`:''}`;
+    return `<span class="character-floor ${allied?'allied':'enemy'} ${person.badOmen?'has-omen':''}" aria-hidden="true"><b>${person.badOmen?`<img class="omen-logo" src="${E.Config.badOmen.icon}" alt="Mauvais Présage">`:iconOf(person)}</b><i class="character-gear">${svg(false,cfg.tiers[tool])}${svg(true,cfg.tiers[armor])}</i></span>${hp>0&&(person.badOmen||hp<maxHp-.0001||person.omenGrowthTimer>0)?`<span class="character-hp ${allied?'allied':'enemy'} ${person.omenGrowthTimer>0?'omen-growth':''}" data-gain="+${E.Config.badOmen.maxHpPerDeath} PV max" role="meter" aria-label="Points de vie" aria-valuenow="${Math.ceil(hp)}" aria-valuemax="${Math.ceil(maxHp)}"><b>${Math.ceil(hp)}/${Math.ceil(maxHp)}</b><i style="width:${Math.min(1,hp/maxHp)*100}%"></i>${person.badOmen?`<em class="omen-threshold" style="width:${E.Config.badOmen.thresholdRatio*100}%"></em>`:""}</span>`:''}`;
   }
   E.CharacterHUD={init,getStats,sync,dispose,html,tierOf};
 }());

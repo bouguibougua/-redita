@@ -265,7 +265,7 @@
     const point=target.point;
     if(Math.abs(unit.lanePosition-point.lanePosition)>.001){moveLaterally(state,unit,point.lanePosition,delta);E.Transport.updateUnitWaterState(state,unit);return true;}
     if(E.BadOmen.distance(state,unit,point)>attackRange(unit)){moveToFieldPoint(state,unit,{offset:point.terrainOffset||0,position:point.position},delta);return true;}
-    if(unit.attackCooldown<=0){triggerAttackVisual(unit,point);events.push({type:'omen',ownerId:unit.ownerId,key:target.key,amount:unit.damage});unit.attackCooldown=attackInterval(unit);}
+    if(unit.attackCooldown<=0){triggerAttackVisual(unit,point);events.push({type:'omen',source:unit,key:target.key,amount:unit.damage});unit.attackCooldown=attackInterval(unit);}
     return true;
   }
 
@@ -374,7 +374,7 @@
     });
 
     damageEvents.forEach((event) => {
-      if(event.type==='omen'){E.BadOmen.hit(state,event.ownerId,event.key,event.amount);return;}
+      if(event.type==='omen'){E.BadOmen.hit(state,event.source,event.key,event.amount);return;}
       event.target.hp = Math.max(0, event.target.hp - event.amount);
       if (event.type === "unit" && event.amount > 0) triggerHitVisual(event.target);
       if (event.type === "village" && event.amount > 0) event.target.damageSmoke = E.Config.visualEffects.structureSmokeDuration;
