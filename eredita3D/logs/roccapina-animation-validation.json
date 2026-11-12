@@ -1,0 +1,18 @@
+{
+  "sources": {
+    "/Users/robin/Downloads/Roccapina 3d.glb": "dc48b764d859f3f45e97e508acae4497b7ceb7df28f6735e677d9e750ab74d14",
+    "/Users/robin/Downloads/épée lion 3dl.glb": "15226309beff5216823dc43c7b819cb32cc708c7600eb7df441ac4e1fbbd9628"
+  },
+  "weapon_source_triangles": 1957829,
+  "weapon_triangles": 6000,
+  "bytes": 7338372,
+  "canonical_height": 1.8,
+  "clips": [
+    "Frappe_Droite",
+    "Frappe_Revers",
+    "Marche",
+    "Mort",
+    "Repos"
+  ],
+  "sha256": "ec975b50ab2e4b509ae633a911a4ec2a4aa014320a2f4b2b6352461dd094dcc2"
+}

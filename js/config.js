@@ -541,10 +541,10 @@
         movementEpsilon: 0.0001,
         clips: { idle: "Repos", walk: "Marche", attacks: ["Coup_Droit", "Revers"], death: "Mort" }
       },
-      // TEMP_BALANCE_VALUE — échelle et rythme d'animation purement visuels.
-      // TEMP_BALANCE_VALUE — dimensions et mouvements visuels du modèle fourni sans clips.
-      roccapina: { src: "assets/models/lion-roccapina.glb", height: 1.05, markerRadius: .18,
-        attackDuration: .65, attackLean: .2, walkFrequency: 8, walkBob: .018, maxFrameDelta: .05 },
+      // TEMP_BALANCE_VALUE — échelle et transitions visuelles du Lion armé, sans effet sur ses statistiques.
+      roccapina: { src: "assets/models/lion-roccapina.glb?v=armed-1", height: .60, canonicalHeight: 1.8, markerRadius: .12,
+        attackDuration: .72, walkTimeScale: 1, crossFade: .08, maxFrameDelta: .05,
+        clips: { idle: "Repos", walk: "Marche", attacks: ["Frappe_Droite", "Frappe_Revers"], death: "Mort" } },
       orcu: {
         src: "assets/models/orcu.glb?v=1-9b79e8bc4d1e", scale: 0.31,
         attackDuration: 0.9, walkTimeScale: 0.35, crossFade: 0.08,

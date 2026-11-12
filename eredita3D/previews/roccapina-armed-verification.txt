@@ -1,0 +1,12 @@
+Lion armé — 12 novembre 2026
+
+Hauteur du corps réduite de 1,05 à 0,60 unité, pieds au niveau du plateau. Épée fournie : 1 957 829 → 6 000 triangles ; textures plafonnées à 1024 px ; fichier complet environ 7 Mo. Les deux sources restent intactes (empreintes vérifiées pendant la préparation).
+
+Cinq clips : Repos, Marche, Frappe_Droite, Frappe_Revers, Mort. Les deux attaques alternent sur le signal réel de combat ; préparation/coupe/retour en garde, arme liée à la main droite. Corrigés après inspection : contrôle Icosphere caché faussant la taille, pose de base, prise et sens de l’épée.
+
+Roccapina : GLB, illustration, fiche, invocation 145/25, regroupement, taille réduite, épée fournie liée à la main, marche, frappe droite/revers sur coup réel et pause validés.
+
+npm test : réussi.
+Aucun changement des 145 PV, 25 dégâts par coup ou du regroupement allié. Aucune génération Tripo.
+
+163 contrôles : marche et orientation aller/retour, diagonales, deux camps, métiers/légendes/animaux, arrêt, pause et rendu sans mutation validés.
