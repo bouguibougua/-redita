@@ -583,9 +583,9 @@
       },
       // TEMP_BALANCE_VALUE — rythme visuel des griffes ; dégâts et cadence du combat inchangés.
       lupu: {
-        src: "assets/models/lupu_mannaru.glb?v=fluid-2", scale: 0.31,
+        src: "assets/models/lupu_mannaru.glb?v=cross-3", scale: 0.31,
         attackDuration: 0.9, walkTimeScale: 1.6,
-        clips: { idle: "Repos", walk: "Quatre_Pattes", attacks: ["Griffes_Croisees"], death: "Mort" }
+        clips: { idle: "Repos", walk: "Quatre_Pattes", guard: "Garde_Debout", attacks: ["Griffes_Croisees"], death: "Mort" }
       },
       // TEMP_BALANCE_VALUE — rendu de la forme vampire ; statistiques dans reinforcementPowers.
       surpatore: {

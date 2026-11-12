@@ -101,68 +101,71 @@ def lupu_gait(rig,t):
   hand=rig.pose.bones[side+'Hand'];direction=Vector((sign*.05,-1,-.2));ns['aim'](side+'Hand',hand.head+direction*.15);ns['orient_palm'](side+'Hand',direction,(0,0,-1),1)
  bpy.context.view_layer.update()
 
-report_path=ROOT/'eredita3D/logs/legend-motion-polish.json'
-report=json.loads(report_path.read_text()) if report_path.exists() else {}
-for kind,filename in FILES.items():
- path=ROOT/'assets/models'/filename;source=path.read_bytes()
- if read_glb(source)[0].get('asset',{}).get('extras',{}).get('legendMotionPolish')==1:
-  print('ALREADY_POLISHED',kind,flush=True);continue
- bpy.ops.wm.read_factory_settings(use_empty=True)
- bpy.ops.import_scene.gltf(filepath=str(path));scene=bpy.context.scene;scene.render.fps=24
- rig=next(o for o in scene.objects if o.type=='ARMATURE')
- for track in rig.animation_data.nla_tracks:track.mute=True
- originals=list(bpy.data.actions);walk='Quatre_Pattes' if kind=='lupu' else 'Marche';data={}
- idle=next(a for a in originals if a.name=='Repos');rig.animation_data.action=idle;scene.frame_set(0);base=sample_pose(rig)
- for action in originals:
-  name=action.name;rig.animation_data.action=action;start,end=action.frame_range;frames=max(1,round(end-start));poses=[]
-  for frame in range(frames+1):
-   scene.frame_set(math.floor(start+frame),subframe=(start+frame)%1);bpy.context.view_layer.update()
-   if kind=='roccapina':
-    t=frame/frames
-    def smooth(a,b,x):
-     u=max(0,min(1,(x-a)/(b-a)));return u*u*(3-2*u)
-    amount=1
-    if name.startswith('Frappe'):amount=1-smooth(0,.23,t)*(1-smooth(.60,1,t))
-    elif name=='Mort':amount=1-smooth(.1,.7,t)
-    relaxed_guard(rig,amount)
-   pose=sample_pose(rig)
-   for bone,(q,p) in pose.items():
-    if kind!='lupu' and name==walk and (bone.endswith('UpLeg') or bone.endswith('Leg')):
-     neutral=base[bone][0];delta=neutral.conjugated()@q
-     if delta.w<0:delta.negate()
-     q=neutral@Quaternion(delta.to_exponential_map()*(1.55 if bone.endswith('UpLeg') else 1.2));pose[bone]=(q,p)
-    if poses:pose[bone]=(short(pose[bone][0],poses[-1][bone][0]),p)
-   poses.append(pose)
-  loop=name in ['Repos',walk]
-  if loop:poses[-1]={bone:(short(q,poses[-2][bone][0]),p.copy()) for bone,(q,p) in poses[0].items()}
-  data[name]={'duration':(end-start)/24,'poses':poses,'loop':loop}
- rig.animation_data.action=None
- for track in list(rig.animation_data.nla_tracks):rig.animation_data.nla_tracks.remove(track)
- for action in originals:bpy.data.actions.remove(action)
- scene.render.fps=FPS;seams={};generated={}
- for name,info in data.items():
-  action=bpy.data.actions.new(name);rig.animation_data.action=action;count=round(info['duration']*FPS);first=None;last=None
-  for frame in range(count+1):
-   scene.frame_set(frame);t=frame/count
-   if kind=='lupu' and name==walk:lupu_gait(rig,t)
-   else:
+def main():
+ report_path=ROOT/'eredita3D/logs/legend-motion-polish.json'
+ report=json.loads(report_path.read_text()) if report_path.exists() else {}
+ for kind,filename in FILES.items():
+  path=ROOT/'assets/models'/filename;source=path.read_bytes()
+  if read_glb(source)[0].get('asset',{}).get('extras',{}).get('legendMotionPolish')==1:
+   print('ALREADY_POLISHED',kind,flush=True);continue
+  bpy.ops.wm.read_factory_settings(use_empty=True)
+  bpy.ops.import_scene.gltf(filepath=str(path));scene=bpy.context.scene;scene.render.fps=24
+  rig=next(o for o in scene.objects if o.type=='ARMATURE')
+  for track in rig.animation_data.nla_tracks:track.mute=True
+  originals=list(bpy.data.actions);walk='Quatre_Pattes' if kind=='lupu' else 'Marche';data={}
+  idle=next(a for a in originals if a.name=='Repos');rig.animation_data.action=idle;scene.frame_set(0);base=sample_pose(rig)
+  for action in originals:
+   name=action.name;rig.animation_data.action=action;start,end=action.frame_range;frames=max(1,round(end-start));poses=[]
+   for frame in range(frames+1):
+    scene.frame_set(math.floor(start+frame),subframe=(start+frame)%1);bpy.context.view_layer.update()
+    if kind=='roccapina':
+     t=frame/frames
+     def smooth(a,b,x):
+      u=max(0,min(1,(x-a)/(b-a)));return u*u*(3-2*u)
+     amount=1
+     if name.startswith('Frappe'):amount=1-smooth(0,.23,t)*(1-smooth(.60,1,t))
+     elif name=='Mort':amount=1-smooth(.1,.7,t)
+     relaxed_guard(rig,amount)
+    pose=sample_pose(rig)
+    for bone,(q,p) in pose.items():
+     if kind!='lupu' and name==walk and (bone.endswith('UpLeg') or bone.endswith('Leg')):
+      neutral=base[bone][0];delta=neutral.conjugated()@q
+      if delta.w<0:delta.negate()
+      q=neutral@Quaternion(delta.to_exponential_map()*(1.55 if bone.endswith('UpLeg') else 1.2));pose[bone]=(q,p)
+     if poses:pose[bone]=(short(pose[bone][0],poses[-1][bone][0]),p)
+    poses.append(pose)
+   loop=name in ['Repos',walk]
+   if loop:poses[-1]={bone:(short(q,poses[-2][bone][0]),p.copy()) for bone,(q,p) in poses[0].items()}
+   data[name]={'duration':(end-start)/24,'poses':poses,'loop':loop}
+  rig.animation_data.action=None
+  for track in list(rig.animation_data.nla_tracks):rig.animation_data.nla_tracks.remove(track)
+  for action in originals:bpy.data.actions.remove(action)
+  scene.render.fps=FPS;seams={};generated={}
+  for name,info in data.items():
+   action=bpy.data.actions.new(name);rig.animation_data.action=action;count=round(info['duration']*FPS);first=None;last=None
+   for frame in range(count+1):
+    scene.frame_set(frame);t=frame/count
+    if kind=='lupu' and name==walk:lupu_gait(rig,t)
+    else:
+     for b in rig.pose.bones:
+      values=[pose[b.name] for pose in info['poses']];q,p=interpolate(values,t,info['loop']);b.rotation_quaternion=q;b.location=p
+    if frame==0:first=sample_pose(rig)
+    if frame==count:last=sample_pose(rig)
     for b in rig.pose.bones:
-     values=[pose[b.name] for pose in info['poses']];q,p=interpolate(values,t,info['loop']);b.rotation_quaternion=q;b.location=p
-   if frame==0:first=sample_pose(rig)
-   if frame==count:last=sample_pose(rig)
-   for b in rig.pose.bones:
-    b.keyframe_insert('rotation_quaternion',frame=frame,group=b.name);b.keyframe_insert('location',frame=frame,group=b.name)
-  if info['loop']:seams[name]={'rotation':max(first[n][0].rotation_difference(last[n][0]).angle for n in first),'position':max((first[n][1]-last[n][1]).length for n in first)}
-  for layer in action.layers:
-   for strip in layer.strips:
-    for bag in strip.channelbags:
-     for curve in bag.fcurves:
-      for key in curve.keyframe_points:key.interpolation='LINEAR'
-  generated[name]=action;rig.animation_data.action=None;track=rig.animation_data.nla_tracks.new();track.name=name;track.strips.new(name,0,action);track.mute=True
- rig.animation_data.action=generated['Repos'];scene.frame_set(0)
- bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_animations=True,export_animation_mode='ACTIONS',export_frame_range=False,export_force_sampling=True,export_nla_strips=True,export_extras=True,export_cameras=False,export_lights=False,export_image_format='AUTO')
- polished,images=preserve_images(source,path.read_bytes());path.write_bytes(polished)
- for seam in seams.values():assert seam['rotation']<.002 and seam['position']<.0001,seam
- report[kind]={'inputSha256':hashlib.sha256(source).hexdigest(),'sha256':hashlib.sha256(polished).hexdigest(),'bytes':len(polished),'fps':FPS,'clips':{n:info['duration'] for n,info in data.items()},'loops':seams,'originalImageSha256':images}
- print('POLISHED',kind,json.dumps(report[kind]),flush=True)
-report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+     b.keyframe_insert('rotation_quaternion',frame=frame,group=b.name);b.keyframe_insert('location',frame=frame,group=b.name)
+   if info['loop']:seams[name]={'rotation':max(first[n][0].rotation_difference(last[n][0]).angle for n in first),'position':max((first[n][1]-last[n][1]).length for n in first)}
+   for layer in action.layers:
+    for strip in layer.strips:
+     for bag in strip.channelbags:
+      for curve in bag.fcurves:
+       for key in curve.keyframe_points:key.interpolation='LINEAR'
+   generated[name]=action;rig.animation_data.action=None;track=rig.animation_data.nla_tracks.new();track.name=name;track.strips.new(name,0,action);track.mute=True
+  rig.animation_data.action=generated['Repos'];scene.frame_set(0)
+  bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_animations=True,export_animation_mode='ACTIONS',export_frame_range=False,export_force_sampling=True,export_nla_strips=True,export_extras=True,export_cameras=False,export_lights=False,export_image_format='AUTO')
+  polished,images=preserve_images(source,path.read_bytes());path.write_bytes(polished)
+  for seam in seams.values():assert seam['rotation']<.002 and seam['position']<.0001,seam
+  report[kind]={'inputSha256':hashlib.sha256(source).hexdigest(),'sha256':hashlib.sha256(polished).hexdigest(),'bytes':len(polished),'fps':FPS,'clips':{n:info['duration'] for n,info in data.items()},'loops':seams,'originalImageSha256':images}
+  print('POLISHED',kind,json.dumps(report[kind]),flush=True)
+ report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+
+if __name__=='__main__':main()

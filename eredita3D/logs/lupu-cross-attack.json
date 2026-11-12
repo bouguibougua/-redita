@@ -1,0 +1,38 @@
+{
+  "inputSha256": "cb6771d8750dafdb6b55bcb72c80899a639714d76adcfd89fc8f1b4513ebcec5",
+  "sha256": "b2b73b9151d12660e42623bd5b724ffbd73416b6132d6256b7525c70dddc450b",
+  "bytes": 1721260,
+  "fps": 60,
+  "clips": [
+    "Garde_Debout",
+    "Griffes_Croisees",
+    "Mort",
+    "Quatre_Pattes",
+    "Repos"
+  ],
+  "poses": {
+    "Griffes_Croisees": {
+      "duration": 1.0,
+      "headMin": 1.463536262512207,
+      "headMax": 1.4700003862380981,
+      "footDrift": 0.0
+    },
+    "Garde_Debout": {
+      "duration": 2.0,
+      "headMin": 1.468551754951477,
+      "headMax": 1.4714316129684448,
+      "footDrift": 0.0
+    }
+  },
+  "clipDurations": {
+    "Garde_Debout": 2,
+    "Griffes_Croisees": 1,
+    "Mort": 1.75,
+    "Quatre_Pattes": 1,
+    "Repos": 2
+  },
+  "originalImageSha256": [
+    "939e102b7e4ad1fec51112ce2752f7713249888f083abf89e4072207d0913cc0"
+  ],
+  "attack": "simultaneous cross slash, upright guard"
+}

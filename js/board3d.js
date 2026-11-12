@@ -531,6 +531,7 @@
         figure.rotation.y = Math.atan2(laneX(unit.visualAttackTarget.lanePosition)+(unit.visualAttackTarget.terrainOffset||0)*terrainWidthScale() - figure.position.x,
           combatZ(unit.visualAttackTarget.position) - figure.position.z);
       }
+      figure.userData.lupu?.setCombatStance?.(!moving && Boolean(unit.visualAttackTarget) && unit.attackCooldown>0 && !unit.returningToVillage && !unit.mythologyRetreating);
       figure.scale.setScalar(unit.mythologyScale || 1);
       updateMythologyAura(figure, appearance, unit.ownerId, state);
       syncUnitVisualState(figure, unit);

@@ -80,3 +80,18 @@ pour éviter de multiplier les amplitudes lors d’un second lancement.
 
 Rapport : `eredita3D/logs/legend-motion-polish.json`.
 Aperçu comparatif : `eredita3D/previews/legends-fluid-motion.png`.
+
+
+## U Lupu Mannaru — double griffe simultanée
+
+Après la préparation et la retouche de fluidité, exécuter
+`eredita3D/scripts/animate_lupu_cross_attack.py` dans Blender.
+Le Lupu se redresse, frappe en X avec les deux mains simultanément et garde
+sa posture bipède entre les coups. Ses pattes arrière restent plantées ; les
+paumes passent dans deux plans légèrement décalés pour éviter leur superposition.
+Le clip `Garde_Debout` maintient cette posture jusqu’au départ du personnage.
+Les deux griffes restent un seul impact du moteur, à la cadence actuelle.
+La marche à quatre pattes, le repos et la mort gardent leurs durées.
+Texture et rig sont conservés ; aucun service de génération n’est utilisé.
+Rapport : `eredita3D/logs/lupu-cross-attack.json`.
+Aperçu : `eredita3D/previews/lupu-simultaneous-cross.png`.

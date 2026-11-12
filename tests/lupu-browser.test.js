@@ -12,7 +12,7 @@ async function run() {
     await page.waitFor('Eredita.LupuModel?.ready || Eredita.LupuModel?.diagnostics.error', 25000);
     const diagnostics = await page.evaluate('Eredita.LupuModel.diagnostics');
     assert.equal(diagnostics.error, null);
-    assert.deepEqual(diagnostics.clips.sort(), ['Griffes_Croisees', 'Mort', 'Quatre_Pattes', 'Repos']);
+    assert.deepEqual(diagnostics.clips.sort(), ['Garde_Debout', 'Griffes_Croisees', 'Mort', 'Quatre_Pattes', 'Repos']);
     await page.click('[data-menu-screen="play"]'); await page.click('#training-button');
     await page.waitFor("Eredita.Network.mode==='solo'");
     await page.evaluate("Eredita.GameView.command('confirmBiomes','red','keep')"); await page.click('#start-game');
@@ -97,21 +97,36 @@ async function run() {
     const strike = await page.evaluate(`(() => {
       const E=Eredita,s=lState,u=s.units.find(u=>u.ownerId==='red'),v=s.players.blue.villages[0];
       u.position=100;u.attackCooldown=0;u.retaliationCooldown=99;const hp=v.hp;
-      window.lCrouch=lBone(lRed,'Head');s.paused=false;E.Combat.update(s,.01);s.paused=true;E.Board3D.update(s,true);
+      window.lCrouch=lBone(lRed,'Head');s.paused=false;E.Combat.update(s,.01);s.paused=true;E.Board3D.update(s,true);E.Board3D.update(s,true);
       const blue=lBone(lBlue,'RightHand');
       const duration=E.Config.characterModels.lupu.attackDuration;
-      lAdvanceSeconds(lRed,duration*.22);const raised={head:lBone(lRed,'Head'),right:lBone(lRed,'RightHand'),left:lBone(lRed,'LeftHand')};
-      lAdvanceSeconds(lRed,duration*(.47-.22));const rightLow=lBone(lRed,'RightHand');
-      lAdvanceSeconds(lRed,duration*(.49-.47));const leftHigh=lBone(lRed,'LeftHand');
-      lAdvanceSeconds(lRed,duration*(.71-.49));const leftLow=lBone(lRed,'LeftHand');
-      return {action:lRed.userData.lupu.action,crouch:lCrouch,raised,rightLow,leftHigh,leftLow,blueBefore:blue,blueAfter:lBone(lBlue,'RightHand'),damage:hp-v.hp,expectedDamage:u.damage+E.Config.units.ravageur.villageDamageBonus};
+      lAdvanceSeconds(lRed,duration*.24);const raised={head:lBone(lRed,'Head'),right:lBone(lRed,'RightHand'),left:lBone(lRed,'LeftHand'),feet:['LeftFoot','RightFoot'].map(n=>lBone(lRed,n))};
+      lAdvanceSeconds(lRed,duration*(.38-.24));const together={right:lBone(lRed,'RightHand'),left:lBone(lRed,'LeftHand')};
+      lAdvanceSeconds(lRed,duration*(.57-.38));const crossed={right:lBone(lRed,'RightHand'),left:lBone(lRed,'LeftHand'),feet:['LeftFoot','RightFoot'].map(n=>lBone(lRed,n))};
+      const blueAfter=lBone(lBlue,'RightHand');
+      lAdvanceSeconds(lRed,duration*(.95-.57));const recovered=lBone(lRed,'Head');
+      lAdvanceSeconds(lRed,duration*.20);const guard={head:lBone(lRed,'Head'),action:lRed.userData.lupu.action};
+      return {crouch:lCrouch,raised,together,crossed,recovered,guard,blueBefore:blue,blueAfter,damage:hp-v.hp,expectedDamage:u.damage+E.Config.units.ravageur.villageDamageBonus};
     })()`);
-    assert.equal(strike.action, 'Griffes_Croisees'); assert.equal(strike.damage, strike.expectedDamage);
-    assert.deepEqual(strike.blueBefore, strike.blueAfter);
-    assert.ok(strike.raised.head[1] > strike.crouch[1] + .04, 'Le loup se redresse pour attaquer');
-    assert.ok(strike.rightLow[0] > strike.raised.right[0] + .04 && strike.rightLow[1] < strike.raised.right[1] - .04, 'La griffe droite descend en diagonale vers la gauche du personnage');
-    assert.ok(strike.leftLow[0] < strike.leftHigh[0] - .04 && strike.leftLow[1] < strike.leftHigh[1] - .04, 'La griffe gauche descend selon la diagonale opposée');
+    assert.equal(strike.damage,strike.expectedDamage,'Un seul impact du moteur malgré les deux griffes');
+    assert.deepEqual(strike.blueBefore,strike.blueAfter);
+    assert.ok(strike.raised.head[1]>strike.crouch[1]+.04,'Le loup se redresse pour attaquer');
+    assert.ok(strike.crossed.right[0]>strike.raised.right[0]+.04&&strike.crossed.right[1]<strike.raised.right[1]-.04,'La griffe droite descend en diagonale');
+    assert.ok(strike.crossed.left[0]<strike.raised.left[0]-.04&&strike.crossed.left[1]<strike.raised.left[1]-.04,'La griffe gauche descend en même temps dans la diagonale opposée');
+    assert.ok(strike.together.right[1]<strike.raised.right[1]-.015&&strike.together.left[1]<strike.raised.left[1]-.015,'Les deux griffes descendent dans la même phase, sans alternance');
+    assert.ok(strike.crossed.right[0]>strike.crossed.left[0],'Les trajectoires se croisent réellement');
+    assert.equal(strike.guard.action,'Garde_Debout');
+    assert.ok(strike.recovered[1]>strike.raised.head[1]-.02&&strike.guard.head[1]>strike.raised.head[1]-.02,'Il reste sur ses deux pattes après le geste et entre deux coups');
+    for(let i=0;i<2;i++)assert.ok(Math.hypot(...strike.crossed.feet[i].map((n,j)=>n-strike.raised.feet[i][j]))<.01,'Les pattes arrière restent plantées pendant la coupe');
     await screenshot('lupu_attack_in_game');
+    const crossPreview=await page.evaluate(`(()=>{
+      const E=Eredita,T=E.Board3D.getXRContext().THREE,scene=new T.Scene();scene.background=new T.Color('#d8d1c1');scene.add(new T.HemisphereLight(0xffffff,0x777777,3));const light=new T.DirectionalLight(0xffefdc,3);light.position.set(2,4,3);scene.add(light);
+      const models=[],phases=[.24,.57,1.2],labels=['Préparation debout','Deux griffes en X','Garde debout'];
+      phases.forEach((phase,i)=>{const f=E.LupuModel.create('red');models.push(f);f.scale.setScalar(1.25);f.position.x=(i-1)*.95;scene.add(f);f.userData.lupu.attack(1);let remaining=E.Config.characterModels.lupu.attackDuration*phase;while(remaining>1e-8){const step=Math.min(remaining,1/120);f.userData.lupu.tick(step,false);remaining-=step;}
+        const c=document.createElement('canvas');c.width=512;c.height=64;const ctx=c.getContext('2d');ctx.fillStyle='#352a1f';ctx.textAlign='center';ctx.font='bold 28px system-ui';ctx.fillText(labels[i],256,40);const texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;const label=new T.Sprite(new T.SpriteMaterial({map:texture,depthTest:false}));label.scale.set(.85,.11,1);label.position.set(f.position.x,1,0);scene.add(label);
+      });
+      const camera=new T.PerspectiveCamera(33,1.8,.01,100);camera.position.set(.9,1.4,3.9);camera.lookAt(0,.44,0);const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1400,778);renderer.render(scene,camera);const png=renderer.domElement.toDataURL('image/png').split(',')[1];models.forEach(f=>{f.userData.lupu.dispose();f.traverse(o=>{if(!o.userData.sharedGeometry)o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});});scene.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});renderer.dispose();return png;
+    })()`);fs.writeFileSync(path.join(folder,'lupu-simultaneous-cross.png'),Buffer.from(crossPreview,'base64'));
     const pausedAt = await page.evaluate('lRed.userData.lupu.time'); await delay(180);
     assert.equal(await page.evaluate('lRed.userData.lupu.time'), pausedAt);
     const repeated = await page.evaluate(`(() => {

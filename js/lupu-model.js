@@ -11,7 +11,7 @@
       .then(async ([loader, skeleton]) => {
         cloneSkeleton = skeleton.clone;
         const asset = await new loader.GLTFLoader().loadAsync(new URL(config().src, document.baseURI).href);
-        const names = [config().clips.idle, config().clips.walk, ...config().clips.attacks, config().clips.death];
+        const names = [config().clips.idle, config().clips.walk, config().clips.guard, ...config().clips.attacks, config().clips.death];
         if (!names.every(name => asset.animations.some(clip => clip.name === name))) throw new Error('Animations de U Lupu Mannaru manquantes');
         template = asset.scene; clips = asset.animations;
         return true;
@@ -61,7 +61,8 @@
 
     const mixer = new THREE.AnimationMixer(model);
     const actions = new Map(clips.map(clip => [clip.name, mixer.clipAction(clip)]));
-    let active = null, moving = false, disposed = false, dying = false, attackSequence = 0;
+    let active = null, moving = false, combatStance = false, disposed = false, dying = false, attackSequence = 0;
+    const restingAction = () => moving ? config().clips.walk : combatStance ? config().clips.guard : config().clips.idle;
     function change(name, attack = false, duration = config().attackDuration) {
       if (active?.getClip().name === name && !attack) return;
       const next = actions.get(name);
@@ -77,7 +78,7 @@
       active = next;
     }
     mixer.addEventListener('finished', event => {
-      if (!dying && event.action === active) change(moving ? config().clips.walk : config().clips.idle);
+      if (!dying && event.action === active) change(restingAction());
     });
     function die() {
       if (disposed || dying) return;
@@ -89,17 +90,18 @@
     instances++;
     group.userData.preserveMythologyMaterial = true;
     group.userData.lupu = {
-      setMoving(value) { moving = Boolean(value); },
+      setMoving(value) { moving = Boolean(value);if(moving)combatStance=false; },
+      setCombatStance(value) { combatStance=Boolean(value)&&!moving; },
       attack(sequence) {
         if (disposed || dying || sequence === attackSequence) return;
-        attackSequence = sequence;
+        attackSequence = sequence; combatStance=true;
         change(config().clips.attacks[(sequence - 1) % config().clips.attacks.length], true);
       },
       die,
       tick(delta, paused, dead = false) {
         if (disposed || paused) return;
         if (dead) die();
-        if (!dying && !config().clips.attacks.includes(active?.getClip().name)) change(moving ? config().clips.walk : config().clips.idle);
+        if (!dying && !config().clips.attacks.includes(active?.getClip().name)) change(restingAction());
         // Rattraper une image longue sans ralentir artificiellement les jambes ; sous-pas pour les fondus.
         let remaining=Math.min(Math.max(0,delta),E.Config.legendMotion.maxCatchUp);
         while(remaining>1e-8){const step=Math.min(remaining,E.Config.legendMotion.frameStep);mixer.update(step);remaining-=step;}
