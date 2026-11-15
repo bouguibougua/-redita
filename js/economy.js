@@ -102,19 +102,22 @@
     return true;
   }
 
-  function saleQuote(village, resource) {
-    if (!E.Config.resources.includes(resource)) return null;
-    const amount = Math.min(E.Config.saleBatchSize, Math.max(0, village.resources[resource]));
+  function saleQuote(village, resource, quantity) {
+    if (!village || !E.Config.resources.includes(resource)) return null;
+    if (quantity !== undefined && !E.Config.shopSaleQuantities.includes(quantity)) return null;
+    const stock = Math.max(0, village.resources[resource] || 0);
+    // Les lots explicites sont indivisibles ; les anciens boutons gardent leur vente du reliquat.
+    const amount = quantity === undefined ? Math.min(E.Config.saleBatchSize, stock) : stock >= quantity ? quantity : 0;
     const levels = village.buildings.filter((building) => E.Config.saleBuildingResources[building.type]?.includes(resource)).map((building) => building.level);
     const bonus = Math.max(0, ...levels) * E.Config.saleBonusPerLevel;
     return { amount, gold: amount * E.Config.resourceSaleValues[resource] * (1 + bonus) };
   }
 
-  function sell(state, playerId, lane, resource) {
+  function sell(state, playerId, lane, resource, quantity) {
     const player = state.players[playerId];
     const village = player?.villages[lane];
     if (state.phase !== "running" || state.paused || !village || village.destroyed) return false;
-    const quote = saleQuote(village, resource);
+    const quote = saleQuote(village, resource, quantity);
     if (!quote || quote.amount <= 0) return false;
     village.resources[resource] = Math.max(0, village.resources[resource] - quote.amount);
     player.gold += quote.gold;

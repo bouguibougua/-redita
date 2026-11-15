@@ -171,3 +171,19 @@ console.log("Cultures réseau : prix autoritaires, niveaux, remboursement et fin
 
 // La limite d’un bâtiment de chaque type est aussi vérifiée pour les ordres invités.
 const beforeDuplicateBuilding=JSON.stringify(state);remote("build",["artisanat"]);assert.equal(JSON.stringify(state),beforeDuplicateBuilding,"Un doublon réseau ne dépense rien et ne renforce pas le village");
+
+// Les lots explicites passent par le devis de l'hôte, jamais par le gain annoncé par l'invité.
+blueVillage.resources.poisson=1110;state.paused=false;state.phase='running';
+for(const quantity of [10,100,1000]){
+  const beforeGold=state.players.blue.gold,beforeStock=blueVillage.resources.poisson;
+  const expected=E.Economy.saleQuote(blueVillage,'poisson',quantity);
+  remote('sell',['poisson',quantity,999999]);
+  assert.equal(state.players.blue.gold,beforeGold+expected.gold);assert.equal(blueVillage.resources.poisson,beforeStock-quantity);
+}
+blueVillage.resources.poisson=99;
+for(const quantity of [-100,'100',100,1000,1,null,{},Infinity]){
+  const before=JSON.stringify(state);remote('sell',['poisson',quantity]);assert.equal(JSON.stringify(state),before);
+}
+const protectedSales=JSON.stringify(state);remote('sell',['poisson',10],'red');assert.equal(JSON.stringify(state),protectedSales);
+state.paused=true;remote('sell',['poisson',10]);assert.equal(blueVillage.resources.poisson,99);
+console.log('Ventes réseau : trois lots, prix autoritaire, quantité falsifiée, stock insuffisant, pause et village adverse validés.');

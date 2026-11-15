@@ -16,15 +16,16 @@
     const item=E.Config.equipment[kind][type];
     const level=Math.max(0,...village.buildings.filter(b=>b.type==='artisanat').map(b=>b.level));
     const equipped=village.equipment?.[fields[kind]]===type;
+    const soldOut=equipped||Boolean(village.equipmentPurchases?.[kind]?.includes(type));
     let reason=null;
     if(state.phase!=='running')reason='Partie inactive';
     else if(state.paused)reason='Partie en pause';
     else if(village.destroyed)reason='Village détruit';
     else if(level<item.requiredTier)reason=`Artisanat T${item.requiredTier} requis`;
     else if(residentId!=null&&!village.residents.some(r=>r.id===residentId))reason='Habitant absent de ce village';
-    else if(equipped)reason='Déjà équipé dans ce village';
+    else if(soldOut)reason='Déjà acheté dans ce village';
     else if(player.gold<item.gold)reason='Or insuffisant';
-    return {...item,kind,type,equipped,residentId,recipients:village.residents.filter(isHuman).length,allowed:!reason,reason:reason||'Tous les habitants actuels et futurs · hors légendes'};
+    return {...item,kind,type,equipped,soldOut,residentId,recipients:village.residents.filter(isHuman).length,allowed:!reason,reason:reason||'Tous les habitants actuels et futurs · hors légendes'};
   }
   function applyVillage(village,resident) {
     if(!isHuman(resident))return false;
@@ -39,6 +40,9 @@
     if(!purchase?.allowed)return false;
     const player=state.players[playerId],village=player.villages[lane],field=fields[purchase.kind];
     player.gold-=purchase.gold;
+    village.equipmentPurchases ||= {};
+    const previous=village.equipment?.[field];
+    village.equipmentPurchases[purchase.kind]=[...new Set([...(village.equipmentPurchases[purchase.kind]||[]),...(previous?[previous]:[]),purchase.type])];
     village.equipment={...(village.equipment||{}),[field]:purchase.type};
     // Update only the equipment contribution, preserving wounds, Artisanat and mythological bonuses.
     for(const unit of state.units) {

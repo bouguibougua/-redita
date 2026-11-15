@@ -8,6 +8,13 @@
   window.Eredita.Config = {
     normalDuration: 750,
     defaultFormat: "simplified",
+    shopSaleQuantities: [10, 100, 1000],
+    // Limites réservées au catalogue : les pièges restent inactifs.
+    shopCatalogLimits: { 'piege-defense': 5, 'piege-chasse': 10 },
+    // Présentation de la boutique : aucune incidence sur les prix ou les prérequis.
+    illustratedShop: { width: 1672, height: 941, hoverDuration: 240, goldDuration: 1200,
+      background: "assets/shop/background.png", merchandise: "assets/shop/merchandise.png",
+      master: "assets/shop/art-master.png", hoverScale: 1.05, particles: 5 },
     formats: {
       simplified: { label: "2 camps", regions: 2, exchanges: 1 },
       classic: { label: "4 camps", regions: 4, exchanges: 2 }
@@ -449,9 +456,9 @@
       // les prix et les vitesses des bateaux ne sont pas encore définis.
       waterRanges: { red: { min: 38, max: 50 }, blue: { min: 50, max: 62 } },
       shop: {
-        barque: { label: "Barque", icon: "🛶", gold: 100, max: 4, capacity: 2, unlock: "boucherie-t1" },
+        barque: { label: "Barque", icon: "🛶", gold: 100, max: 1, capacity: 2, unlock: "boucherie-t1" },
         voilier: { label: "Voilier", icon: "⛵", gold: 350, max: 2, capacity: 15, biome: "littoral", unlock: "boucherie-t3" },
-        filet: { label: "Filet de pêche", icon: "🕸", gold: 75, max: null, fishAmount: 1, interval: 30, biome: "littoral", unlock: "boucherie-t1" }
+        filet: { label: "Filet de pêche", icon: "🕸", gold: 75, max: 3, fishAmount: 1, interval: 30, biome: "littoral", unlock: "boucherie-t1" }
       }
     },
     units: {

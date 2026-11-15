@@ -79,10 +79,10 @@ assert.equal(unit.hp, E.Config.units.guerrier.hp + 50 + E.Config.building.artisa
 assert.equal(unit.maxHp, unit.hp);
 assert.equal(unit.damage, E.Config.units.guerrier.damage + 20 + E.Config.building.artisanatBonus.damage);
 const combatBefore = {hp:unit.hp,maxHp:unit.maxHp};
-assert.ok(buy("armors", "cuir"), "Village equipment also applies during combat");
-assert.equal(unit.armor, "cuir");
-assert.equal(unit.maxHp, combatBefore.maxHp - 35);
-assert.equal(unit.hp, combatBefore.hp - 35);
+assert.equal(buy("armors", "cuir"), false, "Une ancienne armure déjà achetée ne revient pas après un remplacement");
+assert.equal(unit.armor, "fer");
+assert.equal(unit.maxHp, combatBefore.maxHp);
+assert.equal(unit.hp, combatBefore.hp);
 const warrior = E.Units.create("red", 0, "guerrier", { tool: "bronze", armor: "maille" });
 assert.equal(warrior.hp, E.Config.units.guerrier.hp + 35);
 assert.equal(warrior.damage, E.Config.units.guerrier.damage + 10);

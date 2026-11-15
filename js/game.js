@@ -194,9 +194,9 @@
       E.UI.render(state);
     },
 
-    sell(resource) {
+    sell(resource, quantity) {
       const { playerId, lane } = state.selectedVillage;
-      const sale = E.Economy.sell(state, playerId, lane, resource);
+      const sale = E.Economy.sell(state, playerId, lane, resource, quantity);
       if (sale) addLog(`Vente du village ${lane + 1} : +${sale.gold.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} or.`);
       E.UI.render(state);
     },

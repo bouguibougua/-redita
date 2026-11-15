@@ -289,7 +289,7 @@ async function run() {
   await realClick('[data-buy-shop-item="barque"]:not([disabled])');
   assert.equal(await evaluate("testState.players.red.villages[" + coastalLane + "].maritime.barque"), 1);
   assert.equal(await evaluate("testState.players.red.gold"), shopGold - barqueCost);
-  assert.equal(await evaluate("document.querySelector('[data-shop-count=barque]').textContent.includes('1/4')"), true);
+  assert.equal(await evaluate("document.querySelector('[data-shop-count=barque]').textContent.includes('1/1')"), true);
   assert.equal(await evaluate("document.querySelectorAll('.region.red.littoral [data-terrain-fleet=barque] .terrain-vessel').length"), 1);
 
   // Animaux et équipements : achats par vrais clics, silhouettes et refus sans coût.

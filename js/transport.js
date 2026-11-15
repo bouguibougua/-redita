@@ -25,6 +25,7 @@
     const item = E.Config.maritime.shop[type];
     if (!village || !item) return null;
     const count = maritimeState(village)[type] || 0;
+    const soldOut = item.max !== null && count >= item.max;
     let reason = null;
     if (state.phase !== "running") reason = "Partie inactive";
     else if (state.paused) reason = "Partie en pause";
@@ -32,9 +33,9 @@
     else if (E.MythologyEffects?.isBurned(state, village)) reason = "Terrain brûlé";
     else if (item.biome && village.biome !== item.biome) reason = "Littoral requis";
     else reason = unlockReason(village, item);
-    if (!reason && item.max !== null && count >= item.max) reason = "Limite atteinte";
+    if (!reason && soldOut) reason = "Limite atteinte";
     if (!reason && player.gold < item.gold) reason = "Or insuffisant";
-    return { ...item, type, count, allowed: !reason, reason: reason || "Disponible" };
+    return { ...item, type, count, soldOut, allowed: !reason, reason: reason || "Disponible" };
   }
 
   function buy(state, playerId, lane, type) {

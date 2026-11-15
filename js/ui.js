@@ -48,6 +48,7 @@
       resultTitle: document.querySelector("#result-title"),
       resultCopy: document.querySelector("#result-copy")
     };
+    E.IllustratedShop?.init(controller, () => currentState);
     bindEvents();
   }
 
@@ -66,9 +67,9 @@
     });
     elements.startButton.addEventListener("click", () => controller.start());
     document.querySelector("#open-shop-modal").addEventListener("click", () => openShopModal());
-    document.querySelector("#close-shop-modal").addEventListener("click", () => { elements.shopModal.hidden = true; });
+    document.querySelector("#close-shop-modal").addEventListener("click", () => { E.IllustratedShop ? E.IllustratedShop.close() : elements.shopModal.hidden = true; });
     elements.shopModal.addEventListener("click", (event) => {
-      if (event.target === elements.shopModal) elements.shopModal.hidden = true;
+      if (event.target === elements.shopModal) { E.IllustratedShop ? E.IllustratedShop.close() : elements.shopModal.hidden = true; }
     });
     elements.shopVillageNav.addEventListener("click", (event) => {
       const button = event.target.closest("[data-shop-village]");
@@ -283,12 +284,14 @@
   }
 
   function openShopModal() {
-    if (E.Network.mode === "solo" && currentState.selectedVillage.playerId !== "red") {
-      controller.selectVillage("red", currentState.selectedVillage.lane);
+    const owner = E.Network.mode === "local" ? currentState.selectedVillage.playerId : E.Network.playerId || "red";
+    if (currentState.selectedVillage.playerId !== owner) {
+      controller.selectVillage(owner, currentState.selectedVillage.lane);
     }
     elements.shopModal.hidden = false;
     elements.shopModalContent.appendChild(elements.shop);
     syncShopModal(currentState);
+    E.IllustratedShop?.open();
   }
 
   function syncShopModal(state) {
@@ -303,6 +306,7 @@
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", String(selected));
     });
+    E.IllustratedShop?.sync(state);
   }
 
 
@@ -976,6 +980,17 @@
     }).join("");
     elements.shop.innerHTML = `<div class="shop-columns"><div class="shop-sales-column">${sales}</div>${stores}</div>`;
     updateShopSales(state, player, village);
+    syncShopStock(state, player, village);
+  }
+
+  function syncShopStock(state, player, village) {
+    elements.shop.querySelectorAll('[data-buy-equipment]').forEach(button=>{
+      const quote=E.Equipment.quote(state,player.id,village.lane,button.dataset.equipmentKind,button.dataset.buyEquipment);
+      button.closest('[data-shop-catalog-item]').hidden=Boolean(quote?.soldOut);
+    });
+    elements.shop.querySelectorAll('[data-buy-shop-item]').forEach(button=>{
+      button.closest('[data-shop-catalog-item]').hidden=Boolean(E.Transport.shopQuote(state,player.id,village.lane,button.dataset.buyShopItem)?.soldOut);
+    });
   }
 
   function updateShopSales(state, player, village) {
@@ -1067,6 +1082,7 @@
       return;
     }
     updateShopSales(state, player, village);
+    syncShopStock(state, player, village);
     elements.shop.querySelectorAll("[data-buy-shop-item]").forEach((button) => {
       const type = button.dataset.buyShopItem;
       const quote = E.Transport.shopQuote(state, player.id, village.lane, type);

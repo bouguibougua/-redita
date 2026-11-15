@@ -148,10 +148,10 @@ assert.equal(E.Buildings.buildT1(maritimeState, "red", 0, "artisanat"), true);
 assert.equal(E.Transport.shopQuote(maritimeState, "red", 0, "barque").allowed, false);
 assert.equal(E.Transport.shopQuote(maritimeState, "red", 0, "filet").allowed, false);
 assert.equal(E.Buildings.buildT1(maritimeState, "red", 0, "boucherie"), true);
-for (let count = 0; count < 4; count++) assert.ok(E.Transport.buy(maritimeState, "red", 0, "barque"));
+for (let count = 0; count < E.Config.maritime.shop.barque.max; count++) assert.ok(E.Transport.buy(maritimeState, "red", 0, "barque"));
 assert.equal(E.Transport.buy(maritimeState, "red", 0, "barque"), false);
-assert.equal(maritimeVillage.maritime.barque, 4);
-assert.equal(E.Transport.fleetCapacity(maritimeVillage), 8);
+assert.equal(maritimeVillage.maritime.barque, 1);
+assert.equal(E.Transport.fleetCapacity(maritimeVillage), 2);
 assert.ok(E.Transport.buy(maritimeState, "red", 0, "filet"));
 E.Transport.updateFishingNets(maritimeVillage, 30);
 assert.equal(maritimeVillage.resources.poisson, 1);
@@ -163,7 +163,7 @@ assert.equal(E.Buildings.upgrade(maritimeState, "red", 0, butcherIndex, "ble"), 
 assert.ok(E.Transport.buy(maritimeState, "red", 0, "voilier"));
 assert.ok(E.Transport.buy(maritimeState, "red", 0, "voilier"));
 assert.equal(E.Transport.buy(maritimeState, "red", 0, "voilier"), false);
-assert.equal(E.Transport.fleetCapacity(maritimeVillage), 38);
+assert.equal(E.Transport.fleetCapacity(maritimeVillage), 32);
 
 // Une seule Barque protège deux personnes ; la troisième se noie immédiatement.
 const waterState = E.Board.createState("classic");
