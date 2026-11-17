@@ -7,12 +7,16 @@ try{
   await p.send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await p.send('Page.navigate',{url:site.url+'?intro=0'});
   await p.waitFor('window.Eredita?.Board3D?.ready && Eredita.GameView?.getState()');
+  // Cette suite protège le repli illustré ; la scène a sa suite shop3d-browser dédiée.
+  await p.evaluate('Eredita.Config.shopScene.enabled=false');
   await p.click('[data-menu-screen="play"]');await p.click('#training-button');await p.waitFor("Eredita.Network.mode==='solo'");
   // Fixture économique : seul ce navigateur de test reçoit un village intégralement débloqué.
   await p.evaluate(`(()=>{const E=Eredita,s=window.shopState=E.GameView.getState();s.phase='running';s.paused=false;s.preparationRemaining=3600;s.elapsed=0;s.units=[];s.players.red.gold=20000;s.selectedVillage={playerId:'red',lane:0};
     for(const v of s.players.red.villages){v.biome='littoral';v.slots=E.Biomes.createSlots('littoral');v.buildings=['bergerie','artisanat','boucherie'].map((type,i)=>({type,level:3,id:'shop-'+v.lane+'-'+i}));v.equipment={tool:null,armor:null};v.maritime={barque:0,voilier:0,filet:0,filetTimer:0};for(const r of v.residents)Object.assign(r,{tool:null,armor:null,profession:'habitant',mission:'disponible',unitId:null,donkey:false});for(const key of E.Config.resources)v.resources[key]=2110;}
     s.selectedResidentId=s.players.red.villages[0].residents[0].id;E.MythologySession.start(s);E.UI.render(s);document.querySelectorAll('dialog[open]').forEach(d=>d.close());})()`);
   await p.click('#open-shop-modal');await p.waitFor("document.querySelector('#shop-modal').dataset.artReady==='true'");
+  // Observer à l'apparition : l'effet dure 1,2 s, les allers-retours CDP peuvent être plus lents.
+  await p.evaluate(`window.shopGoldEvents=[];new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)shopGoldEvents.push({type:n.className,text:n.textContent});}))).observe(document.querySelector('.shop-gold-effects'),{childList:true})`);
   assert.equal(await p.evaluate("document.querySelectorAll('[data-shop-object]').length"),22);
   assert.equal(await p.evaluate("document.querySelectorAll('[data-shop-sell]').length"),18);
   assert.equal(await p.evaluate("document.querySelectorAll('#shop-village-nav button').length"),2);
@@ -25,7 +29,7 @@ try{
   await move(710,450);assert.equal(await p.evaluate("document.querySelectorAll('.shop-object.is-hovered').length"),0,'Le mur entre les articles ne constitue pas une hitbox');
   let gold=await p.evaluate('shopState.players.red.gold');await move(635,470,true);
   assert.equal(await p.evaluate('shopState.players.red.gold'),gold-150);assert.equal(await p.evaluate('shopState.players.red.villages[0].equipment.armor'),'cuir');
-  assert.ok(await p.evaluate("document.querySelector('.shop-wallet .gold-loss')?.textContent.includes('150')"));
+  assert.ok(await p.evaluate("shopGoldEvents.some(e=>e.type==='gold-loss'&&e.text.includes('150'))"));
   assert.equal(await p.evaluate("document.querySelector('[data-shop-object=armors-cuir]').hidden"),true);
   gold=await p.evaluate('shopState.players.red.gold');await move(635,470,true);assert.equal(await p.evaluate('shopState.players.red.gold'),gold,'Pas de rachat de l’armure équipée');
   await move(189,349,true);assert.equal(await p.evaluate("shopState.players.red.villages[0].animals.filter(a=>a.type==='chien').length"),1);
@@ -39,7 +43,7 @@ try{
   for(const resource of ['ble','chataigne','raisin','viande','poisson','lait']){
     for(const quantity of [10,100,1000]){const before=await p.evaluate(`shopState.players.red.villages[0].resources.${resource}`);gold=await p.evaluate('shopState.players.red.gold');const expected=await p.evaluate(`Eredita.Economy.saleQuote(shopState.players.red.villages[0],'${resource}',${quantity}).gold`);await p.click(`[data-shop-sell=${resource}][data-quantity="${quantity}"]`);assert.equal(await p.evaluate(`shopState.players.red.villages[0].resources.${resource}`),before-quantity);assert.equal(await p.evaluate('shopState.players.red.gold'),gold+expected);}
   }
-  assert.ok(await p.evaluate("document.querySelector('.shop-wallet .gold-gain')"));await capture('boutique-transactions');
+  assert.ok(await p.evaluate("shopGoldEvents.some(e=>e.type==='gold-gain')"));await capture('boutique-transactions');
   await p.click('[data-shop-village="1"]');assert.equal(await p.evaluate("document.querySelector('[data-illustrated-stock=ble]').textContent"),'2 110');
   assert.equal(await p.evaluate('shopState.players.red.villages[1].equipment.armor'),null);
   await move(635,470,true);assert.equal(await p.evaluate('shopState.players.red.villages[1].equipment.armor'),'cuir');

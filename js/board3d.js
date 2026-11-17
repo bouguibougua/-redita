@@ -965,7 +965,7 @@
       habitant: 0xb99570, agriculteur: 0xd1aa42, berger: 0x5f7952,
       pecheur: 0x4d8a9b, chasseur: 0x3f6439, guerrier: 0x596479, ravageur: 0x61443e
     }[profession] || 0xb99570;
-    const toolColor = { bois: 0xb98542, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0x816347;
+    const toolColor = { bois: 0xaaa497, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0x816347;
     const metal = tool === "bronze" || tool === "fer" ? 0.65 : 0;
     const part = (name, geometry, color, x, y, z, options = {}) => {
       const item = mesh(geometry, color, options);
@@ -1320,7 +1320,7 @@
     E.XR?.update(timestamp, xrFrame);
     if ((!enabled && !E.XR?.active) || !renderer) return;
     // L'horloge tourne toujours ; seul le dessin du plateau masqué est évité.
-    if (!E.XR?.active && (E.MenuVR?.active || container.getClientRects().length === 0)) return;
+    if (!E.XR?.active && (E.MenuVR?.active || container.getClientRects().length === 0 || document.querySelector('#shop-modal')?.hidden === false)) return;
     animateUnitEffects();
     if (!E.XR?.active) updateCamera();
     const viewCamera = E.XR?.active ? renderer.xr.getCamera() : camera;
@@ -1368,6 +1368,7 @@
   }
 
   E.Board3D = {
+    createShopAnimal: type => ready ? animalModel('red', type) : null,
     getBoardWidth: boardWidth, targetAt, init, update, toggle, setMode, setXRPreview, resize,
     getXRContext: () => ready ? { THREE, renderer, scene, camera, world, terrainGroup,
       getBoardDimensions: () => ({ width: boardWidth(), depth: 11.05 }) } : null,

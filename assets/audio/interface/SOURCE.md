@@ -20,3 +20,11 @@ publiée est d’environ 0,767 seconde, sans réencodage ni changement de volume
 Aucun son n’est généré
 ou téléchargé depuis un service externe. Les quatre WAV sont servis avec le type
 `audio/wav` et lus depuis les chemins relatifs de `Config.audio.effects`.
+
+## Boutique — 16 novembre 2026
+
+`Downloads/song achat.mp3`, fourni par le concepteur, est copié sans réencodage
+dans `shop-purchase.mp3` (durée : 1,855 s). `shopPurchase` et `shopSale` utilisent
+ce fichier ; une vente est jouée à 45 % du volume des autres effets. Le réglage
+Muet s'applique. Le son n'est déclenché qu'après confirmation d'une transaction,
+y compris après réception du reçu de l'hôte en multijoueur.

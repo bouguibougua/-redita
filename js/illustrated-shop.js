@@ -5,6 +5,7 @@
   const escape = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let controller, getState, root, scene, advanced, wallet, status, recipient, boatType, lastGold, lastOwner, previousFocus;
   let hovered = null, alpha = null, hitContext, imageReady = false, pending = null, messageUntil = 0, syncSignature = '';
+  let scene3D = null, sceneLoading = null;
   const nodes = new Map(), masks = new Map();
   const position = ([x,y,w,h]) => `left:${x/C.width*100}%;top:${y/C.height*100}%;width:${w/C.width*100}%;height:${h/C.height*100}%`;
   function imageMarkup(item) {
@@ -20,6 +21,19 @@
   function init(commands, readState) {
     controller = commands; getState = readState;
     root = document.querySelector('#shop-modal');
+    E.ShopTransactions?.subscribe(receipt=>{
+      if(root.hidden)return;
+      const selection=getState().selectedVillage;
+      if(receipt.playerId!==selection.playerId)return;
+      if(receipt.accepted){
+        goldEffect(receipt.deltaGold);
+        if(receipt.lane===selection.lane){
+          const id=receipt.itemId==='voilier'?'barque':receipt.itemId;
+          pulse(nodes.get(id),'shop-confirmed');
+        }
+      }else if(receipt.lane===selection.lane)say('Transaction refusée · les conditions ont changé');
+      pending=null;
+    });
     const panel = root.querySelector('.shop-modal-panel'), head = root.querySelector('.shop-modal-head'), nav = root.querySelector('#shop-village-nav');
     root.classList.add('illustrated-shop');
     scene = document.createElement('div'); scene.className = 'shop-scene'; scene.setAttribute('aria-label','Échoppe corse');
@@ -70,6 +84,7 @@
       utilities.querySelector('.shop-manage').setAttribute('aria-expanded',String(open));
       utilities.querySelector('.shop-manage').innerHTML=open?'← Revenir à l’échoppe':'Gestion & compagnons <span aria-hidden="true">↗</span>';
       setHover(null);
+      scene3D?.setVisible(!open);
     });
     boatType=document.createElement('div'); boatType.className='shop-boat-choice';
     boatType.innerHTML='<button type="button" data-shop-vessel="barque" aria-pressed="true">Barque</button><button type="button" data-shop-vessel="voilier" aria-pressed="false">Voilier</button>';
@@ -110,6 +125,15 @@
       hitContext=canvas.getContext('2d',{willReadFrequently:true}); hitContext.drawImage(img,0,0,C.width,C.height);
       alpha=hitContext.getImageData(0,0,C.width,C.height).data; imageReady=true;root.dataset.artReady='true';
     };img.onerror=()=>{root.dataset.artReady='error';say('Illustrations indisponibles. La vue Gestion reste accessible.');};img.src=C.merchandise;
+    new MutationObserver(()=>scene3D?.setVisible(!root.hidden&&advanced.hidden)).observe(root,{attributes:true,attributeFilter:['hidden']});
+  }
+  function ensureScene() {
+    if(!E.Config.shopScene?.enabled||!E.ShopScene||sceneLoading)return;
+    sceneLoading=E.ShopScene.create(scene).then(runtime=>{
+      scene3D=runtime;scene.classList.add('shop-has-3d');root.dataset.sceneReady='true';
+      runtime.setVisible(!root.hidden&&advanced.hidden);syncSignature='';sync(getState());
+      return runtime.loaded.then(()=>{root.dataset.modelsReady='true';});
+    }).catch(error=>{root.dataset.sceneReady='error';console.warn('Boutique 3D : vue illustrée conservée.',error);});
   }
   function canManage(state) {
     const {playerId,lane}=state.selectedVillage;
@@ -148,6 +172,7 @@
     return v.maritime?.[item.id==='barque'?selectedVessel():item.id]||0;
   }
   function hit(event) {
+    if(scene3D?.ready)return art.find(item=>item.id===scene3D.hit(event))||null;
     if(!imageReady)return null;
     const rect=scene.querySelector('.shop-merchandise').getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width*C.width,y=(event.clientY-rect.top)/rect.height*C.height;
     if(x<0||y<0||x>=C.width||y>=C.height||alpha[(Math.floor(y)*C.width+Math.floor(x))*4+3]<36)return null;
@@ -156,12 +181,15 @@
     return [...art].reverse().find(item=>!nodes.get(item.id).hidden&&hitContext.isPointInPath(masks.get(item.id),x,y))||null;
   }
   function setHover(item) {
+    if(item&&nodes.get(item.id)?.getAttribute('aria-disabled')==='true')item=null;
     if(hovered===item)return;
     if(hovered)nodes.get(hovered.id)?.classList.remove('is-hovered');
     hovered=item;scene.classList.toggle('over-merchandise',Boolean(item));
+    scene3D?.setHover(item?.id||null);
     if(item){nodes.get(item.id).classList.add('is-hovered');if(item.kind!=='inactive')particles(item.bounds[0]+item.bounds[2]/2,item.bounds[1]+item.bounds[3]*.55);}
   }
   function particles(x,y) {
+    if(scene3D?.ready)return;
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||scene.querySelectorAll('.shop-spark').length>25)return;
     for(let i=0;i<C.particles;i++){
       const heightRatio=scene.querySelector('.shop-merchandise').getBoundingClientRect().height/scene.getBoundingClientRect().height;
@@ -178,8 +206,8 @@
     const float=document.createElement('span');float.className=delta>0?'gold-gain':'gold-loss';
     float.textContent=`${delta>0?'+':'−'}${money(Math.abs(delta))}`;box.append(float);setTimeout(()=>float.remove(),C.goldDuration);
   }
-  function open() {previousFocus=document.activeElement;lastGold=undefined;pending=null;syncSignature='';sync(getState());root.querySelector('#close-shop-modal').focus();}
-  function close() {root.hidden=true;setHover(null);pending=null;lastGold=undefined;previousFocus?.focus();}
+  function open() {previousFocus=document.activeElement;lastGold=undefined;pending=null;syncSignature='';ensureScene();scene3D?.setVisible(advanced.hidden);sync(getState());root.querySelector('#close-shop-modal').focus();}
+  function close() {root.hidden=true;scene3D?.setVisible(false);setHover(null);pending=null;lastGold=undefined;previousFocus?.focus();}
   function sync(state) {
     if(!root||root.hidden||!state)return;
     const {playerId,lane}=state.selectedVillage,player=state.players[playerId],village=player?.villages[lane];if(!village)return;
@@ -191,7 +219,7 @@
       E.Config.resources.map(r=>Math.floor(village.resources[r]||0)),village.slots.map(s=>[s.content?.type,s.content?.count]),village.animals,village.residents.map(r=>[r.id,r.name,r.donkey,r.unitId,r.mission])]);
     if(syncSignature===nextSignature)return;syncSignature=nextSignature;
     if(lastOwner!==playerId){lastGold=undefined;pending=null;lastOwner=playerId;}
-    if(lastGold!==undefined&&Math.abs(player.gold-lastGold)>.001){
+    if(!E.ShopTransactions&&lastGold!==undefined&&Math.abs(player.gold-lastGold)>.001){
       const delta=player.gold-lastGold;goldEffect(delta);
       const item=pending&&art.find(a=>a.id===pending.id);
       if(pending&&item&&Math.sign(delta)===pending.direction&&inventory(item,state)!==pending.before){
@@ -208,6 +236,8 @@
     art.forEach(item=>{
       const node=nodes.get(item.id),q=quote(item,state),allowed=canManage(state)&&q?.allowed;
       const hadFocus=document.activeElement===node;
+      scene3D?.setState(item.id,{allowed,sold:Boolean(q?.soldOut),vessel:item.id==='barque'?selectedVessel():null,count:q?.count});
+      if(!allowed&&hovered===item)setHover(null);
       node.hidden=Boolean(q?.soldOut);
       if(node.hidden&&hovered===item)setHover(null);
       if(node.hidden&&hadFocus)root.querySelector('#close-shop-modal').focus();
@@ -236,5 +266,5 @@
     });
     if(performance.now()>messageUntil)status.textContent=village.destroyed?'Village détruit':state.paused?'Partie en pause':`Village ${lane+1} · stocks locaux, or partagé`;
   }
-  E.IllustratedShop={init,open,close,sync};
+  E.IllustratedShop={init,open,close,sync,get scene3D(){return scene3D;}};
 }());

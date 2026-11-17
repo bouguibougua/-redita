@@ -133,7 +133,7 @@ assert.equal(bulkProfessionVillage.residents[0].profession, "agriculteur", "Le r
 assert.equal(bulkProfessionVillage.residents.slice(1).every((resident) => resident.profession === "habitant"), true);
 
 assert.deepEqual(E.Config.villageShops.bergerie.tiers[1].map((item) => item.label), ["Chèvre", "Cochon", "Vache"]);
-assert.deepEqual(E.Config.villageShops.artisanat.tiers[1].map((item) => item.label), ["Outil en bois", "Armure de cuir"]);
+assert.deepEqual(E.Config.villageShops.artisanat.tiers[1].map((item) => item.label), ["Outil en pierre", "Armure de cuir"]);
 assert.deepEqual(E.Config.villageShops.boucherie.tiers[3].map((item) => item.label), ["Voilier", "Piège défensif"]);
 
 // Magasin maritime : déblocages du GDD, limites par Littoral et Filets.

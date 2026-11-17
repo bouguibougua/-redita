@@ -16,7 +16,11 @@
     const item=E.Config.equipment[kind][type];
     const level=Math.max(0,...village.buildings.filter(b=>b.type==='artisanat').map(b=>b.level));
     const equipped=village.equipment?.[fields[kind]]===type;
-    const soldOut=equipped||Boolean(village.equipmentPurchases?.[kind]?.includes(type));
+    const order=E.Config.equipmentProgression[kind],tier=order.indexOf(type),currentTier=order.indexOf(village.equipment?.[fields[kind]]);
+    const previous=order[tier-1];
+    // Les anciens états peuvent déjà posséder un tier supérieur : ne pas les rétrograder.
+    const soldOut=currentTier>=tier||Boolean(village.equipmentPurchases?.[kind]?.includes(type));
+    const previousOwned=!previous||currentTier>=tier-1||Boolean(village.equipmentPurchases?.[kind]?.includes(previous));
     let reason=null;
     if(state.phase!=='running')reason='Partie inactive';
     else if(state.paused)reason='Partie en pause';
@@ -24,6 +28,7 @@
     else if(level<item.requiredTier)reason=`Artisanat T${item.requiredTier} requis`;
     else if(residentId!=null&&!village.residents.some(r=>r.id===residentId))reason='Habitant absent de ce village';
     else if(soldOut)reason='Déjà acheté dans ce village';
+    else if(!previousOwned)reason=`${E.Config.equipment[kind][previous].label} requis`;
     else if(player.gold<item.gold)reason='Or insuffisant';
     return {...item,kind,type,equipped,soldOut,residentId,recipients:village.residents.filter(isHuman).length,allowed:!reason,reason:reason||'Tous les habitants actuels et futurs · hors légendes'};
   }

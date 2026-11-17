@@ -3,6 +3,13 @@
 .illustrated-shop { z-index: 1300; padding: 16px; background: #100c09eb; }
 .illustrated-shop .shop-modal-panel { position: relative; width: min(1672px,calc((100dvh - 32px)*1.77683),100%); height: auto; padding: 0; overflow: visible; border: 1px solid #8f6535; border-radius: 9px; background: #342313; box-shadow: 0 24px 100px #000b; }
 .shop-scene { position: relative; width: 100%; aspect-ratio: 1672/941; container-type: inline-size; background-size: 100% 100%; border-radius: 8px; overflow: hidden; isolation: isolate; color: #fff1cf; font-family: Georgia, 'Times New Roman', serif; }
+.shop-3d-canvas { position: absolute; inset: 0 0 auto; width: 100%; height: auto; aspect-ratio: 1672/941; display: block; z-index: 0; }
+.shop-scene:not(.shop-has-3d) .shop-3d-canvas { visibility: hidden; }
+.shop-has-3d { background-image: none !important; }
+.shop-has-3d .shop-object svg,.shop-has-3d .shop-fence,.shop-has-3d .shop-nameplate { visibility: hidden; }
+.shop-has-3d .shop-object { opacity: 0; }
+.shop-has-3d .shop-object:focus-visible { opacity: 1; outline: 2px solid #ffe1a1; outline-offset: 3px; filter: none; transform: none; }
+.shop-managing .shop-3d-canvas { visibility: hidden; }
 .illustrated-shop .shop-modal-head { position: absolute; z-index: 12; inset: 0 0 auto; height: 8%; display: flex; gap: 1cqw; margin: 0; padding: 0 1.5cqw; background: linear-gradient(#24180bdd,#1a1009e6); border-bottom: 1px solid #b6853a; box-shadow: 0 4px 12px #13090270; }
 .illustrated-shop .shop-modal-head h2 { flex: 0 0 auto; color: #fff2d0; font-size: 2.7cqw; line-height: 1; text-shadow: 0 2px 3px #000; letter-spacing: -.04em; }
 .illustrated-shop .shop-village-nav { display: flex; flex: 0 1 34%; gap: .45cqw; margin: 0; }

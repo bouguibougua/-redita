@@ -8,3 +8,6 @@ output/cards/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Contexte local de la CLI Tripo (les modèles et task.json restent versionnables).
+.tripo/

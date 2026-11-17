@@ -9,12 +9,21 @@
     normalDuration: 750,
     defaultFormat: "simplified",
     shopSaleQuantities: [10, 100, 1000],
+    shopReceiptHistory: 64,
+    equipmentProgression: { tools: ['bois','bronze','fer'], armors: ['cuir','maille','fer'] },
     // Limites réservées au catalogue : les pièges restent inactifs.
     shopCatalogLimits: { 'piege-defense': 5, 'piege-chasse': 10 },
     // Présentation de la boutique : aucune incidence sur les prix ou les prérequis.
     illustratedShop: { width: 1672, height: 941, hoverDuration: 240, goldDuration: 1200,
       background: "assets/shop/background.png", merchandise: "assets/shop/merchandise.png",
       master: "assets/shop/art-master.png", hoverScale: 1.05, particles: 5 },
+    // Présentation de l'étal 3D ; aucune valeur économique.
+    shopScene: { enabled: true, width: 16.72, height: 9.41, pixelRatio: 1.5,
+      shadowSize: 2048, maxFPS: 30, hoverSpeed: 10, hoverLift: .045,
+      sign: "assets/models/shop/vindutu-sign.glb", dustCount: 45,
+      models: { vache: "assets/models/elevage_vache_petit.glb",
+        chevre: "assets/models/elevage_chevre_petit.glb", cochon: "assets/models/elevage_cochon_petit.glb",
+        barque: "assets/models/barque.glb" } },
     formats: {
       simplified: { label: "2 camps", regions: 2, exchanges: 1 },
       classic: { label: "4 camps", regions: 4, exchanges: 2 }
@@ -176,13 +185,15 @@
     },
     // TEMP_BALANCE_VALUE — volumes et limite des effets sonores d’interface.
     audio: {
-      musicVolume: 0.38, effectVolume: 0.5, maxEffectVoices: 4,
+      musicVolume: 0.38, effectVolume: 0.5, shopSaleVolumeMultiplier: 0.45, maxEffectVoices: 4,
       effects: {
         pageAdd: "assets/audio/interface/page-turn.wav",
         pageRemove: "assets/audio/interface/page-turn-reverse.wav",
         sword: "assets/audio/interface/sword.wav",
         swordReverse: "assets/audio/interface/sword-reverse.wav",
-        diavule: "assets/audio/diavule-invocation.wav"
+        diavule: "assets/audio/diavule-invocation.wav",
+        shopPurchase: "assets/audio/interface/shop-purchase.mp3",
+        shopSale: "assets/audio/interface/shop-purchase.mp3"
       }
     },
     // TEMP_BALANCE_VALUE — révélation du logo du menu, sans effet sur la simulation.
@@ -286,7 +297,7 @@
         label: "Échoppe de l’Artisanat",
         icon: "⚒",
         tiers: {
-          1: [{ label: "Outil en bois", icon: "🪵", equipmentKind: "tools", equipmentType: "bois" }, { label: "Armure de cuir", icon: "🦺", equipmentKind: "armors", equipmentType: "cuir" }],
+          1: [{ label: "Outil en pierre", icon: "🪨", equipmentKind: "tools", equipmentType: "bois" }, { label: "Armure de cuir", icon: "🦺", equipmentKind: "armors", equipmentType: "cuir" }],
           2: [{ label: "Outil en bronze", icon: "🟤", equipmentKind: "tools", equipmentType: "bronze" }, { label: "Cotte de mailles", icon: "🛡", equipmentKind: "armors", equipmentType: "maille" }],
           3: [{ label: "Outil en fer", icon: "⚙", equipmentKind: "tools", equipmentType: "fer" }, { label: "Armure de fer", icon: "🛡", equipmentKind: "armors", equipmentType: "fer" }]
         }
@@ -311,7 +322,7 @@
     equipment: {
       // Prix validés par village ; les achats équipent les habitants actuels et futurs, hors légendes.
       tools: {
-        bois: { label: "Outil en bois", gold: 150, requiredTier: 1, damage: 5, productionBonus: 0.2 },
+        bois: { label: "Outil en pierre", gold: 150, requiredTier: 1, damage: 5, productionBonus: 0.2 },
         bronze: { label: "Outil en bronze", gold: 250, requiredTier: 2, damage: 10, productionBonus: 0.3 },
         fer: { label: "Outil en fer", gold: 400, requiredTier: 3, damage: 20, productionBonus: 0.5 }
       },

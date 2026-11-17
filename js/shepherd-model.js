@@ -112,7 +112,7 @@
       return part;
     };
     if (tool && bone('hand_r')) {
-      const hand = bone('hand_r'), color = { bois: 0xb98542, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0x816347;
+      const hand = bone('hand_r'), color = { bois: 0xaaa497, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0x816347;
       box(hand, 'outil-manche', [.045, .34, .045], 0x91623e, [0, 0, 0]);
       box(hand, 'outil-tete', [.27, .055, .10], color, [0, .16, .015], tool === 'bois' ? 0 : .65);
     }

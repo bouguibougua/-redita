@@ -39,10 +39,11 @@ function nextMessage(socket, type) {
     await nextMessage(host, "peer");
 
     const commandPromise = nextMessage(host, "command");
-    guest.send(JSON.stringify({ type: "command", method: "sell", args: ["ble"], view: { selectedVillage: { playerId: "blue", lane: 0 } } }));
+    guest.send(JSON.stringify({ type: "command", method: "sell", args: ["ble"], commandId: "shop-test-1", view: { selectedVillage: { playerId: "blue", lane: 0 } } }));
     const command = await commandPromise;
     assert.equal(command.playerId, "blue");
     assert.equal(command.method, "sell");
+    assert.equal(command.commandId, "shop-test-1", "Le relais conserve l'identifiant du reçu boutique");
 
     const statePromise = nextMessage(guest, "state");
     host.send(JSON.stringify({ type: "state", state: { phase: "setup", marker: 42 } }));

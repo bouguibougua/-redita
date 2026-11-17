@@ -98,7 +98,7 @@
     marker.rotation.x = Math.PI / 2;
 
     if (tool) {
-      const color = { bois: 0xb98542, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0x816347;
+      const color = { bois: 0xaaa497, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0x816347;
       const metalness = tool === 'bois' ? 0 : .65;
       const options = { metalness, roughness: metalness ? .38 : .85 };
       box('outil-manche', [.027, .29, .027], color, .16, .29, .04, options);

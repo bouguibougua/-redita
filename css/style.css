@@ -285,7 +285,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .armor-fer { background: linear-gradient(110deg, #667686, #ebf4fc 44%, #7d8fa0 49%, #c5d6df 70%, #435669); }
 .gear-tool { position: absolute; right: 7%; top: 32%; height: 61%; width: 7%; border-radius: 2px; background: #744724; transform: rotate(24deg); filter: drop-shadow(1px 1px 1px #15242b); }
 .gear-tool::before { content: ""; position: absolute; top: 0; left: -100%; width: 340%; height: 27%; border: 1px solid #fff7; border-radius: 3px 7px 1px 2px; background: var(--tool-color); }
-.tool-bois { --tool-color: #d4a267; }
+.tool-bois { --tool-color: #aaa497; }
 .tool-bronze { --tool-color: #dc974c; }
 .tool-fer { --tool-color: #d5e6f4; }
 .animal-appearance.unit-body, .animal-appearance.resident-avatar { background-image: none !important; font-size: 1.35rem !important; background-color: #373927; border-radius: 10px; }

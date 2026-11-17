@@ -40,7 +40,7 @@
         const result = source.clone();
         ownedMaterials.set(source, result);
         if (/^Acier/.test(source.name) && tool) {
-          result.color.setHex({ bois: 0xb98542, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0xd2e0e4);
+          result.color.setHex({ bois: 0xaaa497, bronze: 0xc28b43, fer: 0xd2e0e4 }[tool] || 0xd2e0e4);
           result.metalness = tool === 'bois' ? 0 : 0.75;
           result.roughness = tool === 'bois' ? 0.85 : 0.35;
         }

@@ -38,7 +38,7 @@
         if (!materials.has(source)) {
           const result = source.clone();
           if (source.name === 'Arc_Bagues_Bronze' && tool) {
-            result.color.setHex({bois:0xb98542,bronze:0xc28b43,fer:0xd2e0e4}[tool] || 0xc28b43);
+            result.color.setHex({bois:0xaaa497,bronze:0xc28b43,fer:0xd2e0e4}[tool] || 0xc28b43);
             result.metalness = tool === 'bois' ? 0 : .65;
           }
           materials.set(source, result);

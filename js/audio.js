@@ -28,7 +28,7 @@
       const oldest = voices.shift(); oldest.pause(); oldest.currentTime = 0;
     }
     const audio = effects[name].cloneNode(true);
-    audio.volume = cfg.effectVolume;
+    audio.volume = name==='shopSale'?cfg.effectVolume*cfg.shopSaleVolumeMultiplier:cfg.effectVolume;
     audio.addEventListener("ended", () => releaseVoice(audio), { once:true });
     audio.addEventListener("error", () => releaseVoice(audio), { once:true });
     voices.push(audio);

@@ -200,7 +200,10 @@
   }
 
   function sendCommand(method, args, view) {
-    if (mode === "guest" && socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "command", method, args, view }));
+    if (mode !== "guest" || socket?.readyState !== WebSocket.OPEN) return false;
+    const commandId=E.ShopTransactions?.methods.has(method)?E.ShopTransactions.issue(view?.selectedVillage?.playerId):undefined;
+    socket.send(JSON.stringify({ type: "command", method, args, view, commandId }));
+    return true;
   }
 
   function selectReinforcement(epoch, offerId, legendId) {

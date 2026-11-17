@@ -288,6 +288,7 @@
     if (currentState.selectedVillage.playerId !== owner) {
       controller.selectVillage(owner, currentState.selectedVillage.lane);
     }
+    if(currentState.players[owner]?.villages[currentState.selectedVillage.lane]?.destroyed)return;
     elements.shopModal.hidden = false;
     elements.shopModalContent.appendChild(elements.shop);
     syncShopModal(currentState);
@@ -305,6 +306,7 @@
       const selected = Number(button.dataset.shopVillage) === state.selectedVillage.lane;
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", String(selected));
+      button.disabled=state.players[playerId].villages[Number(button.dataset.shopVillage)].destroyed;
     });
     E.IllustratedShop?.sync(state);
   }

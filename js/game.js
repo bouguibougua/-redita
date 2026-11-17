@@ -199,6 +199,7 @@
       const sale = E.Economy.sell(state, playerId, lane, resource, quantity);
       if (sale) addLog(`Vente du village ${lane + 1} : +${sale.gold.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} or.`);
       E.UI.render(state);
+      return sale;
     },
 
     assignProfessionToAll(profession) {
@@ -256,6 +257,7 @@
       const purchase = E.Transport.buy(state, playerId, lane, type);
       if (purchase) addLog(`${state.players[playerId].name} achète ${purchase.label.toLowerCase()} pour le village ${lane + 1}.`);
       E.UI.render(state);
+      return purchase;
     },
 
     buyAnimal(type) {
@@ -263,6 +265,7 @@
       const purchase = E.Livestock.buy(state, playerId, lane, type);
       if (purchase) addLog(`${E.Config.livestock[type].shortLabel} : un animal rejoint l’enclos ${purchase.slotIndex + 1} du village ${lane + 1}.`);
       E.UI.render(state);
+      return purchase;
     },
 
     buyEquipment(...args) {
@@ -270,6 +273,7 @@
       const purchase = E.Equipment.buy(state, playerId, lane, ...args);
       if (purchase) addLog(`Village ${lane + 1} : ${purchase.label} pour tous les habitants actuels et futurs, hors légendes.`);
       E.UI.render(state);
+      return purchase;
     },
 
     buySpecialAnimal(type, residentId) {
@@ -277,6 +281,7 @@
       const purchase = E.Animals.buy(state, playerId, lane, type, residentId);
       if (purchase) addLog(`${E.Config.specialAnimals[type].label} acheté au village ${lane + 1}${type === "ane" ? ` pour ${E.Economy.getResident(state, playerId, lane, residentId).name}` : ""}.`);
       E.UI.render(state);
+      return purchase;
     },
 
     orderAnimal(animalId, mission, slotIndex) {
@@ -318,6 +323,7 @@
     },
 
     restart() {
+      E.ShopTransactions?.resetPending();
       E.Audio?.play("menu");
       pendingBulkTasks = [];
       state = E.Board.createState(state.format);
@@ -416,7 +422,8 @@
     if (!guestCommands.has(method)) return false;
     if (["toggleBiome", "confirmBiomes"].includes(method)) return args[0] === playerId;
     if (method === "chooseRedirect") return String(args[0] || "").startsWith(`${playerId}-`);
-    return view?.selectedVillage?.playerId === playerId;
+    const selection=view?.selectedVillage;
+    return selection?.playerId === playerId && Number.isInteger(selection.lane) && Boolean(state.players[playerId]?.villages[selection.lane]);
   }
 
   function applyRemoteCommand(message) {
@@ -424,24 +431,28 @@
     if (E.Network.mode !== "host" || !onlineAllowed(message.method, message.args || [], message.playerId, message.view)) return;
     const hostView = viewState();
     restoreView(message.view);
-    controller[message.method](...(message.args || []));
+    executeCommand(controller,message.method,message.args||[],message.commandId,false);
     restoreView(hostView);
     E.UI.render(state);
     E.Network.sendState(state);
   }
 
+  function executeCommand(target,method,args,id,feedback=true) {
+    const run=()=>target[method](...args);
+    return E.ShopTransactions?E.ShopTransactions.execute(state,method,args,run,id,feedback):run();
+  }
   const onlineController = new Proxy(controller, {
     get(target, method) {
       if (typeof target[method] !== "function") return target[method];
       return (...args) => {
-        if (E.Network.mode === "local" || E.Network.mode === "pending") return target[method](...args);
+        if (E.Network.mode === "local" || E.Network.mode === "pending") return executeCommand(target,method,args);
         if (E.Network.mode === "tutorial") {
           if (!E.Tutorial?.allow(method, args, state)) return;
           if (E.Tutorial?.freePlay) {
             if (method === "chooseRedirect" && !String(args[0] || "").startsWith("red-")) return;
             if (!localViewMethods.has(method) && method !== "chooseRedirect" && state.selectedVillage?.playerId !== "red") return;
           }
-          const result = target[method](...args);
+          const result = executeCommand(target,method,args);
           E.Tutorial?.afterAction(method, args, state);
           return result;
         }
@@ -449,9 +460,9 @@
           if (["toggleBiome", "confirmBiomes"].includes(method) && args[0] !== "red") return;
           if (method === "chooseRedirect" && !String(args[0] || "").startsWith("red-")) return;
           if (!localViewMethods.has(method) && !["toggleBiome", "confirmBiomes", "start", "togglePause", "restart", "chooseRedirect"].includes(method) && state.selectedVillage?.playerId !== "red") return;
-          return target[method](...args);
+          return executeCommand(target,method,args);
         }
-        if (localViewMethods.has(method)) return target[method](...args);
+        if (localViewMethods.has(method)) return executeCommand(target,method,args);
         if (["toggleBiome", "confirmBiomes"].includes(method)) {
           if (args[0] !== E.Network.playerId) return;
         } else if (["start", "togglePause", "restart"].includes(method)) {
@@ -460,7 +471,7 @@
           return;
         }
         if (E.Network.mode === "guest") return E.Network.sendCommand(method, args, viewState());
-        const result = target[method](...args);
+        const result = executeCommand(target,method,args);
         E.Network.sendState(state);
         return result;
       };
@@ -498,6 +509,7 @@
 
   E.Network.init({
     onReady(session) {
+      E.ShopTransactions?.resetPending();
       pendingBulkTasks = [];
       state = E.Board.createState(session.mode === "tutorial" ? "classic" : session.format || E.Config.defaultFormat);
       E.MythologySession?.reset();
@@ -522,6 +534,7 @@
       previousTimestamp = performance.now();
       E.UI.render(state);
       E.MythologySession?.render(state);
+      E.ShopTransactions?.observe(state);
     },
     onCommand: applyRemoteCommand,
     onMythology(packet) { E.MythologySession?.receive(packet); },

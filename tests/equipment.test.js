@@ -46,6 +46,8 @@ assert.equal(quote("armors", "fer").allowed, false);
 village.buildings[0].level = 3;
 assert.ok(buy("tools", "bronze"));
 assert.ok(buy("tools", "fer"));
+assert.equal(buy("armors", "fer"),false,"La maille doit précéder le fer même avec Artisanat T3");
+assert.ok(buy("armors", "maille"));
 assert.ok(buy("armors", "fer"));
 assert.deepEqual(E.Equipment.bonuses(resident), { damage: 20, hp: 50, productionSpeed: 0, productionYield: 0.5 }, "Replacements do not stack previous tiers");
 assert.equal(resident.mission, "disponible");
