@@ -35,8 +35,12 @@
     const reference = spec.fit === "width" ? Math.max(sizeVector.x, sizeVector.z) : sizeVector.y;
     const scale = reference > 1e-6 ? spec.size / reference : 1;
     merged.translate(0, -box.min.y, 0).scale(scale, scale, scale);
-    const colors = merged.attributes.color, b = spec.brightness ?? 1;
-    if (b !== 1) for (let i = 0; i < colors.array.length; i++) colors.array[i] = Math.min(1, colors.array[i] * b);
+    const colors = merged.attributes.color, positions = merged.attributes.position, b = spec.brightness ?? 1, top = spec.size * (spec.fit === "height" ? 1 : 0.6);
+    // Houppiers : base et intérieur plus sombres, sommet éclairé (lecture claire en vue RTS).
+    for (let i = 0; i < colors.count; i++) {
+      const shade = spec.shade ? 0.6 + 0.42 * Math.min(1, Math.max(0, positions.getY(i) / Math.max(1e-4, top))) : 1;
+      for (let c = 0; c < 3; c++) colors.array[i * 3 + c] = Math.min(1, colors.array[i * 3 + c] * b * shade * (spec.tint ? spec.tint[c] : 1));
+    }
     merged.computeBoundingBox(); merged.computeBoundingSphere();
     merged.userData.sharedModel = true;
     return merged;

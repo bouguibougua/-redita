@@ -47,7 +47,7 @@ for (const [red, blue] of configs) {
     assert.ok(Number.isFinite(out.h), `hauteur finie ${red}/${blue} @${x},${z}`);
     const sum = out.plain + out.mountain + out.coast;
     if (!out.inside) assert.ok(Math.abs(sum - 1) < 1e-6, "poids de biome normalisés");
-    assert.ok(out.h > -4 && out.h < 30, `relief borné (${out.h})`);
+    assert.ok(out.h > -4 && out.h < 48, `relief borné (${out.h})`);
   }
 }
 
@@ -132,7 +132,7 @@ for (const [red, blue] of configs) {
 // 9. Configuration de la caméra : angle fixe unique et bornes de zoom cohérentes.
 {
   const cam = E.Config.strategyCamera;
-  assert.ok(cam.pitchDeg >= 45 && cam.pitchDeg <= 60);
+  assert.ok(cam.pitchDeg >= 40 && cam.pitchDeg <= 60);
   assert.ok(cam.zoomMin > 0 && cam.zoomMin < cam.zoomFit && cam.zoomFit <= cam.zoomMax);
 }
 

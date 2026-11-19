@@ -35,7 +35,7 @@
       uDepth: { value: depthTexture }, uNormal: { value: textures.water.normal },
       uBounds: { value: new THREE.Vector4(extent.minX, extent.minZ, 1 / width, 1 / depthExtent) },
       uTime: { value: 0 }, uSun: { value: new THREE.Vector3(-0.5, 0.8, -0.4).normalize() },
-      uShallow: { value: new THREE.Color(0x35c4b4) }, uDeep: { value: new THREE.Color(0x0c5f86) },
+      uShallow: { value: new THREE.Color(0x46c7b2) }, uDeep: { value: new THREE.Color(0x0b4a70) },
       uFoam: { value: new THREE.Color(0xf4f7f0) }, uSky: { value: new THREE.Color(cfg.skyColor) },
       uSunColor: { value: new THREE.Color(cfg.sunColor) }, uWave: { value: profile.waterDetail > 0 ? 1 : 0 }, uFoamOn: { value: profile.waterDetail > 0 ? 1 : 0.5 }
     }]);
@@ -67,17 +67,22 @@
           float fresnel = 0.03 + 0.55 * pow(1.0 - max(dot(N, V), 0.0), 4.0);
           float deepness = 1.0 - exp(-depth * 1.15);
           vec3 color = mix(uShallow, uDeep, deepness);
+          // Caustiques sur les hauts-fonds : lignes lumineuses mouvantes, comme dans une crique.
+          float ca = texture2D(uNormal, p * 0.55 + vec2(uTime * 0.021, -uTime * 0.017)).x;
+          float cb = texture2D(uNormal, p * vec2(-0.47, 0.61) + vec2(-uTime * 0.015, uTime * 0.024)).y;
+          float caustic = pow(clamp(1.0 - abs(ca + cb - 1.0) * 3.2, 0.0, 1.0), 3.0);
+          color += vec3(0.75, 0.95, 0.85) * caustic * (1.0 - smoothstep(0.1, 1.2, depth)) * 0.32 * uWave;
           color = mix(color, uSky, fresnel);
           vec3 H = normalize(normalize(uSun) + V);
           float spec = pow(max(dot(N, H), 0.0), 220.0) * 0.9 * uWave;
           color += uSunColor * spec;
-          float alpha = mix(0.42, 0.95, smoothstep(0.0, 0.7, depth));
+          float alpha = mix(0.62, 0.96, smoothstep(0.0, 0.6, depth));
           // Écume : bande côtière pulsée par les vagues + liseré blanc au contact du sable.
           float jitter = n1.x * 0.5 + n2.y * 0.5;
-          float band = 1.0 - smoothstep(0.0, 0.2 + 0.07 * jitter, depth);
-          float pulse = 0.55 + 0.45 * sin(depth * 24.0 - uTime * 1.5 + jitter * 6.0);
-          float lap = (1.0 - smoothstep(0.0, 0.05, depth)) * 0.85;
-          float foam = clamp(band * pulse * 0.75 + lap, 0.0, 1.0) * uFoamOn;
+          float band = 1.0 - smoothstep(0.0, 0.13 + 0.05 * jitter, depth);
+          float pulse = smoothstep(0.35, 0.9, 0.5 + 0.5 * sin(depth * 30.0 - uTime * 1.6 + jitter * 6.0));
+          float lap = (1.0 - smoothstep(0.0, 0.035, depth)) * 0.8;
+          float foam = clamp(band * pulse * 0.6 + lap, 0.0, 1.0) * uFoamOn;
           color = mix(color, uFoam, foam);
           alpha = max(alpha * smoothstep(0.0, 0.025, depth), foam * 0.92);
           gl_FragColor = vec4(color, alpha);

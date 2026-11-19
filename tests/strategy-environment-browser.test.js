@@ -39,14 +39,16 @@ async function run() {
         if (o.userData.decorative) decorativeInTerrain++;
       });
       return { mode: Eredita.Board3D.renderMode, boxes: boxes.length, boxesVisible: boxes.filter(b => b.visible).length, bases, visibleBases, frames, visibleFrames, decorativeInTerrain,
-        sceneFog: Boolean(c.scene.fog), tone: c.renderer.toneMapping };
+        sceneFog: Boolean(c.scene.fog), post: Eredita.Board3D.postProcessing, environmentMap: Boolean(c.scene.environment), tone: c.renderer.toneMapping };
     })()`);
     assert.equal(board.mode, 'strategy');
     assert.ok(board.boxes >= 2 && board.boxesVisible === 0, 'socle et rebord du plateau masqués en version PC');
     assert.ok(board.bases >= 4 && board.visibleBases === 0, 'volumes de base des régions masqués');
     assert.equal(board.frames, 4); assert.equal(board.visibleFrames, 4);
     assert.equal(board.decorativeInTerrain, 0, 'aucun décor dans le groupe sélectionnable');
-    assert.ok(board.sceneFog, 'brume atmosphérique');
+    // Brume : linéaire de Three.js, ou perspective atmosphérique calculée par le post-traitement.
+    assert.ok(board.sceneFog || board.post, 'brume atmosphérique');
+    assert.ok(board.environmentMap, 'ciel en carte d’environnement');
 
     // Paysage : généré, borné en triangles, jamais sélectionnable, avec eau et végétation instanciée.
     const env = await page.evaluate(`(() => {
@@ -204,20 +206,26 @@ async function run() {
     assert.deepEqual(voids, [], 'aucun bord du monde ni ciel visible, même au dézoom maximal');
 
     // Qualités graphiques : quatre niveaux, paysage reconstruit, ressources libérées.
-    const quality = await page.evaluate(`(async () => {
-      const E = Eredita, out = {}, memory = () => E.Board3D.getXRContext().renderer.info.memory.geometries;
-      for (const level of ['low', 'medium', 'high', 'ultra']) {
-        E.GraphicsSettings.set(level, false);
-        await new Promise(r => setTimeout(r, 1200));
-        const d = E.Board3D.environment.diagnostics;
-        out[level] = { instances: d.vegetation.instances, triangles: d.triangles, buildMs: d.buildMs, geometries: memory() };
-      }
-      E.GraphicsSettings.set('medium', false); await new Promise(r => setTimeout(r, 1200));
+    // Un appel par niveau (le rendu logiciel des tests est lent) : on attend le paysage reconstruit au bon niveau.
+    const quality = { out: {} };
+    for (const level of ['low', 'medium', 'high', 'ultra']) {
+      await page.evaluate(`Eredita.GraphicsSettings.set('${level}', false)`);
+      await page.waitFor(`Eredita.Board3D.environment?.diagnostics.quality === Eredita.Config.graphics.levels['${level}'].label`, 60000);
+      await delay(800);
+      quality.out[level] = await page.evaluate(`(() => { const d = Eredita.Board3D.environment.diagnostics;
+        return { instances: d.vegetation.instances, triangles: d.triangles, buildMs: d.buildMs, geometries: Eredita.Board3D.getXRContext().renderer.info.memory.geometries }; })()`);
+    }
+    await page.evaluate(`Eredita.GraphicsSettings.set('medium', false)`);
+    await page.waitFor(`Eredita.Board3D.environment?.diagnostics.quality === Eredita.Config.graphics.levels.medium.label`, 60000);
+    await delay(800);
+    Object.assign(quality, await page.evaluate(`(async () => {
+      const E = Eredita, memory = () => E.Board3D.getXRContext().renderer.info.memory.geometries;
       const withEnv = memory(); E.Board3D.releaseEnvironment();
       const released = memory(); const gone = !E.Board3D.environment;
-      await new Promise(r => setTimeout(r, 400));
-      return { out, withEnv, released, gone, rebuilt: Boolean(E.Board3D.environment) };
-    })()`);
+      return { withEnv, released, gone };
+    })()`));
+    await page.waitFor('Boolean(Eredita.Board3D.environment)', 30000);
+    quality.rebuilt = true;
     assert.ok(quality.out.low.instances < quality.out.medium.instances && quality.out.medium.instances < quality.out.high.instances && quality.out.high.instances < quality.out.ultra.instances, JSON.stringify(quality.out));
     assert.ok(quality.out.ultra.triangles < 1500000, 'ultra reste borné');
     assert.ok(quality.gone && quality.released < quality.withEnv - 10, `géométries libérées (${quality.withEnv} → ${quality.released})`);
@@ -233,7 +241,7 @@ async function run() {
       let bases = 0, visibleBases = 0, frames = 0;
       c.terrainGroup.traverse(o => { if (o.userData.terrainRole === 'base') { bases++; if (o.visible) visibleBases++; } if (o.name === 'team-frame' && o.visible) frames++; });
       const inXr = { mode: E.Board3D.renderMode, boxesVisible: boxes.filter(b => b.visible).length, bases, visibleBases, frames, envVisible: E.Board3D.environment?.group.visible,
-        sun: c.scene.children.find(o => o.isDirectionalLight).intensity, tone: c.renderer.toneMapping, width: E.Board3D.getBoardWidth() };
+        sun: c.scene.children.find(o => o.isDirectionalLight).intensity, tone: c.renderer.toneMapping, width: E.Board3D.getBoardWidth(), envMap: Boolean(c.scene.environment), fog: c.scene.fog };
       delete E.XR.active; Object.defineProperty(E.XR, 'active', { get() { return false; }, configurable: true });
       await new Promise(r => setTimeout(r, 600));
       return { sunBefore, inXr, back: { mode: E.Board3D.renderMode, boxesVisible: boxes.filter(b => b.visible).length, envVisible: E.Board3D.environment?.group.visible, tone: c.renderer.toneMapping } };
@@ -242,6 +250,7 @@ async function run() {
     assert.equal(xr.inXr.visibleBases, xr.inXr.bases, 'bases de région conservées en VR/MR'); assert.equal(xr.inXr.frames, 0);
     assert.equal(xr.inXr.envVisible, false, 'aucun paysage imposé en VR/MR'); assert.equal(xr.inXr.tone, 0, 'rendu VR/MR sans tone mapping ajouté');
     assert.equal(xr.inXr.sun, 2.8, 'éclairage de plateau d\'origine en VR/MR');
+    assert.equal(xr.inXr.envMap, false, 'aucun ciel d’environnement en VR/MR'); assert.equal(xr.inXr.fog, null, 'aucune brume en VR/MR');
     assert.equal(xr.back.mode, 'strategy'); assert.equal(xr.back.boxesVisible, 0); assert.equal(xr.back.envVisible, true);
     assert.ok(Math.abs(xr.inXr.width - (2 * 3 * 1.15 + 1.65)) < 0.01, 'dimensions du plateau inchangées');
 

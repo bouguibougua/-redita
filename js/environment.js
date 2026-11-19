@@ -76,17 +76,50 @@
     return material;
   }
 
+  // Éclairage cuit du relief (le soleil est fixe) : ombres portées des crêtes et fonds de vallée,
+  // calculés sur une grille grossière de hauteurs. Partagé par le sol et la végétation : un bois à
+  // l'ombre d'une crête est plus sombre, ce qui donne leur modelé aux montagnes en vue plongeante.
+  const BASIN_RING = [[3, 0], [-3, 0], [0, 3], [0, -3], [2.1, 2.1], [-2.1, 2.1], [2.1, -2.1], [-2.1, -2.1]];
+  function buildTerrainLight(field, lim, sun) {
+    const STEP = 1.25, margin = 5;
+    const minX = lim.minX - margin, minZ = lim.minZ - margin;
+    const W = Math.ceil((lim.maxX - lim.minX + 2 * margin) / STEP) + 1, D = Math.ceil((lim.maxZ - lim.minZ + 2 * margin) / STEP) + 1;
+    const grid = new Float32Array(W * D);
+    for (let j = 0; j < D; j++) for (let i = 0; i < W; i++) grid[j * W + i] = field.heightAt(minX + i * STEP, minZ + j * STEP);
+    function height(x, z) {
+      const fx = clamp((x - minX) / STEP, 0, W - 1.001), fz = clamp((z - minZ) / STEP, 0, D - 1.001);
+      const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, k = j * W + i;
+      return (grid[k] * (1 - u) + grid[k + 1] * u) * (1 - v) + (grid[k + W] * (1 - u) + grid[k + W + 1] * u) * v;
+    }
+    const flat = Math.hypot(sun.x, sun.z) || 1, dx = sun.x / flat, dz = sun.z / flat, rise = sun.y / flat;
+    // 0 = plein soleil, 1 = à l'ombre d'un relief ; pénombre plus large pour les reliefs lointains.
+    function shadowAt(x, z, h) {
+      let block = 0;
+      for (let t = 0.8; t < 46; t += t < 8 ? 0.8 : 1.6) {
+        const above = height(x + dx * t, z + dz * t) - (h + rise * t + 0.15);
+        if (above > 0) { block = Math.max(block, above / (0.4 + t * 0.07)); if (block >= 1) return 1; }
+      }
+      return block;
+    }
+    function basinAt(x, z, h) {
+      let sum = 0;
+      for (const [ox, oz] of BASIN_RING) sum += height(x + ox, z + oz);
+      return clamp((sum / BASIN_RING.length - h) * 0.085, 0, 0.32);
+    }
+    return { shadowAt, basinAt, height };
+  }
+
   // Construit un chunk de terrain ; la grille est étendue d'un anneau pour calculer des normales
   // identiques sur les arêtes partagées. Une jupe masque les fissures entre niveaux de détail.
-  function buildChunk(THREE, field, ix, iz, segments) {
+  function buildChunk(THREE, field, ix, iz, segments, light) {
     const x0 = ix * CHUNK, z0 = iz * CHUNK, step = CHUNK / segments, N = segments + 1, P = N + 2;
     const H = new Float32Array(P * P);
-    const attrs = new Float32Array(P * P * 6); // plain, mountain, coast, sea, path, cliff
+    const attrs = new Float32Array(P * P * 8); // plain, mountain, coast, sea, path, cliff, forest, maquis
     const out = {};
     for (let j = 0; j < P; j++) for (let i = 0; i < P; i++) {
       field.sample(x0 + (i - 1) * step, z0 + (j - 1) * step, out);
       const k = j * P + i; H[k] = out.h;
-      attrs[k * 6] = out.plain; attrs[k * 6 + 1] = out.mountain; attrs[k * 6 + 2] = out.coast; attrs[k * 6 + 3] = out.sea; attrs[k * 6 + 4] = out.path; attrs[k * 6 + 5] = out.cliff;
+      attrs.set([out.plain, out.mountain, out.coast, out.sea, out.path, out.cliff, out.forest || 0, out.maquis || 0], k * 8);
     }
     const skirt = 4 * N, total = N * N + skirt;
     const positions = new Float32Array(total * 3), normals = new Float32Array(total * 3), colors = new Float32Array(total * 3), splats = new Float32Array(total * 4);
@@ -97,9 +130,10 @@
       const dx = (H[k + 1] - H[k - 1]) / (2 * step), dz = (H[k + P] - H[k - P]) / (2 * step);
       const slope = Math.hypot(dx, dz);
       let nx = -dx, ny = 1, nz = -dz; const nl = Math.hypot(nx, ny, nz); nx /= nl; ny /= nl; nz /= nl;
-      const plain = attrs[k * 6], coast = attrs[k * 6 + 2], sea = attrs[k * 6 + 3], path = attrs[k * 6 + 4], cliff = attrs[k * 6 + 5];
+      const plain = attrs[k * 8], coast = attrs[k * 8 + 2], sea = attrs[k * 8 + 3], path = attrs[k * 8 + 4], cliff = attrs[k * 8 + 5];
+      const forest = smooth(0.38, 0.74, attrs[k * 8 + 6]), maquis = smooth(0.26, 0.64, attrs[k * 8 + 7]);
       // Le massif de fond prend l'aspect d'une montagne (roche, éboulis) même hors biome montagne.
-      const mountain = Math.max(attrs[k * 6 + 1], smooth(1.4, 4.5, h) * (1 - coast * 0.4));
+      const mountain = Math.max(attrs[k * 8 + 1], smooth(1.4, 4.5, h) * (1 - coast * 0.4));
       const jitter = noise.nB.fbm(x * 0.09 + 40, z * 0.09, 2);
       const rock = clamp(smooth(0.5, 1.05, slope) + mountain * smooth(1.8, 5.5, h + jitter * 1.4) * 0.9 + coast * cliff * smooth(0.5, 1.6, h) * 0.8);
       const underwater = sea * smooth(water - 0.02, water - 0.12, h);
@@ -118,7 +152,15 @@
       // Variations naturelles de teinte : maquis sombre, herbes sèches, ocres.
       const tone = noise.nB.fbm(x * 0.045 + 50, z * 0.045 - 20, 3), fine = noise.nC.fbm(x * 0.35, z * 0.35, 2);
       // Herbes dorées (tone > 0) et vertes plus sombres (tone < 0), comme une prairie de fin d'été.
-      const r = (1 + tone * 0.3 + fine * 0.06) * ao * (1 - mountain * 0.04), g = (1 + tone * 0.12 + fine * 0.05) * ao, b = (1 - tone * 0.3 + fine * 0.03) * ao * (1 + mountain * 0.05);
+      let r = (1 + tone * 0.3 + fine * 0.06) * ao * (1 - mountain * 0.04), g = (1 + tone * 0.12 + fine * 0.05) * ao, b = (1 - tone * 0.3 + fine * 0.03) * ao * (1 + mountain * 0.05);
+      // Sous-bois sombre et frais sous les forêts, teinte olive sous le maquis : la végétation tient au sol.
+      const under = forest * (1 - rock * 0.7) * (1 - sand), scrub = maquis * (1 - forest) * (1 - rock * 0.7) * (1 - sand);
+      r *= 1 - under * 0.34 - scrub * 0.14; g *= 1 - under * 0.22 - scrub * 0.08; b *= 1 - under * 0.3 - scrub * 0.16;
+      // Relief à contre-jour : ombre bleutée des crêtes, fonds de vallée assombris.
+      if (light && h > water - 0.3) {
+        const shade = light.shadowAt(x, z, h), basin = light.basinAt(x, z, h);
+        r *= (1 - shade * 0.42) * (1 - basin); g *= (1 - shade * 0.38) * (1 - basin); b *= (1 - shade * 0.24) * (1 - basin * 0.8);
+      }
       colors.set([r, g, b], v * 3);
       positions.set([x, h, z], v * 3); normals.set([nx, ny, nz], v * 3);
     }
@@ -167,6 +209,8 @@
 
     const bounds = field.bounds;
     const lim = { minX: bounds.minX - extent, maxX: bounds.maxX + extent, minZ: bounds.minZ - extent, maxZ: bounds.maxZ + extent };
+    const sunVector = (cfg.sunDirection || [-0.36, 0.64, 0.56]), sunLength = Math.hypot(...sunVector);
+    const light = buildTerrainLight(field, lim, { x: sunVector[0] / sunLength, y: sunVector[1] / sunLength, z: sunVector[2] / sunLength });
     const terrain = new THREE.Group(); terrain.name = "terrain-chunks"; group.add(terrain);
     let triangles = 0, chunks = 0;
     const started = performance.now();
@@ -176,7 +220,7 @@
         const d = field.distanceToBoard(cx, cz) - CHUNK * 0.7;
         const full = profile.chunkSegments;
         const segments = d < 6 ? full : d < 26 ? Math.max(8, full >> 1) : Math.max(5, full >> 2);
-        const geometry = buildChunk(THREE, field, ix, iz, segments);
+        const geometry = buildChunk(THREE, field, ix, iz, segments, light);
         const mesh = new THREE.Mesh(geometry, material);
         mesh.receiveShadow = true; mesh.castShadow = false; mesh.matrixAutoUpdate = false; mesh.userData.decorative = true;
         mesh.raycast = () => {};
@@ -188,18 +232,19 @@
 
     const water = E.WaterRenderer?.create(THREE, { field, extent: lim, profile, textures, scene: options.scene });
     if (water) { group.add(water.mesh); }
-    let vegetation = E.VegetationManager?.create(THREE, { field, extent: lim, profile, models: options.models || null });
+    let vegetation = E.VegetationManager?.create(THREE, { field, extent: lim, profile, models: options.models || null, light });
     if (vegetation) group.add(vegetation.group);
 
     // Les modèles Tripo arrivent après la première image : seule la végétation est reconstruite.
     function setModels(models) {
       if (!E.VegetationManager || !models || !Object.keys(models).length) return;
-      const next = E.VegetationManager.create(THREE, { field, extent: lim, profile, models });
+      const next = E.VegetationManager.create(THREE, { field, extent: lim, profile, models, light });
       vegetation?.dispose(); vegetation = next; group.add(next.group);
     }
 
     function update(time, view) {
       water?.update(time, view);
+      vegetation?.update?.(time);
     }
 
     function dispose() {
@@ -211,7 +256,7 @@
     }
 
     return { group, field, extent: lim, update, dispose, setModels, heightAt: field.heightAt,
-      get diagnostics() { return { chunks, triangles: triangles + (vegetation?.stats.triangles || 0), terrainTriangles: triangles, buildMs, vegetation: vegetation?.stats || null, seed: field.seed }; } };
+      get diagnostics() { return { chunks, triangles: triangles + (vegetation?.stats.triangles || 0), terrainTriangles: triangles, buildMs, vegetation: vegetation?.stats || null, seed: field.seed, quality: profile.label }; } };
   }
 
   E.Environment = { create, CHUNK };

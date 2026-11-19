@@ -1,0 +1,212 @@
+"""Prépare un arbre ou un buisson Tripo en houppiers pleins (lisibles en vue RTS).
+
+Blender --background --python scripts/prepare-environment-tree.py -- source.glb destination.glb triangles_proche triangles_loin taille_voxel [apercu.png]
+
+La simple réduction d'un feuillage Tripo (cartes de feuilles) donne des pointes éparses.
+Ici, le modèle est remaillé en voxels : les feuilles proches fusionnent en touffes arrondies,
+le tronc reste un fût. Les couleurs de l'original (échantillonnées dans ses textures) sont
+ensuite transférées sur le nouveau maillage, puis réduit en version proche et lointaine.
+taille_voxel est relative à la hauteur du modèle (ex. 0.025).
+"""
+import bpy
+import bmesh
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+from mathutils import Vector
+
+args = sys.argv[sys.argv.index('--') + 1:]
+source, destination = Path(args[0]), Path(args[1])
+near_target, far_target, voxel_factor = int(args[2]), int(args[3]), float(args[4])
+preview = Path(args[5]) if len(args) > 5 else None
+
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete(use_global=False)
+bpy.ops.import_scene.gltf(filepath=str(source))
+
+
+def base_color_source(material):
+    if not material or not material.use_nodes:
+        return None, (0.6, 0.6, 0.6)
+    for node in material.node_tree.nodes:
+        if node.type != 'BSDF_PRINCIPLED':
+            continue
+        socket = node.inputs['Base Color']
+        factor = tuple(socket.default_value[:3])
+        stack = [link.from_node for link in socket.links]
+        while stack:
+            current = stack.pop()
+            if current.type == 'TEX_IMAGE' and current.image:
+                return current.image, (1.0, 1.0, 1.0)
+            for entry in current.inputs:
+                stack.extend(link.from_node for link in entry.links)
+        return None, factor
+    return None, (0.6, 0.6, 0.6)
+
+
+# 1. Couleur de base des textures → couleur de sommet (domaine point, moyenne des coins).
+meshes = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
+for obj in meshes:
+    mesh = obj.data
+    count = len(mesh.loops)
+    colors = np.ones((count, 4), dtype=np.float32)
+    uv_layer = mesh.uv_layers.active
+    uvs = np.zeros(count * 2, dtype=np.float32)
+    if uv_layer:
+        uv_layer.data.foreach_get('uv', uvs)
+    uvs = uvs.reshape(count, 2)
+    poly_material = np.zeros(len(mesh.polygons), dtype=np.int32)
+    mesh.polygons.foreach_get('material_index', poly_material)
+    loop_totals = np.zeros(len(mesh.polygons), dtype=np.int32)
+    mesh.polygons.foreach_get('loop_total', loop_totals)
+    loop_material = np.repeat(poly_material, loop_totals)
+    for index, material in enumerate(mesh.materials):
+        selected = loop_material == index
+        if not selected.any():
+            continue
+        image, factor = base_color_source(material)
+        if image is None or not uv_layer or not image.size[0]:
+            colors[selected, :3] = factor
+            continue
+        w, h = image.size
+        pixels = np.empty(w * h * image.channels, dtype=np.float32)
+        image.pixels.foreach_get(pixels)
+        pixels = pixels.reshape(h, w, image.channels)[:, :, :3]
+        u = np.mod(uvs[selected, 0], 1.0) * (w - 1)
+        v = np.mod(uvs[selected, 1], 1.0) * (h - 1)
+        colors[selected, :3] = pixels[v.round().astype(np.int64), u.round().astype(np.int64)]
+    # Moyenne par sommet : couleurs douces, sans moucheture.
+    loop_vertex = np.zeros(count, dtype=np.int64)
+    mesh.loops.foreach_get('vertex_index', loop_vertex)
+    sums = np.zeros((len(mesh.vertices), 3), dtype=np.float64)
+    hits = np.zeros(len(mesh.vertices), dtype=np.float64)
+    np.add.at(sums, loop_vertex, colors[:, :3])
+    np.add.at(hits, loop_vertex, 1)
+    point = np.ones((len(mesh.vertices), 4), dtype=np.float32)
+    point[:, :3] = sums / np.maximum(hits, 1)[:, None]
+    attribute = mesh.color_attributes.new(name='Col', type='FLOAT_COLOR', domain='POINT')
+    # Pixels JPEG encodés sRGB → linéaire pour un attribut flottant.
+    srgb = np.clip(point[:, :3], 0, 1)
+    point[:, :3] = np.where(srgb <= 0.04045, srgb / 12.92, ((srgb + 0.055) / 1.055) ** 2.4)
+    attribute.data.foreach_set('color', point.ravel())
+    mesh.color_attributes.active_color = attribute
+
+bpy.ops.object.select_all(action='DESELECT')
+for obj in meshes:
+    obj.select_set(True)
+bpy.context.view_layer.objects.active = meshes[0]
+if len(meshes) > 1:
+    bpy.ops.object.join()
+original = bpy.context.view_layer.objects.active
+original.parent = None
+bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+for obj in list(bpy.context.scene.objects):
+    if obj != original:
+        bpy.data.objects.remove(obj, do_unlink=True)
+
+# Base à z = 0, pied centré (tranche basse = tronc).
+mesh = original.data
+coords = np.empty(len(mesh.vertices) * 3, dtype=np.float32)
+mesh.vertices.foreach_get('co', coords)
+coords = coords.reshape(-1, 3)
+z_min, z_max = coords[:, 2].min(), coords[:, 2].max()
+low = coords[coords[:, 2] < z_min + (z_max - z_min) * 0.08]
+foot = low[:, :2].mean(axis=0) if len(low) > 8 else (coords[:, :2].min(axis=0) + coords[:, :2].max(axis=0)) / 2
+coords -= np.array([foot[0], foot[1], z_min], dtype=np.float32)
+mesh.vertices.foreach_set('co', coords.ravel())
+mesh.update()
+height = float(z_max - z_min)
+
+# 2. Copie remaillée en voxels : touffes pleines, puis lissage pour arrondir.
+model = original.copy()
+model.data = original.data.copy()
+bpy.context.scene.collection.objects.link(model)
+bpy.ops.object.select_all(action='DESELECT')
+model.select_set(True)
+bpy.context.view_layer.objects.active = model
+model.data.remesh_voxel_size = max(0.004, height * voxel_factor)
+model.data.remesh_voxel_adaptivity = 0.0
+bpy.ops.object.voxel_remesh()
+smooth = model.modifiers.new('arrondi', 'SMOOTH')
+smooth.factor = 0.6
+smooth.iterations = 6
+bpy.ops.object.modifier_apply(modifier=smooth.name)
+
+# 3. Couleurs de l'original transférées sur le remaillage.
+color = model.data.color_attributes.get('Col') or model.data.color_attributes.new(name='Col', type='FLOAT_COLOR', domain='POINT')
+model.data.color_attributes.active_color = color
+transfer = model.modifiers.new('couleurs', 'DATA_TRANSFER')
+transfer.object = original
+transfer.use_vert_data = True
+transfer.data_types_verts = {'COLOR_VERTEX'}
+transfer.vert_mapping = 'POLYINTERP_NEAREST'
+transfer.layers_vcol_vert_select_src = 'ALL'
+transfer.layers_vcol_vert_select_dst = 'NAME'
+bpy.ops.object.modifier_apply(modifier=transfer.name)
+bpy.data.objects.remove(original, do_unlink=True)
+for layer in list(model.data.uv_layers):
+    model.data.uv_layers.remove(layer)
+model.data.materials.clear()
+
+
+def triangle_count():
+    model.data.calc_loop_triangles()
+    return len(model.data.loop_triangles)
+
+
+def decimate(target):
+    current = triangle_count()
+    if current <= target:
+        return
+    modifier = model.modifiers.new('reduction', 'DECIMATE')
+    modifier.decimate_type = 'COLLAPSE'
+    modifier.ratio = max(0.0001, target / current)
+    modifier.use_collapse_triangulate = True
+    bpy.ops.object.modifier_apply(modifier=modifier.name)
+
+
+def export(path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    for polygon in model.data.polygons:
+        polygon.use_smooth = True
+    bpy.ops.object.select_all(action='DESELECT')
+    model.select_set(True)
+    bpy.ops.export_scene.gltf(filepath=str(path), export_format='GLB', export_yup=True, use_selection=True,
+                              export_vertex_color='ACTIVE', export_materials='NONE', export_texcoords=False,
+                              export_normals=True, export_apply=True)
+
+
+remeshed = triangle_count()
+decimate(near_target)
+near_triangles = triangle_count()
+export(destination)
+dims = list(model.dimensions)
+
+if preview:
+    scene = bpy.context.scene
+    scene.render.engine = 'BLENDER_WORKBENCH'
+    scene.display.shading.light = 'STUDIO'
+    scene.display.shading.color_type = 'VERTEX'
+    scene.render.resolution_x = scene.render.resolution_y = 512
+    camera_data = bpy.data.cameras.new('apercu')
+    camera = bpy.data.objects.new('apercu', camera_data)
+    scene.collection.objects.link(camera)
+    scene.camera = camera
+    reach = max(dims) * 1.9
+    camera.location = Vector((reach * 0.75, -reach * 0.75, dims[2] * 0.5 + reach * 0.55))
+    direction = Vector((0, 0, dims[2] * 0.45)) - camera.location
+    camera.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
+    scene.render.filepath = str(preview)
+    bpy.ops.render.render(write_still=True)
+
+decimate(far_target)
+far_triangles = triangle_count()
+far_path = destination.with_name(destination.stem + '_far.glb')
+export(far_path)
+
+print('ENV_TREE ' + json.dumps({
+    'file': destination.name, 'remeshed': remeshed, 'near_triangles': near_triangles, 'far_triangles': far_triangles,
+    'bytes': destination.stat().st_size, 'far_bytes': far_path.stat().st_size, 'dimensions_xyz_blender': [round(d, 3) for d in dims],
+}))

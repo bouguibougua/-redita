@@ -181,7 +181,7 @@
     // Hauteur et caractéristiques d'un point. `out` est réutilisé pour éviter les allocations.
     function sample(x, z, out = {}) {
       const inner = interior(x, z);
-      if (inner) { out.h = inner.h; out.plain = 1; out.mountain = 0; out.coast = 0; out.sea = inner.sea; out.dist = 0; out.path = 0; out.cliff = 0; out.inside = true; return out; }
+      if (inner) { out.h = inner.h; out.plain = 1; out.mountain = 0; out.coast = 0; out.sea = inner.sea; out.dist = 0; out.path = 0; out.road = 0; out.cliff = 0; out.forest = 0; out.maquis = 0; out.inside = true; return out; }
       out.inside = false;
       const w = biomeWeights(x, z, wtmp);
       const db = distanceToBoard(x, z);
@@ -209,7 +209,7 @@
       let sea = seaT;
 
       // Prolongement des mers des régions littorales vers l'extérieur du plateau.
-      let bandMask = 0, bandBed = 0;
+      let bandMask = 0, bandBed = 0, valley = 0;
       for (const band of bands) {
         const e = band.side < 0 ? band.edge - x : x - band.edge;
         if (e <= -0.2) continue;
@@ -217,9 +217,11 @@
         const z0 = band.z0 - open * 6 - 0.6 * nC.fbm(x * 0.2, z * 0.2, 2), z1 = band.z1 + open * 6 + 0.6 * nC.fbm(x * 0.2 + 9, z * 0.2, 2);
         const soft = 0.7 + 6 * open;
         const inside = smooth(z0, z0 + soft, z) * (1 - smooth(z1 - soft, z1, z)) * smooth(-0.3, 0.0, e);
+        // Vallée plus large que l'eau : les versants de la gorge s'élèvent progressivement depuis les berges.
+        valley = Math.max(valley, smooth(z0 - 4.5, z0 + soft, z) * (1 - smooth(z1 - soft, z1 + 4.5, z)) * smooth(-0.3, 0.0, e));
         if (inside > bandMask) {
           bandMask = inside;
-          bandBed = FLOOR - 0.23 - 0.35 * smooth(0, 5, e) - 2.2 * smooth(3, 18, e) + 0.18 * nC.fbm(x * 0.17, z * 0.17, 2);
+          bandBed = FLOOR - 0.3 - 0.55 * smooth(0, 3, e) - 2.2 * smooth(3, 16, e) + 0.15 * nC.fbm(x * 0.17, z * 0.17, 2);
         }
       }
 
@@ -237,16 +239,22 @@
       // Côté caméra il reste bas (occlusion) pour ne jamais masquer le plateau.
       const backDistance = Math.max(x - bounds.maxX - 3, Math.abs(z - centerZ) - (bounds.maxZ - centerZ) - 6) + 3 * nC.fbm(x * 0.04 + 3, z * 0.04, 2);
       // Les mers prolongées percent le massif (golfe) au lieu de buter dessus.
-      const ring = smooth(0, 10, backDistance) * occlusion * (1 - 0.95 * bandMask);
+      const ring = smooth(0, 10, backDistance) * occlusion * (1 - valley);
       if (ring > 0) {
         const peaks = 0.5 + 0.5 * nA.fbm(x * 0.02 - 4.4, z * 0.02 + 1.9, 2);
-        h += ring * (1 - 0.65 * w.mountain) * (2 + 21 * (0.3 * peaks + 0.7 * ridge) * (0.55 + 0.45 * peaks));
+        // Plus on s'éloigne, plus les chaînes sont hautes : plans successifs que la brume détache.
+        h += ring * (1 - 0.65 * w.mountain) * (2 + 21 * (0.3 * peaks + 0.7 * ridge) * (0.55 + 0.45 * peaks)) * (1 + 0.85 * smooth(14, 60, backDistance));
       }
       h = mix(h, 0.02, (1 - smooth(0, 0.5, db)) * (1 - w.coast));
-      const path = pathMask(x, z) * w.plain;
+      // Piste de terre faisant le tour du plateau (interrompue par la mer), reliée aux chemins des plaines.
+      const road = (1 - smooth(0.17, 0.3, Math.abs(db - 0.6))) * (1 - smooth(0.12, 0.3, sea));
+      const path = Math.max(pathMask(x, z) * w.plain, road);
       h -= path * 0.035;
       out.h = h; out.plain = w.plain; out.mountain = w.mountain; out.coast = w.coast;
-      out.sea = sea; out.dist = db; out.path = path; out.cliff = cliffZone;
+      out.sea = sea; out.dist = db; out.path = path; out.road = road; out.cliff = cliffZone;
+      // Couverture végétale partagée par le sol (sous-bois) et la végétation (bois, maquis, clairières).
+      out.forest = clamp01(0.5 + 1.3 * nB.fbm(x * 0.045 + 12, z * 0.045, 3));
+      out.maquis = clamp01(0.5 + 1.2 * nC.fbm(x * 0.1 - 5, z * 0.1 + 9, 3));
       return out;
     }
 
