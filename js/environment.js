@@ -184,8 +184,15 @@
 
     const water = E.WaterRenderer?.create(THREE, { field, extent: lim, profile, textures, scene: options.scene });
     if (water) { group.add(water.mesh); }
-    const vegetation = E.VegetationManager?.create(THREE, { field, extent: lim, profile });
+    let vegetation = E.VegetationManager?.create(THREE, { field, extent: lim, profile, models: options.models || null });
     if (vegetation) group.add(vegetation.group);
+
+    // Les modèles Tripo arrivent après la première image : seule la végétation est reconstruite.
+    function setModels(models) {
+      if (!E.VegetationManager || !models || !Object.keys(models).length) return;
+      const next = E.VegetationManager.create(THREE, { field, extent: lim, profile, models });
+      vegetation?.dispose(); vegetation = next; group.add(next.group);
+    }
 
     function update(time, view) {
       water?.update(time, view);
@@ -199,7 +206,7 @@
       group.clear();
     }
 
-    return { group, field, extent: lim, update, dispose, heightAt: field.heightAt,
+    return { group, field, extent: lim, update, dispose, setModels, heightAt: field.heightAt,
       get diagnostics() { return { chunks, triangles: triangles + (vegetation?.stats.triangles || 0), terrainTriangles: triangles, buildMs, vegetation: vegetation?.stats || null, seed: field.seed }; } };
   }
 

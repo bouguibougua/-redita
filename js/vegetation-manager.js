@@ -143,9 +143,16 @@
     return lib;
   }
 
-  function create(THREE, { field, extent, profile }) {
-    const rng = field.random;
+  function create(THREE, { field, extent, profile, models = null }) {
+    // Aléatoire propre à la végétation : même placement avant et après l'arrivée des modèles Tripo.
+    const T = E.TerrainGenerator, rng = T.mulberry32(T.hashString(`${field.seed}:vegetation`));
     const lib = buildLibrary(THREE);
+    // Modèle Tripo s'il est chargé, sinon forme procédurale.
+    const model = (key, lod) => models?.[key]?.[lod] || null;
+    const pick = (keys, roll, lod, fallback) => {
+      const found = keys.map((key) => model(key, lod)).filter(Boolean);
+      return found.length ? found[Math.floor(roll * found.length) % found.length] : fallback;
+    };
     const material = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0 });
     const flowerMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.8, metalness: 0 });
     const buckets = new Map();
@@ -153,20 +160,18 @@
     const density = profile.vegetation;
     const waterLevel = field.waterLevel;
     const sample = {}, probeA = {}, probeB = {};
-    const tints = {
-      pine: [0.85, 1.12], oak: [0.8, 1.2], olive: [0.85, 1.12], bush: [0.75, 1.25], rock: [0.85, 1.15]
-    };
 
     function add(type, geometry, x, y, z, sx, sy, sz, ry, tint, castShadow = false, tiltX = 0, tiltZ = 0, material_ = material) {
       const key = `${type}:${Math.floor(x / SECTOR)}:${Math.floor(z / SECTOR)}`;
-      let bucket = buckets.get(key);
-      if (!bucket) { bucket = { type, geometry, material: material_, castShadow, items: [] }; buckets.set(key, bucket); }
+      const geometryKey = geometry.uuid;
+      const bucketKey = `${key}:${geometryKey}`;
+      let bucket = buckets.get(bucketKey);
+      if (!bucket) { bucket = { type, geometry, material: material_, castShadow, items: [] }; buckets.set(bucketKey, bucket); }
       bucket.items.push([x, y, z, sx, sy, sz, ry, tint, tiltX, tiltZ]);
     }
 
     const cell = 1.25 / Math.sqrt(Math.max(0.15, density));
     const noise = field.noise;
-    const zero = { x: 0, z: 0 };
     for (let gz = extent.minZ; gz < extent.maxZ; gz += cell) {
       for (let gx = extent.minX; gx < extent.maxX; gx += cell) {
         const x = gx + rng() * cell, z = gz + rng() * cell;
@@ -183,7 +188,7 @@
         const grove = clamp(0.5 + 1.1 * noise.nC.fbm(x * 0.06 - 5, z * 0.06 + 9, 3));
         // Près du plateau, la végétation reste basse pour ne jamais masquer les unités ni les villages.
         const nearBoard = smooth(1.0, 7.5, dist);
-        const far = dist > 24, farSector = far ? 1 : 0;
+        const far = dist > 24, lod = far ? "far" : "near";
         const underwater = h < waterLevel + 0.02;
         const P = sample.plain, Mo = sample.mountain, C = sample.coast;
 
@@ -194,15 +199,25 @@
           const big = Mo > 0.5 && roll2 < 0.18 && slope > 0.45 && h > 1.4;
           if (big) {
             const s = 0.8 + roll3 * 1.1;
-            add("crag", lib.crag, x, h - 0.2, z, s, s * (0.8 + roll2 * 1.4), s, spin, 0.85 + roll3 * 0.3, true);
+            add("crag", pick(["crag0", "crag1"], roll2, lod, lib.crag), x, h - 0.2, z, s, s * (0.8 + roll2 * 1.4), s, spin, 0.85 + roll3 * 0.3, true);
           } else {
             const s = (0.1 + roll2 * roll2 * 0.5 + Mo * 0.14) * (0.45 + 0.55 * nearBoard);
             const variant = Math.floor(roll3 * 3) % 3;
-            add(`rock${variant}`, lib.rocks[variant], x, h - s * 0.12, z, s * 1.2, s, s * 1.2, spin, 0.82 + roll3 * 0.36, !far, 0, 0);
+            // Rochers polis par la mer sur le rivage, granites ailleurs.
+            const coastal = shallow && model("coastRock0", lod);
+            const geometry = coastal ? pick(["coastRock0", "coastRock1"], roll3, lod, lib.rocks[variant]) : model(`rock${variant}`, lod) || lib.rocks[variant];
+            add(coastal ? "coastRock" : `rock${variant}`, geometry, x, h - s * 0.12, z, s * 1.2, s, s * 1.2, spin, 0.82 + roll3 * 0.36, !far, 0, 0);
           }
           continue;
         }
         if (underwater) continue;
+
+        // Blocs de falaise granitique, à moitié enfoncés, sur les côtes escarpées (modèle Tripo uniquement).
+        if (C > 0.45 && sample.cliff > 0.35 && slope > 0.55 && h > 0.25 && h < 3.2 && roll2 < 0.09 * density && model("cliff", lod)) {
+          const s = 0.45 + roll3 * 0.5;
+          add("cliff", model("cliff", lod), x, h - s * 0.9, z, s, s * (0.7 + roll * 0.5), s, spin, 0.85 + roll * 0.25, !far);
+          continue;
+        }
 
         const scaleNear = 0.4 + 0.6 * nearBoard;
         // Montagne : forêts de pins laricio sur les pentes, jusqu'à la limite des arbres.
@@ -210,7 +225,7 @@
           const pineChance = Mo * forest * smooth(0.25, 0.7, forest) * (1 - smooth(5.5, 8, h)) * (1 - smooth(0.8, 1.45, slope)) * 0.82 * density;
           if (roll < rockChance + pineChance) {
             const s = (0.75 + roll2 * 0.9) * scaleNear * (0.9 + (h > 2 ? 0.2 : 0));
-            add(far ? "pineFar" : "pineNear", far ? lib.pineFar : lib.pineNear, x, h - 0.04, z, s, s * (0.9 + roll3 * 0.35), s, spin, 0.82 + roll3 * 0.3, !far);
+            add(far ? "pineFar" : "pineNear", model("pine", lod) || (far ? lib.pineFar : lib.pineNear), x, h - 0.04, z, s, s * (0.9 + roll3 * 0.35), s, spin, 0.82 + roll3 * 0.3, !far);
             continue;
           }
         }
@@ -219,12 +234,12 @@
           const oakChance = P * grove * 0.2 * density, oliveChance = P * (1 - grove) * 0.07 * density;
           if (roll2 < oakChance && nearBoard > 0.35) {
             const s = (0.8 + roll3 * 0.7) * scaleNear;
-            add(far ? "oakFar" : "oakNear", far ? lib.oakFar : lib.oakNear, x, h - 0.03, z, s, s * (0.85 + roll * 0.4), s, spin, 0.78 + roll3 * 0.4, !far);
+            add(far ? "oakFar" : "oakNear", pick(["oak0", "oak1"], roll, lod, far ? lib.oakFar : lib.oakNear), x, h - 0.03, z, s, s * (0.85 + roll * 0.4), s, spin, 0.78 + roll3 * 0.4, !far);
             continue;
           }
           if (roll2 > 1 - oliveChance && nearBoard > 0.3) {
             const s = (0.9 + roll3 * 0.6) * scaleNear;
-            add(far ? "oliveFar" : "olive", far ? lib.oliveFar : lib.olive, x, h - 0.03, z, s, s, s, spin, 0.85 + roll * 0.3, !far);
+            add(far ? "oliveFar" : "olive", model("olive", lod) || (far ? lib.oliveFar : lib.olive), x, h - 0.03, z, s, s, s, spin, 0.85 + roll * 0.3, !far);
             continue;
           }
         }
@@ -232,12 +247,12 @@
         const bushChance = (P * 0.3 * grove + C * 0.42 + Mo * 0.1) * density * (h > 0.18 || P > 0.5 ? 1 : 0.2);
         if (roll3 < bushChance && slope < 1.2) {
           const s = (0.6 + roll * 0.9) * (0.55 + 0.45 * nearBoard);
-          add(far ? "bushFar" : "bush", far ? lib.bushFar : lib.bush, x, h - 0.02, z, s, s * (0.8 + roll2 * 0.4), s, spin, 0.7 + roll2 * 0.6, false);
+          add(far ? "bushFar" : "bush", model("bush", lod) || (far ? lib.bushFar : lib.bush), x, h - 0.02, z, s, s * (0.8 + roll2 * 0.4), s, spin, 0.7 + roll2 * 0.6, false);
         }
         // Côte : pins parasols/pins maritimes épars sur les hauteurs.
         if (C > 0.4 && h > 0.5 && h < 3 && slope < 1.0 && roll2 < 0.035 * density && dist > 2.5) {
           const s = (0.7 + roll * 0.6) * scaleNear;
-          add(far ? "pineFar" : "pineNear", far ? lib.pineFar : lib.pineNear, x, h - 0.04, z, s, s, s, spin, 0.9 + roll3 * 0.2, !far);
+          add(far ? "pineFar" : "pineNear", model("pine", lod) || (far ? lib.pineFar : lib.pineNear), x, h - 0.04, z, s, s, s, spin, 0.9 + roll3 * 0.2, !far);
         }
         // Fleurs sauvages et touffes : seulement près de la caméra, sur les prairies.
         if (!far && P > 0.4 && slope < 0.6 && profile.flowers > 0 && dist < 26) {
@@ -263,7 +278,7 @@
     for (const bucket of buckets.values()) {
       const count = bucket.items.length;
       const mesh = new THREE.InstancedMesh(bucket.geometry, bucket.material, count);
-      mesh.castShadow = bucket.castShadow; mesh.receiveShadow = bucket.castShadow || bucket.type.startsWith("rock") || bucket.type === "crag";
+      mesh.name = bucket.type; mesh.castShadow = bucket.castShadow; mesh.receiveShadow = bucket.castShadow || /rock|crag|cliff/i.test(bucket.type);
       bucket.items.forEach((item, i) => {
         const [x, y, z, sx, sy, sz, ry, tint, tiltX, tiltZ] = item;
         dummy.position.set(x, y, z); dummy.rotation.set(tiltX, ry, tiltZ); dummy.scale.set(sx, sy, sz); dummy.updateMatrix();
@@ -277,9 +292,10 @@
       group.add(mesh);
       const tris = (bucket.geometry.index ? bucket.geometry.index.count : bucket.geometry.attributes.position.count) / 3;
       stats.instances += count; stats.triangles += tris * count; stats.byType[bucket.type] = (stats.byType[bucket.type] || 0) + count;
-      geometries.add(bucket.geometry);
+      if (!bucket.geometry.userData.sharedModel) geometries.add(bucket.geometry);
     }
     stats.draws = group.children.length;
+    stats.models = models ? Object.keys(models).length : 0;
 
     function dispose() {
       group.removeFromParent();

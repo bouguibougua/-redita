@@ -58,6 +58,21 @@ async function run() {
     assert.ok(env.children.includes('mer') && env.children.includes('vegetation'));
     assert.match(env.seed, /eredita-corse-1:2:/);
 
+    // Modèles Tripo du décor : chargés après coup, substitués aux formes procédurales, toujours non sélectionnables.
+    await page.waitFor('Eredita.Board3D.environment?.diagnostics.vegetation?.models >= 10', 60000);
+    const withModels = await page.evaluate(`(() => {
+      const e = Eredita.Board3D.environment, d = e.diagnostics;
+      let pickable = 0, shared = 0; e.group.traverse(o => {
+        if (o.isMesh && o.raycast.toString() !== '() => {}') pickable++;
+        if (o.isInstancedMesh && o.geometry.userData.sharedModel) shared++;
+      });
+      return { triangles: d.triangles, instances: d.vegetation.instances, pickable, shared, seed: d.seed };
+    })()`);
+    assert.equal(withModels.pickable, 0, 'les modèles Tripo ne sont jamais sélectionnables');
+    assert.ok(withModels.shared > 10, `modèles Tripo utilisés (${withModels.shared} groupes)`);
+    assert.ok(withModels.triangles < 1600000, `budget de triangles tenu (${withModels.triangles})`);
+    assert.equal(withModels.seed, env.seed, 'même paysage après l’arrivée des modèles');
+
     // Caméra : angle fixe quoi que fasse le joueur.
     const probe = `(() => {
       const cam = Eredita.Board3D.camera, d = cam.getWorldDirection(new (cam.position.constructor)());
