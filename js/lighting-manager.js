@@ -13,7 +13,7 @@
       background: scene.background, fog: scene.fog
     };
     const fogColor = new THREE.Color(cfg.fogColor);
-    const direction = new THREE.Vector3(-0.36, 0.64, 0.56).normalize();
+    const direction = new THREE.Vector3(...(cfg.sunDirection || [-0.36, 0.64, 0.56])).normalize();
     let mode = "board", shadowExtent = 0, appliedMap = 0;
     const target = new THREE.Vector3();
 

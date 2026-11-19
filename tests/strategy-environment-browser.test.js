@@ -1,6 +1,8 @@
 'use strict';
 // Version PC : plateau sans socle, paysage décoratif, caméra de stratégie à angle fixe ; VR/MR inchangée.
 const assert = require('node:assert/strict');
+global.window = global.window || {}; require('../js/config.js');
+const PITCH = window.Eredita.Config.strategyCamera.pitchDeg;
 const { startStaticServer, startBrowser, delay } = require('../scripts/export-menu-gif');
 
 async function run() {
@@ -52,7 +54,7 @@ async function run() {
       let pickable = 0; e.group.traverse(o => { if (o.isMesh && o.raycast !== undefined && o.raycast.toString() !== '() => {}') pickable++; });
       return { d, pickable, children: e.group.children.map(c => c.name), seed: d.seed };
     })()`);
-    assert.ok(env.d.chunks > 30 && env.d.triangles < 450000, `environnement borné (${env.d.triangles} triangles)`);
+    assert.ok(env.d.chunks > 30 && env.d.triangles < 650000, `environnement borné (${env.d.triangles} triangles)`);
     assert.ok(env.d.vegetation.instances > 300 && env.d.vegetation.draws < 400);
     assert.equal(env.pickable, 0, 'le paysage ne répond jamais au raycast de sélection');
     assert.ok(env.children.includes('mer') && env.children.includes('vegetation'));
@@ -80,7 +82,7 @@ async function run() {
       return { pitch: Math.asin(-d.y) * 180 / Math.PI, heading: Math.atan2(d.z, d.x) * 180 / Math.PI, target: sc.target, zoom: sc.zoom, desired: sc.desiredZoom, fit: sc.fit };
     })()`;
     const start = await page.evaluate(probe);
-    assert.ok(Math.abs(start.pitch - 55) < 0.6, `inclinaison initiale ${start.pitch}`);
+    assert.ok(Math.abs(start.pitch - PITCH) < 0.6, `inclinaison initiale ${start.pitch}`);
     assert.ok(Math.abs(start.heading) < 0.6, 'cap horizontal fixe');
     const send = (type, init, target = 'window') => page.evaluate(`${target}.dispatchEvent(new ${type.startsWith('wheel') ? 'WheelEvent' : type.startsWith('pointer') ? 'PointerEvent' : 'KeyboardEvent'}(${JSON.stringify(type.toLowerCase())}, ${JSON.stringify({ bubbles: true, cancelable: true, ...init })}))`);
     const canvas = 'Eredita.Board3D.getXRContext().renderer.domElement';
@@ -89,12 +91,12 @@ async function run() {
     await page.waitFor('Math.abs(Eredita.Board3D.strategyCamera.zoom - 1.75) < 0.01', 30000);
     const farthest = await page.evaluate(probe);
     assert.ok(Math.abs(farthest.zoom - 1.75) < 0.02, `zoom max ${JSON.stringify(farthest)}`);
-    assert.ok(Math.abs(farthest.pitch - 55) < 0.6 && Math.abs(farthest.heading) < 0.6);
+    assert.ok(Math.abs(farthest.pitch - PITCH) < 0.6 && Math.abs(farthest.heading) < 0.6);
     for (let i = 0; i < 60; i++) await send('wheel', { deltaY: -240, clientX: 700, clientY: 400 }, canvas);
     await page.waitFor('Math.abs(Eredita.Board3D.strategyCamera.zoom - 0.17) < 0.01', 30000);
     const closest = await page.evaluate(probe);
     assert.ok(Math.abs(closest.zoom - 0.17) < 0.01, `zoom min (${closest.zoom})`);
-    assert.ok(Math.abs(closest.pitch - 55) < 0.6, 'le zoom conserve exactement le même angle');
+    assert.ok(Math.abs(closest.pitch - PITCH) < 0.6, 'le zoom conserve exactement le même angle');
     // Le zoom reste centré sur le curseur : le point du sol visé ne bouge presque pas.
     await page.evaluate(`Eredita.Board3D.strategyCamera.setDesired(0, 0, 1)`); await page.waitFor('Math.abs(Eredita.Board3D.strategyCamera.zoom - 1) < 0.01', 30000);
     const groundUnder = `(() => {
@@ -118,7 +120,7 @@ async function run() {
     await send('keydown', { code: 'ArrowUp', key: 'ArrowUp' }); await page.waitFor(`Eredita.Board3D.strategyCamera.target.x > ${right.target.x + 0.5}`, 40000); await send('keyup', { code: 'ArrowUp', key: 'ArrowUp' }); await page.waitFor('Eredita.Board3D.strategyCamera.settled', 40000);
     const up = await page.evaluate(probe);
     assert.ok(up.target.x > right.target.x + 0.4, 'W / Z / flèche haut avancent');
-    assert.ok(Math.abs(up.pitch - 55) < 0.6 && Math.abs(up.heading) < 0.6, 'le déplacement ne tourne jamais la caméra');
+    assert.ok(Math.abs(up.pitch - PITCH) < 0.6 && Math.abs(up.heading) < 0.6, 'le déplacement ne tourne jamais la caméra');
     // Champ de saisie : aucune interprétation des touches.
     const typed = await page.evaluate(`(() => {
       const select = document.querySelector('#graphics-quality'); select.focus();
@@ -148,14 +150,24 @@ async function run() {
     await delay(300);
     const panEnd = await page.evaluate(probe);
     assert.ok(Math.hypot(panEnd.target.x - panStart.target.x, panEnd.target.z - panStart.target.z) > 0.3, 'clic molette déplace la caméra');
-    assert.ok(Math.abs(panEnd.pitch - 55) < 0.6 && Math.abs(panEnd.heading) < 0.6);
-    // Un glissement du bouton gauche ne fait plus tourner ni basculer la caméra.
+    assert.ok(Math.abs(panEnd.pitch - PITCH) < 0.6 && Math.abs(panEnd.heading) < 0.6);
+    // Cliquer-glisser gauche : déplace la carte (le point saisi suit le curseur), sans rotation ni bascule.
     await send('pointerdown', { button: 0, buttons: 1, pointerId: 8, clientX: 700, clientY: 400 }, canvas);
     await send('pointermove', { button: -1, buttons: 1, pointerId: 8, clientX: 500, clientY: 250 }, canvas);
+    const leftPanning = await page.evaluate('Eredita.Board3D.strategyCamera.panning');
     await send('pointerup', { button: 0, buttons: 0, pointerId: 8, clientX: 500, clientY: 250 }, canvas);
     await delay(300);
     const afterLeft = await page.evaluate(probe);
-    assert.ok(Math.abs(afterLeft.pitch - 55) < 0.6 && Math.abs(afterLeft.heading) < 0.6 && Math.abs(afterLeft.zoom - panEnd.zoom) < 0.01);
+    assert.equal(leftPanning, true, 'le glisser gauche saisit la carte');
+    assert.ok(Math.hypot(afterLeft.target.x - panEnd.target.x, afterLeft.target.z - panEnd.target.z) > 0.3, 'le glisser gauche déplace la carte');
+    assert.ok(Math.abs(afterLeft.pitch - PITCH) < 0.6 && Math.abs(afterLeft.heading) < 0.6 && Math.abs(afterLeft.zoom - panEnd.zoom) < 0.01);
+    // Un clic gauche sans mouvement ne déplace rien (il reste une sélection).
+    await send('pointerdown', { button: 0, buttons: 1, pointerId: 9, clientX: 700, clientY: 400 }, canvas);
+    await send('pointermove', { button: -1, buttons: 1, pointerId: 9, clientX: 703, clientY: 402 }, canvas);
+    await send('pointerup', { button: 0, buttons: 0, pointerId: 9, clientX: 703, clientY: 402 }, canvas);
+    await delay(300);
+    const afterClick = await page.evaluate(probe);
+    assert.ok(Math.hypot(afterClick.target.x - afterLeft.target.x, afterClick.target.z - afterLeft.target.z) < 0.02, 'un clic simple ne déplace pas la carte');
 
     // Double-clic sur un village de l'interface : centrage.
     await page.evaluate(`Eredita.Board3D.strategyCamera.setDesired(-3, 0, 0.9)`); await page.waitFor('Eredita.Board3D.strategyCamera.settled', 40000);
@@ -163,7 +175,7 @@ async function run() {
     await page.waitFor('Eredita.Board3D.strategyCamera.settled', 40000);
     const focused = await page.evaluate(probe), blue1 = await page.evaluate(`Eredita.Board3D.regionLayout().find(r => r.owner === 'red' && r.lane === 1)`);
     assert.ok(Math.hypot(focused.target.x - blue1.cx, focused.target.z - blue1.cz) < 0.3, 'double-clic centre la caméra sur le village');
-    assert.ok(Math.abs(focused.pitch - 55) < 0.6);
+    assert.ok(Math.abs(focused.pitch - PITCH) < 0.6);
 
     // Aucun vide : coins de l'écran toujours sur le paysage, au dézoom maximal et aux limites de déplacement.
     const voids = await page.evaluate(`(() => {
@@ -174,9 +186,8 @@ async function run() {
         let i = 0;
         const step = () => {
           if (i >= spots.length) return resolve(bad);
-          sc.setDesired(spots[i][0], spots[i][1], Eredita.Config.strategyCamera.zoomMax);
+          sc.jumpTo(spots[i][0], spots[i][1], Eredita.Config.strategyCamera.zoomMax);
           const ready = () => {
-            if (!sc.settled) return setTimeout(ready, 100);
             cam.updateMatrixWorld(true);
             for (const [nx, ny] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 1]]) {
               const dir = new T(nx, ny, 0.5).unproject(cam).sub(cam.position).normalize();

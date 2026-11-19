@@ -1,7 +1,7 @@
 (function () {
   "use strict";
-  // Caméra de stratégie de la version PC : inclinaison et cap fixes, déplacement ZQSD/WASD/flèches
-  // ou clic molette, zoom molette centré sur le curseur, interpolation douce et limites.
+  // Caméra de stratégie de la version PC : inclinaison et cap fixes, déplacement ZQSD/WASD/flèches,
+  // cliquer-glisser (gauche au-delà de quelques pixels, ou molette), zoom molette centré sur le curseur, interpolation douce et limites.
   // Elle ne touche ni aux règles ni à la sélection ; la VR/MR ne l'utilise jamais.
   const E = window.Eredita = window.Eredita || {};
   const KEY_DIRECTIONS = {
@@ -71,7 +71,7 @@
       const bounds = getBounds();
       desired.x = (bounds.minX + bounds.maxX) / 2; desired.z = (bounds.minZ + bounds.maxZ) / 2; desired.zoom = cfg.zoomFit;
       clampState(desired);
-      if (!animate) Object.assign(current, desired);
+      if (!animate) { refreshFit(); Object.assign(current, desired); poseInto(camera, current); }
     }
 
     function centerOn(x, z, zoom) {
@@ -144,18 +144,27 @@
       clampState(desired);
     }
 
+    // Bouton gauche : le déplacement ne démarre qu'après un seuil, un simple clic reste une sélection.
+    const DRAG_THRESHOLD = 6;
     function onPointerDown(event) {
-      if (event.button !== 1 || !isActive()) return;
-      event.preventDefault();
+      if ((event.button !== 1 && event.button !== 0) || !isActive() || panning) return;
+      const pending = event.button === 0;
+      if (!pending) event.preventDefault();
       syncScratch(); poseInto(scratch, current);
       const start = groundPoint(event.clientX, event.clientY, scratch, a);
       if (!start) return;
-      panning = { id: event.pointerId, x: start.x, z: start.z };
-      try { domElement.setPointerCapture(event.pointerId); } catch (_) {}
-      domElement.style.cursor = "grabbing";
+      panning = { id: event.pointerId, x: start.x, z: start.z, pending, sx: event.clientX, sy: event.clientY };
+      if (!pending) {
+        try { domElement.setPointerCapture(event.pointerId); } catch (_) {}
+        domElement.style.cursor = "grabbing";
+      }
     }
     function onPointerMove(event) {
       if (!panning || panning.id !== event.pointerId) return;
+      if (panning.pending) {
+        if (Math.hypot(event.clientX - panning.sx, event.clientY - panning.sy) <= DRAG_THRESHOLD) return;
+        panning.pending = false; domElement.style.cursor = "grabbing";
+      }
       syncScratch(); poseInto(scratch, current);
       const now = groundPoint(event.clientX, event.clientY, scratch, b);
       if (!now) return;
@@ -195,7 +204,9 @@
       get distance() { return fit * current.zoom; }, get fit() { refreshFit(); return fit; },
       get pitchDegrees() { return cfg.pitchDeg; }, get headingDegrees() { return cfg.headingDeg; },
       get settled() { return Math.hypot(desired.x - current.x, desired.z - current.z) < 0.02 && Math.abs(desired.zoom - current.zoom) < 0.002; },
-      get panning() { return Boolean(panning); }, setDesired(x, z, zoom) { desired.x = x; desired.z = z; if (zoom !== undefined) desired.zoom = zoom; clampState(desired); },
+      get panning() { return Boolean(panning && !panning.pending); }, setDesired(x, z, zoom) { desired.x = x; desired.z = z; if (zoom !== undefined) desired.zoom = zoom; clampState(desired); },
+      // Place la caméra immédiatement, sans interpolation (bornes respectées).
+      jumpTo(x, z, zoom) { refreshFit(); desired.x = x; desired.z = z; if (zoom !== undefined) desired.zoom = zoom; clampState(desired); Object.assign(current, desired); poseInto(camera, current); ready = true; },
       get keysDown() { return [...keys]; } };
   }
 

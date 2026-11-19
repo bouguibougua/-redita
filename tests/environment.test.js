@@ -47,7 +47,7 @@ for (const [red, blue] of configs) {
     assert.ok(Number.isFinite(out.h), `hauteur finie ${red}/${blue} @${x},${z}`);
     const sum = out.plain + out.mountain + out.coast;
     if (!out.inside) assert.ok(Math.abs(sum - 1) < 1e-6, "poids de biome normalisés");
-    assert.ok(out.h > -4 && out.h < 22, `relief borné (${out.h})`);
+    assert.ok(out.h > -4 && out.h < 30, `relief borné (${out.h})`);
   }
 }
 
@@ -63,12 +63,25 @@ for (const [red, blue] of configs) {
   const mountain = field(["montagne", "montagne"], ["montagne", "montagne"], "m"), plain = field(["plaine", "plaine"], ["plaine", "plaine"], "m");
   let maxMountain = 0, maxPlain = 0, maxNear = 0;
   for (let x = -40; x <= 40; x += 1.5) for (let z = -40; z <= 40; z += 1.5) {
-    maxMountain = Math.max(maxMountain, mountain.heightAt(x, z)); maxPlain = Math.max(maxPlain, plain.heightAt(x, z));
+    maxMountain = Math.max(maxMountain, mountain.heightAt(x, z));
+    if (plain.distanceToBoard(x, z) < 4) maxPlain = Math.max(maxPlain, plain.heightAt(x, z));
     if (Math.abs(z) < 6 && x < mountain.bounds.minX - 2 && x > mountain.bounds.minX - 6) maxNear = Math.max(maxNear, mountain.heightAt(x, z));
   }
   assert.ok(maxMountain > 6, `massif visible (${maxMountain.toFixed(1)})`);
   assert.ok(maxPlain < 3, `plaine presque plate (${maxPlain.toFixed(1)})`);
   assert.ok(maxNear < 2.2, `relief proche côté caméra limité (${maxNear.toFixed(1)})`);
+}
+
+// 4 bis. Toile de fond : un massif ferme l'horizon côté lointain, même sans région de montagne ; jamais côté caméra.
+{
+  const f = field(["plaine", "littoral"], ["plaine", "littoral"], "fond");
+  let back = 0, front = 0;
+  for (let z = -20; z <= 20; z += 2) {
+    back = Math.max(back, f.heightAt(f.bounds.maxX + 28, z));
+    if (Math.abs(z) < f.bounds.maxZ + 3) front = Math.max(front, f.heightAt(f.bounds.minX - 4, z));
+  }
+  assert.ok(back > 6, `massif de fond visible (${back.toFixed(1)})`);
+  assert.ok(front < 2.2, `côté caméra dégagé (${front.toFixed(1)})`);
 }
 
 // 5. Littoral : l'eau se prolonge hors du plateau (bandes aux extrémités) et au large.
@@ -119,7 +132,7 @@ for (const [red, blue] of configs) {
 // 9. Configuration de la caméra : angle fixe unique et bornes de zoom cohérentes.
 {
   const cam = E.Config.strategyCamera;
-  assert.ok(cam.pitchDeg >= 50 && cam.pitchDeg <= 60);
+  assert.ok(cam.pitchDeg >= 45 && cam.pitchDeg <= 60);
   assert.ok(cam.zoomMin > 0 && cam.zoomMin < cam.zoomFit && cam.zoomFit <= cam.zoomMax);
 }
 

@@ -97,13 +97,16 @@
       const dx = (H[k + 1] - H[k - 1]) / (2 * step), dz = (H[k + P] - H[k - P]) / (2 * step);
       const slope = Math.hypot(dx, dz);
       let nx = -dx, ny = 1, nz = -dz; const nl = Math.hypot(nx, ny, nz); nx /= nl; ny /= nl; nz /= nl;
-      const plain = attrs[k * 6], mountain = attrs[k * 6 + 1], coast = attrs[k * 6 + 2], sea = attrs[k * 6 + 3], path = attrs[k * 6 + 4], cliff = attrs[k * 6 + 5];
+      const plain = attrs[k * 6], coast = attrs[k * 6 + 2], sea = attrs[k * 6 + 3], path = attrs[k * 6 + 4], cliff = attrs[k * 6 + 5];
+      // Le massif de fond prend l'aspect d'une montagne (roche, éboulis) même hors biome montagne.
+      const mountain = Math.max(attrs[k * 6 + 1], smooth(1.4, 4.5, h) * (1 - coast * 0.4));
       const jitter = noise.nB.fbm(x * 0.09 + 40, z * 0.09, 2);
       const rock = clamp(smooth(0.5, 1.05, slope) + mountain * smooth(1.8, 5.5, h + jitter * 1.4) * 0.9 + coast * cliff * smooth(0.5, 1.6, h) * 0.8);
       const underwater = sea * smooth(water - 0.02, water - 0.12, h);
-      const beach = coast * smooth(water + 0.55 + jitter * 0.12, water + 0.05, h);
+      // Plage : une frange au ras de l'eau seulement, près de la mer.
+      const beach = coast * smooth(water + 0.22 + jitter * 0.08, water + 0.03, h) * smooth(0.02, 0.25, sea + coast * 0.15);
       let sand = clamp(Math.max(beach, underwater) * (1 - rock * 0.9));
-      let dirt = clamp(path * 0.95 + plain * smooth(0.25, 0.6, noise.nD.fbm(x * 0.16 + 9, z * 0.16, 2)) * 0.45 + mountain * 0.25 * (1 - rock));
+      let dirt = clamp(path * 0.95 + plain * smooth(0.12, 0.55, noise.nD.fbm(x * 0.16 + 9, z * 0.16, 2)) * 0.6 + mountain * 0.25 * (1 - rock));
       dirt *= 1 - sand;
       let grass = clamp(1 - rock - sand - dirt, 0.0, 1);
       if (h > 7.5) { grass *= 1 - smooth(7.5, 10, h); }
@@ -111,10 +114,11 @@
       splats.set([grass / sum, rock / sum, sand / sum, dirt / sum], v * 4);
       // Occlusion ambiante cuite : creux plus sombres, sommets légèrement éclaircis.
       const concavity = (H[k - 1] + H[k + 1] + H[k - P] + H[k + P]) / 4 - h;
-      const ao = clamp(1 - concavity * 1.6, 0.55, 1.08);
+      const ao = clamp(1 - concavity * 1.6 / (1 + slope * 0.8), 0.68, 1.08);
       // Variations naturelles de teinte : maquis sombre, herbes sèches, ocres.
       const tone = noise.nB.fbm(x * 0.045 + 50, z * 0.045 - 20, 3), fine = noise.nC.fbm(x * 0.35, z * 0.35, 2);
-      const r = (1 + tone * 0.16 + fine * 0.05) * ao * (1 - mountain * 0.04), g = (1 + tone * 0.07 + fine * 0.04) * ao, b = (1 - tone * 0.18 + fine * 0.03) * ao * (1 + mountain * 0.05);
+      // Herbes dorées (tone > 0) et vertes plus sombres (tone < 0), comme une prairie de fin d'été.
+      const r = (1 + tone * 0.3 + fine * 0.06) * ao * (1 - mountain * 0.04), g = (1 + tone * 0.12 + fine * 0.05) * ao, b = (1 - tone * 0.3 + fine * 0.03) * ao * (1 + mountain * 0.05);
       colors.set([r, g, b], v * 3);
       positions.set([x, h, z], v * 3); normals.set([nx, ny, nz], v * 3);
     }

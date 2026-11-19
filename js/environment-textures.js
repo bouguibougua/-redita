@@ -24,8 +24,9 @@
       const broad = periodicFbm(u, v, 3, 4, 11) * 0.5 + 0.5;
       const patch = periodicFbm(u, v, 7, 3, 23) * 0.5 + 0.5;
       const blade = periodicFbm(u, v, 48, 2, 41) * 0.5 + 0.5;
-      const dry = [158, 140, 82], green = [84, 114, 50], dark = [48, 72, 34];
-      let c = lerp3(green, dry, clamp((broad - 0.35) * 1.6));
+      // Prairie corse : vert franc, plaques dorées d'herbe sèche, touffes sombres.
+      const dry = [170, 146, 72], green = [92, 116, 46], dark = [50, 70, 32];
+      let c = lerp3(green, dry, clamp((broad - 0.44) * 1.5));
       c = lerp3(c, dark, clamp((patch - 0.55) * 2.2));
       const shade = 0.82 + blade * 0.36;
       return { color: [c[0] * shade, c[1] * shade, c[2] * shade], rough: 0.93, height: blade * 0.7 + patch * 0.3 };

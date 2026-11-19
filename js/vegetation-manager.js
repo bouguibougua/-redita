@@ -170,7 +170,9 @@
       bucket.items.push([x, y, z, sx, sy, sz, ry, tint, tiltX, tiltZ]);
     }
 
-    const cell = 1.25 / Math.sqrt(Math.max(0.15, density));
+    const cell = 1.0 / Math.sqrt(Math.max(0.15, density));
+    const bounds = field.bounds;
+    const farDistance = E.Config.environment3d.vegetationFarDistance || 20;
     const noise = field.noise;
     for (let gz = extent.minZ; gz < extent.maxZ; gz += cell) {
       for (let gx = extent.minX; gx < extent.maxX; gx += cell) {
@@ -188,12 +190,24 @@
         const grove = clamp(0.5 + 1.1 * noise.nC.fbm(x * 0.06 - 5, z * 0.06 + 9, 3));
         // Près du plateau, la végétation reste basse pour ne jamais masquer les unités ni les villages.
         const nearBoard = smooth(1.0, 7.5, dist);
-        const far = dist > 24, lod = far ? "far" : "near";
+        const far = dist > farDistance, lod = far ? "far" : "near";
         const underwater = h < waterLevel + 0.02;
-        const P = sample.plain, Mo = sample.mountain, C = sample.coast;
+        const P = sample.plain, C = sample.coast;
+        // Le massif de fond se comporte comme une montagne, quel que soit le biome voisin.
+        const Mo = Math.max(sample.mountain, smooth(1.6, 4.5, h) * (1 - C * 0.4));
+        // Pourtour du plateau : rochers et maquis serrés, comme une lisière naturelle.
+        const rim = 1 - smooth(1.5, 6, dist);
+        const cameraSide = x < bounds.minX + 0.5;
+
+        // Chaos granitiques en lisière (côté lointain et côtés seulement : jamais devant la caméra).
+        if (!cameraSide && !underwater && dist > 1.6 && dist < 6 && sample.path < 0.05 && roll < 0.035 * density * (0.4 + Mo + P * 0.6)) {
+          const s = 0.3 + roll2 * 0.32;
+          add("crag", pick(["crag0", "crag1"], roll3, lod, lib.crag), x, h - 0.12, z, s, s * (0.75 + roll3 * 0.6), s, spin, 0.85 + roll2 * 0.3, true);
+          continue;
+        }
 
         // Rochers : partout, plus nombreux en montagne ; sur la côte, certains émergent de l'eau.
-        const rockChance = (0.03 + Mo * 0.14 + C * 0.05 + smooth(0.6, 1.4, slope) * 0.1) * density;
+        const rockChance = (0.03 + Mo * 0.14 + C * 0.05 + rim * 0.09 + smooth(0.6, 1.4, slope) * 0.1) * density;
         const shallow = h > waterLevel - 0.42 && h < waterLevel + 0.55 && C > 0.45 && sample.sea > 0.2;
         if ((roll < rockChance && !underwater) || (shallow && roll < 0.11 * density)) {
           const big = Mo > 0.5 && roll2 < 0.18 && slope > 0.45 && h > 1.4;
@@ -212,17 +226,10 @@
         }
         if (underwater) continue;
 
-        // Blocs de falaise granitique, à moitié enfoncés, sur les côtes escarpées (modèle Tripo uniquement).
-        if (C > 0.45 && sample.cliff > 0.35 && slope > 0.55 && h > 0.25 && h < 3.2 && roll2 < 0.09 * density && model("cliff", lod)) {
-          const s = 0.45 + roll3 * 0.5;
-          add("cliff", model("cliff", lod), x, h - s * 0.9, z, s, s * (0.7 + roll * 0.5), s, spin, 0.85 + roll * 0.25, !far);
-          continue;
-        }
-
         const scaleNear = 0.4 + 0.6 * nearBoard;
         // Montagne : forêts de pins laricio sur les pentes, jusqu'à la limite des arbres.
-        if (Mo > 0.2 && h > 0.35 && h < 8 && slope < 1.45) {
-          const pineChance = Mo * forest * smooth(0.25, 0.7, forest) * (1 - smooth(5.5, 8, h)) * (1 - smooth(0.8, 1.45, slope)) * 0.82 * density;
+        if (Mo > 0.2 && h > 0.35 && h < 11 && slope < 2.3) {
+          const pineChance = Mo * forest * smooth(0.2, 0.65, forest) * (1 - smooth(7.5, 11, h)) * (1 - smooth(1.2, 2.3, slope)) * 0.9 * density;
           if (roll < rockChance + pineChance) {
             const s = (0.75 + roll2 * 0.9) * scaleNear * (0.9 + (h > 2 ? 0.2 : 0));
             add(far ? "pineFar" : "pineNear", model("pine", lod) || (far ? lib.pineFar : lib.pineNear), x, h - 0.04, z, s, s * (0.9 + roll3 * 0.35), s, spin, 0.82 + roll3 * 0.3, !far);
@@ -230,8 +237,8 @@
           }
         }
         // Plaines et collines : chênes, oliviers, maquis.
-        if (P > 0.25 && slope < 1.0) {
-          const oakChance = P * grove * 0.2 * density, oliveChance = P * (1 - grove) * 0.07 * density;
+        if (P > 0.25 && slope < 1.2) {
+          const oakChance = P * (0.08 + grove * (0.26 + rim * 0.12)) * density, oliveChance = P * (1 - grove) * 0.09 * density;
           if (roll2 < oakChance && nearBoard > 0.35) {
             const s = (0.8 + roll3 * 0.7) * scaleNear;
             add(far ? "oakFar" : "oakNear", pick(["oak0", "oak1"], roll, lod, far ? lib.oakFar : lib.oakNear), x, h - 0.03, z, s, s * (0.85 + roll * 0.4), s, spin, 0.78 + roll3 * 0.4, !far);
@@ -244,7 +251,7 @@
           }
         }
         // Maquis méditerranéen : buissons denses sur côtes, collines et lisières.
-        const bushChance = (P * 0.3 * grove + C * 0.42 + Mo * 0.1) * density * (h > 0.18 || P > 0.5 ? 1 : 0.2);
+        const bushChance = (P * 0.3 * grove + C * 0.42 + Mo * 0.1 + rim * 0.22) * density * (h > 0.18 || P > 0.5 ? 1 : 0.2);
         if (roll3 < bushChance && slope < 1.2) {
           const s = (0.6 + roll * 0.9) * (0.55 + 0.45 * nearBoard);
           add(far ? "bushFar" : "bush", model("bush", lod) || (far ? lib.bushFar : lib.bush), x, h - 0.02, z, s, s * (0.8 + roll2 * 0.4), s, spin, 0.7 + roll2 * 0.6, false);

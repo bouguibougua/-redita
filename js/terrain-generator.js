@@ -200,7 +200,9 @@
       const cliffZone = smooth(0.12, 0.42, nA.fbm(x * 0.032 + 7.7, z * 0.032, 2));
       const shoreDistance = 4.4 + 2.8 * nB.fbm(x * 0.05 + 2.1, z * 0.05, 3);
       const t = dd - shoreDistance;
-      const land = FLOOR + 0.05 + 0.2 * smooth(0.5, 5, dd) * (0.5 + 0.5 * nD.fbm(x * 0.1, z * 0.1, 2)) + cliffZone * 2.1 * smooth(-4.6, -1.4, t);
+      // Terre littorale : collines de maquis qui ne redescendent vers l'eau qu'au rivage (plage étroite).
+      const rise = smooth(0.3, 3.2, dd) * (1 - smooth(-2.4, -0.2, t));
+      const land = FLOOR + 0.06 + rise * (0.32 + 0.5 * (0.5 + 0.5 * nD.fbm(x * 0.1, z * 0.1, 2))) + cliffZone * 2.1 * smooth(-4.6, -1.4, t);
       const seaT = smooth(-0.35 - 1.7 * (1 - cliffZone), 0.8 + 1.1 * (1 - cliffZone), t) * smooth(0.38, 0.68, w.coast);
       const seabed = FLOOR - 0.23 - 2.8 * smooth(0, 13, t) + 0.25 * nC.fbm(x * 0.15, z * 0.15, 2);
       let coastH = mix(land, seabed, seaT);
@@ -230,6 +232,15 @@
         const outside = Math.max(band.z0 - z, z - band.z1, 0) / Math.max(1, 1 + smooth(2, 16, e) * 6);
         const bank = (1 - bandMask) * (1 - smooth(0, 1.7, outside)) * smooth(-0.2, 0.6, e);
         if (bank > 0) h = mix(h, Math.max(h, FLOOR + 0.05), bank);
+      }
+      // Toile de fond : un massif corse ferme l'horizon côté lointain et sur les côtés, quels que soient les biomes.
+      // Côté caméra il reste bas (occlusion) pour ne jamais masquer le plateau.
+      const backDistance = Math.max(x - bounds.maxX - 3, Math.abs(z - centerZ) - (bounds.maxZ - centerZ) - 6) + 3 * nC.fbm(x * 0.04 + 3, z * 0.04, 2);
+      // Les mers prolongées percent le massif (golfe) au lieu de buter dessus.
+      const ring = smooth(0, 10, backDistance) * occlusion * (1 - 0.95 * bandMask);
+      if (ring > 0) {
+        const peaks = 0.5 + 0.5 * nA.fbm(x * 0.02 - 4.4, z * 0.02 + 1.9, 2);
+        h += ring * (1 - 0.65 * w.mountain) * (2 + 21 * (0.3 * peaks + 0.7 * ridge) * (0.55 + 0.45 * peaks));
       }
       h = mix(h, 0.02, (1 - smooth(0, 0.5, db)) * (1 - w.coast));
       const path = pathMask(x, z) * w.plain;
