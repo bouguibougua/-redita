@@ -79,7 +79,7 @@
 
   // regions : [{ cx, cz, hw, hd, biome, owner, lane, water?: {z0, z1} }]
   // Les zones d'eau déclarées (littoral) sont prolongées vers l'extérieur aux extrémités du plateau.
-  function create({ regions, seed = "eredita", waterLevel = 0.045 }) {
+  function create({ regions, seed = "eredita", waterLevel = 0.045, boardScale = 1 }) {
     const rootSeed = hashString(String(seed));
     const rng = mulberry32(rootSeed);
     const nA = createNoise(rootSeed ^ 0x1234567), nB = createNoise(rootSeed ^ 0x2345678),
@@ -165,24 +165,42 @@
     }
 
     const wtmp = { plain: 1, mountain: 0, coast: 0 };
-    const innerOut = { h: 0, sea: 0 };
+    const innerOut = { h: 0, sea: 0, bed: undefined };
     // Sous les régions jouables : le sol reste caché sous les modèles de terrain ; seule la
     // bande étroite de la frontière est visible (mer continue si un des deux côtés est littoral).
+    // Littoral dont le modèle est chargé : `bed` donne le fond réel de la tuile (grille du sol),
+    // pour que la mer du paysage remplace l'eau du modèle avec ses vrais rivages (version PC).
     function interior(x, z) {
       if (x < bounds.minX || x > bounds.maxX || z < bounds.minZ || z > bounds.maxZ) return null;
-      if (Math.abs(z - centerZ) < 0.19) {
-        const sea = regions.some((r) => r.biome === "littoral" && x >= r.cx - r.hw && x <= r.cx + r.hw);
-        innerOut.h = sea ? FLOOR - 0.3 : 0.02; innerOut.sea = sea ? 1 : 0; return innerOut;
+      innerOut.bed = undefined;
+      if (Math.abs(z - centerZ) < 0.19 * boardScale) {
+        const littoral = regions.find((r) => r.biome === "littoral" && x >= r.cx - r.hw && x <= r.cx + r.hw);
+        innerOut.h = littoral ? FLOOR - 0.9 : 0.02; innerOut.sea = littoral ? 1 : 0;
+        // Teinte de l'eau de l'interstice alignée sur le large des tuiles littorales voisines (0,22 sous la surface).
+        if (littoral?.tile) innerOut.bed = FLOOR - 0.22 * (littoral.scale || 1);
+        return innerOut;
       }
       const region = regions.find((r) => Math.abs(x - r.cx) <= r.hw && Math.abs(z - r.cz) <= r.hd);
-      innerOut.h = region && region.biome === "littoral" ? -0.3 : 0.008; innerOut.sea = 0; return innerOut;
+      const grid = region && region.biome === "littoral" && region.water ? region.tile?.grid : null;
+      innerOut.h = region && region.biome === "littoral" ? -0.3 : 0.008; innerOut.sea = 0;
+      if (grid && z >= region.water.z0 && z <= region.water.z1) {
+        // Mer limitée à la bande d'eau du modèle. Profondeur d'aspect (teinte, transparence, écume) :
+        // nulle au rivage (liseré d'écume sur le sable, trait de côte un peu sinueux), turquoise au bord,
+        // plus bleue vers le large ; le sable du modèle reste visible par transparence au rivage.
+        const k = region.scale || 1, shore = (region.cz < centerZ ? z - region.water.z0 : region.water.z1 - z) / k;
+        const bed = grid.heightAt((x - region.cx) / k, (z - region.cz) / k) * k;
+        const wiggle = 0.06 * nC.fbm(x * 1.6 / k, z * 0.4 / k, 2);
+        const depth = (0.05 + 0.17 * smooth(0.1, 1.3, shore) + 0.03 * nD.fbm(x * 0.9 / k + 4, z * 0.9 / k, 2)) * k;
+        innerOut.sea = 1; innerOut.bed = mix(FLOOR, Math.max(bed, FLOOR - depth), smooth(0, 0.16, shore - 0.05 - wiggle));
+      }
+      return innerOut;
     }
 
     // Hauteur et caractéristiques d'un point. `out` est réutilisé pour éviter les allocations.
     function sample(x, z, out = {}) {
       const inner = interior(x, z);
-      if (inner) { out.h = inner.h; out.plain = 1; out.mountain = 0; out.coast = 0; out.sea = inner.sea; out.dist = 0; out.path = 0; out.road = 0; out.cliff = 0; out.forest = 0; out.maquis = 0; out.inside = true; return out; }
-      out.inside = false;
+      if (inner) { out.h = inner.h; out.bed = inner.bed; out.plain = 1; out.mountain = 0; out.coast = 0; out.sea = inner.sea; out.dist = 0; out.path = 0; out.road = 0; out.cliff = 0; out.forest = 0; out.maquis = 0; out.inside = true; return out; }
+      out.inside = false; out.bed = undefined;
       const w = biomeWeights(x, z, wtmp);
       const db = distanceToBoard(x, z);
       const dd = Math.max(0, db + 1.3 * nC.fbm(x * 0.08, z * 0.08, 2) * smooth(0, 2.5, db));

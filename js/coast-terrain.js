@@ -12,6 +12,7 @@
       if (group) { group.name = 'terrain-littoral'; group.userData.owner = owner; }
       return group;
     },
+    layout(width, owner) { return variants[owner]?.layout(width, owner) || null; },
     get ready() { return Object.values(variants).every(model => model.ready); },
     get diagnostics() { return { red: variants.red.diagnostics, blue: variants.blue.diagnostics }; }
   };

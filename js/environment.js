@@ -50,7 +50,7 @@
           ${simple ? "" : "cR = mix(cR, rockTriplanar(vTerrainPos, normalize(vTerrainN), 0.63), 0.35 * (1.0 - farMix));"}
           vec3 terrainAlbedo = cG * sp.x + cR * sp.y + cS * sp.z + cD * sp.w;
           float wet = 1.0 - smoothstep(uWater - 0.2, uWater - 0.08, vTerrainPos.y);
-          terrainAlbedo *= mix(1.0, 0.72, wet * (sp.z + 0.2));
+          terrainAlbedo *= mix(1.0, 0.55, wet * (sp.z + 0.3));
           diffuseColor.rgb *= terrainAlbedo;
           terrainRough = texture2D(tGrass, uvA).a * sp.x + texture2D(tRock, uvA).a * sp.y + texture2D(tSand, uvA).a * sp.z + texture2D(tDirt, uvA).a * sp.w;
           terrainRough = mix(terrainRough, 1.0, wet * 0.0);
@@ -197,14 +197,27 @@
     return geometry;
   }
 
+  // Les régions arrivent en coordonnées du jeu. Avec une échelle de présentation k, le paysage est
+  // construit autour de régions k fois plus grandes puis son groupe est réduit de 1/k : les villages
+  // paraissent plus grands face au décor sans toucher au plateau ni aux coordonnées du jeu.
+  // `tile` (repères du décor, grille du sol) et `slots` restent en unités de la tuile : `scale` les convertit.
+  function scaleRegions(regions, k) {
+    return (regions || []).map((r) => ({ ...r, cx: r.cx * k, cz: r.cz * k, hw: r.hw * k, hd: r.hd * k, scale: k,
+      water: r.water ? { z0: r.water.z0 * k, z1: r.water.z1 * k } : r.water }));
+  }
+
   function create(THREE, options) {
-    const { renderer, regions, seed, profile, extent, camera } = options;
+    const { renderer, seed, profile, camera } = options;
     const cfg = E.Config.environment3d;
-    const field = E.TerrainGenerator.create({ regions, seed, waterLevel: cfg.waterLevel });
+    const k = options.presentationScale || 1, extent = options.extent * k;
+    const regions = scaleRegions(options.regions, k);
+    const waterLevel = cfg.waterLevel * k;
+    const field = E.TerrainGenerator.create({ regions, seed, waterLevel, boardScale: k });
     const group = new THREE.Group(); group.name = "environnement-corse";
+    group.scale.setScalar(1 / k);
     const disposables = [];
     const textures = E.EnvironmentTextures.build(THREE, profile.textureSize, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
-    const material = terrainMaterial(THREE, textures, profile, cfg.waterLevel);
+    const material = terrainMaterial(THREE, textures, profile, waterLevel);
     disposables.push(material);
 
     const bounds = field.bounds;
@@ -235,27 +248,56 @@
     let vegetation = E.VegetationManager?.create(THREE, { field, extent: lim, profile, models: options.models || null, light });
     if (vegetation) group.add(vegetation.group);
 
+    // Régions brûlées : leur végétation disparaît (les rochers restent), comme sur les modèles d'origine.
+    const burnedRegions = new Map();
+    function applyBurned() {
+      for (const [key, meshes] of vegetation?.regions || []) {
+        const burned = burnedRegions.get(key) || false;
+        meshes.forEach((mesh) => { if (mesh.userData.burnable) mesh.visible = !burned; });
+      }
+    }
+    function setRegionBurned(owner, lane, burned) {
+      const key = `${owner}:${lane}`;
+      if ((burnedRegions.get(key) || false) === Boolean(burned)) return;
+      burnedRegions.set(key, Boolean(burned)); applyBurned();
+    }
+    // Habillage d'une région : décor du paysage à la place de celui du modèle, mer du paysage sur le littoral.
+    function regionDressing(owner, lane) {
+      const region = field.regions.find((r) => r.owner === owner && r.lane === lane);
+      if (!region?.tile) return null;
+      return { decor: Boolean(vegetation?.regions?.has(`${owner}:${lane}`)), water: region.biome === "littoral" && Boolean(water) };
+    }
+
     // Les modèles Tripo arrivent après la première image : seule la végétation est reconstruite.
+    // L'ancienne reste (masquée) deux images de plus : ses matériaux gardent les programmes de shaders,
+    // que la nouvelle réutilise au lieu de les recompiler.
+    let retired = null;
     function setModels(models) {
       if (!E.VegetationManager || !models || !Object.keys(models).length) return;
       const next = E.VegetationManager.create(THREE, { field, extent: lim, profile, models, light });
-      vegetation?.dispose(); vegetation = next; group.add(next.group);
+      if (retired) retired.vegetation.dispose();
+      if (vegetation) { vegetation.group.visible = false; retired = { vegetation, frames: 2 }; }
+      vegetation = next; group.add(next.group); applyBurned();
     }
 
     function update(time, view) {
       water?.update(time, view);
       vegetation?.update?.(time);
+      if (retired && --retired.frames <= 0) { retired.vegetation.dispose(); retired = null; }
     }
 
     function dispose() {
       group.removeFromParent();
-      water?.dispose(); vegetation?.dispose();
+      water?.dispose(); vegetation?.dispose(); retired?.vegetation.dispose(); retired = null;
       disposables.forEach((item) => item.dispose?.());
       Object.values(textures).forEach((pair) => { pair.albedo.dispose(); pair.normal.dispose(); });
       group.clear();
     }
 
-    return { group, field, extent: lim, update, dispose, setModels, heightAt: field.heightAt,
+    // Interface en coordonnées de scène ; `field` et `localExtent` restent en unités du paysage.
+    const sceneExtent = { minX: lim.minX / k, maxX: lim.maxX / k, minZ: lim.minZ / k, maxZ: lim.maxZ / k };
+    return { group, field, extent: sceneExtent, localExtent: lim, presentationScale: k, update, dispose, setModels, setRegionBurned, regionDressing,
+      heightAt: (x, z) => field.heightAt(x * k, z * k) / k,
       get diagnostics() { return { chunks, triangles: triangles + (vegetation?.stats.triangles || 0), terrainTriangles: triangles, buildMs, vegetation: vegetation?.stats || null, seed: field.seed, quality: profile.label }; } };
   }
 

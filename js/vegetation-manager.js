@@ -161,6 +161,11 @@
     }
     // --- Couvre-sol ---
     lib.flower = merge(THREE, [{ geo: new THREE.ConeGeometry(0.05, 0.12, 4), matrix: M(0, 0.07, 0), color: 0xffffff, ao: false }], 0.2);
+    // Fleur des prés des régions (vue de près) : corolle aplatie sur une tige fine ; la teinte de l'instance colore la corolle.
+    lib.blossom = merge(THREE, [
+      { geo: new THREE.CylinderGeometry(0.004, 0.006, 0.08, 3, 1, true), matrix: M(0, 0.04, 0), color: 0x3a5522, ao: false, jitter: 0 },
+      { geo: new THREE.OctahedronGeometry(0.034, 0), matrix: M(0, 0.084, 0, 1, 0.42, 1, 0.4), color: 0xffffff, ao: false, radial: true, jitter: 0.12 },
+      { geo: new THREE.TetrahedronGeometry(0.011, 0), matrix: M(0, 0.095, 0), color: 0xf6d66a, ao: false, jitter: 0 }], 0.1);
     lib.tuft = merge(THREE, [
       { geo: new THREE.ConeGeometry(0.05, 0.28, 4), matrix: M(0, 0.14, 0, 1, 1, 1, 0, 0.1, 0.05), color: 0x5f6e30 },
       { geo: new THREE.ConeGeometry(0.045, 0.22, 4), matrix: M(0.06, 0.11, 0.02, 1, 1, 1, 1.2, -0.12), color: 0x75823a },
@@ -396,8 +401,194 @@
       }
     }
 
+    // 6. Habillage des régions (version PC) : chaque élément du décor des modèles de région est
+    // remplacé, au même endroit et au même volume, par son équivalent du paysage (pin laricio,
+    // crêtes et blocs de granite, maquis fleuri), puis la prairie est garnie d'herbes et de fleurs
+    // hors des chemins, des emplacements, de la cour du village et de l'eau.
+    const regionCounts = {};
+    {
+      const dims = new Map();
+      const measure = (geometry) => {
+        if (!dims.has(geometry)) {
+          geometry.computeBoundingBox(); const b = geometry.boundingBox;
+          dims.set(geometry, { w: Math.max(b.max.x - b.min.x, b.max.z - b.min.z, 1e-3), h: Math.max(b.max.y - b.min.y, 1e-3), y0: b.min.y });
+        }
+        return dims.get(geometry);
+      };
+      const cfgVillage = E.Config.villagePresentation;
+      const flowerPalette = { plaine: [0xe2483c, 0xf4f2ea, 0xf2d23a, 0xc88bd8, 0xf0b33a], montagne: [0xf4f2ea, 0xb98ad8, 0xf2e35a], littoral: [0xf4f2ea, 0xe7a0bf, 0xf2d23a] };
+      for (const region of field.regions || []) {
+        const tile = region.tile; if (!tile) continue;
+        const k = region.scale || 1, key = `${region.owner}:${region.lane}`, grid = tile.grid, biome = region.biome;
+        const rr = T.mulberry32(T.hashString(`${field.seed}:region:${key}:${biome}`));
+        let count = 0;
+        // Coordonnées de la tuile (unités du jeu) → paysage.
+        const place = (burnable, type, geometry, material, tx, tz, ty, sx, sy, sz, ry, tint, shadow = false, tiltX = 0, tiltZ = 0) => {
+          add(`r|${key}|${burnable ? 1 : 0}|${type}`, geometry, material, false, region.cx + tx * k, ty * k, region.cz + tz * k, sx, sy, sz, ry, tint, shadow, tiltX, tiltZ);
+          count++;
+        };
+        const ground = (tx, tz) => grid.heightAt(tx, tz);
+        const rock = (r) => model(`rock${Math.floor(r * 3) % 3}`, "near") || lib.rocks[Math.floor(r * 3) % 3];
+        // Cailloux et galets : version allégée du granite (quelques dizaines de triangles suffisent).
+        const pebble = (r) => model(`rock${Math.floor(r * 3) % 3}`, "far") || lib.rocks[Math.floor(r * 3) % 3];
+        // Granite corse : gris rosé à ocre.
+        const granite = (r) => { const b = 0.72 + r * 0.2; return [b * 1.05, b, b * 0.9]; };
+        const blooms = tile.anchors.filter((a) => a.kind === "Fleurs_immortelles");
+        // a) Décor du modèle, élément par élément.
+        for (const a of tile.anchors) {
+          const r1 = rr(), r2 = rr(), r3 = rr(), spin = rr() * Math.PI * 2;
+          // Les parcelles restent dégagées (le modèle d'origine posait parfois un arbre sur la pastille).
+          if (region.slots?.some(([sx, sz]) => Math.hypot(a.x - sx, a.z - sz) < 0.44)) continue;
+          const height = Math.max(0.02, a.top - a.y), width = Math.max(a.w, a.d, 0.02);
+          const tone = hue(0.86 + r3 * 0.28, r2 * 2 - 1);
+          switch (a.kind) {
+            case "Pin_Couronne": {
+              const g = model("pine", "near") || lib.pineNear, m = measure(g), s = (a.top - ground(a.x, a.z)) * k * 1.12 / m.h;
+              place(true, "pine", g, foliage, a.x, a.z, ground(a.x, a.z) - 0.01, s, s * (0.94 + r1 * 0.14), s, spin, tone, true);
+              break;
+            }
+            case "Pin_Tronc": case "Fleurs_immortelles": break; // portés par la couronne et par le maquis
+            case "Genevrier": {
+              const g = lib.bushes[0], m = measure(g), s = width * k * 1.15 / m.w;
+              place(true, "juniper", g, foliage, a.x, a.z, a.y, s, Math.max(s * 0.7, height * k * 1.1 / m.h), s, spin, [0.72 * tone[0], 0.86 * tone[1], 0.84 * tone[2]], shadowBushes);
+              break;
+            }
+            case "Maquis": case "Maquis_Cotier": {
+              const flowering = blooms.some((b) => Math.hypot(b.x - a.x, b.z - a.z) < 0.06);
+              const g = flowering ? lib.bloom.yellow : a.kind === "Maquis_Cotier" && r1 < 0.32 ? lib.bloom.pink : lib.bushes[Math.floor(r3 * 3) % 3];
+              const m = measure(g), s = width * k * 1.2 / m.w;
+              place(true, flowering ? "bloom-yellow" : "bush", g, foliage, a.x, a.z, a.y - 0.005, s, Math.max(s * 0.7, height * k * 1.15 / m.h), s, spin, tone, shadowBushes);
+              break;
+            }
+            case "Crete_Granite": {
+              // Crête allongée du modèle : rangée de blocs de granite (chaos), plus hauts au centre.
+              const along = a.w >= a.d, long = Math.max(a.w, a.d), short = Math.max(0.14, Math.min(a.w, a.d));
+              const n = Math.max(1, Math.min(4, Math.round(long / (short * 1.15))));
+              for (let p = 0; p < n; p++) {
+                const t = n === 1 ? 0 : (p / (n - 1) - 0.5) * (long - short), jitter = (rr() - 0.5) * short * 0.25;
+                const px = a.x + (along ? t : jitter), pz = a.z + (along ? jitter : t);
+                const middle = n === 1 ? 1 : 1 - Math.abs(p - (n - 1) / 2) / ((n - 1) / 2 + 0.5);
+                const g = pick(["crag0", "crag1"], rr(), "near", lib.crag);
+                const m = measure(g), s = short * k * (1.15 + 0.4 * middle) / m.w;
+                const sy = Math.min(s * 1.5, Math.max(s * 0.55, height * k * (0.45 + 0.35 * middle) / m.h));
+                place(false, "crag", g, solid, px, pz, ground(px, pz) - 0.02 - m.y0 * sy / k, s, sy, s, rr() * Math.PI * 2, granite(rr()), true);
+                // Éboulis au pied du chaos.
+                for (let e = 0; e < 2; e++) {
+                  const ang = rr() * Math.PI * 2, dist = short * (0.55 + rr() * 0.3), ex = px + Math.cos(ang) * dist, ez = pz + Math.sin(ang) * dist;
+                  if (region.slots?.some(([sx, sz]) => Math.hypot(ex - sx, ez - sz) < 0.44)) continue;
+                  const pg = pebble(rr()), ps = 0.035 + rr() * 0.035;
+                  place(false, "rock", pg, solid, ex, ez, ground(ex, ez) - 0.006, ps * 1.2, ps * 0.6, ps * 1.2, rr() * 6.28, granite(rr()).map((c) => c * 0.85));
+                }
+              }
+              break;
+            }
+            case "Cap_Granitique": {
+              const g = pick(["coastRock0", "coastRock1"], r3, "near", null) || rock(r3);
+              const m = measure(g), s = width * k * 1.05 / m.w, sy = Math.min(s * 1.6, Math.max(s * 0.6, height * k * 0.9 / m.h));
+              place(false, "coastRock", g, solid, a.x, a.z, a.y - 0.03 - m.y0 * sy / k, s, sy, s, spin, granite(r3), true);
+              break;
+            }
+            case "Eboulis": case "Granite": case "Galet": {
+              const g = width > 0.12 ? rock(r3) : pebble(r3), m = measure(g), s = width * k * 1.15 / m.w, sy = Math.min(s * 1.3, Math.max(s * 0.45, height * k * 1.1 / m.h));
+              place(false, "rock", g, solid, a.x, a.z, a.y - 0.01 - m.y0 * sy / k, s, sy, s, spin, granite(r3), width > 0.12);
+              break;
+            }
+            default: { // touffes : herbe rase, herbe d'altitude, oyat des dunes
+              const g = lib.tuft, m = measure(g), s = Math.max(0.35, height * k * 1.25 / m.h);
+              const tint = a.kind === "Oyat" ? [1.12 * tone[0], 1.08 * tone[1], 0.78 * tone[2]] : a.kind === "Herbe_Altitude" ? [1.05 * tone[0], 0.98 * tone[1], 0.74 * tone[2]] : tone;
+              place(true, "tuft", g, foliage, a.x, a.z, a.y - 0.005, s, s * (0.9 + r1 * 0.4), s, spin, tint);
+            }
+          }
+        }
+        // b) Prairie : herbes et fleurs en taches, arbustes épars ; ni chemin, ni emplacement, ni cour, ni eau.
+        const hwTile = region.hw / k, hdTile = region.hd / k;
+        const courtyard = cfgVillage.front + 0.10 + 0.08; // bord de la cour (côté rouge, z < valeur)
+        const bigs = tile.anchors.filter((a) => Math.max(a.w, a.d) > 0.13);
+        // Eau : la bande marine du littoral (les terres des régions sont toutes sous le niveau 0,11 de la mer).
+        const band = biome === "littoral" && region.water ? [(region.water.z0 - region.cz) / k, (region.water.z1 - region.cz) / k] : null;
+        const wet = (tz) => Boolean(band) && tz > band[0] - 0.05 && tz < band[1] + 0.05;
+        const cell = 0.085 / Math.sqrt(Math.max(0.3, density));
+        const palette = flowerPalette[biome] || flowerPalette.plaine;
+        for (let gz = -hdTile + 0.06; gz < hdTile - 0.06; gz += cell) {
+          for (let gx = -hwTile + 0.06; gx < hwTile - 0.06; gx += cell) {
+            const tx = gx + rr() * cell, tz = gz + rr() * cell, r1 = rr(), r2 = rr(), r3 = rr();
+            if (region.owner === "red" ? tz < courtyard : tz > -courtyard) continue;
+            if (Math.abs(tx) > hwTile - 0.07 || Math.abs(tz) > hdTile - 0.06) continue;
+            if (region.slots?.some(([sx, sz]) => Math.hypot(tx - sx, tz - sz) < 0.47)) continue;
+            if (bigs.some((a) => Math.hypot(tx - a.x, tz - a.z) < Math.max(a.w, a.d) * 0.55 + 0.02)) continue;
+            const ty = ground(tx, tz), sand = grid.pathAt(tx, tz);
+            if (wet(tz)) continue;
+            const [wx, wz] = [region.cx + tx * k, region.cz + tz * k];
+            const patch = bloomNoise.fbm(wx * 0.6 + 13, wz * 0.6 - 4, 2);
+            const spin = r2 * Math.PI * 2;
+            if (sand > 0.35) {
+              // Sur le sable du littoral : oyats en haut de plage et galets ; jamais sur les chemins de terre.
+              if (biome !== "littoral") continue;
+              if (r1 < 0.08) place(true, "tuft", lib.tuft, foliage, tx, tz, ty - 0.005, 0.42 + r3 * 0.3, 0.55 + r2 * 0.45, 0.42 + r3 * 0.3, spin, [1.15, 1.1, 0.76]);
+              else if (r1 < 0.1) { const g = pebble(r3); place(false, "rock", g, solid, tx, tz, ty - 0.008, 0.05 + r3 * 0.04, 0.03 + r2 * 0.025, 0.05 + r3 * 0.04, spin, hue(0.92 + r3 * 0.15, 0.2)); }
+              continue;
+            }
+            const flowers = biome === "plaine" ? 0.12 + 0.3 * smooth(0.05, 0.35, patch) : biome === "littoral" ? 0.06 + 0.12 * smooth(0.15, 0.4, patch) : 0.04 + 0.08 * smooth(0.2, 0.45, patch);
+            const tufts = biome === "montagne" ? 0.3 : biome === "littoral" ? 0.26 : 0.32;
+            const shrub = biome === "montagne" ? 0.022 : 0.016;
+            if (r1 < flowers && profile.flowers > 0) {
+              // Bouquet de fleurs des champs (coquelicots, marguerites, immortelles) d'une seule couleur.
+              const color = palette[Math.floor(r3 * palette.length) % palette.length];
+              const n = 4 + Math.floor(rr() * 3);
+              for (let f = 0; f < n; f++) {
+                const fx = tx + (rr() - 0.5) * 0.16, fz = tz + (rr() - 0.5) * 0.16;
+                if (grid.pathAt(fx, fz) > 0.35 || region.slots?.some(([sx, sz]) => Math.hypot(fx - sx, fz - sz) < 0.45)) continue;
+                place(true, "blossom", lib.blossom, foliage, fx, fz, ground(fx, fz), 0.75 + rr() * 0.35, 0.7 + rr() * 0.5, 0.75 + rr() * 0.35, rr() * 6, color);
+              }
+            } else if (r1 < flowers + tufts) {
+              // Touffes claires (l'herbe du sol est lumineuse) ; herbes dorées par taches en plaine.
+              const golden = biome !== "montagne" && patch < -0.1;
+              const tint = biome === "montagne" ? [1.18, 1.1, 0.84] : golden ? [1.42, 1.25, 0.78] : 1.02 + r3 * 0.3;
+              place(true, "tuft", lib.tuft, foliage, tx, tz, ty - 0.005, 0.36 + r3 * 0.34, 0.4 + r2 * 0.45, 0.36 + r3 * 0.34, spin, tint);
+            } else if (r1 < flowers + tufts + shrub * 2.2 && (Math.abs(tx) > hwTile - 0.5 || Math.abs(tz) > hdTile - 0.45)) {
+              // Arbustes en lisière de région seulement : la prairie centrale reste lisible.
+              const kind = biome === "montagne" ? lib.bushes[0] : patch > 0.25 ? lib.bloom[biome === "littoral" ? "pink" : "white"] : lib.bushes[1 + Math.floor(r3 * 2)];
+              const s = 0.32 + r3 * 0.22;
+              place(true, "bush", kind, foliage, tx, tz, ty - 0.008, s, s * (0.8 + r2 * 0.3), s, spin, hue(0.84 + r2 * 0.3, r3 * 2 - 1), shadowBushes);
+            } else if (r1 > 0.99 || (biome === "montagne" && r1 > 0.958)) {
+              const g = pebble(r3), s = biome === "montagne" ? 0.06 + r2 * r2 * 0.1 : 0.04 + r2 * 0.05;
+              place(false, "rock", g, solid, tx, tz, ty - s * 0.25, s * 1.2, s * 0.6, s * 1.2, spin, granite(r3).map((c) => c * 0.82));
+            }
+          }
+        }
+        // c) Arbres de lisière, côté caméra seulement (x bas) : ils ne masquent ni parcelle ni unité.
+        {
+          const wanted = biome === "montagne" ? 3 : 2;
+          let planted = 0;
+          for (let attempt = 0; attempt < 24 && planted < wanted; attempt++) {
+            const tx = -hwTile + 0.16 + rr() * 0.3;
+            const span = hdTile - 0.25 - courtyard - 0.2, tz0 = courtyard + 0.2 + rr() * span;
+            const tz = region.owner === "red" ? tz0 : -tz0;
+            if (region.slots?.some(([sx, sz]) => Math.hypot(tx - sx, tz - sz) < 0.6)) continue;
+            if (grid.pathAt(tx, tz) > 0.2 || wet(tz)) continue;
+            if (bigs.some((a) => Math.hypot(tx - a.x, tz - a.z) < Math.max(a.w, a.d) * 0.6 + 0.12)) continue;
+            const r1 = rr(), r2 = rr(), spin = rr() * Math.PI * 2, ty = ground(tx, tz);
+            if (biome === "montagne") {
+              const g = model("pine", "near") || lib.pineNear, s = (0.58 + r1 * 0.22) * k / measure(g).h;
+              place(true, "pine", g, foliage, tx, tz, ty - 0.01, s, s * (0.92 + r2 * 0.16), s, spin, hue(0.88 + r2 * 0.22, r1 * 2 - 1), true);
+            } else if (biome === "littoral") {
+              const g = model("pine", "near") || lib.pineNear, s = (0.48 + r1 * 0.12) * k / measure(g).h;
+              place(true, "pine", g, foliage, tx, tz, ty - 0.01, s * 1.3, s * 0.8, s * 1.3, spin, hue(0.9 + r2 * 0.2, r1 * 2 - 1), true);
+            } else {
+              const g = r1 < 0.6 ? (model("olive", "near") || lib.olive) : (pick(["oak0", "oak1"], r2, "near", lib.oakNear));
+              const s = (r1 < 0.6 ? 0.42 + r2 * 0.1 : 0.5 + r2 * 0.12) * k / measure(g).h;
+              place(true, r1 < 0.6 ? "olive" : "oak", g, foliage, tx, tz, ty - 0.01, s, s, s, spin, hue(0.9 + r2 * 0.2, 0.3), true);
+            }
+            planted++;
+          }
+        }
+        regionCounts[key] = count;
+      }
+    }
+
     // Instanciation : un InstancedMesh par type, géométrie et secteur.
     const group = new THREE.Group(); group.name = "vegetation";
+    const regions = new Map();
     const dummy = new THREE.Object3D(), color = new THREE.Color();
     const geometries = new Set();
     for (const bucket of buckets.values()) {
@@ -421,13 +612,23 @@
       mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.computeBoundingSphere();
       mesh.userData.decorative = true; mesh.raycast = () => {};
+      // Habillage des régions : maillages rattachés à leur région (masqués quand elle brûle).
+      let type = bucket.type;
+      if (type.startsWith("r|")) {
+        const [, key, burnable, plain] = type.split("|");
+        type = `region-${plain}`; mesh.name = type;
+        mesh.userData.region = key; mesh.userData.burnable = burnable === "1";
+        if (!regions.has(key)) regions.set(key, []);
+        regions.get(key).push(mesh);
+      }
       group.add(mesh);
       const tris = (bucket.geometry.index ? bucket.geometry.index.count : bucket.geometry.attributes.position.count) / 3;
-      stats.instances += count; stats.triangles += tris * count; stats.byType[bucket.type] = (stats.byType[bucket.type] || 0) + count;
+      stats.instances += count; stats.triangles += tris * count; stats.byType[type] = (stats.byType[type] || 0) + count;
       if (!bucket.geometry.userData.sharedModel) geometries.add(bucket.geometry);
     }
     stats.draws = group.children.length;
     stats.models = models ? Object.keys(models).length : 0;
+    stats.regions = regionCounts;
 
     function update(time) { wind.value = profile.animatedWater ? time : 0; }
 
@@ -436,11 +637,11 @@
       group.children.forEach((mesh) => mesh.dispose?.());
       geometries.forEach((geometry) => geometry.dispose());
       const all = [lib.pineNear, lib.oakNear, lib.olive, lib.pineFar, lib.oakFar, lib.oliveFar, lib.cypress, lib.cypressFar, lib.bushFar, lib.bloomFar,
-        lib.crag, lib.flower, lib.tuft, lib.post, lib.rail, ...lib.bushes, ...lib.rocks, ...Object.values(lib.bloom)];
+        lib.crag, lib.flower, lib.blossom, lib.tuft, lib.post, lib.rail, ...lib.bushes, ...lib.rocks, ...Object.values(lib.bloom)];
       all.forEach((geometry) => geometry?.dispose?.());
       foliage.dispose(); solid.dispose(); group.clear();
     }
-    return { group, stats, update, dispose };
+    return { group, stats, update, dispose, regions };
   }
 
   E.VegetationManager = { create };

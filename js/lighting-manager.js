@@ -83,7 +83,7 @@
     }
 
     // Suit la cible de la caméra : l'ombre reste nette là où le joueur regarde.
-    function update(targetPoint, distance) {
+    function update(targetPoint, distance, unitScale = 1) {
       if (mode !== "strategy") return;
       const wanted = Math.max(9, Math.min(46, distance * 0.82));
       const extent = Math.ceil(wanted / 3) * 3;
@@ -95,7 +95,7 @@
         shadowExtent = extent;
         const c = sun.shadow.camera; c.left = -extent; c.right = extent; c.top = extent; c.bottom = -extent; c.near = 5; c.far = 160; c.updateProjectionMatrix();
       }
-      if (scene.fog?.isFog) { scene.fog.near = distance * 1.05; scene.fog.far = distance * 2.7 + 36; }
+      if (scene.fog?.isFog) { scene.fog.near = distance * 1.05; scene.fog.far = distance * 2.7 + 36 * unitScale; }
     }
 
     function dispose() { applyBoard(); sky?.dispose(); sky = null; }

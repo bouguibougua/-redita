@@ -2,7 +2,7 @@
 // Version PC : plateau sans socle, paysage décoratif, caméra de stratégie à angle fixe ; VR/MR inchangée.
 const assert = require('node:assert/strict');
 global.window = global.window || {}; require('../js/config.js');
-const PITCH = window.Eredita.Config.strategyCamera.pitchDeg;
+const PITCH = window.Eredita.Config.strategyCamera.pitchDeg, ZOOM = window.Eredita.Config.strategyCamera, Eredita_boardScale = window.Eredita.Config.environment3d.boardScale;
 const { startStaticServer, startBrowser, delay } = require('../scripts/export-menu-gif');
 
 async function run() {
@@ -90,14 +90,14 @@ async function run() {
     const canvas = 'Eredita.Board3D.getXRContext().renderer.domElement';
     // Molette : zoom borné, angle inchangé.
     for (let i = 0; i < 30; i++) await send('wheel', { deltaY: 240, clientX: 700, clientY: 400 }, canvas);
-    await page.waitFor('Math.abs(Eredita.Board3D.strategyCamera.zoom - 1.75) < 0.01', 30000);
+    await page.waitFor(`Math.abs(Eredita.Board3D.strategyCamera.zoom - ${ZOOM.zoomMax}) < 0.01`, 30000);
     const farthest = await page.evaluate(probe);
-    assert.ok(Math.abs(farthest.zoom - 1.75) < 0.02, `zoom max ${JSON.stringify(farthest)}`);
+    assert.ok(Math.abs(farthest.zoom - ZOOM.zoomMax) < 0.02, `zoom max ${JSON.stringify(farthest)}`);
     assert.ok(Math.abs(farthest.pitch - PITCH) < 0.6 && Math.abs(farthest.heading) < 0.6);
     for (let i = 0; i < 60; i++) await send('wheel', { deltaY: -240, clientX: 700, clientY: 400 }, canvas);
-    await page.waitFor('Math.abs(Eredita.Board3D.strategyCamera.zoom - 0.17) < 0.01', 30000);
+    await page.waitFor(`Math.abs(Eredita.Board3D.strategyCamera.zoom - ${ZOOM.zoomMin}) < 0.01`, 30000);
     const closest = await page.evaluate(probe);
-    assert.ok(Math.abs(closest.zoom - 0.17) < 0.01, `zoom min (${closest.zoom})`);
+    assert.ok(Math.abs(closest.zoom - ZOOM.zoomMin) < 0.01, `zoom min (${closest.zoom})`);
     assert.ok(Math.abs(closest.pitch - PITCH) < 0.6, 'le zoom conserve exactement le même angle');
     // Le zoom reste centré sur le curseur : le point du sol visé ne bouge presque pas.
     await page.evaluate(`Eredita.Board3D.strategyCamera.setDesired(0, 0, 1)`); await page.waitFor('Math.abs(Eredita.Board3D.strategyCamera.zoom - 1) < 0.01', 30000);
@@ -231,26 +231,56 @@ async function run() {
     assert.ok(quality.gone && quality.released < quality.withEnv - 10, `géométries libérées (${quality.withEnv} → ${quality.released})`);
     assert.ok(quality.rebuilt, 'le paysage se reconstruit à la demande');
 
+    // Habillage des régions (version PC) : chaque région reçoit le décor du paysage.
+    await page.waitFor('Eredita.Board3D.regionLayout().every(r => Eredita.Board3D.environment?.regionDressing?.(r.owner, r.lane)?.decor)', 60000);
+
     // VR/MR : plateau d'origine, sans paysage, éclairage et brume d'origine ; retour PC propre.
     const xr = await page.evaluate(`(async () => {
       const E = Eredita, c = E.Board3D.getXRContext();
+      // Modèles de région : décor/eau d'origine, sol et parcelles PC ou d'origine selon le mode.
+      const regions = () => {
+        const o = { deco: 0, decoVis: 0, water: 0, waterVis: 0, ground: 0, groundPc: 0, slots: 0, slotPc: 0, fenceVis: 0 };
+        c.terrainGroup.traverse(i => {
+          const role = i.userData.terrainRole;
+          if (role === 'decoration' || role === 'rock') { o.deco++; if (i.visible) o.decoVis++; }
+          if (role === 'water') { o.water++; if (i.visible) o.waterVis++; }
+          if (role === 'ground') { o.ground++; if (/-pc$/.test(i.material?.name || '')) o.groundPc++; }
+          if (i.geometry?.type === 'CylinderGeometry' && i.userData.mapTarget?.kind === 'slot') { o.slots++; if (Array.isArray(i.material)) o.slotPc++; }
+          if (i.name === 'slot-pen-fence' && i.visible) o.fenceVis++;
+        });
+        return o;
+      };
+      const pcRegions = regions();
       const sunBefore = c.scene.children.find(o => o.isDirectionalLight).intensity;
       Object.defineProperty(E.XR, 'active', { get: () => true, configurable: true });
       await new Promise(r => setTimeout(r, 500));
+      const xrRegions = regions();
       const boxes = c.world.children.filter(o => o.isMesh && o.geometry.type === 'BoxGeometry');
       let bases = 0, visibleBases = 0, frames = 0;
       c.terrainGroup.traverse(o => { if (o.userData.terrainRole === 'base') { bases++; if (o.visible) visibleBases++; } if (o.name === 'team-frame' && o.visible) frames++; });
       const inXr = { mode: E.Board3D.renderMode, boxesVisible: boxes.filter(b => b.visible).length, bases, visibleBases, frames, envVisible: E.Board3D.environment?.group.visible,
-        sun: c.scene.children.find(o => o.isDirectionalLight).intensity, tone: c.renderer.toneMapping, width: E.Board3D.getBoardWidth(), envMap: Boolean(c.scene.environment), fog: c.scene.fog };
+        sun: c.scene.children.find(o => o.isDirectionalLight).intensity, tone: c.renderer.toneMapping, width: E.Board3D.getBoardWidth(), envMap: Boolean(c.scene.environment), fog: c.scene.fog, worldScale: c.world.scale.x };
       delete E.XR.active; Object.defineProperty(E.XR, 'active', { get() { return false; }, configurable: true });
       await new Promise(r => setTimeout(r, 600));
-      return { sunBefore, inXr, back: { mode: E.Board3D.renderMode, boxesVisible: boxes.filter(b => b.visible).length, envVisible: E.Board3D.environment?.group.visible, tone: c.renderer.toneMapping } };
+      return { sunBefore, inXr, pcRegions, xrRegions, backRegions: regions(), back: { mode: E.Board3D.renderMode, boxesVisible: boxes.filter(b => b.visible).length, envVisible: E.Board3D.environment?.group.visible, tone: c.renderer.toneMapping, worldScale: c.world.scale.x, envScale: E.Board3D.environment?.group.scale.x } };
     })()`);
+    for (const [label, r] of [['PC', xr.pcRegions], ['retour PC', xr.backRegions]]) {
+      assert.ok(r.deco > 0 && r.decoVis === 0, `${label} : décor des modèles de région remplacé par celui du paysage ${JSON.stringify(r)}`);
+      assert.equal(r.waterVis, 0, `${label} : mer du paysage sur le littoral`);
+      assert.ok(r.ground > 0 && r.groundPc === r.ground, `${label} : sol détaillé des régions`);
+      assert.ok(r.slots > 0 && r.slotPc === r.slots, `${label} : parcelles (potagers, enclos) à la place des pastilles`);
+    }
+    const v = xr.xrRegions;
+    assert.ok(v.decoVis === v.deco && v.waterVis === v.water && v.groundPc === 0 && v.slotPc === 0 && v.fenceVis === 0, `VR/MR : modèles de région d'origine intacts ${JSON.stringify(v)}`);
     assert.equal(xr.inXr.mode, 'board'); assert.ok(xr.inXr.boxesVisible >= 2, 'socle conservé en VR/MR');
     assert.equal(xr.inXr.visibleBases, xr.inXr.bases, 'bases de région conservées en VR/MR'); assert.equal(xr.inXr.frames, 0);
     assert.equal(xr.inXr.envVisible, false, 'aucun paysage imposé en VR/MR'); assert.equal(xr.inXr.tone, 0, 'rendu VR/MR sans tone mapping ajouté');
     assert.equal(xr.inXr.sun, 2.8, 'éclairage de plateau d\'origine en VR/MR');
     assert.equal(xr.inXr.envMap, false, 'aucun ciel d’environnement en VR/MR'); assert.equal(xr.inXr.fog, null, 'aucune brume en VR/MR');
+    // Villages agrandis face au paysage par réduction du décor : le plateau reste à l'échelle 1 partout.
+    assert.equal(xr.inXr.worldScale, 1, 'plateau à l’échelle 1 en VR/MR');
+    assert.equal(xr.back.worldScale, 1, 'plateau à l’échelle 1 en version PC (coordonnées du jeu inchangées)');
+    assert.ok(Math.abs(xr.back.envScale * Eredita_boardScale - 1) < 1e-9, 'paysage réduit de 1/boardScale autour des villages');
     assert.equal(xr.back.mode, 'strategy'); assert.equal(xr.back.boxesVisible, 0); assert.equal(xr.back.envVisible, true);
     assert.ok(Math.abs(xr.inXr.width - (2 * 3 * 1.15 + 1.65)) < 0.01, 'dimensions du plateau inchangées');
 

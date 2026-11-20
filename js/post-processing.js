@@ -147,8 +147,14 @@
       }
     }
 
-    function render(scene, camera, { profile, focusDistance = 20, sunDirection } = {}) {
+    // unitScale : unités de scène par unité du paysage (paysage réduit autour des villages agrandis) ;
+    // les longueurs réglées dans le paysage (rayon d'AO, brume, nappe) suivent cette réduction.
+    function render(scene, camera, { profile, focusDistance = 20, sunDirection, unitScale = 1 } = {}) {
       ensureTargets(profile);
+      aoUniforms.uRadius.value = cfg.aoRadius * unitScale;
+      compositeUniforms.uHazeDensity.value = cfg.hazeDensity / unitScale;
+      compositeUniforms.uMistDensity.value = cfg.mistDensity / unitScale;
+      compositeUniforms.uMistHeight.value = cfg.mistHeight * unitScale;
       const previous = renderer.getRenderTarget();
       renderer.setRenderTarget(target);
       renderer.render(scene, camera);
