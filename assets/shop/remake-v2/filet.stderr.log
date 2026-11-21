@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single traditional handmade hemp fishing net hanging vertically in a roughly rectangular shape, sagging naturally between two upper rope loops. Clearly OPEN diamond mesh holes, individual twisted beige rope strands and knotted intersections. Small aged cork floats across top and a few stone sinkers along bottom. Threaded rope border, weathered natural fibers. No fish, no wall, no frame, no fabric sheet, no opaque backing.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=5000
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created 9220441d-2e4a-4391-93a8-c7ee17517e84 (@shop-v2-filet)
+text_to_model · queued
+text_to_model · running 15% · 9220441d
+text_to_model · running 26% · 9220441d
+text_to_model · running 44% · 9220441d
+text_to_model · running 67% · 9220441d
+text_to_model · success 100% · 9220441d
+✓ text_to_model · 9220441d-2e4a-4391-93a8-c7ee17517e84 · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-filet-9220441d

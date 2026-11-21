@@ -95,3 +95,10 @@
 @media (prefers-reduced-motion: reduce) {
   .play-panel, .play-lobby * { animation: none !important; transition: none !important; }
 }
+/* Sélecteur de qualité graphique du paysage 3D (PC). */
+.graphics-quality { position: absolute; right: 10px; bottom: 8px; z-index: 6; display: flex; align-items: center; gap: 6px;
+  font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: #efe3c3; background: rgba(20, 16, 11, .62);
+  border: 1px solid rgba(210, 176, 106, .35); border-radius: 6px; padding: 3px 6px; backdrop-filter: blur(3px); }
+.graphics-quality select { background: transparent; color: inherit; border: 0; font: inherit; text-transform: none; letter-spacing: 0; cursor: pointer; }
+.graphics-quality select option { color: #20180f; }
+.battlefield:not(.three-mode) .graphics-quality { display: none; }

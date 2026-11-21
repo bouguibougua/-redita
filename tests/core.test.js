@@ -134,7 +134,7 @@ assert.equal(bulkProfessionVillage.residents.slice(1).every((resident) => reside
 
 assert.deepEqual(E.Config.villageShops.bergerie.tiers[1].map((item) => item.label), ["Chèvre", "Cochon", "Vache"]);
 assert.deepEqual(E.Config.villageShops.artisanat.tiers[1].map((item) => item.label), ["Outil en pierre", "Armure de cuir"]);
-assert.deepEqual(E.Config.villageShops.boucherie.tiers[3].map((item) => item.label), ["Voilier", "Piège défensif"]);
+assert.deepEqual(E.Config.villageShops.boucherie.tiers[3].map((item) => item.label), ["Piège défensif"]);
 
 // Magasin maritime : déblocages du GDD, limites par Littoral et Filets.
 const maritimeState = E.Board.createState("classic");

@@ -63,6 +63,7 @@
     const resident = getResident(state, playerId, lane, residentId);
     resident.profession = profession;
     if (E.Config.combatProfessions.includes(profession)) resident.combatProfession = profession;
+    E.Animals?.assignWaitingDonkeys(state.players[playerId].villages[lane]);
     return true;
   }
 
@@ -220,6 +221,7 @@
     if(!resident||!village||village.destroyed||unit.hp<=0||resident.pendingMission)return false;
     resident.combatHealthRatio=unit.hp/unit.maxHp;resident.unitId=null;
     state.units=state.units.filter(entry=>entry!==unit);
+    E.Animals?.assignWaitingDonkeys(village);
     return true;
   }
 
@@ -349,6 +351,7 @@
       resident.huntTargetLaneOffset = null;
     }
     village.jobs[job] += 1;
+    E.Animals?.assignWaitingDonkeys(village);
     return true;
   }
 
@@ -701,6 +704,7 @@
     E.CharacterAI.resolve(state);
     Object.values(state.players).forEach((player) => {
       player.villages.filter((village) => !village.destroyed).forEach((village) => {
+        E.Animals?.assignWaitingDonkeys(village);
         village.productionMultiplier = E.MythologyEffects?.productionMultiplier(state, village) ?? 1;
         E.Transport.maritimeState(village).productionMultiplier = village.productionMultiplier;
         updateWorkerTrips(state, village, delta);

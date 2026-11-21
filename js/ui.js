@@ -155,7 +155,7 @@
       const equipment = event.target.closest("[data-buy-equipment]");
       if (equipment) controller.buyEquipment(equipment.dataset.equipmentKind, equipment.dataset.buyEquipment);
       const specialAnimal = event.target.closest("[data-buy-special-animal]");
-      if (specialAnimal) controller.buySpecialAnimal(specialAnimal.dataset.buySpecialAnimal, specialAnimal.dataset.residentId);
+      if (specialAnimal) controller.buySpecialAnimal(specialAnimal.dataset.buySpecialAnimal);
       const animalOrder = event.target.closest("[data-order-animal]");
       if (animalOrder) controller.orderAnimal(animalOrder.dataset.animalId, animalOrder.dataset.orderAnimal, animalOrder.dataset.slotIndex === undefined ? undefined : Number(animalOrder.dataset.slotIndex));
       const specialSlaughter = event.target.closest("[data-slaughter-special]");
@@ -571,7 +571,14 @@
         return `<div class="local-person ${player.id}" data-local-animal="${animal.id}" style="left:${left}%;top:${top}%" title="${E.Config.specialAnimals[animal.type].label}">${animalAppearance(animal.type, "unit-body")}</div>`;
       })
     )).join("");
-    elements.units.innerHTML = combatUnits + workers + locals + localAnimals;
+    const waitingDonkeys = Object.values(state.players).flatMap((player) => player.villages.flatMap((village) =>
+      village.destroyed || !vision(state, village).all ? [] : E.Board.waitingDonkeyPoints(village).map((point) => {
+        const left = ((point.lanePosition + .5 + point.terrainOffset / E.Config.board.laneSpacing) / regionCount) * 100;
+        const top = (E.Board.combatZ(point.position) - E.Config.boardProjection.originZ) / E.Config.boardProjection.positionScale;
+        return `<div class="local-person ${player.id}" data-waiting-donkey style="left:${left}%;top:${top}%" title="Âne en attente à la base">${animalAppearance("ane", "unit-body")}</div>`;
+      })
+    )).join("");
+    elements.units.innerHTML = combatUnits + workers + locals + localAnimals + waitingDonkeys;
   }
 
   function terrainSignature(state) {
@@ -946,8 +953,7 @@
       elements.shop.innerHTML = '<p class="empty-copy">Sélectionnez un village.</p>';
       return;
     }
-    const resident = shopResident(state, village);
-    elements.shop.dataset.signature = shopSignature(state, village);
+    elements.shop.dataset.signature = shopSignature(village);
     const sales = `<section class="shop-sales" aria-label="Vendre les ressources du village"><header><h3>Vendre les ressources</h3><span>Or global <b data-shop-gold>${formatNumber(player.gold)}</b></span></header><p>Stocks du village ${village.lane + 1} · jusqu’à ${E.Config.saleBatchSize} unités par vente.</p><div class="shop-sale-list">${E.Config.resources.map((resource) => `<div class="shop-sale" data-shop-sale="${resource}"><div><strong>${resourceIcons[resource]} ${resourceLabels[resource]}</strong><small>Stock : <b data-shop-stock="${resource}">${formatNumber(village.resources[resource])}</b></small></div><span data-shop-sale-preview="${resource}"></span><button class="sell-button" type="button" data-sell="${resource}">Vendre</button></div>`).join("")}</div></section>`;
     const stores = Object.entries(E.Config.villageShops).map(([buildingType, store]) => {
       const buildingLevel = E.Transport.buildingLevel(village, buildingType);
@@ -955,9 +961,9 @@
         const unlocked = buildingLevel >= Number(tier);
         const itemCards = items.map((item) => {
           if (item.specialAnimal) {
-            const quote = E.Animals.purchaseQuote(state, player.id, village.lane, item.specialAnimal, resident?.id);
-            const effect = item.specialAnimal === "ane" ? `Pour ${resident?.name || "l’habitant sélectionné"} · +20 % déplacement, +10 % travail` : item.specialAnimal === "chien" ? "40 PV · combat, garde et perturbation des élevages" : "80 PV · 8 dégâts/s · priorité aux champs · nage à mi-vitesse";
-            return `<article class="shop-item ${item.specialAnimal === "ane" && resident?.donkey ? "equipped" : ""}" data-shop-catalog-item><span class="shop-item-icon">${item.icon}</span><div><strong>${item.label}</strong><small>${effect}</small></div><button type="button" data-buy-special-animal="${item.specialAnimal}" data-resident-id="${resident?.id || ""}" ${!quote.allowed ? "disabled" : ""}>${item.specialAnimal === "ane" && resident?.donkey ? "Associé" : "Acheter"}<small>${quote.gold} or</small></button><p data-shop-reason>${quote.reason}</p></article>`;
+            const quote = E.Animals.purchaseQuote(state, player.id, village.lane, item.specialAnimal);
+            const effect = item.specialAnimal === "ane" ? "Attribution automatique · +20 % déplacement, +10 % travail" : item.specialAnimal === "chien" ? "40 PV · combat, garde et perturbation des élevages" : "80 PV · 8 dégâts/s · priorité aux champs · nage à mi-vitesse";
+            return `<article class="shop-item" data-shop-catalog-item><span class="shop-item-icon">${item.icon}</span><div><strong>${item.label}</strong><small>${effect}</small></div><button type="button" data-buy-special-animal="${item.specialAnimal}" ${!quote.allowed ? "disabled" : ""}>Acheter<small>${quote.gold} or</small></button><p data-shop-reason>${quote.reason}</p></article>`;
           }
           if (item.animalType) {
             const quote = E.Livestock.purchaseQuote(state, player.id, village.lane, item.animalType);
@@ -1009,13 +1015,10 @@
     });
   }
 
-  function shopResident(state, village) {
-    return village.residents.find((resident) => resident.id === state.selectedResidentId) || village.residents[0] || null;
-  }
-
   function renderAnimalRoster(state, player, village) {
     const animals = village.animals || [];
-    const donkeyCount = village.residents.filter((resident) => resident.donkey).length;
+    const donkeyCount = E.Animals.assignedDonkeyCount(village);
+    const waitingDonkeys = E.Animals.waitingDonkeyCount(village);
     const counts = ["chien", "sanglier"].map((type) => `${E.Config.specialAnimals[type].icon} ${animals.filter((animal) => animal.type === type).length}`).join(" · ");
     const cards = animals.map((animal) => {
       const definition = E.Config.specialAnimals[animal.type];
@@ -1027,7 +1030,7 @@
       const status = { disponible: "Au village", attaque: "En attaque", defense: "Garde la frontière", garde: "Garde un enclos", perturber: "Perturbe les élevages ennemis" }[animal.mission] || animal.mission;
       return `<article class="companion-card" data-companion-card="${animal.id}"><header>${animalAppearance(animal.type, "resident-avatar")}<div><strong>${definition.label} ${String(animal.id).split("-").at(-1)}</strong><small>${status} · <b data-companion-hp="${animal.id}">${definition.hp}</b> PV</small></div></header><div class="companion-orders">${command("attaque", "Attaquer")}${animal.type === "chien" ? command("defense", "Frontière") + command("perturber", "Perturber") + guards : `<button type="button" class="slaughter-button" data-slaughter-special="${animal.id}" ${animal.unitId || state.paused || state.phase !== "running" || village.destroyed ? "disabled" : ""}>Abattre · +${definition.meatAtDeath} viande</button>`}</div></article>`;
     }).join("");
-    return `<section class="companion-roster"><h4>Compagnons du village</h4><p class="section-help">${counts} · 🫏 ${donkeyCount} associé(s)</p>${cards || '<p class="section-help">Achetez un chien ou un sanglier pour lui donner une mission ici.</p>'}<p class="section-help">Les compagnons ne consomment ni population ni emplacement d’élevage. Un âne accompagne son habitant et meurt avec lui. Un animal engagé ne peut pas être abattu.</p></section>`;
+    return `<section class="companion-roster"><h4>Compagnons du village</h4><p class="section-help">${counts} · 🫏 ${donkeyCount} associé(s) · ${waitingDonkeys} à la base</p>${cards || '<p class="section-help">Achetez un chien ou un sanglier pour lui donner une mission ici.</p>'}<p class="section-help">Les compagnons ne consomment ni population ni emplacement d’élevage. Un âne accompagne son habitant et meurt avec lui. Un animal engagé ne peut pas être abattu.</p></section>`;
   }
 
   function updateAnimalOrders(state, player, village) {
@@ -1048,9 +1051,8 @@
     });
   }
 
-  function shopSignature(state, village) {
-    const resident = shopResident(state, village);
-    return `${village.equipment?.tool}:${village.equipment?.armor}:${village.residents.length}:${village.destroyed}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${resident?.id}:${resident?.profession}:${resident?.tool}:${resident?.armor}:${resident?.donkey}:${herdSignature(village)}:${(village.animals || []).map((animal) => `${animal.id}:${animal.mission}:${animal.unitId}`).join(",")}`;
+  function shopSignature(village) {
+    return `${village.equipment?.tool}:${village.equipment?.armor}:${village.residents.length}:${village.destroyed}:${village.buildings.map((building) => `${building.type}:${building.level}`).join(",")}:${E.Animals.assignedDonkeyCount(village)}:${E.Animals.waitingDonkeyCount(village)}:${herdSignature(village)}:${(village.animals || []).map((animal) => `${animal.id}:${animal.mission}:${animal.unitId}`).join(",")}`;
   }
 
   function animalShopCount(village, type) {
@@ -1079,7 +1081,7 @@
     const player = state.players[selection.playerId];
     const village = player?.villages[selection.lane];
     if (!village) return;
-    if (elements.shop.dataset.selectionKey !== `${selection.playerId}-${selection.lane}` || elements.shop.dataset.signature !== shopSignature(state, village)) {
+    if (elements.shop.dataset.selectionKey !== `${selection.playerId}-${selection.lane}` || elements.shop.dataset.signature !== shopSignature(village)) {
       renderShop(state);
       return;
     }
@@ -1109,7 +1111,7 @@
       button.closest("[data-shop-catalog-item]").querySelector("[data-shop-reason]").textContent = quote.reason;
     });
     elements.shop.querySelectorAll("[data-buy-special-animal]").forEach((button) => {
-      const quote = E.Animals.purchaseQuote(state, player.id, village.lane, button.dataset.buySpecialAnimal, button.dataset.residentId);
+      const quote = E.Animals.purchaseQuote(state, player.id, village.lane, button.dataset.buySpecialAnimal);
       button.disabled = !quote.allowed;
       button.closest("[data-shop-catalog-item]").querySelector("[data-shop-reason]").textContent = quote.reason;
     });

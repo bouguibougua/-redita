@@ -1324,7 +1324,7 @@ Si la personne associée meurt :
 
 **l'Âne meurt également.**
 
-Dans le prototype, l'Âne s'achète à la **Bergerie T2** et accompagne immédiatement l'habitant sélectionné, hors combat. Un habitant ne peut avoir qu'un âne. Le compagnon reste associé lors des changements de métier, tâche et déploiement ; il ne se reproduit pas et n'occupe pas d'enclos.
+L’âne s’achète à la **Bergerie T2**. Dans le village d’achat, il rejoint automatiquement un agriculteur, puis un berger si aucun agriculteur ne peut le recevoir. Un habitant qui exerce la tâche ou qui attend à la base avec le métier correspondant peut le recevoir s’il est hors combat et n’a pas déjà un âne. Les légendes ne reçoivent pas d’âne. S’il n’y a personne à équiper, l’âne attend à la base et rejoint automatiquement un travailleur dès qu’il remplit ces conditions. La destruction du village retire les ânes qui attendent à la base. Le compagnon reste associé lors des changements de métier, de tâche et des déploiements. Il ne se reproduit pas et n’occupe pas d’enclos.
 
 TEMP_BALANCE_VALUE : achat **150 or** ; convention de cumul, les déplacements sont multipliés par **1,2** après le bonus de métier et les rendements de travail par **1,1** après les autres bonus (agriculture, récolte de lait, pêche personnelle et chasse). Les trajets restent nécessaires pour déposer les récoltes. Aucun bonus n'est appliqué aux Filets autonomes ni à la reproduction des élevages. L'âne n'ajoute pas une seconde unité militaire et ne peut pas survivre à la mort de son habitant.
 
@@ -1769,8 +1769,10 @@ sélections, activations et effets.
 
 Le cristal reste centré en haut de l’écran, même inactif, abaissé sous le haut de l’écran pour garder toute la gemme, son compteur et ses éclairs visibles, avec une marge supplémentaire de 16 pixels. Il devient jaune,
 avec ses petits éclairs électriques, lorsqu’une proposition attend.
-Un clic déclenche les rayons bicolores existants et, après **500 ms**,
-le glissement des deux grandes cartes trapézoïdales symétriques.
+Un clic déclenche les rayons bicolores et, après **500 ms**,
+le glissement des deux cartes trapézoïdales symétriques. En partie, leurs
+dimensions sont réduites d’environ un tiers sur ordinateur. Sur téléphone,
+la largeur garde assez de place pour les portraits et les descriptions.
 Leurs couleurs proviennent exclusivement de `mythology-data.js`.
 
 Le chronomètre de partie est placé directement sous le cristal, y compris
@@ -1780,13 +1782,17 @@ lorsqu’ils sont ouverts, puis revient sous le petit cristal à leur fermeture.
 
 Aucun choix ne s’ouvre automatiquement. Toute la surface de chaque proposition
 est cliquable ; le choix validé reçoit sa bordure dorée, puis les cartes se
-ferment. Fermer sans choisir conserve la proposition. La sélection n’est pas
-chronométrée et ne déclenche aucun pouvoir.
+ferment. Quand le menu se ferme, les cartes glissent vers le cristal et ses
+deux moitiés se rejoignent. Le mode mouvements réduits ferme immédiatement.
+Un second clic sur le cristal ou le bouton Fermer conserve la proposition.
+La sélection n’est pas chronométrée et ne déclenche aucun pouvoir.
 
-Si une autre proposition attend, le cristal se réarme immédiatement ; un
-nouveau clic est obligatoire. Les animations et la géométrie existantes restent
-inchangées. Les illustrations sont normales à gauche et inversées à droite ;
-en l’absence d’une variante distincte, seul l’élément image est retourné.
+Si une autre proposition attend, le cristal se réarme à la fin de la
+fermeture et attend un nouveau clic. Dans les cartes de choix, les
+illustrations sont un peu dézoomées et cadrées sur le visage ou le sujet
+principal. Elles sont normales à gauche
+et inversées à droite. En l’absence d’une variante distincte, seul l’élément
+image est retourné.
 
 ---
 
@@ -1859,13 +1865,13 @@ la planche restent provisoires, pas des couleurs définitivement validées.
 
 **Nouvelle règle du concepteur, 12 novembre 2026 :** l’ancien pouvoir de vision est remplacé par une invocation d’archer, **45 PV de base**, **15 dégâts par flèche**, **une flèche toutes les 9 secondes**. Il apparaît dans la région alliée choisie.
 
-Tant qu’un personnage ennemi n’est pas marqué, U Mazzeru reste immobile et choisit **le plus proche ennemi non marqué sur toute la carte, sans limite de portée**, toutes colonnes confondues, travailleurs compris. Les personnages et compagnons indépendants sont concernés ; les champs, élevages et bâtiments ne reçoivent pas la marque. La cible est choisie au départ du tir ; la flèche suit son identité si elle change de tâche ou se déploie, mais ne change pas de victime si celle-ci meurt avant l’impact.
+Tant qu’un personnage ennemi non marqué se trouve sur le terrain, U Mazzeru reste immobile et choisit **le plus proche, sans limite de portée**, toutes colonnes confondues. Il peut viser les travailleurs et les compagnons indépendants une fois qu’ils ont franchi la porte du village vers le terrain. Les champs, élevages et bâtiments ne reçoivent pas la marque. La flèche suit l’identité de la cible si elle change de tâche ou se déploie sur le terrain. Elle se dissipe si la cible meurt ou rentre à l’abri avant l’impact.
 
 La flèche applique **15 dégâts et Mauvais Présage à l’impact**. La marque ne se cumule pas. Elle affiche le logo fourni en petit sous les pieds du personnage et colore **les 15 % gauches de sa barre de vie en rouge**. Dès que ses PV courants sont **inférieurs ou égaux à 15 % de ses PV maximum actuels**, il meurt instantanément. Le seuil se recalcule avec les équipements et changements de PV maximum. La marque suit les rappels et changements de tâche ; elle disparaît à la mort. Les protections humaines existantes restent applicables avant une mort effective.
 
 **Règle précisée par le concepteur, 12 novembre 2026 :** quand **un ennemi marqué meurt, quelle que soit la cause**, **le personnage qui a appliqué cette marque** gagne **+15 PV maximum** : U Mazzeru ou U Surpatore vampire. Le gain revient uniquement à cet auteur encore vivant, une seule fois par décès, **sans soin immédiat** et sans plafond ajouté. Une brève pulsation rouge sur sa barre de vie et « +15 PV max » signalent ce gain. La marque ne se cumulant pas, un coup ultérieur d’un autre invocateur ne remplace pas son auteur. Une flèche conserve l’identité de son tireur durant le vol ; si celui-ci meurt, aucun autre invocateur ne récupère son bonus. L’identité de l’auteur reste conservée lors des déploiements, rappels et snapshots de la victime. Cette règle remplace l’ancien partage provisoire entre tous les Mazzeri alliés.
 
-Quand tous les ennemis vivants sont marqués, Mazzeru avance et combat comme l’archer existant sur sa colonne : portée **15**, **15 dégâts par flèche**, cadence toujours **9 s**. Un nouvel ennemi non marqué le fait s’arrêter là où il se trouve pour reprendre les tirs globaux ; il n’est pas téléporté à son point de départ.
+Quand il n’y a plus d’ennemi non marqué sur le terrain, U Mazzeru avance et combat comme l’archer sur sa colonne, y compris contre le village à portée. Il conserve ses **15 unités de portée, 15 dégâts par flèche et un tir toutes les 9 s**. Les personnages à l’abri restent exclus de ses cibles. Dès qu’un ennemi non marqué arrive sur le terrain, U Mazzeru s’arrête à sa position actuelle et reprend les tirs globaux.
 
 **U Surpatore, forme vampire uniquement**, applique également Mauvais Présage avec ses coups. Il garde sa victime jusqu’à sa mort et continue de la poursuivre si elle change de tâche ou de ligne. Il choisit ensuite une nouvelle victime selon sa détection habituelle ; il ne donne pas priorité aux ennemis non marqués. Son sanglier ne pose pas la marque. Ses **40 PV de base, 11 dégâts et cadence existante** restent inchangés. Une mort portant sa propre marque lui donne le bonus à lui, sans le partager avec Mazzeru.
 
@@ -2123,7 +2129,7 @@ Le magasin ne doit pas nécessairement être une grande interface indépendante.
 
 Le système d'achat est intégré au village.
 
-La boutique s'ouvre depuis le panneau latéral et permet de naviguer entre les villages du joueur sans la fermer. Depuis le 16 novembre 2026, sa vue principale PC est une échoppe corse en vraie 3D, à caméra fixe : animaux à gauche, outils et armures au centre, équipements à droite et six paniers de ressources en bas. Les objets possèdent des maillages indépendants ; un contour discret et un léger mouvement signalent le survol d’un article disponible. Les articles verrouillés sont assombris et ne scintillent pas. Un clic achète selon les prérequis existants, sans prix sur les objets ni popup. Les ventes par lots exacts ×10, ×100 et ×1000 utilisent les stocks du village et créditent l’or global ; leurs gains réels sont affichés sur les boutons. Le solde, les stocks et le chronomètre suivent la simulation, et le montant exact de chaque transaction confirmée apparaît près du solde pendant 1,2 seconde. Le son fourni « song achat.mp3 » joue une fois après validation, à volume réduit pour une vente. L’invité attend le reçu de l’hôte ; un refus ou un message réseau dupliqué ne produit ni second paiement ni son de réussite. La navigation propose deux villages en format simplifié et quatre en classique. Les pièges de chasse et défensif restent visibles et inactifs, conformément à la confirmation du concepteur. Un sélecteur Barque/Voilier conserve l’accès aux deux embarcations. Le sélecteur « Âne pour » reprend la sélection de l’habitant. La vue **Gestion & compagnons** conserve les quatre colonnes historiques : vente des six ressources locales du village sélectionné, Bergerie, Artisanat et Boucherie. L'or gagné par la vente reste global. La première colonne ne contient que la vente des ressources : les blocs « Réserve de barques », « Équipement du village » et « Habitant associé à l’âne » sont retirés. L’équipement collectif reste achetable dans la troisième colonne et consultable dans le bandeau de statistiques. L’âne est associé à l’habitant sélectionné dans le panneau Habitants ; son nom est précisé sur l’article de la Bergerie. Un clic en dehors de la fenêtre ferme la boutique, tout comme le bouton rouge « Retour ». Chaque échoppe exige le bâtiment associé et chaque rayon exige son bon tier. La Bergerie T1 débloque Chèvre, Cochon et Vache, T2 l'Âne, T3 Chien et Sanglier. L'Artisanat T1 débloque l’équipement en pierre et cuir, T2 l’équipement en bronze et maille, T3 l’équipement en fer. La Barque, le Piège et le Piège défensif sont retirés de l’Artisanat. La Boucherie T1 débloque Filet de pêche et Barque, T2 Piège de chasse, T3 Voilier et Piège défensif. Barque, Voilier, Filet, chèvres, cochons, vaches, ânes, chiens, sangliers, outils et armures sont achetables et fonctionnels ; les éléments dont la mécanique n'est pas encore implémentée restent visibles mais non achetables. La liste « Compagnons du village » de la Bergerie permet de commander séparément chiens et sangliers et d'en consulter les PV. Le malus de reproduction actif est indiqué directement dans l'enclos touché.
+La boutique s'ouvre depuis le panneau latéral et permet de naviguer entre les villages du joueur sans la fermer. Depuis le 16 novembre 2026, sa vue principale PC est une échoppe corse en vraie 3D, à caméra fixe : animaux à gauche, outils et armures au centre, équipements à droite et six paniers de ressources en bas. Les objets possèdent des maillages indépendants ; un agrandissement, une avancée, une inclinaison suivant le curseur et un contour ivoire/doré signalent le survol de chaque article visible, selon la vidéo fournie le 17 novembre 2026. Les articles verrouillés et les pièges inactifs répondent visuellement au survol sans autoriser leur achat. Les articles verrouillés sont assombris et ne scintillent pas. Un clic achète selon les prérequis existants, sans prix sur les objets ni popup. Les ventes par lots exacts ×10, ×100 et ×1000 utilisent les stocks du village et créditent l’or global ; leurs gains réels sont affichés sur les boutons. Le solde, les stocks et le chronomètre suivent la simulation, et le montant exact de chaque transaction confirmée apparaît près du solde pendant 1,2 seconde. Le son fourni « song achat.mp3 » joue une fois après validation, à volume réduit pour une vente. L’invité attend le reçu de l’hôte ; un refus ou un message réseau dupliqué ne produit ni second paiement ni son de réussite. La navigation propose deux villages en format simplifié et quatre en classique. Les pièges de chasse et défensif restent visibles et inactifs, conformément à la confirmation du concepteur. Depuis la demande du 17 novembre 2026, le Voilier est retiré de la boutique : aucun sélecteur ni article Voilier dans l’étal, Gestion ou le catalogue XR. La Barque reste disponible. Les données de transport des anciens états sont conservées. Le bas de l’échoppe indique le nombre d’ânes en attente à la base. La vue **Gestion & compagnons** conserve les quatre colonnes historiques : vente des six ressources locales du village sélectionné, Bergerie, Artisanat et Boucherie. L'or gagné par la vente reste global. La première colonne ne contient que la vente des ressources : les blocs « Réserve de barques », « Équipement du village » et « Habitant associé à l’âne » sont retirés. L’équipement collectif reste achetable dans la troisième colonne et consultable dans le bandeau de statistiques. L’âne est attribué automatiquement dans le village selon le §44. Un clic en dehors de la fenêtre ferme la boutique, tout comme le bouton rouge « Retour ». Chaque échoppe exige le bâtiment associé et chaque rayon exige son bon tier. La Bergerie T1 débloque Chèvre, Cochon et Vache, T2 l'Âne, T3 Chien et Sanglier. L'Artisanat T1 débloque l’équipement en pierre et cuir, T2 l’équipement en bronze et maille, T3 l’équipement en fer. La Barque, le Piège et le Piège défensif sont retirés de l’Artisanat. La Boucherie T1 débloque Filet de pêche et Barque, T2 Piège de chasse, T3 Piège défensif (catalogue inactif). Barque, Filet, chèvres, cochons, vaches, ânes, chiens, sangliers, outils et armures sont achetables et fonctionnels ; les éléments dont la mécanique n'est pas encore implémentée restent visibles mais non achetables. La liste « Compagnons du village » de la Bergerie permet de commander séparément chiens et sangliers et d'en consulter les PV. Le malus de reproduction actif est indiqué directement dans l'enclos touché.
 
 Chaque achat d'animal ajoute **un animal** à un enclos vivant de la même espèce, choisi au hasard **dans le village sélectionné**. S'il n'existe aucun enclos compatible, un emplacement libre autorisant les animaux est choisi au hasard pour en créer un. Aucune culture ni autre espèce n'est remplacée. S'il n'y a pas de place, l'achat est bloqué sans dépense. Les dégâts du troupeau et sa progression de reproduction sont conservés. TEMP_BALANCE_VALUE : achat d'une chèvre **50 or**, d'un cochon **65 or**, d'une vache **90 or**, avec Bergerie T1 minimum. Le placement direct d'un élevage est disponible sans Bergerie dans un emplacement libre compatible, selon les règles provisoires du prototype.
 
@@ -2911,7 +2917,7 @@ Chaque personnage possède une **hitbox circulaire au sol**, commune aux deux ca
 
 La **vision est circulaire** autour de chaque personnage. Sans cible détectée, un attaquant avance droit dans sa colonne ; lorsqu’il repère un ennemi, il l’approche et attaque à sa portée existante. Il cherche une place libre aléatoire autour de cette cible, en conservant sa colonne de départ, comme confirmé par le concepteur. La redirection après destruction d’un village et les retours au village restent possibles et respectent les collisions. Les remparts sont détectés sur la largeur de leur façade ; les formations décalées rejoignent une place autour de la porte pour la frapper. Les gardes restent à leur poste. Un travailleur attaquable à distance devient une cible de combat sans se mettre à poursuivre le tireur au-delà de sa défense de proximité.
 
-Les priorités propres aux légendes et animaux sont conservées : Mazzeru vise globalement les ennemis non marqués et reste immobile pendant ce mode ; le vampire garde sa victime ; le Lupu ne combat pas les troupes ; les ravageurs et le Lupu privilégient les champs et élevages détectés, puis gardent leur cible économique jusqu’à sa disparition. Les gardes et les compagnons conservent leurs missions propres. Les grandes hitboxes des légendes suivent leur facteur de taille ; le contact entre deux grandes figurines reste attaquable sans qu’elles doivent se pénétrer.
+Les priorités propres aux légendes et animaux sont conservées : Mazzeru vise globalement les ennemis non marqués sur le terrain et reste immobile pendant ce mode ; le vampire garde sa victime ; le Lupu ne combat pas les troupes ; les ravageurs et le Lupu privilégient les champs et élevages détectés, puis gardent leur cible économique jusqu’à sa disparition. Les gardes et les compagnons conservent leurs missions propres. Les grandes hitboxes des légendes suivent leur facteur de taille ; le contact entre deux grandes figurines reste attaquable sans qu’elles doivent se pénétrer.
 
 À chaque nouvelle tournée, **agriculteurs et bergers choisissent aléatoirement un champ ou un élevage compatible et vivant**, puis une place libre aléatoire dans sa zone. Cette destination est réservée et conservée pendant le trajet et le travail ; elle change si la source disparaît ou si la place devient occupée. Une récolte chargée est livrée même si sa source a disparu. Le retour utilise une place libre au village. Les rendements, bonus, délais de récolte/traite et dépôts existants sont conservés ; les temps de trajet dépendent désormais des distances réellement parcourues et des contournements. Les chasseurs utilisent également l’évitement pendant leurs déplacements.
 
@@ -2949,8 +2955,48 @@ Dans chaque village, chaque référence d’armure et d’outil/arme est achetab
 
 ### Boutique 3D — présentation et limites de cette livraison
 
-Le décor est constitué de volumes séparés : charpente, mur, toiture, tissu, table, clôture et étagère. Les animaux et la barque réutilisent les modèles du jeu ; les autres marchandises sont des maillages locaux. La pancarte en bois a été générée avec Tripo, allégée localement et reçoit le texte exact VINDUTU dans le rendu. Prix, stocks, plafonds et conditions restent dans la simulation commune. Les ventes exactes, le voilier, le choix du destinataire de l’âne et les pièges inactifs sont conservés.
+Le décor est constitué de volumes séparés : charpente, mur, toiture, tissu, table, clôture et étagère. La refonte du 17 novembre 2026 remplace vingt articles par des modèles Tripo PBR indépendants et reconstruit localement le décor et les pancartes. L’âne et la barque sont conservés. Le sanglier est représenté uniquement par sa tête fixée au mur. La nouvelle pancarte en bois reçoit le texte exact VINDUTU dans le rendu. Prix, stocks, plafonds et conditions restent dans la simulation commune. Les ventes exactes, la barque, l’attribution des ânes dans le village et les pièges inactifs sont conservés. Le Voilier a été retiré du catalogue et du décor à la demande du concepteur le 17 novembre 2026.
 
 Un village détruit ne peut plus ouvrir sa boutique ; s’il est détruit pendant l’ouverture, ses transactions sont immédiatement bloquées et la fermeture ou le choix d’un village vivant restent possibles. La simulation continue pendant la visite. Seul le dessin du plateau PC est suspendu derrière la boutique pour économiser le GPU. Le rendu de boutique s’arrête à sa fermeture et en vue Gestion. Les mouvements réduits sont respectés. En cas d’indisponibilité WebGL, la vue illustrée reste utilisable.
 
 Le déplacement des commandes de parcelles et des compagnons sous Légende est un lot suivant : le panneau actuel reste accessible. La boutique XR actuelle partage les mêmes devis, progression, commandes et confirmations économiques ; la projection du nouvel étal 3D dans WebXR et sa validation physique sur Quest 3 restent à réaliser.
+
+
+### Boutique — amélioration visuelle du 17 novembre 2026
+
+La boutique conserve son moteur Three.js et les mêmes transactions. Le rendu utilise
+des matériaux de bois, pierre, terre cuite, cuir, lin, osier et métal avec couleur,
+normales et rugosité partagées. Les charpentes ont des arêtes adoucies et un veinage
+orienté ; les présentoirs, les tissus, les lanternes, les paniers et les ressources
+sont détaillés. L’éclairage associe soleil chaud, lumière ambiante et environnement
+de réflexion local. L’âne de la boutique possède un modèle Tripo indépendant ;
+sa respiration est simulée sans nouveau système d’animation. Le sanglier est
+désormais une tête murale immobile, sauf lors de sa mise en avant au survol.
+Ces assets concernent la présentation de l’étal, sans modifier les modèles du plateau
+ni les statistiques. Le Voilier n’est plus proposé dans aucune vue du catalogue.
+La barque et les réserves de transport des anciens états restent compatibles.
+
+
+### Nouvelle référence de survol — 17 novembre 2026
+
+À la demande du concepteur, le survol suit désormais la mise en avant montrée
+dans `IMG_9788.MOV`. L’article grossit, s’avance et s’incline selon la position
+du pointeur, puis revient progressivement au repos. Le clic et le survol
+utilisent un rectangle invisible ajusté au modèle au repos.
+Lorsque deux zones se recouvrent, l’article le plus proche
+de la caméra est sélectionné.
+Cela concerne tous les articles visibles, même verrouillés, et les paniers de
+ressources. Cette réaction visuelle n’altère aucun prérequis ni prix : le clic
+reste validé par le moteur ; les pièges restent inactifs. Les objets déjà vendus
+ne réagissent plus. Le décor et les autres objets ne sont pas déplacés par le
+survol. Le mode mouvements réduits conserve uniquement l’identification visuelle.
+Le clavier utilise le même survol centré, les contrôles de vente ciblent leur
+panier. Les paramètres sont centralisés dans `Config.shopScene.hover`.
+
+Les articles 3D restent des modèles indépendants. Le collier fourni est incliné
+pour montrer sa sangle et représente l’achat du chien. Le sanglier est un
+trophée mural composé de sa tête. Le cochon est placé devant la vache,
+sur la droite de l’enclos et derrière la barrière. La barque agrandie se trouve
+au premier plan, plus bas devant la table inclinée de la Boucherie. Les deux pièges agrandis
+sont décalés vers la droite sur la table. Les enseignes en bois portent les
+noms Bergerie, Artisanal et Boucherie.

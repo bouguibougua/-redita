@@ -145,24 +145,62 @@ test("bad IDs, unknown types, phases, paused games, lost villages and insufficie
   rejectedWithoutMutation(state, () => E.Animals.buy(state, "red", 0, "chien"));
 });
 
-test("the donkey belongs to one eligible local resident and has no standalone military unit", () => {
+test("a donkey waits in its village until a resident takes up farming or shepherding", () => {
   const { state, village, enemy } = scenario(2);
   const resident = village.residents[0];
+  const shepherd = village.residents[1];
   const humansBefore = population(state);
   const slotsBefore = JSON.stringify(village.slots);
   const goldBefore = state.players.red.gold;
   rejectedWithoutMutation(state, () => E.Animals.buy(state, "red", 0, "ane", enemy.residents[0].id));
   rejectedWithoutMutation(state, () => E.Animals.buy(state, "red", 0, "ane", "missing"));
-  assert.ok(E.Animals.buy(state, "red", 0, "ane", resident.id));
-  assert.equal(resident.donkey, true);
+  delete village.waitingDonkeys; // Ancien snapshot.
+  assert.equal(E.Animals.buy(state, "red", 0, "ane").residentId, null);
+  assert.equal(village.waitingDonkeys, 1);
+  assert.equal(resident.donkey, false);
   assert.equal(state.players.red.gold, goldBefore - E.Config.specialAnimals.ane.gold);
   assert.equal(state.units.length, 0);
   assert.equal(population(state), humansBefore);
   assert.equal(JSON.stringify(village.slots), slotsBefore);
-  rejectedWithoutMutation(state, () => E.Animals.buy(state, "red", 0, "ane", resident.id));
-  const soldier = village.residents[1];
+
+  assert.ok(E.Economy.setProfession(state, "blue", 0, enemy.residents[0].id, "agriculteur"));
+  assert.ok(E.Economy.setProfession(state, "red", 1, state.players.red.villages[1].residents[0].id, "agriculteur"));
+  assert.equal(village.waitingDonkeys, 1);
+  assert.equal(enemy.residents[0].donkey, false);
+  assert.equal(state.players.red.villages[1].residents[0].donkey, false);
+  assert.ok(E.Crops.place(state, "red", 0, 0, "ble"));
+  assert.ok(E.Economy.assignResidentJob(state, "red", 0, resident.id, "agriculture"));
+  assert.equal(resident.donkey, true);
+  assert.equal(village.waitingDonkeys, 0);
+
+  assert.ok(E.Animals.buy(state, "red", 0, "ane"));
+  assert.equal(village.waitingDonkeys, 1);
+  herd(state, "red", "chevre", 1);
+  assert.ok(E.Economy.assignResidentJob(state, "red", 0, shepherd.id, "elevage"));
+  assert.equal(shepherd.donkey, true);
+  assert.equal(village.waitingDonkeys, 0);
+  assert.equal(state.units.length, 0);
+});
+
+test("donkey purchases prioritize farmers over shepherds and skip combatants", () => {
+  const { state, village } = scenario(2);
+  const [shepherd, farmer, soldier] = village.residents;
+  herd(state, "red");
+  assert.ok(E.Crops.place(state, "red", 0, 1, "ble"));
+  assert.ok(E.Economy.assignResidentJob(state, "red", 0, shepherd.id, "elevage"));
+  assert.ok(E.Economy.assignResidentJob(state, "red", 0, farmer.id, "agriculture"));
+  assert.ok(E.Economy.setProfession(state, "red", 0, soldier.id, "agriculteur"));
   assert.equal(E.Economy.deployResident(state, "red", 0, soldier.id, "attaque"), true);
-  rejectedWithoutMutation(state, () => E.Animals.buy(state, "red", 0, "ane", soldier.id));
+  assert.equal(E.Animals.buy(state, "red", 0, "ane", shepherd.id).residentId, farmer.id);
+  assert.equal(farmer.donkey, true);
+  assert.equal(shepherd.donkey, false);
+  assert.equal(E.Animals.buy(state, "red", 0, "ane").residentId, shepherd.id);
+  assert.ok(E.Animals.buy(state, "red", 0, "ane"));
+  assert.ok(E.Animals.buy(state, "red", 0, "ane"));
+  assert.equal(village.waitingDonkeys, 2);
+  assert.equal(soldier.donkey, false);
+  E.Animals.onVillageDestroyed(village);
+  assert.equal(village.waitingDonkeys, 0);
 });
 
 test("all dog missions and boar attack deploy independent units exactly once", () => {

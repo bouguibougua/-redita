@@ -1,0 +1,28 @@
+{
+  "task_id": "b8ef5922-5dc4-4265-b133-a6a1a30c568b",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "A single Corsican wild boar, full body standing calmly on four distinct hooves, natural stocky proportions, coarse dark brown bristly fur, slightly arched back, small ivory tusks, alert short ears, realistic dark snout, no base, no environment, no ground, no text. Refined hand painted realistic medieval game art, physically based fur textures, clean readable silhouette.",
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 5000,
+    "model_version": "P1-20260311",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T08:22:05.166139Z",
+  "completed_at": "2026-11-17T08:23:11.762455Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

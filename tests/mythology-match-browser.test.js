@@ -23,9 +23,12 @@ async function run() {
   async function openChoices(page) {
     await page.send('Page.bringToFront');
     await page.waitFor(`${diagnostic}.crystal?.ready`);
-    assert.equal(await page.evaluate("document.querySelector('.mythology-match-widget').classList.contains('is-open')"), false);
+    await waitClosed(page);
     await page.click(stage);
     await page.waitFor(`${diagnostic}.crystal.cardsProgress===1`, 10000);
+  }
+  async function waitClosed(page) {
+    await page.waitFor(`!${diagnostic}.crystal.started && !document.querySelector('.mythology-match-widget').classList.contains('is-open')`);
   }
   async function checkOverlay(page, open) {
     const layout = await page.evaluate(`(() => {
@@ -37,14 +40,20 @@ async function run() {
         cards:cards.map(c=>({width:c.offsetWidth,height:c.offsetHeight,top:c.getBoundingClientRect().top})),
         clock:(()=>{const c=widget.querySelector('.board-clock').getBoundingClientRect();return {left:c.left,right:c.right}})(),
         gap:{left:cards[0].getBoundingClientRect().right,right:cards[1].getBoundingClientRect().left},
-        overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
+        overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+        textFits:cards.every(card=>{
+          const heading=card.querySelector('.mythology-heading'),power=card.querySelector('.mythology-power');
+          return heading.offsetHeight+power.offsetHeight<card.clientHeight && power.scrollHeight<=power.clientHeight+1;
+        })};
     })()`);
     assert.equal(layout.position, 'fixed'); assert.ok(Math.abs(layout.center-layout.viewport/2)<1, 'Crystal is exactly centered');
     assert.equal(layout.background, 'rgba(0, 0, 0, 0)', 'No modal panel hides the board');
     assert.equal(layout.title, open); assert.equal(layout.closed, !open); assert.equal(layout.overflow, false);
-    assert.ok(layout.top<85); assert.ok(layout.width>layout.viewport*.9, 'Cards span almost the full screen');
+    assert.ok(layout.top<85);
     if(open) {
-      assert.deepEqual(layout.cards[0],layout.cards[1]); assert.ok(layout.bottom<600, 'Board remains visible below the cards');
+      assert.ok(layout.cards[0].width < layout.viewport*.39 && layout.cards[0].height <= 268, 'Compact cards fit above the board');
+      assert.equal(layout.textFits, true);
+      assert.deepEqual(layout.cards[0],layout.cards[1]); assert.ok(layout.bottom<340, 'Board remains visible below the cards');
       assert.ok(layout.clock.left>=layout.gap.left-1 && layout.clock.right<=layout.gap.right+1, 'The clock fits between the choices, including on mobile');
     }
   }
@@ -86,9 +95,24 @@ async function run() {
     await openChoices(page);
     await checkOverlay(page, true);
     await screenshot(page, '02-cartes-sur-plateau');
-    await page.click('.mythology-match-close');
+    assert.equal(await page.evaluate(`document.querySelector('${stage}').getAttribute('aria-expanded')`), 'true');
+    await page.evaluate(`(()=>{
+      const preview=document.querySelector('.mythology-match-widget .mythology-crystal-preview');
+      window.returnOffsets=[];
+      const observer=new MutationObserver(()=>{
+        if (${diagnostic}.crystal.closing) {
+          returnOffsets.push(new DOMMatrix(getComputedStyle(document.querySelector('${left}')).transform).m41);
+        }
+      });
+      observer.observe(preview,{attributes:true,attributeFilter:['style']});
+    })()`);
+    await page.click(stage);
+    await waitClosed(page);
+    assert.ok(await page.evaluate('returnOffsets.some(offset=>offset>0)'), 'The left card slides back towards the crystal');
+    assert.equal(await page.evaluate(`document.querySelector('${stage}').getAttribute('aria-expanded')`), 'false');
+    assert.equal(await page.evaluate(`${diagnostic}.crystal.cardsProgress`), 0);
     assert.equal(await page.evaluate(`${diagnostic}.privateView.pendingCount`), 3, 'Closing without choosing never consumes the head');
-    assert.equal(await page.evaluate(`${diagnostic}.privateView.pending.id`), first.pending.id);
+    assert.deepEqual(await page.evaluate(`${diagnostic}.privateView.pending`), first.pending);
     await checkOverlay(page, false);
     await openChoices(page);
     const inventory = 'JSON.stringify(Object.values(Eredita.GameView.getState().players).map(p=>({gold:p.gold,resources:p.villages.map(v=>v.resources),cards:p.cards})))';
@@ -104,7 +128,7 @@ async function run() {
     assert.equal(await page.evaluate("initialCrystal===document.querySelector('.mythology-match-widget canvas')"), true, 'Reuse the renderer between offers');
     assert.equal(await page.evaluate('collected.length'), 1);
     assert.equal(await page.evaluate('Eredita.MythologySession.getObtainedLegends()[0].illustration.mirrored'), false);
-    await page.waitFor(`${diagnostic}.crystal?.ready`);
+    await waitClosed(page);
     assert.equal(await page.evaluate(`${diagnostic}.crystal.started`), false, 'Next crystal is armed without opening cards');
     assert.equal(await page.evaluate("document.querySelector('.mythology-match-widget').classList.contains('is-open')"), false);
     assert.equal(await page.evaluate("document.querySelector('.mythology-match-count').textContent"), '2');
@@ -113,13 +137,17 @@ async function run() {
     assert.equal(await page.evaluate(`${diagnostic}.crystal.started`), false, 'A later render never opens the next offer');
     await screenshot(page, '03-cristal-rearme-deux');
     await openChoices(page);
-    assert.deepEqual(await page.evaluate("[...document.querySelectorAll('.mythology-match-widget .mythology-choice')].map(c=>c.dataset.legendId)"), accumulated.queue[1].legendIds);
+    const nextChoices = await page.evaluate("[...document.querySelectorAll('.mythology-match-widget .mythology-choice')].map(c=>c.dataset.legendId)");
+    assert.deepEqual(nextChoices, await page.evaluate(`${diagnostic}.privateView.pending.legendIds`));
+    assert.ok(!nextChoices.includes(await page.evaluate(`${diagnostic}.privateView.selections[0].legendId`)));
     await page.click(right);
+    await waitClosed(page);
     assert.equal(await page.evaluate(`${diagnostic}.privateView.pendingCount`), 1);
     assert.equal(await page.evaluate(`${diagnostic}.privateView.pending.id`), accumulated.queue[2].id);
     assert.equal(await page.evaluate(`${diagnostic}.privateView.selections[1].offerId`), accumulated.queue[1].id);
     assert.equal(await page.evaluate("document.querySelector('.mythology-match-count').textContent"), '1');
     await openChoices(page); await page.click(left);
+    await waitClosed(page);
     assert.equal(await page.evaluate(`${diagnostic}.privateView.pending`), null);
     assert.equal(await page.evaluate(`${diagnostic}.privateView.pendingCount`), 0);
     assert.equal(await page.evaluate(`${diagnostic}.privateView.selections.length`), 3);
@@ -191,6 +219,7 @@ async function run() {
     await guest.evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
     assert.equal(await guest.evaluate(`${diagnostic}.privateView.selections.length`), selectionCount);
     assert.equal(await guest.evaluate('collected.length'), 1, 'Duplicate packets never duplicate the collection hook');
+    await waitClosed(guest);
     assert.equal(await guest.evaluate("document.querySelector('.mythology-match-widget').classList.contains('is-open')"), false, 'Validated network choice closes the pair');
     assert.deepEqual(await guest.evaluate('Eredita.MythologySession.getObtainedLegends().map(s=>s.legendId)'), [bluePrivate.pending.legendIds[1]]);
     assert.equal(await guest.evaluate('Eredita.MythologySession.getObtainedLegends()[0].illustration.mirrored'), false, 'Right choice uses normal illustration for the future LÉGENDE menu');
@@ -206,16 +235,22 @@ async function run() {
     assert.equal(await host.evaluate(`${diagnostic}.privateView.pending.id`), redPrivate.pending.id);
     await openChoices(guest); await guest.click(left);
     await guest.waitFor(`${diagnostic}.privateView.selections.length===2 && ${diagnostic}.crystal?.ready`);
+    await waitClosed(guest);
     assert.equal(await guest.evaluate(`${diagnostic}.privateView.pendingCount`), 1);
     assert.equal(await guest.evaluate(`${diagnostic}.privateView.pending.id`), queuedMobile[1].id);
     assert.equal(await guest.evaluate(`${diagnostic}.crystal.started`), false);
     assert.equal(await guest.evaluate("document.querySelector('.mythology-match-count').textContent"), '1');
     assert.equal(await guest.evaluate("document.querySelector('.mythology-match-widget').classList.contains('is-open')"), false);
-    assert.ok(await guest.evaluate("document.querySelector('.mythology-match-widget').scrollWidth<=document.querySelector('.mythology-match-widget').clientWidth+1"));
+    await checkOverlay(guest, false);
     await screenshot(guest, '05-fifo-mobile-rearme');
     await openChoices(guest);
     await checkOverlay(guest, true);
     await screenshot(guest, '06-fifo-mobile-cartes');
+    await guest.click(stage);
+    await waitClosed(guest);
+    assert.equal(await guest.evaluate(`${diagnostic}.privateView.pending.id`), queuedMobile[1].id);
+    await checkOverlay(guest, false);
+    await openChoices(guest);
     await guest.click(right); await guest.waitFor(`${diagnostic}.privateView.selections.length===3`);
     assert.equal(await guest.evaluate(`${diagnostic}.privateView.pendingCount`), 0);
     assert.equal(await host.evaluate(`${diagnostic}.privateView.pendingCount`), 3, 'Guest draining its queue does not affect the host queue');

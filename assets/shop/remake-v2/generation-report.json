@@ -1,0 +1,445 @@
+{
+  "approvedCredits": 800,
+  "jobs": {
+    "chien": {
+      "status": "success",
+      "startedAt": 1794954659.9227772,
+      "destination": "assets/models/shop/v2/chien.glb",
+      "exitCode": 0,
+      "completedAt": 1794954711.437761,
+      "result": {
+        "task_id": "30942970-cc0a-4533-a05a-a6ee3bb02ab0",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-chien-30942970",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-chien-30942970/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-chien-30942970/preview.png"
+      }
+    },
+    "sanglier": {
+      "status": "success",
+      "startedAt": 1794954659.9232798,
+      "destination": "assets/models/shop/v2/sanglier.glb",
+      "exitCode": 0,
+      "completedAt": 1794954734.663858,
+      "result": {
+        "task_id": "855f2ce5-81a5-4b1a-b87a-8c3bd27089ec",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-sanglier-855f2ce5",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-sanglier-855f2ce5/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-sanglier-855f2ce5/preview.png"
+      }
+    },
+    "vache": {
+      "status": "success",
+      "startedAt": 1794954659.933086,
+      "destination": "assets/models/shop/v2/vache.glb",
+      "exitCode": 0,
+      "completedAt": 1794954711.5690591,
+      "result": {
+        "task_id": "c2c25b03-ea11-477e-b8e8-3d118c91395b",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-vache-c2c25b03",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-vache-c2c25b03/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-vache-c2c25b03/preview.png"
+      }
+    },
+    "chevre": {
+      "status": "success",
+      "startedAt": 1794954711.4396338,
+      "destination": "assets/models/shop/v2/chevre.glb",
+      "exitCode": 0,
+      "completedAt": 1794954761.947045,
+      "result": {
+        "task_id": "fdc38bcc-c01b-4ae2-a986-4d8e4f903b9b",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-chevre-fdc38bcc",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-chevre-fdc38bcc/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-chevre-fdc38bcc/preview.png"
+      }
+    },
+    "cochon": {
+      "status": "success",
+      "startedAt": 1794954711.569576,
+      "destination": "assets/models/shop/v2/cochon.glb",
+      "exitCode": 0,
+      "completedAt": 1794954761.9003341,
+      "result": {
+        "task_id": "0103eed3-c33b-479a-b332-0d43e4a92b9c",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-cochon-0103eed3",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-cochon-0103eed3/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-cochon-0103eed3/preview.png"
+      }
+    },
+    "tools-bois": {
+      "status": "success",
+      "startedAt": 1794954734.665776,
+      "destination": "assets/models/shop/v2/tools-bois.glb",
+      "exitCode": 0,
+      "completedAt": 1794954784.807727,
+      "result": {
+        "task_id": "743ffea1-1743-4a8c-9fe7-64b8ca63b3ea",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-tools-bois-743ffea1",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-tools-bois-743ffea1/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-tools-bois-743ffea1/preview.png"
+      }
+    },
+    "tools-bronze": {
+      "status": "success",
+      "startedAt": 1794954761.9012601,
+      "destination": "assets/models/shop/v2/tools-bronze.glb",
+      "exitCode": 0,
+      "completedAt": 1794954835.8361878,
+      "result": {
+        "task_id": "4b6bb8e8-531a-45c9-b91e-a70a71fb7516",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-tools-bronze-4b6bb8e8",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-tools-bronze-4b6bb8e8/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-tools-bronze-4b6bb8e8/preview.png"
+      }
+    },
+    "tools-fer": {
+      "status": "success",
+      "startedAt": 1794954761.947693,
+      "destination": "assets/models/shop/v2/tools-fer.glb",
+      "exitCode": 0,
+      "completedAt": 1794954812.452582,
+      "result": {
+        "task_id": "4e0a0f23-5138-4d4d-abcc-8fda802a9072",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-tools-fer-4e0a0f23",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-tools-fer-4e0a0f23/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-tools-fer-4e0a0f23/preview.png"
+      }
+    },
+    "armors-cuir": {
+      "status": "success",
+      "startedAt": 1794954784.808453,
+      "destination": "assets/models/shop/v2/armors-cuir.glb",
+      "exitCode": 0,
+      "completedAt": 1794954835.148569,
+      "result": {
+        "task_id": "d836b553-2403-4094-9ba9-1580f3f591a3",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-armors-cuir-d836b553",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-armors-cuir-d836b553/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-armors-cuir-d836b553/preview.png"
+      }
+    },
+    "armors-maille": {
+      "status": "success",
+      "startedAt": 1794954812.4544709,
+      "destination": "assets/models/shop/v2/armors-maille.glb",
+      "exitCode": 0,
+      "completedAt": 1794954862.95634,
+      "result": {
+        "task_id": "48d2b262-bcbc-44fe-82d1-2e385036eec8",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-armors-maille-48d2b262",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-armors-maille-48d2b262/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-armors-maille-48d2b262/preview.png"
+      }
+    },
+    "armors-fer": {
+      "status": "success",
+      "startedAt": 1794954835.150485,
+      "destination": "assets/models/shop/v2/armors-fer.glb",
+      "exitCode": 0,
+      "completedAt": 1794954885.644198,
+      "result": {
+        "task_id": "0838613e-2314-4f57-87b9-65da3d9d67cb",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-armors-fer-0838613e",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-armors-fer-0838613e/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-armors-fer-0838613e/preview.png"
+      }
+    },
+    "filet": {
+      "status": "success",
+      "startedAt": 1794954835.838119,
+      "destination": "assets/models/shop/v2/filet.glb",
+      "exitCode": 0,
+      "completedAt": 1794954886.529715,
+      "result": {
+        "task_id": "9220441d-2e4a-4391-93a8-c7ee17517e84",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-filet-9220441d",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-filet-9220441d/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-filet-9220441d/preview.png"
+      }
+    },
+    "piege-chasse": {
+      "status": "success",
+      "startedAt": 1794954862.958339,
+      "destination": "assets/models/shop/v2/piege-chasse.glb",
+      "exitCode": 0,
+      "completedAt": 1794954936.860546,
+      "result": {
+        "task_id": "f3f3f1da-cc98-456f-9f4a-5a343c8f6750",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-piege-chasse-f3f3f1da",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-piege-chasse-f3f3f1da/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-piege-chasse-f3f3f1da/preview.png"
+      }
+    },
+    "piege-defense": {
+      "status": "success",
+      "startedAt": 1794954885.646163,
+      "destination": "assets/models/shop/v2/piege-defense.glb",
+      "exitCode": 0,
+      "completedAt": 1794954936.509961,
+      "result": {
+        "task_id": "598529f0-9818-4f7b-89f9-5ac9f409cdd5",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-piege-defense-598529f0",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-piege-defense-598529f0/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-piege-defense-598529f0/preview.png"
+      }
+    },
+    "ble": {
+      "status": "success",
+      "startedAt": 1794954886.531978,
+      "destination": "assets/models/shop/v2/ble.glb",
+      "exitCode": 0,
+      "completedAt": 1794954961.1567051,
+      "result": {
+        "task_id": "c0742546-ebcc-48f2-a3c6-7e5d17e0a594",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-ble-c0742546",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-ble-c0742546/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-ble-c0742546/preview.png"
+      }
+    },
+    "chataigne": {
+      "status": "success",
+      "startedAt": 1794954936.511942,
+      "destination": "assets/models/shop/v2/chataigne.glb",
+      "exitCode": 0,
+      "completedAt": 1794954987.2149692,
+      "result": {
+        "task_id": "74a17091-308b-4995-97d0-de26083d23a3",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-chataigne-74a17091",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-chataigne-74a17091/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-chataigne-74a17091/preview.png"
+      }
+    },
+    "raisin": {
+      "status": "success",
+      "startedAt": 1794954936.862488,
+      "destination": "assets/models/shop/v2/raisin.glb",
+      "exitCode": 0,
+      "completedAt": 1794954987.3447099,
+      "result": {
+        "task_id": "2e3925cc-3664-406b-afc0-0660dfa34547",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-raisin-2e3925cc",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-raisin-2e3925cc/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-raisin-2e3925cc/preview.png"
+      }
+    },
+    "viande": {
+      "status": "success",
+      "startedAt": 1794954961.158842,
+      "destination": "assets/models/shop/v2/viande.glb",
+      "exitCode": 0,
+      "completedAt": 1794955011.698295,
+      "result": {
+        "task_id": "31261e0c-01c2-4645-a5b5-bf80e43de7aa",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-viande-31261e0c",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-viande-31261e0c/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-viande-31261e0c/preview.png"
+      }
+    },
+    "poisson": {
+      "status": "success",
+      "startedAt": 1794954987.21701,
+      "destination": "assets/models/shop/v2/poisson.glb",
+      "exitCode": 0,
+      "completedAt": 1794955039.0987651,
+      "result": {
+        "task_id": "99d6aa30-de02-46b8-b328-adcead25b44c",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-poisson-99d6aa30",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-poisson-99d6aa30/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-poisson-99d6aa30/preview.png"
+      }
+    },
+    "lait": {
+      "status": "success",
+      "startedAt": 1794954987.3454561,
+      "destination": "assets/models/shop/v2/lait.glb",
+      "exitCode": 0,
+      "completedAt": 1794955038.899936,
+      "result": {
+        "task_id": "2a9da0b8-208a-4c81-84e0-3e5649653462",
+        "type": "text_to_model",
+        "status": "success",
+        "credits_consumed": 40,
+        "output_dir": "assets/shop/remake-v2/tripo-out/shop-v2-lait-2a9da0b8",
+        "files": [
+          "model.glb",
+          "rendered_image.webp",
+          "generated_image.jpeg",
+          "preview.png"
+        ],
+        "model_file": "assets/shop/remake-v2/tripo-out/shop-v2-lait-2a9da0b8/model.glb",
+        "preview": "assets/shop/remake-v2/tripo-out/shop-v2-lait-2a9da0b8/preview.png"
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of primitive stone tools displayed in a compact crossed arrangement: one flint stone axe on a weathered chestnut wood handle and one small harvesting sickle with chipped flint blade and wood grip. Dark grey flint facets, rawhide bindings with visible knots, rough wood grain. Two complete tools, no hands, no rack, no wall.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4000
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created 743ffea1-1743-4a8c-9fe7-64b8ca63b3ea (@shop-v2-tools-bois)
+text_to_model · queued
+text_to_model · running 6% · 743ffea1
+text_to_model · running 12% · 743ffea1
+text_to_model · running 21% · 743ffea1
+text_to_model · running 33% · 743ffea1
+text_to_model · success 100% · 743ffea1
+✓ text_to_model · 743ffea1-1743-4a8c-9fe7-64b8ca63b3ea · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-tools-bois-743ffea1

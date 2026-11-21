@@ -140,7 +140,7 @@ achats de la boutique restent disponibles.
 
 | Légende | Effet |
 | --- | --- |
-| U Mazzeru | Archer invoqué : 45 PV, 15 dégâts, un tir toutes les 9 s. Vise globalement le plus proche non marqué ; Mauvais Présage exécute à 15 % des PV max. Chaque mort marquée donne +15 PV max aux Mazzeri alliés vivants. |
+| U Mazzeru | Archer invoqué de 45 PV. Tire toutes les 9 s et inflige 15 dégâts. Vise globalement le plus proche ennemi non marqué sur le terrain. Mauvais Présage exécute à 15 % des PV max. La mort d’une cible marquée donne +15 PV max à l’auteur de sa marque encore vivant. |
 | A Strega | Rendement d’une région ennemie ×0,5 pendant 120 s. |
 | U Stregu | Rendement d’une région alliée ×2 pendant 120 s. |
 | A Fata | Rivière et vitesse de pêche +25 % dans la région choisie. |
@@ -285,7 +285,7 @@ Nouvelle règle du concepteur : le Ravageur et U Lupu Mannaru rejoignent physiqu
 
 ## U Mazzeru et Mauvais Présage — nouvelle règle du 12 novembre 2026
 
-L’invocation remplace l’ancien pouvoir de vision sous le même identifiant `u-mazzeru`. Le concepteur a confirmé les travailleurs comme cibles et le gain à toute mort marquée, quelle qu’en soit la cause. Tir global prioritaire sur le plus proche non marqué, immobilité durant cette phase, 45 PV/15 dégâts/9 s ; tous marqués : déplacement et portée habituelle de l’archer, cadence toujours 9 s. L’impact applique dégâts et marque, puis l’exécution au seuil inclusif de 15 % des PV max. Aucun cumul de marques ni soin gratuit avec le gain de +15 PV max. Les morts marquées par le vampire ouvrent également le gain. Pour plusieurs Mazzeri, le partage actuel à tous les alliés vivants est un réglage provisoire centralisé (`growthRecipients`), non une règle définitive ajoutée.
+U Mazzeru reste immobile lorsqu’il peut tirer sur un ennemi non marqué sur le terrain, travailleurs compris. Il vise le plus proche de toute la carte. À défaut, il avance sur sa colonne et combat à la portée de l’archer. Les habitants qui se trouvent à l’abri dans un village sont protégés de ses flèches, y compris s’ils y rentrent pendant le vol. L’impact applique 15 dégâts et une marque, avec un tir toutes les 9 s. Mauvais Présage exécute au seuil inclusif de 15 % des PV max. La mort d’une cible marquée donne +15 PV max uniquement à l’auteur de la marque encore vivant, U Mazzeru ou U Surpatore vampire.
 
 `bad-omen.js` gère identités, cibles locales et déployées, flèches en vol, exécutions et gains ; le moteur de combat conserve les protections et morts existantes. Le vampire verrouille sa victime jusqu’à son décès, sans changer de cible parce qu’une autre n’a pas de marque. Le logo fourni s’affiche au sol et la barre conserve une zone rouge fixe à gauche ; les gains de Mazzeru ont une pulsation rouge. Les paramètres temporaires restent dans `config.js`.
 

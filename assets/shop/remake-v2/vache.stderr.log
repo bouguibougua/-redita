@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican cow, natural small hardy cattle proportions, warm chestnut brown coat, cream muzzle, small curved horns, subtle udder, four separate hooves, calm standing pose. Full body, no fence, no vegetation. Three quarter pose with head turned toward viewer.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=5000
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created c2c25b03-ea11-477e-b8e8-3d118c91395b (@shop-v2-vache)
+text_to_model · queued
+text_to_model · running 6% · c2c25b03
+text_to_model · running 11% · c2c25b03
+text_to_model · running 18% · c2c25b03
+text_to_model · running 27% · c2c25b03
+text_to_model · success 100% · c2c25b03
+✓ text_to_model · c2c25b03-ea11-477e-b8e8-3d118c91395b · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-vache-c2c25b03

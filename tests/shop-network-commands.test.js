@@ -99,7 +99,7 @@ remote("buyAnimal", ["chevre"]);
 assert.equal(state.players.blue.gold, initialGold);
 assert.equal(JSON.stringify(blueVillage.slots), herdBefore);
 
-// Compagnons : tiers, association à son habitant et ordres validés par l'hôte.
+// Compagnons : tiers, attente à la base, attribution et ordres validés par l'hôte.
 state.paused = false;
 state.players.blue.gold = 5000;
 blueVillage.resources.ble = 1000;
@@ -108,9 +108,13 @@ assert.equal(E.Buildings.upgrade(state, "blue", 0, sheepfold, "ble"), true);
 initialGold = state.players.blue.gold;
 remote("buySpecialAnimal", ["ane", redResident.id]);
 assert.equal(state.players.blue.gold, initialGold);
-remote("buySpecialAnimal", ["ane", blueResident.id]);
-assert.equal(blueResident.donkey, true);
+remote("buySpecialAnimal", ["ane"]);
+assert.equal(blueResident.donkey, false);
+assert.equal(blueVillage.waitingDonkeys, 1);
 assert.equal(state.players.blue.gold, initialGold - E.Config.specialAnimals.ane.gold);
+remote("assignResidentMission", [blueResident.id, "elevage"]);
+assert.equal(blueResident.donkey, true);
+assert.equal(blueVillage.waitingDonkeys, 0);
 initialGold = state.players.blue.gold;
 remote("buySpecialAnimal", ["chien"]);
 assert.equal(state.players.blue.gold, initialGold, "Le Chien requiert Bergerie T3");

@@ -28,6 +28,7 @@
     const crop = asset.crop || { x: 0, y: 0, width: 1, height: 1 };
     viewport.style.aspectRatio = `${asset.width * crop.width} / ${asset.height * crop.height}`;
     viewport.style.setProperty('--mythology-art-ratio', String(asset.width * crop.width / (asset.height * crop.height)));
+    viewport.style.setProperty('--mythology-art-focus-x', `${asset.focusX ?? 50}%`);
     const cropped = element('div', `mythology-illustration-crop${illustration.mirrored ? ' is-mirrored' : ''}`);
     const img = document.createElement('img'); img.src = asset.src; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
     img.style.width = `${100 / crop.width}%`; img.style.height = `${100 / crop.height}%`;
@@ -155,6 +156,12 @@
     let single = mode === 'match' && rightId === null;
     let lastStatus = '', lastExposed = null, lastRun = 0, selected = null;
     let selectionLocked = false, selectionConfirmed = false, interactionEnabled = true;
+    function syncStage(state) {
+      const enabled = interactionEnabled && state.ready && !state.closing && (mode === 'match' ? !selectionLocked : !state.started);
+      stage.setAttribute('aria-disabled', String(!enabled));
+      stage.tabIndex = enabled ? 0 : -1;
+      if (mode === 'match') stage.setAttribute('aria-expanded', String(state.started));
+    }
     function clearChoice() {
       selected = null; selectionLocked = selectionConfirmed = false; delete root.dataset.selectedSide; delete root.dataset.selectionState;
       results.querySelectorAll('.mythology-choice').forEach(card => {
@@ -202,12 +209,12 @@
       root.dataset.started = String(state.started);
       root.dataset.paused = String(state.paused);
       choiceTitle.hidden = state.cardsProgress <= 0;
-      const exposed = state.cardsProgress >= 1;
+      const exposed = state.cardsProgress >= 1 && !state.closing;
       if (exposed !== lastExposed) { results.setAttribute('aria-hidden', String(!exposed)); results.inert = !exposed; lastExposed = exposed; }
       replay.disabled = !state.ready || (state.playing && !state.paused);
       pause.disabled = !state.ready || state.reducedMotion || !state.playing;
       pause.textContent = state.paused ? 'Reprendre' : 'Pause';
-      stage.setAttribute('aria-disabled', String(!interactionEnabled || !state.ready || state.started)); stage.tabIndex = interactionEnabled && state.ready && !state.started ? 0 : -1;
+      syncStage(state);
       const text = state.error || (!state.palette.ready ? state.palette.issues.map(issue => issue.message).join(' ') :
         selectionLocked && selected ? (selectionConfirmed ? 'Renfort retenu : ' : 'Validation du choix : ') + E.Mythology.get(selected.legendId).name :
         state.phase === 'loading' ? 'Préparation de l’aperçu…' : !state.started ? (single ? 'Découvrez votre dernier renfort disponible' : 'Cliquez sur le cristal pour découvrir les deux renforts') :
@@ -217,7 +224,12 @@
       stage.dataset.phase = state.phase;
     }});
     const activate = () => {
-      if (!interactionEnabled || !crystal.activate()) return false;
+      if (!interactionEnabled || selectionLocked || crystal.diagnostics.closing) return false;
+      if (mode === 'match' && crystal.diagnostics.started) {
+        root.dispatchEvent(new CustomEvent('eredita:mythology-close', { bubbles: true }));
+        return true;
+      }
+      if (!crystal.activate()) return false;
       root.dispatchEvent(new CustomEvent('eredita:mythology-open', { bubbles: true }));
       return true;
     };
@@ -227,14 +239,19 @@
     stage.addEventListener('click', activate); stage.addEventListener('keydown', activateKey);
     function choose(event) {
       const card = event.target.closest('.mythology-choice');
-      if (!interactionEnabled || selectionLocked || !card || !results.contains(card) || crystal.diagnostics.cardsProgress < 1 || !crystal.diagnostics.ready) return;
+      const state = crystal.diagnostics;
+      if (!interactionEnabled || selectionLocked || !card || !results.contains(card) || state.closing || state.cardsProgress < 1 || !state.ready) return;
       if (event.type === 'keydown') { if (!['Enter', ' '].includes(event.key)) return; event.preventDefault(); if (event.repeat) return; }
       if (selected?.side === card.dataset.side) return;
       clearChoice(); card.classList.add('is-selected'); card.setAttribute('aria-pressed', 'true');
       selected = Object.freeze({ legendId: card.dataset.legendId, side: card.dataset.side,
         pair: Object.freeze({ leftId: selects[0].value, rightId: selects[1].value }), runId: crystal.diagnostics.runId, preview: mode !== 'match' });
       root.dataset.selectedSide = selected.side;
-      if (mode === 'match') { selectionLocked = true; root.dataset.selectionState = 'sending'; status.textContent = 'Validation du choix…'; }
+      if (mode === 'match') {
+        selectionLocked = true;
+        syncStage(crystal.diagnostics);
+        root.dataset.selectionState = 'sending'; status.textContent = 'Validation du choix…';
+      }
       // Signal de présentation uniquement : aucun appel au moteur des pouvoirs.
       root.dispatchEvent(new CustomEvent('eredita:mythology-select', { bubbles: true, detail: selected }));
     }
@@ -255,8 +272,7 @@
       resetReveal,
       setInteractionEnabled(enabled) {
         interactionEnabled = Boolean(enabled); root.inert = !interactionEnabled;
-        const ready = interactionEnabled && crystal.diagnostics.ready && !crystal.diagnostics.started;
-        stage.setAttribute('aria-disabled', String(!ready)); stage.tabIndex = ready ? 0 : -1;
+        syncStage(crystal.diagnostics);
       },
       resolveSelection(result) {
         if (!result?.accepted) { clearChoice(); status.textContent = 'Choix refusé. Vous pouvez réessayer.'; return; }

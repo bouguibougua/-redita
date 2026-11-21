@@ -1,0 +1,30 @@
+{
+  "task_id": "30942970-cc0a-4533-a05a-a6ee3bb02ab0",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican shepherd dog, short dark brindle brown fur with warm tan legs and muzzle, alert ears, calm standing pose, four distinct legs and paws, simple worn leather collar. Full body, no leash, no human. Facing forward with head slightly turned.",
+    "delight": false,
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 5000,
+    "model_version": "P1-20260311",
+    "texture_version": "v3.5-20260815",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T22:31:01.865493Z",
+  "completed_at": "2026-11-17T22:31:40.475544Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

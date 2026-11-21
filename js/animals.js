@@ -17,20 +17,46 @@
     return null;
   }
 
-  function purchaseQuote(state, playerId, lane, type, residentId) {
+  function waitingDonkeyCount(village) {
+    return village.waitingDonkeys ?? 0;
+  }
+
+  function assignedDonkeyCount(village) {
+    return village.residents.filter((resident) => resident.donkey).length;
+  }
+
+  function donkeyCandidates(village) {
+    const eligible = village.residents.filter((resident) => !resident.donkey && !resident.isLegend
+      && !resident.unitId && !(resident.hp <= 0) && !(resident.combatHealthRatio <= 0));
+    return definition("ane").assignmentMissions.flatMap((mission) => eligible.filter((resident) =>
+      resident.mission === mission || (resident.mission === "disponible" && resident.profession === E.Config.jobs[mission].profession)));
+  }
+
+  function assignWaitingDonkeys(village) {
+    const waiting = waitingDonkeyCount(village);
+    if (!waiting || village.destroyed) return;
+    const recipients = donkeyCandidates(village).slice(0, waiting);
+    if (!recipients.length) return;
+    recipients.forEach((resident) => { resident.donkey = true; });
+    village.waitingDonkeys -= recipients.length;
+  }
+
+  function purchaseQuote(state, playerId, lane, type, legacyResidentId) {
     const item = definition(type);
     const village = villageAt(state, playerId, lane);
     if (!item || !village) return null;
-    const resident = village.residents.find((entry) => entry.id === residentId);
     let reason = inactiveReason(state, village);
     if (!reason && E.Transport.buildingLevel(village, "bergerie") < item.requiredTier) reason = `Bergerie T${item.requiredTier} requise`;
-    if (!reason && type === "ane") {
-      if (!resident) reason = "Sélectionnez un habitant du village";
-      else if (resident.unitId || ["attaque", "defense"].includes(resident.mission)) reason = "Habitant engagé au combat";
-      else if (resident.donkey) reason = "Cet habitant possède déjà un âne";
-    }
+    if (!reason && type === "ane" && legacyResidentId && !village.residents.some((resident) => resident.id === legacyResidentId)) reason = "Habitant introuvable dans ce village";
     if (!reason && state.players[playerId].gold < item.gold) reason = "Or insuffisant";
-    return { ...item, type, residentId, allowed: !reason, reason: reason || "Disponible" };
+    const quote = { ...item, type, allowed: !reason, reason: reason || "Disponible" };
+    if (!reason && type === "ane") {
+      const recipient = donkeyCandidates(village)[waitingDonkeyCount(village)];
+      quote.residentId = recipient?.id ?? null;
+      quote.residentName = recipient?.name ?? null;
+      quote.reason = recipient ? `Attribution automatique à ${recipient.name}` : "Attend à la base jusqu’à ce qu’un agriculteur ou un berger soit disponible";
+    }
+    return quote;
   }
 
   function buy(state, playerId, lane, type, residentId) {
@@ -38,8 +64,10 @@
     if (!quote?.allowed) return false;
     const village = villageAt(state, playerId, lane);
     let animal = null;
-    if (type === "ane") village.residents.find((entry) => entry.id === residentId).donkey = true;
-    else {
+    if (type === "ane") {
+      village.waitingDonkeys = waitingDonkeyCount(village) + 1;
+      assignWaitingDonkeys(village);
+    } else {
       village.animals ||= [];
       village.nextAnimalNumber ||= 1;
       animal = { id: `${village.id}-animal-${village.nextAnimalNumber++}`, type, mission: "disponible", unitId: null };
@@ -130,11 +158,12 @@
   }
 
   function onVillageDestroyed(village) {
+    village.waitingDonkeys = 0;
     (village.animals || []).forEach((animal) => {
       if (!animal.unitId && animal.type === "sanglier") village.resources.viande += definition("sanglier").meatAtDeath;
     });
     village.animals = (village.animals || []).filter((animal) => animal.unitId);
   }
 
-  E.Animals = { purchaseQuote, buy, orderQuote, deploy, slaughter, harassment, targetHerd, fieldPosition, isAnimal, onUnitDeath, onVillageDestroyed };
+  E.Animals = { purchaseQuote, buy, waitingDonkeyCount, assignedDonkeyCount, assignWaitingDonkeys, orderQuote, deploy, slaughter, harassment, targetHerd, fieldPosition, isAnimal, onUnitDeath, onVillageDestroyed };
 }());

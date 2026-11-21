@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of bunches of dark purple and dusky blue grapes, subtle dusty bloom, woody stems and two small muted green vine leaves. Natural grape clusters, detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4500
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created 2e3925cc-3664-406b-afc0-0660dfa34547 (@shop-v2-raisin)
+text_to_model · queued
+text_to_model · running 8% · 2e3925cc
+text_to_model · running 14% · 2e3925cc
+text_to_model · running 23% · 2e3925cc
+text_to_model · running 36% · 2e3925cc
+text_to_model · success 100% · 2e3925cc
+✓ text_to_model · 2e3925cc-3664-406b-afc0-0660dfa34547 · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-raisin-2e3925cc

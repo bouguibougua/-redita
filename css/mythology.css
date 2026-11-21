@@ -104,13 +104,19 @@
 }
 .mythology-choice[data-side=right] { transform: translateX(calc((1 - var(--cards-progress, 1)) * (-50% - var(--choice-gap, 84px) / 2))); }
 .mythology-crystal-results[aria-hidden=true] .mythology-choice { pointer-events: none; }
-.mythology-choice .mythology-illustration { position: absolute; inset: 0; aspect-ratio: auto !important; container-type: size; }
-/* Le recadrage contient seulement l’illustration, jamais les textes imprimés. */
-.mythology-choice .mythology-illustration-crop {
-  inset: auto; left: 50%; top: 44%; width: max(100%, calc(100cqh * var(--mythology-art-ratio)));
-  height: auto; aspect-ratio: var(--mythology-art-ratio); transform: translate(-50%, -50%);
+.mythology-choice .mythology-illustration {
+  position: absolute; inset: 0; aspect-ratio: auto !important;
+  background: radial-gradient(ellipse at 50% 28%, color-mix(in srgb, var(--mythology-primary) 18%, #08090a), #08090a 76%);
 }
-.mythology-choice .mythology-illustration-crop.is-mirrored { transform: translate(-50%, -50%) scaleX(-1); }
+/* Le haut de l’œuvre reste visible et le visage est centré même sur une carte étroite. */
+.mythology-choice .mythology-illustration-crop {
+  inset: 0 auto auto 50%; height: 92%; width: auto; aspect-ratio: var(--mythology-art-ratio);
+  transform: translateX(calc(0% - var(--mythology-art-focus-x, 50%)));
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+}
+.mythology-choice .mythology-illustration-crop.is-mirrored {
+  transform: translateX(calc(var(--mythology-art-focus-x, 50%) - 100%)) scaleX(-1);
+}
 .mythology-choice .mythology-illustration img { transition: filter .25s ease; }
 .mythology-choice::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: linear-gradient(180deg, #06090d0d, transparent 30%, #080b1077 52%, #080b10ed 78%, #06090dfa); }
@@ -147,8 +153,9 @@
 /* Popup permanent, centré dans le viewport, sans fond modal ni déplacement du plateau. */
 .mythology-match-widget {
   position: fixed; z-index: 1250; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
-  width: min(1920px, calc(100% - 40px)); margin: 0; color: #e8deca; pointer-events: none;
+  width: min(1314px, calc(67% + 1px)); margin: 0; color: #e8deca; pointer-events: none;
 }
+.mythology-match-widget .mythology-crystal-preview { --choice-height: clamp(188px, 24dvh, 268px); }
 .mythology-match-widget .mythology-crystal-heading,
 .mythology-match-widget .mythology-crystal-phase,
 .mythology-match-widget .mythology-crystal-hint { display: none; }
@@ -160,6 +167,17 @@
   background: linear-gradient(90deg, transparent, #080b10ed 18%, #080b10ed 82%, transparent);
 }
 .mythology-match-widget .mythology-crystal-stage { pointer-events: auto; }
+.mythology-match-widget .mythology-choice { display: flex; flex-direction: column; justify-content: flex-end; }
+.mythology-match-widget .mythology-choice .mythology-illustration-crop { top: -2%; height: 101%; }
+.mythology-match-widget .mythology-choice .mythology-heading,
+.mythology-match-widget .mythology-choice .mythology-power { position: relative; inset: auto; }
+.mythology-match-widget .mythology-choice .mythology-heading { padding-block: 4px 6px; gap: 4px; }
+.mythology-match-widget .mythology-choice .mythology-name { font-size: clamp(1rem, 2.1vw, 1.75rem); }
+.mythology-match-widget .mythology-choice .mythology-category { font-size: .58rem; gap: 5px; }
+.mythology-match-widget .mythology-category-icon { width: 14px; height: 14px; }
+.mythology-match-widget .mythology-choice .mythology-power {
+  height: auto; min-height: 3.6em; padding-block: 0 10px; font-size: clamp(.74rem, 1.05vw, .94rem); line-height: 1.35;
+}
 .mythology-match-widget:not(.is-open) .mythology-crystal-stage {
   width: 88px; background: radial-gradient(ellipse, #0b1019db, #090c1280 55%, transparent 75%);
 }
@@ -205,13 +223,18 @@
   .mythology-choice .mythology-power { height: 112px; padding: 4px 8px 12px 18%; font-size: .72rem; line-height: 1.4; }
   .mythology-choice[data-side=right] .mythology-power { padding-right: 18%; padding-left: 8px; }
   .mythology-crystal-palette { gap: 4px 12px; }
-  .mythology-match-widget { width: calc(100% - 16px); }
+  .mythology-match-widget { width: min(calc(100% - 16px), max(76%, 320px)); }
+  .mythology-match-widget .mythology-crystal-preview { --choice-height: clamp(218px, 30dvh, 248px); }
+  .mythology-match-widget .mythology-choice .mythology-name { font-size: clamp(.85rem, 3.4vw, 1.12rem); }
+  .mythology-match-widget .mythology-choice .mythology-category { font-size: .52rem; }
+  .mythology-match-widget .mythology-choice .mythology-power { min-height: 6em; font-size: .72rem; }
   .mythology-match-widget .mythology-choice-title { top: -38px; font-size: .72rem; }
   .mythology-match-widget .mythology-crystal-stage { width: 76px; }
   .mythology-match-close { top: -50px; min-height: 28px; padding: 4px 10px; font-size: .65rem; }
 }
 @media (max-height: 520px) and (min-width: 701px) {
   .mythology-crystal-preview { --choice-height: 230px; }
+  .mythology-match-widget .mythology-crystal-preview { --choice-height: 176px; }
   .mythology-choice .mythology-heading { bottom: 60px; }
   .mythology-choice .mythology-power { height: 60px; font-size: .78rem; }
 }
@@ -431,5 +454,11 @@
 /* Une seule légende encore disponible : une seule carte centrée. */
 .mythology-crystal-preview[data-single="true"] .mythology-pair { grid-template-columns: minmax(0, 1fr); justify-items: center; }
 .mythology-crystal-preview[data-single="true"] .mythology-choice { width: min(45%, 600px); }
+.mythology-match-widget .mythology-crystal-preview[data-single="true"] .mythology-choice {
+  transform: scale(calc(.88 + var(--cards-progress) * .12));
+}
 .mythology-crystal-preview[data-single="true"][data-started="true"] .mythology-crystal-stage { pointer-events: none; }
+.mythology-crystal-preview[data-single="true"][data-started="true"] .mythology-crystal-stage::before {
+  pointer-events: auto; width: min(100%, 84px); height: 80px;
+}
 .mythology-crystal-preview[data-single="true"] .mythology-crystal-results::after { display: none; }

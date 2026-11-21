@@ -13,15 +13,21 @@
     let disposed = false, paused = false, playing = false, seconds = 0, error = null;
     let raf = null, startMs = 0, lastFrame = -Infinity, reveal = 0;
     let started = false, runId = 0;
+    let closing = null;
     let hovered = false, burstProgress = 0;
     let ambientTime = 0, ambientStartMs = performance.now(), inView = true;
     const shards = [], arcs = [];
     const points = [];
-    const cardProgress = () => presentation === 'codex' || !started || seconds < cfg.cardsAppearAt ? 0 : motion.matches ? 1 :
-      1 - Math.pow(1 - Math.min(1, (seconds - cfg.cardsAppearAt) / cfg.cardsDeployDuration), 3);
+    const cardTime = () => Math.max(0, Math.min(1, (seconds - cfg.cardsAppearAt) / cfg.cardsDeployDuration));
+    function cardProgress() {
+      if (presentation === 'codex' || !started) return 0;
+      if (closing) return 1 - Math.pow(1 - closing.cardTime * (1 - closing.progress), 3);
+      if (motion.matches) return Number(seconds >= cfg.cardsAppearAt);
+      return 1 - Math.pow(1 - cardTime(), 3);
+    }
     const diagnostics = () => ({ ready: !disposed && Boolean(renderer) && palette.ready && !error, disposed, paused, playing,
       seconds, duration: presentation === 'codex' ? codex.duration / 1000 : cfg.duration, reducedMotion: motion.matches, palette, reveal, started, runId,
-      presentation, hovered, burstProgress,
+      presentation, hovered, burstProgress, closing: Boolean(closing),
       magicVisible: Boolean(particles?.visible && particles.material.opacity > 0),
       lightningVisible: arcs.some(arc => arc.visible),
       cardsAppearAt: cfg.cardsAppearAt, cardsProgress: palette.ready ? cardProgress() : 0,
@@ -30,7 +36,7 @@
         colors: beam.strands.map(strand => '#' + strand.glow.material.color.getHexString()) })),
       phase: error ? 'error' : !palette.ready ? 'missing-colors' : !renderer ? 'loading' : presentation === 'codex' ?
         playing ? burstProgress < .5 ? 'shattering' : 'reforming' : hovered ? 'enchanted' : 'idle' :
-        !started ? 'idle' : seconds < cfg.splitAt ? 'charging' : seconds < cfg.revealAt ? 'opening' : 'revealing', error });
+        closing ? 'closing' : !started ? 'idle' : seconds < cfg.splitAt ? 'charging' : seconds < cfg.revealAt ? 'opening' : 'revealing', error });
     const emit = () => { if (!disposed) onState(diagnostics()); };
 
     function geometry(sign) {
@@ -266,10 +272,15 @@
       }
       if (disposed || paused || !playing || document.hidden) return;
       const end = motion.matches ? cfg.cardsAppearAt : cfg.duration;
-      seconds=Math.min(end,(now-startMs)/1000);
+      const elapsed = Math.max(0, (now - startMs) / 1000);
+      if (closing) {
+        closing.progress = Math.min(1, elapsed / closing.duration);
+        if (closing.progress === 1) { finishClose(); return; }
+        seconds = closing.seconds * (1 - closing.progress);
+      } else seconds = Math.min(end, elapsed);
       const fps=innerWidth<cfg.mobileBreakpoint?cfg.mobileFps:cfg.desktopFps;
       if (now-lastFrame>=1000/fps) {lastFrame=now;paint();}
-      if (seconds>=end) {playing=false;paint();return;}
+      if (!closing && seconds>=end) {playing=false;paint();return;}
       raf=requestAnimationFrame(frame);
     }
     function play() {
@@ -283,8 +294,30 @@
       if (playing&&!document.hidden) raf=requestAnimationFrame(frame);return true;
     }
     function activate() { return !started && play(); }
+    function finishClose() {
+      const onComplete = closing.onComplete;
+      cancelAnimationFrame(raf);
+      closing = null;
+      playing = paused = started = false;
+      seconds = 0;
+      if (error) emit(); else paint();
+      onComplete();
+    }
+    function reverse(onComplete) {
+      if (presentation !== 'offer' || disposed || !started || closing || !renderer || error) return false;
+      cancelAnimationFrame(raf);
+      closing = { seconds, cardTime: cardTime(), progress: 0, duration: Math.min(seconds, cfg.closeDuration), onComplete };
+      if (motion.matches || seconds === 0) { finishClose(); return true; }
+      paused = false;
+      playing = true;
+      startMs = performance.now();
+      lastFrame = -Infinity;
+      emit();
+      if (!document.hidden) raf = requestAnimationFrame(frame);
+      return true;
+    }
     function pause() {
-      if (!playing || paused || disposed) return false;
+      if (!playing || paused || disposed || closing) return false;
       paused=true;cancelAnimationFrame(raf);emit();return true;
     }
     function resume() {
@@ -299,6 +332,7 @@
     function setSelection(left,right) {
       if (disposed) return false;
       cancelAnimationFrame(raf);playing=false;paused=false;started=false;seconds=0;
+      closing = null;
       palette=E.Mythology.getCrystalPalette(left,right);applyColors();
       if (autoPlay && palette.ready && renderer && !error) play();else {reveal=0;paint();emit();}
       scheduleAmbient();
@@ -307,9 +341,14 @@
     const visibility=() => {
       cancelAnimationFrame(raf);
       if (presentation === 'codex') { if (playing) startMs = performance.now() - seconds * 1000; scheduleAmbient(); return; }
-      if (!document.hidden&&playing&&!paused) {startMs=performance.now()-seconds*1000;raf=requestAnimationFrame(frame);}
+      if (!document.hidden && playing && !paused) {
+        const elapsed = closing ? closing.progress * closing.duration : seconds;
+        startMs = performance.now() - elapsed * 1000;
+        raf = requestAnimationFrame(frame);
+      }
     };
     const motionChange=() => {
+      if (closing && motion.matches) { finishClose(); return; }
       if (presentation === 'codex') {
         cancelAnimationFrame(raf);
         if (motion.matches && playing) { burstProgress = 1; playing = false; }
@@ -322,7 +361,14 @@
       hovered = Boolean(value);
       paint(); scheduleAmbient();
     }
-    const contextLost=event => {event.preventDefault();error='Le contexte 3D a été perdu. Fermez puis rouvrez l’aperçu.';playing=false;cancelAnimationFrame(raf);emit();};
+    const contextLost=event => {
+      event.preventDefault();
+      error = 'Le contexte 3D a été perdu. Fermez puis rouvrez l’aperçu.';
+      if (closing) { finishClose(); return; }
+      playing = false;
+      cancelAnimationFrame(raf);
+      emit();
+    };
     const observer=new ResizeObserver(resize);observer.observe(host);
     const viewportObserver = presentation === 'codex' && typeof IntersectionObserver !== 'undefined' ? new IntersectionObserver(entries => {
       const visible = entries[0].isIntersecting;
@@ -334,7 +380,7 @@
     document.addEventListener('visibilitychange',visibility);motion.addEventListener('change',motionChange);
     function dispose() {
       if (disposed) return;
-      disposed=true;playing=false;cancelAnimationFrame(raf);observer.disconnect();viewportObserver?.disconnect();
+      disposed=true;playing=false;closing=null;cancelAnimationFrame(raf);observer.disconnect();viewportObserver?.disconnect();
       document.removeEventListener('visibilitychange',visibility);motion.removeEventListener('change',motionChange);
       scene?.traverse(node => {node.geometry?.dispose();if(node.material) node.material.dispose();});
       if (renderer) {renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();}
@@ -353,7 +399,7 @@
       const rim=new THREE.DirectionalLight(0xffffff,1.8);rim.position.set(-3,1,-2);scene.add(rim);
       buildCrystal();applyColors();resize();if (autoPlay && palette.ready) play();else emit();scheduleAmbient();return true;
     }).catch(e => {if (!disposed) {error=`Aperçu 3D indisponible : ${e.message||e}`;emit();}return false;});
-    return {ready,activate,play,pause,resume,seek,setSelection,setHovered,dispose,get diagnostics(){return diagnostics();}};
+    return {ready,activate,play,pause,resume,reverse,seek,setSelection,setHovered,dispose,get diagnostics(){return diagnostics();}};
   }
   E.MythologyCrystal=Object.freeze({create});
 }());

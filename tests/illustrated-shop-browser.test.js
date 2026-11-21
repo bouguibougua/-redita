@@ -33,10 +33,16 @@ try{
   assert.equal(await p.evaluate("document.querySelector('[data-shop-object=armors-cuir]').hidden"),true);
   gold=await p.evaluate('shopState.players.red.gold');await move(635,470,true);assert.equal(await p.evaluate('shopState.players.red.gold'),gold,'Pas de rachat de l’armure équipée');
   await move(189,349,true);assert.equal(await p.evaluate("shopState.players.red.villages[0].animals.filter(a=>a.type==='chien').length"),1);
-  await move(420,550,true);assert.equal(await p.evaluate('shopState.players.red.villages[0].residents[0].donkey'),true,'La tête de l’âne reste achetable');
+  await move(420,550,true);
+  assert.equal(await p.evaluate('shopState.players.red.villages[0].waitingDonkeys'),1,'Un âne acheté attend à la base');
+  assert.equal(await p.evaluate("document.querySelector('[data-shop-donkey-stock]').textContent"),'Ânes à la base · 1');
+  await p.evaluate("Eredita.GameView.command('setProfession',shopState.players.red.villages[0].residents[0].id,'agriculteur')");
+  assert.equal(await p.evaluate('shopState.players.red.villages[0].residents[0].donkey'),true,'L’âne rejoint automatiquement le nouvel agriculteur');
+  assert.equal(await p.evaluate("document.querySelector('[data-shop-donkey-stock]').textContent"),'Ânes à la base · 0');
   await move(1470,717,true);assert.equal(await p.evaluate('shopState.players.red.villages[0].maritime.barque'),1);
   assert.equal(await p.evaluate("document.querySelector('[data-shop-object=barque]').hidden"),true);
-  await p.click('[data-shop-vessel=voilier]');await move(1470,717,true);assert.equal(await p.evaluate('shopState.players.red.villages[0].maritime.voilier'),1);
+  assert.equal(await p.evaluate("document.querySelector('[data-shop-vessel=voilier]')"),null,'Le voilier est retiré de l’échoppe');
+  assert.equal(await p.evaluate('shopState.players.red.villages[0].maritime.voilier'),0);
   for(let count=1;count<=3;count++){await move(1222,255,true);assert.equal(await p.evaluate('shopState.players.red.villages[0].maritime.filet'),count);assert.equal(await p.evaluate("document.querySelector('[data-shop-object=filet]').hidden"),count===3);}
   const maxNetGold=await p.evaluate('shopState.players.red.gold');await move(1222,255,true);assert.equal(await p.evaluate('shopState.players.red.gold'),maxNetGold);
   gold=await p.evaluate('shopState.players.red.gold');await move(1222,550,true);assert.equal(await p.evaluate('shopState.players.red.gold'),gold,'Piège visible mais inactif');
@@ -50,7 +56,9 @@ try{
   await p.click('[data-shop-village="0"]');assert.equal(await p.evaluate('shopState.players.red.villages[0].maritime.barque'),1);assert.equal(await p.evaluate('shopState.players.red.villages[0].resources.ble'),1000);
   await p.evaluate("shopState.players.red.gold=0;shopState.players.red.villages[0].resources.ble=9;Eredita.UI.render(shopState)");
   const snapshot=await p.evaluate('JSON.stringify(shopState.players.red)');await move(815,300,true);await p.click('[data-shop-sell=ble][data-quantity="10"]');assert.equal(await p.evaluate('JSON.stringify(shopState.players.red)'),snapshot);
-  await p.click('.shop-manage');assert.equal(await p.evaluate("document.querySelector('#shop-modal-content').hidden"),false);assert.ok(await p.evaluate("document.querySelector('.companion-roster')"));await p.click('.shop-manage');
+  await p.click('.shop-manage');assert.equal(await p.evaluate("document.querySelector('#shop-modal-content').hidden"),false);assert.ok(await p.evaluate("document.querySelector('.companion-roster')"));
+  assert.equal(await p.evaluate("document.querySelector('[data-buy-shop-item=voilier]')"),null,'Le voilier est également retiré de Gestion');
+  await p.click('.shop-manage');
   // Activation clavier sur un article, puis fermeture avec restauration du focus.
   await p.evaluate("shopState.players.red.gold=5000;Eredita.UI.render(shopState);document.querySelector('[data-shop-object=tools-bois]').focus()");
   await p.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});await p.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});

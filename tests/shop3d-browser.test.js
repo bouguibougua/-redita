@@ -23,11 +23,12 @@ async function run(){
     assert.equal(await p.evaluate('getComputedStyle(document.querySelector(".shop-object svg")).visibility'),'hidden');
     async function capture(name){if(!process.env.EREDITA_SHOP_PREVIEW_DIR)return;const dir=process.env.EREDITA_SHOP_PREVIEW_DIR;fs.mkdirSync(dir,{recursive:true});const r=await p.send('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(dir,name+'.png'),Buffer.from(r.data,'base64'));}
     await capture('boutique-3d');
-    // Trouver un point de la géométrie visible, pas le rectangle SVG de l'ancien rendu.
-    async function point(id){return p.evaluate(`(()=>{const item=Eredita.ShopArt.find(i=>i.id===${JSON.stringify(id)}),r=document.querySelector('.shop-3d-canvas').getBoundingClientRect();
-      const [x,y,w,h]=item.bounds;for(let j=1;j<24;j++)for(let i=1;i<24;i++){const px=Math.round(r.x+(x+w*i/24)/1672*r.width),py=Math.round(r.y+(y+h*j/24)/941*r.height);
-      if(Eredita.IllustratedShop.scene3D.hit({clientX:px,clientY:py})===item.id)return {x:px,y:py};}return null;})()`);}
-    async function clickObject(id){const pos=await point(id);assert.ok(pos,`Géométrie cliquable : ${id}`);await p.send('Input.dispatchMouseEvent',{type:'mouseMoved',...pos});await p.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,...pos});await p.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,...pos});}
+    // Chercher un point dans le rectangle calculé à partir du modèle 3D.
+    async function point(id){return p.evaluate(`(()=>{const shop=Eredita.IllustratedShop.scene3D,id=${JSON.stringify(id)},r=document.querySelector('.shop-3d-canvas').getBoundingClientRect();
+      const [x,y,w,h]=shop.diagnostics.items[id].hitBounds;for(const v of [.5,.3,.7,.2,.8])for(const u of [.5,.3,.7,.2,.8]){
+      const px=Math.round(r.x+(x+w*u)/1672*r.width),py=Math.round(r.y+(y+h*v)/941*r.height);
+      if(shop.hit({clientX:px,clientY:py})===id)return {x:px,y:py};}return null;})()`);}
+    async function clickObject(id){const pos=await point(id);assert.ok(pos,`Article cliquable : ${id}`);await p.send('Input.dispatchMouseEvent',{type:'mouseMoved',...pos});await p.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,...pos});await p.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,...pos});}
     const time=await p.evaluate('shopState.preparationRemaining');
     await clickObject('armors-cuir');
     assert.equal(await p.evaluate('shopState.players.red.gold'),19850);
@@ -37,7 +38,7 @@ async function run(){
     assert.equal(await p.evaluate('Eredita.IllustratedShop.scene3D.diagnostics.items["tools-bronze"].allowed'),false,'Pierre requis malgré Artisanat T3');
     assert.equal(await p.evaluate('Eredita.IllustratedShop.scene3D.diagnostics.items["armors-maille"].allowed'),true,'Cuir débloque les mailles');
     assert.equal(await p.evaluate('Eredita.IllustratedShop.scene3D.root.getObjectByName("sold-armors-cuir").visible'),true);
-    assert.equal(await point('armors-cuir'),null,'Un objet vendu ne reste pas dans le raycast');
+    assert.equal(await point('armors-cuir'),null,'Un objet vendu ne reste pas sélectionnable');
     await capture('boutique-3d-vindutu');
     await p.click('[data-shop-village="1"]');
     assert.equal(await p.evaluate('Eredita.IllustratedShop.scene3D.diagnostics.items["armors-cuir"].sold'),false);
@@ -73,6 +74,12 @@ async function run(){
     for(const [width,height] of [[844,390],[390,844]]){
       await p.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});await delay(200);
       assert.ok(await p.evaluate(`(()=>{const r=document.querySelector('.shop-3d-canvas').getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=${width}&&Math.abs(r.width/r.height-1672/941)<.02})()`));
+      if(width<height){
+        const pos=await point('chien');
+        assert.ok(pos,'Le collier reste accessible en portrait');
+        await p.send('Input.dispatchMouseEvent',{type:'mouseMoved',...pos});
+        await p.waitFor('Eredita.IllustratedShop.scene3D.diagnostics.hovered==="chien" && Eredita.IllustratedShop.scene3D.diagnostics.items.chien.hoverAmount>.8');
+      }
       await capture(`boutique-3d-${width}x${height}`);
     }
     await p.click('#close-shop-modal');assert.equal(await p.evaluate('Eredita.IllustratedShop.scene3D.diagnostics.running'),false);
@@ -84,7 +91,7 @@ async function run(){
     assert.equal(await p.evaluate('getComputedStyle(document.querySelector(".shop-object svg")).visibility'),'visible','Repli illustré si contexte perdu');
     assert.deepEqual(p.errors,[]);assert.deepEqual(p.consoleErrors,[]);
     assert.deepEqual(p.badResponses.filter(u=>/\/(assets|js|css)\//.test(u)),[]);
-    console.log('Boutique 3D : modèles, raycast, achat souris, VINDUTU, villages indépendants, animaux, filets, pièges, ventes, refus, temps réel, responsive, réouverture et repli validés.');
+    console.log('Boutique 3D : modèles, zones rectangulaires, achat souris, VINDUTU, villages indépendants, animaux, filets, pièges, ventes, refus, temps réel, responsive, réouverture et repli validés.');
   }finally{await browser?.close();await new Promise(r=>site.server.close(r));}
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});

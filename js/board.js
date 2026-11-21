@@ -57,6 +57,7 @@
         nextResidentNumber: E.Config.startingPopulation + 1,
         nextAnimalNumber: 1,
         animals: [],
+        waitingDonkeys: 0,
         residents: Array.from(
           { length: E.Config.startingPopulation },
           (_, index) => createResident(villageId, index + 1)
@@ -121,6 +122,10 @@
     if(z>-inner)return 100-t+(z+inner)*t/(edge+inner);
     return (z-p.originZ)/p.positionScale;
   }
+  // Les extrémités de la colonne correspondent aux portes des villages.
+  function isOnBattlefield(point) {
+    return point.position > 0 && point.position < E.Config.movement.columnLength;
+  }
   function widthScale(state) { return getFormat(state).regions===E.Config.formats.simplified.regions ? E.Config.board.simplifiedWidthScale : 1; }
   function slotHitbox(state,village,index) {
     const cfg=E.Config.villagePresentation,slots=village.slots.length===2?cfg.slotsTwo:cfg.slotsFour;
@@ -135,7 +140,16 @@
     const angle=2*Math.PI*number/Math.max(1,total)+(inner?.19:0);
     return {x:cfg.fire[0]+Math.cos(angle)*cfg.idleRadiusX*radius,z:cfg.fire[1]+Math.sin(angle)*cfg.idleRadiusZ*radius};
   }
-  E.Board = { createState, getFormat, combatZ, combatPosition, widthScale, slotHitbox, idlePosition };
+  function waitingDonkeyPoints(village) {
+    const { regionCenter, waitingDonkeySpots } = E.Config.villagePresentation;
+    const sign = village.ownerId === "red" ? 1 : -1;
+    return waitingDonkeySpots.slice(0, village.waitingDonkeys ?? 0).map(([x, z]) => ({
+      lanePosition: village.lane,
+      terrainOffset: x * sign,
+      position: combatPosition((-regionCenter + z) * sign)
+    }));
+  }
+  E.Board = { createState, getFormat, combatZ, combatPosition, isOnBattlefield, widthScale, slotHitbox, idlePosition, waitingDonkeyPoints };
 
 }());
 

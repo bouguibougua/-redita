@@ -186,7 +186,6 @@
         lines = [];
         const level = E.Transport.buildingLevel(v, data);
         entries = Object.entries(E.Config.villageShops[data].tiers).flatMap(([tier, items]) => items.map((item) => {
-          const resident = selectedResident();
           if (item.animalType) return button(item.label, command("buyAnimal", item.animalType), own && E.Livestock.purchaseQuote(s, p.id, v.lane, item.animalType).allowed);
           if (item.purchaseType) return button(item.label, command("buyShopItem", item.purchaseType), own && level >= Number(tier) && E.Transport.shopQuote(s, p.id, v.lane, item.purchaseType).allowed);
           if (item.equipmentKind) {
@@ -194,11 +193,15 @@
             return button(item.label, command("buyEquipment", item.equipmentKind, item.equipmentType), own && q.allowed,
               {detail: `${q.gold} or · village entier, actuels et futurs · hors légendes`, reason: q.reason});
           }
-          if (item.specialAnimal) return button(item.label, command("buySpecialAnimal", item.specialAnimal, resident?.id), own && E.Animals.purchaseQuote(s, p.id, v.lane, item.specialAnimal, resident?.id).allowed);
+          if (item.specialAnimal) {
+            const q = E.Animals.purchaseQuote(s, p.id, v.lane, item.specialAnimal);
+            return button(item.label, command("buySpecialAnimal", item.specialAnimal), own && q.allowed, { reason: q.reason });
+          }
           return button(`${item.label} · à venir`, null, false);
         }));
       } else if (name === "animals") {
         title = "Compagnons";
+        lines = [`Ânes à la base · ${E.Animals.waitingDonkeyCount(v)}`];
         entries = (v.animals || []).flatMap((animal) => [button(`${E.Config.specialAnimals[animal.type].label} · attaquer`, command("orderAnimal", animal.id, "attaque"), own && E.Animals.orderQuote(s, p.id, v.lane, animal.id, "attaque").allowed),
           ...(animal.type === "chien" ? [button("Défendre", command("orderAnimal", animal.id, "defense"), own && E.Animals.orderQuote(s, p.id, v.lane, animal.id, "defense").allowed), button("Perturber", command("orderAnimal", animal.id, "perturber"), own && E.Animals.orderQuote(s, p.id, v.lane, animal.id, "perturber").allowed),
             ...v.slots.map((slot, index) => button(`Garder enclos ${index + 1}`, command("orderAnimal", animal.id, "garde", index), own && slot.content?.category === "livestock" && E.Animals.orderQuote(s, p.id, v.lane, animal.id, "garde", index).allowed))] : [button("Abattre", command("slaughterSpecialAnimal", animal.id), own && !animal.unitId)])]);

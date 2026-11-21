@@ -84,8 +84,10 @@
   }
 
   function nearestEnemyUnit(state, unit) {
+    const fieldOnly = unit.mythologyLegendId === 'u-mazzeru';
     return state.units
       .filter(other => other.ownerId !== unit.ownerId && other.hp > 0)
+      .filter(other => !fieldOnly || E.Board.isOnBattlefield(other))
       .filter(other => unitDistance(state,unit,other) <= Math.max(E.Config.combat.detectionRange, attackRange(unit)))
       .sort((a,b) => unitDistance(state,unit,a) - unitDistance(state,unit,b))[0] || null;
   }

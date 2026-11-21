@@ -1,0 +1,30 @@
+{
+  "task_id": "f3f3f1da-cc98-456f-9f4a-5a343c8f6750",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A small rustic medieval wooden live-capture cage trap, rectangular chestnut wood cage with thin round bars, open square entrance, raised sliding wooden door, simple trigger stick and rope mechanism. Aged wood grain and small iron fasteners, clearly hollow interior. Three quarter front view. Empty trap, no animal, no bait, no ground.",
+    "delight": false,
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 4000,
+    "model_version": "P1-20260311",
+    "texture_version": "v3.5-20260815",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T22:34:24.749887Z",
+  "completed_at": "2026-11-17T22:35:21.067141Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

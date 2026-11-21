@@ -12,8 +12,16 @@
   const configRef = path => ({ configRef: path });
   // Illustrations individuelles ; Roccapina utilise une image de la vidéo fournie.
   // Aucun lien avec le catalogue historique de cartes ; miroir uniquement sur l’art.
+  // Position horizontale du visage (ou du sujet principal), en pourcentage de l’image.
+  const portraitFocus = {
+    'a-fata': 60, 'a-mumma': 58, 'a-stregha': 57, 'a-stregha-bianca': 54,
+    'anima-in-pena': 59, 'i-lacrimenti': 61, 'l-orcu': 60, 'lion-roccapina': 52,
+    'oeil-sainte-lucie': 50, 'squadra-arozza': 53, 'u-diavulu': 56,
+    'u-fullettu': 50, 'u-lupu-mannaru': 62, 'u-magu': 54, 'u-mazzeru': 59,
+    'u-stregu': 54, 'u-surpatore': 58
+  };
   const art = id => ({ src: `assets/mythology/${id}.webp`, kind: 'illustration', width: id === 'lion-roccapina' ? 1280 : 1536, height: id === 'lion-roccapina' ? 720 : 1024,
-    crop: { x: 0, y: 0, width: 1, height: 1 } });
+    crop: { x: 0, y: 0, width: 1, height: 1 }, focusX: portraitFocus[id] ?? 50 });
   const param = key => configRef('reinforcementPowers.' + key);
   function entry(id, name, category, description, parameters, primary, options = {}) {
     return { id, name, aliases: options.aliases || [],
@@ -30,15 +38,15 @@
   }
   const entries = [
     entry('u-mazzeru', 'U Mazzeru', 'invocation',
-      'Invoque un archer de 45 PV : 15 dégâts à l’impact, un tir toutes les 9 s et Mauvais Présage. Il vise le plus proche ennemi non marqué sur toute la carte. Chaque mort portant sa propre marque lui donne +15 PV maximum.',
-      { hp: param('mazzeruHp'), damage: param('mazzeruDamage') }, '#c73d4d', { targetMode:'allied-region', shortDescription:'45 PV · 15 dégâts / 9 s · Portée globale sur les non marqués · Mauvais Présage.', source:{document:'GAME_DESIGN.md',section:66,decision:'mazzeru-bad-omen-2026-11-12'}, lore: { subtitle: "Le chasseur de morts", paragraphs: [
+      'Invoque un archer de 45 PV : 15 dégâts à l’impact, un tir toutes les 9 s et Mauvais Présage. Il vise le plus proche ennemi non marqué hors des villages, sur toute la carte. Chaque mort portant sa propre marque lui donne +15 PV maximum.',
+      { hp: param('mazzeruHp'), damage: param('mazzeruDamage') }, '#c73d4d', { targetMode:'allied-region', shortDescription:'45 PV · 15 dégâts / 9 s · Tir global hors village · Mauvais Présage.', source:{document:'GAME_DESIGN.md',section:66,decision:'mazzeru-bad-omen-2026-11-12'}, lore: { subtitle: "Le chasseur de morts", paragraphs: [
           "U Mazzeru est l'une des figures les plus emblématiques de la mythologie corse. Il s'agit d'un individu possédant un don surnaturel qui lui permet de pressentir la mort d'une personne à travers ses rêves.",
           "Pendant son sommeil, son esprit participe à une chasse nocturne au cours de laquelle il poursuit et tue un animal, généralement un sanglier ou un autre gibier. Lorsqu'il s'approche de sa proie, il découvre que celle-ci possède le visage d'une personne qu'il connaît. Selon la croyance, cette personne est destinée à mourir prochainement.",
           "Le Mazzeru n'est pas nécessairement malveillant. Son pouvoir est souvent involontaire et peut être vécu comme une malédiction. Certaines traditions évoquent également des affrontements entre groupes de Mazzeri, notamment lors des Mandrache, associés au destin des communautés."
         ] },
         menuDescription: [
-        'U Mazzeru reste immobile tant qu’il existe un personnage ennemi sans Mauvais Présage, travailleurs compris. Il vise le plus proche sans limite de portée et tire toutes les 9 secondes : 15 dégâts à l’impact, puis une marque permanente.',
-        'Mauvais Présage colore en rouge les 15 % gauches de la barre de vie et exécute le personnage à ce seuil. Chaque ennemi portant sa propre marque qui meurt, quelle que soit la cause, lui donne +15 PV maximum, sans soin immédiat. Une marque posée par Surpatore profite à Surpatore. Quand tous les ennemis sont marqués, il avance et combat à la portée de l’archer, toujours à 15 dégâts et un tir toutes les 9 secondes.'
+        'U Mazzeru reste immobile tant qu’un ennemi non marqué se trouve sur le terrain. Il vise le plus proche sans limite de portée, travailleurs compris. Les personnages à l’abri dans un village échappent à ses flèches.',
+        'Mauvais Présage colore en rouge les 15 % gauches de la barre de vie et exécute le personnage à ce seuil. Toute mort d’un ennemi portant la marque d’U Mazzeru lui donne +15 PV maximum, sans soin immédiat. Une marque posée par Surpatore profite à Surpatore. Quand il n’a plus de cible non marquée sur le terrain, U Mazzeru avance et combat à la portée de l’archer, toujours à 15 dégâts et un tir toutes les 9 secondes.'
       ] }),
     entry('a-stregha', 'A Strega', 'enchantement',
       'Maudit une région ennemie pendant 2 minutes : son rendement est divisé par deux.',
@@ -271,7 +279,7 @@
   E.Config.mythology = freeze({ schemaVersion: 1, categories, entries,
     // Présentation partagée par l’aperçu et la partie, sans activation des pouvoirs.
     crystal: { duration: 4.4, splitAt: 1.4, splitDuration: 1.2, revealAt: 2.5, revealDuration: 1.1,
-      cardsAppearAt: .5, cardsDeployDuration: .95, cardOuterInset: 16,
+      cardsAppearAt: .5, cardsDeployDuration: .95, closeDuration: .65, cardOuterInset: 16,
       crystalHeightPixels: 72,
       beamSegments: 24, beamsFadeAt: 1.2, beamsFadeDuration: .8,
       maxPixelRatio: 1.5, desktopFps: 60, mobileFps: 30, mobileBreakpoint: 600, particleCount: 48 },

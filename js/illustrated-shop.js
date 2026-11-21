@@ -2,8 +2,7 @@
   "use strict";
   const E = window.Eredita, C = E.Config.illustratedShop, art = E.ShopArt;
   const money = value => Number(value || 0).toLocaleString('fr-FR',{maximumFractionDigits:2});
-  const escape = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let controller, getState, root, scene, advanced, wallet, status, recipient, boatType, lastGold, lastOwner, previousFocus;
+  let controller, getState, root, scene, advanced, wallet, status, donkeyStock, lastGold, lastOwner, previousFocus;
   let hovered = null, alpha = null, hitContext, imageReady = false, pending = null, messageUntil = 0, syncSignature = '';
   let scene3D = null, sceneLoading = null;
   const nodes = new Map(), masks = new Map();
@@ -28,8 +27,7 @@
       if(receipt.accepted){
         goldEffect(receipt.deltaGold);
         if(receipt.lane===selection.lane){
-          const id=receipt.itemId==='voilier'?'barque':receipt.itemId;
-          pulse(nodes.get(id),'shop-confirmed');
+          pulse(nodes.get(receipt.itemId),'shop-confirmed');
         }
       }else if(receipt.lane===selection.lane)say('Transaction refusée · les conditions ont changé');
       pending=null;
@@ -75,9 +73,8 @@
       baskets.append(group);
     }); scene.append(baskets);
     const utilities=document.createElement('div'); utilities.className='shop-utilities';
-    utilities.innerHTML='<label class="shop-recipient">Âne pour <select data-shop-recipient aria-label="Habitant associé à l’âne"></select></label><div class="shop-feedback" role="status" aria-live="polite"></div><button type="button" class="shop-manage" aria-expanded="false" aria-controls="shop-modal-content">Gestion & compagnons <span aria-hidden="true">↗</span></button>';
-    scene.append(utilities); status=utilities.querySelector('.shop-feedback'); recipient=utilities.querySelector('select');
-    recipient.addEventListener('change',()=>controller.selectResident(recipient.value));
+    utilities.innerHTML='<span class="shop-donkey-stock" data-shop-donkey-stock></span><div class="shop-feedback" role="status" aria-live="polite"></div><button type="button" class="shop-manage" aria-expanded="false" aria-controls="shop-modal-content">Gestion & compagnons <span aria-hidden="true">↗</span></button>';
+    scene.append(utilities); status=utilities.querySelector('.shop-feedback'); donkeyStock=utilities.querySelector('[data-shop-donkey-stock]');
     advanced=root.querySelector('#shop-modal-content'); advanced.hidden=true;
     utilities.querySelector('.shop-manage').addEventListener('click',()=>{
       const open=advanced.hidden; advanced.hidden=!open; scene.classList.toggle('shop-managing',open);
@@ -85,14 +82,6 @@
       utilities.querySelector('.shop-manage').innerHTML=open?'← Revenir à l’échoppe':'Gestion & compagnons <span aria-hidden="true">↗</span>';
       setHover(null);
       scene3D?.setVisible(!open);
-    });
-    boatType=document.createElement('div'); boatType.className='shop-boat-choice';
-    boatType.innerHTML='<button type="button" data-shop-vessel="barque" aria-pressed="true">Barque</button><button type="button" data-shop-vessel="voilier" aria-pressed="false">Voilier</button>';
-    scene.append(boatType);
-    boatType.addEventListener('click',event=>{
-      const button=event.target.closest('[data-shop-vessel]'); if(!button)return;
-      boatType.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
-      sync(getState()); say(button.dataset.shopVessel==='voilier'?'Voilier · 15 places · Littoral, Boucherie T3':'Barque · 2 places · Boucherie T1');
     });
     baskets.addEventListener('click',event=>{
       const button=event.target.closest('[data-shop-sell]'); if(!button)return;
@@ -103,10 +92,17 @@
       controller.sell(button.dataset.shopSell,amount);
     });
     scene.addEventListener('pointermove',event=>{
-      if(event.target.closest('.shop-modal-head,.shop-baskets,.shop-utilities,.shop-boat-choice')||!advanced.hidden){setHover(null);return;}
-      setHover(hit(event));
+      if(event.target.closest('.shop-modal-head,.shop-utilities')||!advanced.hidden){setHover(null);return;}
+      const basket=event.target.closest('[data-shop-basket]');
+      setHover(basket?art.find(item=>item.id===basket.dataset.shopBasket):hit(event),event);
     });
     scene.addEventListener('pointerleave',()=>setHover(null));
+    window.addEventListener('blur',()=>setHover(null));
+    baskets.addEventListener('focusin',event=>{
+      const group=event.target.closest('[data-shop-basket]');
+      if(group)setHover(art.find(item=>item.id===group.dataset.shopBasket));
+    });
+    baskets.addEventListener('focusout',event=>{if(!event.relatedTarget?.closest?.('[data-shop-basket]'))setHover(null);});
     scene.addEventListener('click',event=>{
       if(event.target.closest('button,select,label,.shop-modal-head,.shop-baskets,.shop-utilities')||!advanced.hidden)return;
       const item=hit(event);if(item)activate(item);
@@ -140,15 +136,13 @@
     return state.phase==='running'&&!state.paused&&!state.players[playerId]?.villages[lane]?.destroyed&&
       (E.Network.mode==='local'||playerId===(E.Network.playerId||'red'));
   }
-  function selectedResident(state,village) {return village.residents.find(r=>r.id===state.selectedResidentId)||village.residents[0];}
-  function selectedVessel(){return boatType.querySelector('[aria-pressed="true"]').dataset.shopVessel;}
   function quote(item,state) {
-    const {playerId,lane}=state.selectedVillage,village=state.players[playerId].villages[lane];
+    const {playerId,lane}=state.selectedVillage;
     if(item.kind==='inactive')return {allowed:false,reason:'Catalogue · mécanique à venir'};
     if(item.kind==='animal')return E.Livestock.purchaseQuote(state,playerId,lane,item.id);
-    if(item.kind==='special')return E.Animals.purchaseQuote(state,playerId,lane,item.id,selectedResident(state,village)?.id);
+    if(item.kind==='special')return E.Animals.purchaseQuote(state,playerId,lane,item.id);
     if(item.kind==='tools'||item.kind==='armors')return E.Equipment.quote(state,playerId,lane,item.kind,item.type);
-    if(item.kind==='transport')return E.Transport.shopQuote(state,playerId,lane,item.id==='barque'?selectedVessel():item.id);
+    if(item.kind==='transport')return E.Transport.shopQuote(state,playerId,lane,item.id);
     return {allowed:canManage(state),reason:'Choisissez une quantité sur le panier'};
   }
   function activate(item) {
@@ -156,20 +150,20 @@
     if(q?.soldOut)return;
     if(item.kind==='resource'){scene.querySelector(`[data-shop-sell="${item.id}"]`)?.focus();return;}
     if(!canManage(state)||!q?.allowed){refuse(button,q?.reason||'Gestion indisponible');return;}
-    const {playerId,lane}=state.selectedVillage,village=state.players[playerId].villages[lane];
-    pending={owner:playerId,lane,id:item.id,label:item.id==='barque'?selectedVessel():item.label,gold:state.players[playerId].gold,before:inventory(item,state),direction:-1,expires:performance.now()+5000};
+    const {playerId,lane}=state.selectedVillage;
+    pending={owner:playerId,lane,id:item.id,label:item.label,gold:state.players[playerId].gold,before:inventory(item,state),direction:-1,expires:performance.now()+5000};
     if(item.kind==='animal')controller.buyAnimal(item.id);
-    else if(item.kind==='special')controller.buySpecialAnimal(item.id,selectedResident(state,village)?.id);
+    else if(item.kind==='special')controller.buySpecialAnimal(item.id);
     else if(item.kind==='tools'||item.kind==='armors')controller.buyEquipment(item.kind,item.type);
-    else if(item.kind==='transport')controller.buyShopItem(item.id==='barque'?selectedVessel():item.id);
+    else if(item.kind==='transport')controller.buyShopItem(item.id);
   }
   function inventory(item,state) {
     const {playerId,lane}=state.selectedVillage,v=state.players[playerId].villages[lane];
     if(item.kind==='resource')return v.resources[item.id];
     if(item.kind==='animal')return v.slots.reduce((n,s)=>n+(s.content?.type===item.id?s.content.count:0),0);
-    if(item.kind==='special')return item.id==='ane'?Boolean(selectedResident(state,v)?.donkey):(v.animals||[]).filter(a=>a.type===item.id).length;
+    if(item.kind==='special')return item.id==='ane'?E.Animals.waitingDonkeyCount(v)+E.Animals.assignedDonkeyCount(v):(v.animals||[]).filter(a=>a.type===item.id).length;
     if(item.kind==='tools'||item.kind==='armors')return v.equipment[item.kind==='tools'?'tool':'armor'];
-    return v.maritime?.[item.id==='barque'?selectedVessel():item.id]||0;
+    return v.maritime?.[item.id]||0;
   }
   function hit(event) {
     if(scene3D?.ready)return art.find(item=>item.id===scene3D.hit(event))||null;
@@ -180,12 +174,13 @@
     if((x<347&&y>694&&y<733)||(x<340&&y>750&&y<791)||(x>301&&x<347&&y>680&&y<861))return null;
     return [...art].reverse().find(item=>!nodes.get(item.id).hidden&&hitContext.isPointInPath(masks.get(item.id),x,y))||null;
   }
-  function setHover(item) {
-    if(item&&nodes.get(item.id)?.getAttribute('aria-disabled')==='true')item=null;
+  function setHover(item,event) {
+    if(item&&nodes.get(item.id)?.hidden)item=null;
+    // Actualiser le point même sans changer d'objet : il pilote l'inclinaison.
+    scene3D?.setHover(item?.id||null,event);
     if(hovered===item)return;
     if(hovered)nodes.get(hovered.id)?.classList.remove('is-hovered');
     hovered=item;scene.classList.toggle('over-merchandise',Boolean(item));
-    scene3D?.setHover(item?.id||null);
     if(item){nodes.get(item.id).classList.add('is-hovered');if(item.kind!=='inactive')particles(item.bounds[0]+item.bounds[2]/2,item.bounds[1]+item.bounds[3]*.55);}
   }
   function particles(x,y) {
@@ -215,8 +210,9 @@
     scene.querySelector('[data-shop-phase]').textContent=state.paused?'En pause':document.querySelector('#phase-label').textContent;
     if(performance.now()>messageUntil)status.textContent=village.destroyed?'Village détruit':state.paused?'Partie en pause':`Village ${lane+1} · stocks locaux, or partagé`;
     if(pending&&(performance.now()>pending.expires||pending.owner!==playerId||pending.lane!==lane))pending=null;
-    const nextSignature=JSON.stringify([playerId,lane,player.gold,state.phase,state.paused,village.destroyed,E.MythologyEffects?.isBurned(state,village),state.selectedResidentId,selectedVessel(),village.equipment,village.equipmentPurchases,village.buildings.map(b=>[b.type,b.level]),[village.maritime?.barque,village.maritime?.voilier,village.maritime?.filet],
-      E.Config.resources.map(r=>Math.floor(village.resources[r]||0)),village.slots.map(s=>[s.content?.type,s.content?.count]),village.animals,village.residents.map(r=>[r.id,r.name,r.donkey,r.unitId,r.mission])]);
+    const waitingDonkeys=E.Animals.waitingDonkeyCount(village);
+    const nextSignature=JSON.stringify([playerId,lane,player.gold,state.phase,state.paused,village.destroyed,E.MythologyEffects?.isBurned(state,village),village.equipment,village.equipmentPurchases,village.buildings.map(b=>[b.type,b.level]),[village.maritime?.barque,village.maritime?.filet],
+      E.Config.resources.map(r=>Math.floor(village.resources[r]||0)),village.slots.map(s=>[s.content?.type,s.content?.count]),village.animals,waitingDonkeys,village.residents.map(r=>[r.id,r.name,r.donkey,r.unitId,r.mission,r.profession,r.hp,r.combatHealthRatio])]);
     if(syncSignature===nextSignature)return;syncSignature=nextSignature;
     if(lastOwner!==playerId){lastGold=undefined;pending=null;lastOwner=playerId;}
     if(!E.ShopTransactions&&lastGold!==undefined&&Math.abs(player.gold-lastGold)>.001){
@@ -230,20 +226,17 @@
     }
     lastGold=player.gold;
     wallet.querySelector('[data-shop-balance]').textContent=money(player.gold);
-    const resident=selectedResident(state,village),signature=JSON.stringify(village.residents.map(r=>[r.id,r.name,r.donkey]));
-    if(recipient.dataset.signature!==signature){recipient.dataset.signature=signature;recipient.innerHTML=village.residents.map(r=>`<option value="${escape(r.id)}">${escape(r.name)}${r.donkey?' · âne':''}</option>`).join('');}
-    recipient.value=resident?.id||'';recipient.disabled=!canManage(state)||!village.residents.length;
+    donkeyStock.textContent=`Ânes à la base · ${waitingDonkeys}`;
     art.forEach(item=>{
       const node=nodes.get(item.id),q=quote(item,state),allowed=canManage(state)&&q?.allowed;
       const hadFocus=document.activeElement===node;
-      scene3D?.setState(item.id,{allowed,sold:Boolean(q?.soldOut),vessel:item.id==='barque'?selectedVessel():null,count:q?.count});
-      if(!allowed&&hovered===item)setHover(null);
+      scene3D?.setState(item.id,{allowed,sold:Boolean(q?.soldOut),count:q?.count});
       node.hidden=Boolean(q?.soldOut);
       if(node.hidden&&hovered===item)setHover(null);
       if(node.hidden&&hadFocus)root.querySelector('#close-shop-modal').focus();
       node.setAttribute('aria-disabled',String(!allowed));node.classList.toggle('shop-equipped',Boolean(q?.equipped));
       node.classList.toggle('shop-catalog-only',item.kind==='inactive');
-      const label=item.id==='barque'? (selectedVessel()==='voilier'?'Voilier':'Barque'):item.label;
+      const label=item.label;
       node.setAttribute('aria-label',item.kind==='resource'?`${label} · stock ${money(village.resources[item.id])}`:`${item.kind==='inactive'?label:`Acheter ${label}`} · ${q?.reason||'Indisponible'}`);
       const plate=scene.querySelector(`[data-shop-label="${item.id}"]`);
       if(plate)plate.hidden=node.hidden;
@@ -252,7 +245,6 @@
         else if(item.kind==='animal')count=` · ${village.slots.reduce((n,s)=>n+(s.content?.type===item.id?s.content.count:0),0)}`;
         plate.textContent=label+count;plate.classList.toggle('catalog-plate',item.kind==='inactive');}
     });
-    boatType.querySelectorAll('[data-shop-vessel]').forEach(button=>{button.hidden=Boolean(E.Transport.shopQuote(state,playerId,lane,button.dataset.shopVessel)?.soldOut);});
     E.Config.resources.forEach(resource=>{
       scene.querySelector(`[data-illustrated-stock="${resource}"]`).textContent=money(Math.floor(village.resources[resource]||0));
       scene.querySelectorAll(`[data-shop-sell="${resource}"]`).forEach(button=>{

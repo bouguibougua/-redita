@@ -1,0 +1,30 @@
+{
+  "task_id": "c0742546-ebcc-48f2-a3c6-7e5d17e0a594",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket filled with golden harvested wheat ears in small upright tied sheaves. Finely defined wheat grains and awns, dry stems, natural jute ties, detailed wicker weave and thick rim. Compact coherent arrangement, no other produce. View slightly from above so contents and front basket are visible.",
+    "delight": false,
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 4500,
+    "model_version": "P1-20260311",
+    "texture_version": "v3.5-20260815",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T22:34:48.301628Z",
+  "completed_at": "2026-11-17T22:35:38.112577Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

@@ -19,17 +19,112 @@
       master: "assets/shop/art-master.png", hoverScale: 1.05, particles: 5 },
     // Présentation de l'étal 3D ; aucune valeur économique.
     shopScene: { enabled: true, width: 16.72, height: 9.41, pixelRatio: 1.5,
-      shadowSize: 2048, maxFPS: 30, hoverSpeed: 10, hoverLift: .045,
-      sign: "assets/models/shop/vindutu-sign.glb", dustCount: 45,
-      models: { vache: "assets/models/elevage_vache_petit.glb",
-        chevre: "assets/models/elevage_chevre_petit.glb", cochon: "assets/models/elevage_cochon_petit.glb",
-        barque: "assets/models/barque.glb" } },
+      shadowSize: 2048, maxFPS: 30,
+      hover: { response: 14, scale: 1.10, lift: .09, depth: .45, tiltX: .14, tiltY: .18,
+        emissive: .035, hitPadding: .085 },
+      exposure: 1.12, ambientIntensity: 1.25, sunIntensity: 3.1, bounceIntensity: .55,
+      materials: { resolution: 1024, anisotropy: 4 },
+      dustCount: 45, resourceBaseY: -2.84, animalBaseY: -3.28,
+      models: {
+        "barque": { src: "assets/models/barque.glb", rotation: [.55,-.55,-.10], fit: [4.53,2.85,4.18], offset: [-.20,-.62,2.55] },
+        "ane": "assets/models/shop/donkey.glb",
+        "chien": { src: "assets/models/shop/collier.glb", rotation: [1.02,.20,-.21], fit: [1.34,1.36,1.2] },
+        "sanglier": {"src":"assets/models/shop/v2/sanglier.glb","rotation":[0,-1.57,0],"fit":[1.46,1.62,1.5]},
+        "vache": {"src":"assets/models/shop/v2/vache.glb","rotation":[0,-1.34,0],"fit":[3.1,2.85,5]},
+        "chevre": {"src":"assets/models/shop/v2/chevre.glb","rotation":[0,-1.35,0],"fit":[1.45,2.55,3]},
+        "cochon": { src: "assets/models/shop/v2/cochon.glb", rotation: [0,-1.2,0], fit: [1.78,1.94,3], offset: [.18,0,.79] },
+        "tools-bois": {"src":"assets/models/shop/v2/tools-bois.glb","rotation":[0,-1.57,0],"fit":[1.5,1.44,1.6]},
+        "tools-bronze": {"src":"assets/models/shop/v2/tools-bronze.glb","rotation":[0,-1.57,0],"fit":[1.5,1.44,1.6]},
+        "tools-fer": {"src":"assets/models/shop/v2/tools-fer.glb","rotation":[0,-1.57,0],"fit":[1.5,1.44,1.6]},
+        "armors-cuir": {"src":"assets/models/shop/v2/armors-cuir.glb","rotation":[0,-1.57,0],"fit":[1.32,1.72,1.5]},
+        "armors-maille": {"src":"assets/models/shop/v2/armors-maille.glb","rotation":[0,-1.57,0],"fit":[1.65,1.72,1.5]},
+        "armors-fer": {"src":"assets/models/shop/v2/armors-fer.glb","rotation":[0,-1.57,0],"fit":[1.32,1.72,1.5]},
+        "filet": {"src":"assets/models/shop/v2/filet.glb","rotation":[0,-1.57,0],"fit":[3.03,2.48,1.5]},
+        "piege-chasse": { src: "assets/models/shop/v2/piege-chasse.glb", rotation: [.12,-1.2,0], fit: [1.68,1.12,1.79], offset: [.43,0,0] },
+        "piege-defense": { src: "assets/models/shop/v2/piege-defense.glb", rotation: [.65,-.25,0], fit: [1.43,.84,1.82], offset: [.90,0,0] },
+        "ble": {"src":"assets/models/shop/v2/ble.glb","rotation":[0.2,-1.57,0],"fit":[1.6,1.38,1.9]},
+        "chataigne": {"src":"assets/models/shop/v2/chataigne.glb","rotation":[0.2,-1.57,0],"fit":[1.6,1.38,1.9]},
+        "raisin": {"src":"assets/models/shop/v2/raisin.glb","rotation":[0.2,-1.57,0],"fit":[1.6,1.38,1.9]},
+        "viande": {"src":"assets/models/shop/v2/viande.glb","rotation":[0.2,-1.57,0],"fit":[1.6,1.38,1.9]},
+        "poisson": {"src":"assets/models/shop/v2/poisson.glb","rotation":[0.2,-1.57,0],"fit":[1.6,1.38,1.9]},
+        "lait": {"src":"assets/models/shop/v2/lait.glb","rotation":[0.2,-1.57,0],"fit":[1.6,1.38,1.9]}
+      } },
     formats: {
       simplified: { label: "2 camps", regions: 2, exchanges: 1 },
       classic: { label: "4 camps", regions: 4, exchanges: 2 }
     },
     // TEMP_BALANCE_VALUE — dimensions visuelles du plateau, sans effet sur les distances logiques.
     board: { laneSpacing: 3, simplifiedWidthScale: 1.15, baseMargin: 1.3, rimMargin: 1.65 },
+    // Présentation PC uniquement (paysage corse + caméra de stratégie) : aucune incidence sur les règles.
+    // Les plateaux VR/MR gardent le socle d'origine (voir Board3D.renderMode).
+    strategyCamera: {
+      pitchDeg: 44,            // inclinaison fixe : jamais modifiable par le joueur
+      headingDeg: -90,         // orientation horizontale fixe (la caméra regarde vers +x, comme l'ancien cadrage)
+      fov: 35,                 // champ de vision resserré : le plateau occupe l'écran, pas le paysage
+      zoomMin: 0.17,           // multiple de la distance de cadrage complet (zoom maximal)
+      zoomMax: 1.25,           // dézoom limité : vue d'ensemble du plateau et de ses abords seulement
+      zoomFit: 1.0,
+      wheelSensitivity: 0.0012,
+      keyboardSpeed: 0.8,      // tailles de plateau par seconde au cadrage complet
+      smoothing: 9,            // plus grand = plus réactif
+      panMargin: 4,            // marge de déplacement au-delà des régions jouables (unités du jeu)
+      lowestClearance: 0.6     // la caméra reste au-dessus du relief
+    },
+    environment3d: {
+      baseSeed: "eredita-corse-1",
+      // Présentation PC : villages agrandis face au paysage. Le décor est construit autour de régions
+      // boardScale fois plus grandes puis réduit d'autant ; plateau, unités et coordonnées du jeu
+      // restent à l'échelle 1 (PC comme VR/MR). Purement visuel.
+      boardScale: 1.6,
+      // Dimensions des modèles de région (mesurées sur les GLB) : sert uniquement au raccord visuel.
+      tileHalfWidth: 1.62, tileHalfDepth: 2.42, regionZ: 2.55, waterStart: 0.52, waterEnd: 2.42,
+      idleReleaseSeconds: 45,
+      waterLevel: 0.11, // surface de l'eau des modèles de littoral
+      // Fin d'après-midi dorée : soleil chaud assez bas, brume bleutée qui détache les massifs lointains.
+      fogColor: 0xbfcfd8, skyColor: 0xbfcfd8,
+      sunColor: 0xffc788, sunIntensity: 4.6, sunDirection: [-0.42, 0.42, 0.66], hemiSky: 0xbcd2ec, hemiGround: 0x6b5a32, hemiIntensity: 0.45,
+      exposure: 1.06,
+      // Ciel servant de lumière d'ambiance et de reflets (carte d'environnement PMREM, PC uniquement).
+      envZenith: 0x3f78c4, envHorizon: 0xcfdde6, envGround: 0x5f5440, envSunColor: 0xffd29a, envIntensity: 0.62,
+      // Décor Tripo réduit par scripts/prepare-environment-model.py (couleurs de sommets, *_far.glb = loin).
+      // size : hauteur visée (fit "height") ou plus grande emprise au sol (fit "width"), en unités de scène.
+      // Un fichier absent ou illisible laisse la forme procédurale correspondante.
+      modelFarMaxTriangles: 600, // lointain plus lourd : forme procédurale lointaine
+      vegetationFarDistance: 20, // au-delà (distance au plateau) : versions lointaines du décor
+      models: {
+        // Arbres : remaillés en houppiers pleins par scripts/prepare-environment-tree.py.
+        pine:       { src: "assets/models/environment/pin_laricio.glb", fit: "height", size: 1.75, brightness: 1.2, shade: true },
+        oak0:       { src: "assets/models/environment/chene_vert.glb", fit: "height", size: 1.3, brightness: 1.15, shade: true },
+        oak1:       { src: "assets/models/environment/chene_vert_2.glb", fit: "height", size: 1.3, brightness: 1.2, shade: true, tint: [0.78, 1.1, 0.72] },
+        olive:      { src: "assets/models/environment/olivier.glb", fit: "height", size: 0.9, brightness: 1.3, shade: true },
+        rock0:      { src: "assets/models/environment/granite_1.glb", fit: "width", size: 2.0, brightness: 1 },
+        rock1:      { src: "assets/models/environment/granite_2.glb", fit: "width", size: 2.0, brightness: 0.95 },
+        rock2:      { src: "assets/models/environment/granite_3.glb", fit: "width", size: 2.0, brightness: 1 },
+        crag0:      { src: "assets/models/environment/crete_granite_1.glb", fit: "height", size: 3.0, brightness: 1 },
+        crag1:      { src: "assets/models/environment/crete_granite_2.glb", fit: "height", size: 3.0, brightness: 1 },
+        coastRock0: { src: "assets/models/environment/rocher_cotier_1.glb", fit: "width", size: 2.0, brightness: 1.1 },
+        coastRock1: { src: "assets/models/environment/rocher_cotier_2.glb", fit: "width", size: 2.0, brightness: 1.1 }
+      }
+    },
+    // Post-traitement PC (jamais en VR/MR) : brume atmosphérique et de vallée, occlusion ambiante, étalonnage.
+    // Couleurs en hexadécimal sRGB ; densités par unité de distance ; hazeStartFactor × distance caméra-cible.
+    postProcessing: {
+      exposure: 1.04, saturation: 1.17, contrast: 1.1, vignette: 0.2,
+      shadowTint: [0.9, 0.97, 1.1], highlightTint: [1.07, 1.0, 0.87],
+      hazeColor: 0xaec4d4, hazeSunColor: 0xffd9a6, hazeIntensity: 0.95, hazeDensity: 0.014, hazeStartFactor: 1.2,
+      mistColor: 0xe9eeee, mistIntensity: 0.95, mistDensity: 0.02, mistHeight: 2.2,
+      aoRadius: 0.7, aoIntensity: 1.5, aoStrength: 0.85
+    },
+    // Quatre niveaux de qualité : réglage mémorisé par le navigateur, ?quality=… prioritaire.
+    graphics: {
+      defaultLevel: "high",
+      levels: {
+        low:    { label: "Faible", pixelRatio: 1,   shadowMap: 1024, textureSize: 128, chunkSegments: 12, viewScale: 0.8, vegetation: 0.28, flowers: 0,   waterDetail: 0, antialias: false, shadows: true,  animatedWater: false, ao: 0 },
+        medium: { label: "Moyen",  pixelRatio: 1.25,shadowMap: 2048, textureSize: 256, chunkSegments: 18, viewScale: 0.95,vegetation: 0.55, flowers: 0.4, waterDetail: 1, antialias: true,  shadows: true,  animatedWater: true, ao: 6 },
+        high:   { label: "Élevé",  pixelRatio: 2,   shadowMap: 2048, textureSize: 256, chunkSegments: 24, viewScale: 1.05,vegetation: 0.85, flowers: 0.8, waterDetail: 2, antialias: true,  shadows: true,  animatedWater: true, ao: 10 },
+        ultra:  { label: "Ultra",  pixelRatio: 2,   shadowMap: 4096, textureSize: 512, chunkSegments: 32, viewScale: 1.2, vegetation: 1.0,  flowers: 1.2, waterDetail: 3, antialias: true,  shadows: true,  animatedWater: true, ao: 14 }
+      }
+    },
     // Présentation 3D uniquement : aucune incidence sur les règles ou les déplacements.
     terrainModels: {
       plaine: { src: "assets/models/plaine.glb?v=1" },
@@ -71,6 +166,7 @@
       buildings: { bergerie: [-1.02, -1.98], village: [-0.34, -1.98],
         artisanat: [0.34, -1.98], boucherie: [1.02, -1.98] },
       fire: [0, -1.19], idleRadiusX: 1.10, idleRadiusZ: 0.35,
+      waitingDonkeySpots: [[-1.03, -1.63], [-0.49, -1.63], [0.97, -1.63]],
       idleScale: 0.58, crowdedIdleScale: 0.47, crowdedThreshold: 20,
       wallHalfWidth: 1.38, rampartModelDepth: 2.02, combatTransition: 30,
       slotsTwo: [[-0.55, 0.10], [0.55, 0.10]],
@@ -308,14 +404,14 @@
         tiers: {
           1: [{ label: "Filet de pêche", icon: "🕸", purchaseType: "filet" }, { label: "Barque", icon: "🛶", purchaseType: "barque" }],
           2: [{ label: "Piège de chasse", icon: "🪤" }],
-          3: [{ label: "Voilier", icon: "⛵", purchaseType: "voilier" }, { label: "Piège défensif", icon: "🛡" }]
+          3: [{ label: "Piège défensif", icon: "🛡" }]
         }
       }
     },
     specialAnimals: {
       // TEMP_BALANCE_VALUE — prix, vitesses terrestres des animaux et cadence du chien.
       // Les PV, dégâts, bonus, cumul maximal, tiers et nage sont fixés par le GDD.
-      ane: { label: "Âne", icon: "🫏", gold: 150, requiredTier: 2, movementBonus: 0.2, workBonus: 0.1 },
+      ane: { label: "Âne", icon: "🫏", gold: 150, requiredTier: 2, movementBonus: 0.2, workBonus: 0.1, assignmentMissions: ["agriculture", "elevage"] },
       chien: { label: "Chien", icon: "🐕", gold: 120, requiredTier: 3, hp: 40, damage: 7, speed: 5, attackInterval: 1, harassmentPenalty: 0.05, goatPenalty: 0.07, maxStacks: 4 },
       sanglier: { label: "Sanglier", icon: "🐗", gold: 180, requiredTier: 3, hp: 80, damage: 8, speed: 5, waterSpeedMultiplier: 0.5, meatAtDeath: 8 }
     },

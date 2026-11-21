@@ -67,14 +67,22 @@
   u.visualAttackSequence=(u.visualAttackSequence||0)+1;u.visualAttackTimer=E.Config.visualEffects.unitAttackDuration;u.visualAttackTarget={...t.point};u.attackCooldown=cfg().shotInterval;
  }
  function updateProjectiles(s,delta){if(!s.badOmen)return;
-  for(const p of s.badOmen.projectiles){const t=find(s,p.targetKey);if(!t){p.remaining=0;continue;}p.target={...t.point};p.remaining-=delta;if(p.remaining<=1e-9)hit(s,p,p.targetKey,p.damage);}
+  for(const p of s.badOmen.projectiles){
+   const t=find(s,p.targetKey);
+   if(!t || (t.kind !== 'village' && !E.Board.isOnBattlefield(t.point))){
+    p.remaining=0;continue;
+   }
+   p.target={...t.point};p.remaining-=delta;if(p.remaining<=1e-9)hit(s,p,p.targetKey,p.damage);
+  }
   s.badOmen.projectiles=s.badOmen.projectiles.filter(p=>p.remaining>1e-9);
  }
  function mazzeruTurn(s,u){
-  const target=characters(s).filter(t=>t.ownerId!==u.ownerId&&!markOf(s,t)).sort((a,b)=>distance(s,u,a.point)-distance(s,u,b.point)||a.key.localeCompare(b.key))[0];
+  const enemies = characters(s).filter(t => t.ownerId !== u.ownerId && E.Board.isOnBattlefield(t.point));
+  const nearestFirst = (a,b) => distance(s,u,a.point)-distance(s,u,b.point) || a.key.localeCompare(b.key);
+  const target = enemies.filter(t => !markOf(s,t)).sort(nearestFirst)[0];
   u.mazzeruMarking=Boolean(target);
-  const ordinary=target||characters(s).filter(t=>t.ownerId!==u.ownerId&&Math.abs(t.point.lanePosition-u.lanePosition)<.12&&distance(s,u,t.point)<=E.Config.combat.professionAttackRanges.chasseur)
-   .sort((a,b)=>distance(s,u,a.point)-distance(s,u,b.point)||a.key.localeCompare(b.key))[0];
+  const ordinary = target || enemies.filter(t => Math.abs(t.point.lanePosition-u.lanePosition)<.12 &&
+    distance(s,u,t.point)<=E.Config.combat.professionAttackRanges.chasseur).sort(nearestFirst)[0];
   if(!ordinary)return false;
   if(u.attackCooldown<=0)shoot(s,u,ordinary);return true;
  }

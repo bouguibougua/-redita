@@ -87,10 +87,21 @@
     }
     if (E.GameView?.getState) render(E.GameView.getState());
   }
-  function closeOffer() {
-    if (!widget || submitted) return;
-    widget.classList.remove('is-open'); component.resetReveal(); pausedByMatch = false;
+  function finishOfferClose() {
+    widget.classList.remove('is-open');
+    render(stateRef);
     component.element.querySelector('.mythology-crystal-stage').focus({ preventScroll: true });
+  }
+  function retractOffer() {
+    if (component.crystal.diagnostics.closing) return;
+    pausedByMatch = false;
+    if (component.crystal.reverse(finishOfferClose)) return;
+    component.resetReveal();
+    finishOfferClose();
+  }
+  function closeOffer() {
+    if (!widget?.classList.contains('is-open') || submitted) return;
+    retractOffer();
   }
   function activate(ownedOfferId, target = {}) {
     const current = stateRef && view(stateRef);
@@ -209,6 +220,7 @@
     closeButton.addEventListener('click', closeOffer);
     // L’ouverture suit uniquement une activation réussie de l’instance existante.
     component.element.addEventListener('eredita:mythology-open', () => { cancelTargeting(); widget.classList.add('is-open'); });
+    component.element.addEventListener('eredita:mythology-close', closeOffer);
     component.element.addEventListener('eredita:mythology-select', event => select(stateRef, event.detail));
     // Aucun geste sur les cartes ne se propage aux commandes du plateau.
     for (const type of ['pointerdown', 'pointerup', 'click', 'dblclick', 'wheel']) widget.addEventListener(type, event => event.stopPropagation());
@@ -247,9 +259,9 @@
     const active = current?.selections.find(item => item.offerId === activeTargetId);
     if (!active || active.status === 'activated') activeTargetId = targetInFlight = hoveredRegion = null;
     const nextId = current?.pending?.id || null;
-    if (nextId !== offerId) {
-      // Une confirmation referme même la DERNIÈRE paire. La tête suivante reste
-      // fermée et réutilise le renderer ; seul un nouveau clic pourra la révéler.
+    const closing = component.crystal.diagnostics.closing;
+    const closeAfterSelection = nextId !== offerId && submitted && widget.classList.contains('is-open');
+    if (nextId !== offerId && !closing && !closeAfterSelection) {
       widget.classList.remove('is-open');
       offerId = nextId; submitted = false; resolved = !nextId && Boolean(current?.selections.length); pausedByMatch = false;
       if (current?.pending) component.setPair(...current.pending.legendIds); else component.resetReveal();
@@ -258,12 +270,13 @@
     const count = current?.pendingCount || 0;
     if (counter.textContent !== String(count)) { counter.textContent = String(count); counter.hidden = count === 0; }
     const stage = component.element.querySelector('.mythology-crystal-stage');
-    const label = count ? `Ouvrir le cristal · ${count} proposition${count > 1 ? 's' : ''} en attente` : 'Cristal inactif';
+    const label = widget.classList.contains('is-open') ? 'Refermer les choix de renfort' :
+      count ? `Ouvrir le cristal · ${count} proposition${count > 1 ? 's' : ''} en attente` : 'Cristal inactif';
     if (stage.getAttribute('aria-label') !== label) stage.setAttribute('aria-label', label);
     widget.classList.toggle('is-available', available); widget.dataset.resolved = String(resolved);
     component.setInteractionEnabled(available && !state.paused);
-    closeButton.disabled = submitted;
-    if (state.paused && component.crystal.diagnostics.playing && !component.crystal.diagnostics.paused) {
+    closeButton.disabled = submitted || closing;
+    if (state.paused && !closing && component.crystal.diagnostics.playing && !component.crystal.diagnostics.paused) {
       pausedByMatch = component.crystal.pause();
     } else if (!state.paused && pausedByMatch) { pausedByMatch = false; component.crystal.resume(); }
     const remaining = Math.max(0, Math.ceil((current?.nextAt || 0) - state.elapsed));
@@ -282,6 +295,9 @@
       inventoryContent.replaceChildren(E.MythologyUI.createInventory(state, stock, arm, activeTargetId));
     }
     updateTargetHints();
+    // Le renfort est ajouté au stock immédiatement. Seule la paire affichée
+    // est conservée jusqu’à la fin de l’animation.
+    if (closeAfterSelection && !closing) retractOffer();
   }
   const battlefield = document.querySelector('#battlefield');
   battlefield.addEventListener('click', event => {

@@ -279,7 +279,10 @@
     buySpecialAnimal(type, residentId) {
       const { playerId, lane } = state.selectedVillage;
       const purchase = E.Animals.buy(state, playerId, lane, type, residentId);
-      if (purchase) addLog(`${E.Config.specialAnimals[type].label} acheté au village ${lane + 1}${type === "ane" ? ` pour ${E.Economy.getResident(state, playerId, lane, residentId).name}` : ""}.`);
+      if (purchase) {
+        const status = purchase.residentName ? ` · rejoint ${purchase.residentName}` : " · en attente à la base";
+        addLog(`${purchase.label} acheté au village ${lane + 1}${type === "ane" ? status : ""}.`);
+      }
       E.UI.render(state);
       return purchase;
     },

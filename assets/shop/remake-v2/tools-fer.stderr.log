@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of medieval iron implements displayed in a compact crossed arrangement: one straight short steel sword pointing upward and one curved forged iron harvesting sickle. Forged steel with polished cutting edges, subtle hammer marks, worn dark leather grips, restrained bronze guard fittings. Entire blades and grips visible. No hands, no rack, no wall.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4000
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created 4e0a0f23-5138-4d4d-abcc-8fda802a9072 (@shop-v2-tools-fer)
+text_to_model · queued
+text_to_model · running 7% · 4e0a0f23
+text_to_model · running 12% · 4e0a0f23
+text_to_model · running 21% · 4e0a0f23
+text_to_model · running 31% · 4e0a0f23
+text_to_model · success 100% · 4e0a0f23
+✓ text_to_model · 4e0a0f23-5138-4d4d-abcc-8fda802a9072 · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-tools-fer-4e0a0f23

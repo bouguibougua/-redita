@@ -1,0 +1,30 @@
+{
+  "task_id": "0838613e-2314-4f57-87b9-65da3d9d67cb",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval forged iron breastplate, front facing, curved anatomical chest and tapered waist, layered steel fauld at bottom, modest shoulder straps, small bronze rivets and dark leather fastenings. Silvery grey hammered iron with realistic soft reflections and worn edges, no fantasy ornament. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+    "delight": false,
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 5000,
+    "model_version": "P1-20260311",
+    "texture_version": "v3.5-20260815",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T22:33:56.956365Z",
+  "completed_at": "2026-11-17T22:34:31.174292Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

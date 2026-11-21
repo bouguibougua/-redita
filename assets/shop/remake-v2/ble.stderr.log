@@ -1,0 +1,21 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket filled with golden harvested wheat ears in small upright tied sheaves. Finely defined wheat grains and awns, dry stems, natural jute ties, detailed wicker weave and thick rim. Compact coherent arrangement, no other produce. View slightly from above so contents and front basket are visible.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4500
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created c0742546-ebcc-48f2-a3c6-7e5d17e0a594 (@shop-v2-ble)
+text_to_model · queued
+text_to_model · running 12% · c0742546
+text_to_model · running 23% · c0742546
+text_to_model · running 36% · c0742546
+text_to_model · running 56% · c0742546
+text_to_model · running 86% · c0742546
+text_to_model · success 100% · c0742546
+✓ text_to_model · c0742546-ebcc-48f2-a3c6-7e5d17e0a594 · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-ble-c0742546

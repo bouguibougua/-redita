@@ -179,7 +179,7 @@ for (const mission of Object.keys(professions)) {
   pig.reproductionProgress = 11;
   const originalAnimals = E.Animals;
   try {
-    E.Animals = { harassment: (currentState, targetVillage, slotIndex) => {
+    E.Animals = { ...originalAnimals, harassment: (currentState, targetVillage, slotIndex) => {
       assert.equal(currentState, state);
       assert.equal(targetVillage, village);
       return { stacks: slotIndex === 0 ? 4 : 1, penalty: slotIndex === 0 ? 0.28 : 0.05 };

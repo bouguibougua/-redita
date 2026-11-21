@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker fish basket holding four whole fresh Mediterranean silver fish, overlapping naturally. Clearly defined scales, fins, tails, dark eyes, cool grey blue backs and pale bellies. Detailed woven wicker and thick rim, no ice or modern packaging. View slightly from above so contents and front basket are visible.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4500
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created 99d6aa30-de02-46b8-b328-adcead25b44c (@shop-v2-poisson)
+text_to_model · queued
+text_to_model · running 14% · 99d6aa30
+text_to_model · running 24% · 99d6aa30
+text_to_model · running 40% · 99d6aa30
+text_to_model · running 63% · 99d6aa30
+text_to_model · success 100% · 99d6aa30
+✓ text_to_model · 99d6aa30-de02-46b8-b328-adcead25b44c · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-poisson-99d6aa30

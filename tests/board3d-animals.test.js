@@ -52,7 +52,7 @@ async function run() {
   const resident = { id: 1, profession: "agriculteur", mission: "disponible", donkey: false, unitId: null };
   const dog = { id: 1, type: "chien", mission: "disponible", hp: 40, unitId: null };
   const boar = { id: 2, type: "sanglier", mission: "disponible", hp: 80, unitId: null };
-  const village = { ownerId: "red", lane: 0, biome: "littoral", residents: [resident], animals: [dog, boar] };
+  const village = { id: "red-0", ownerId: "red", lane: 0, biome: "littoral", residents: [resident], animals: [dog, boar] };
   const state = { units: [], players: { red: { id: "red", villages: [village] } } };
   renderer.updateUnits(state);
   assert.equal(renderer.models.size, 3, "Les animaux disponibles apparaissent au village avec les habitants.");
@@ -60,10 +60,20 @@ async function run() {
   assert.equal(renderer.models.get("animal-red-2").userData.animalType, "sanglier");
 
   const withoutDonkey = renderer.models.get("resident-red-1");
+  village.waitingDonkeys = 1;
+  renderer.updateUnits(state);
+  const waitingDonkey = renderer.models.get("waiting-donkey-red-0-0");
+  assert.equal(waitingDonkey.userData.animalType, "ane");
+  assert.equal(waitingDonkey.userData.mapTarget, undefined);
+  const { front, back, regionCenter } = context.window.Eredita.Config.villagePresentation;
+  assert.ok(waitingDonkey.position.z >= back - regionCenter && waitingDonkey.position.z <= front - regionCenter);
+
+  village.waitingDonkeys = 0;
   resident.donkey = true;
   renderer.updateUnits(state);
   const withDonkey = renderer.models.get("resident-red-1");
-  assert.notEqual(withDonkey, withoutDonkey, "Acheter l'âne renouvelle immédiatement l'apparence.");
+  assert.notEqual(withDonkey, withoutDonkey, "L'attribution renouvelle immédiatement l'apparence.");
+  assert.equal(waitingDonkey.parent, null, "L'âne quitte la réserve du village dès son attribution.");
   assert.ok(withDonkey.getObjectByName("animal-ane"));
   assert.equal(renderer.models.size, 3, "L'âne accompagne une personne sans créer une unité indépendante.");
   resident.mission = "agriculture";

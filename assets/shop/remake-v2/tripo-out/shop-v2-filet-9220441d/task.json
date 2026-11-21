@@ -1,0 +1,30 @@
+{
+  "task_id": "9220441d-2e4a-4391-93a8-c7ee17517e84",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single traditional handmade hemp fishing net hanging vertically in a roughly rectangular shape, sagging naturally between two upper rope loops. Clearly OPEN diamond mesh holes, individual twisted beige rope strands and knotted intersections. Small aged cork floats across top and a few stone sinkers along bottom. Threaded rope border, weathered natural fibers. No fish, no wall, no frame, no fabric sheet, no opaque backing.",
+    "delight": false,
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 5000,
+    "model_version": "P1-20260311",
+    "texture_version": "v3.5-20260815",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T22:33:57.961181Z",
+  "completed_at": "2026-11-17T22:34:35.422736Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

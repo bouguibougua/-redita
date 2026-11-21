@@ -1,0 +1,21 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of ancient bronze implements displayed in a compact crossed arrangement: one leaf-shaped short bronze sword pointing upward and one curved bronze harvesting sickle. Aged warm bronze with subtle patina, sharpened edges, leather-wrapped wood handles. Entire blades and grips visible. No hands, no rack, no wall.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4000
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created 4b6bb8e8-531a-45c9-b91e-a70a71fb7516 (@shop-v2-tools-bronze)
+text_to_model · queued
+text_to_model · running 7% · 4b6bb8e8
+text_to_model · running 12% · 4b6bb8e8
+text_to_model · running 20% · 4b6bb8e8
+text_to_model · running 30% · 4b6bb8e8
+text_to_model · running 46% · 4b6bb8e8
+text_to_model · success 100% · 4b6bb8e8
+✓ text_to_model · 4b6bb8e8-531a-45c9-b91e-a70a71fb7516 · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-tools-bronze-4b6bb8e8

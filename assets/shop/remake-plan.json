@@ -1,0 +1,1136 @@
+{
+  "model": "tripo-p1",
+  "wireModel": "P1-20260311",
+  "balanceBefore": 840,
+  "estimatedTotal": 800,
+  "status": "generated-and-integrated",
+  "preserve": [
+    "assets/models/shop/donkey.glb",
+    "assets/models/barque.glb"
+  ],
+  "jobs": [
+    {
+      "id": "chien",
+      "label": "Chien",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican shepherd dog, short dark brindle brown fur with warm tan legs and muzzle, alert ears, calm standing pose, four distinct legs and paws, simple worn leather collar. Full body, no leash, no human. Facing forward with head slightly turned.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/chien.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican shepherd dog, short dark brindle brown fur with warm tan legs and muzzle, alert ears, calm standing pose, four distinct legs and paws, simple worn leather collar. Full body, no leash, no human. Facing forward with head slightly turned.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-chien",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican shepherd dog, short dark brindle brown fur with warm tan legs and muzzle, alert ears, calm standing pose, four distinct legs and paws, simple worn leather collar. Full body, no leash, no human. Facing forward with head slightly turned.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican shepherd dog, short dark brindle brown fur with warm tan legs and muzzle, alert ears, calm standing pose, four distinct legs and paws, simple worn leather collar. Full body, no leash, no human. Facing forward with head slightly turned.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "sanglier",
+      "label": "Tête de sanglier murale",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. ONLY a mounted wild boar HEAD, frontal wall trophy. Coarse dark brown bristly fur, alert short ears, anatomically convincing dark snout, small curved ivory tusks. Short closed neck attached to a simple small oval dark chestnut wood wall plaque. The head faces straight forward and projects from the plaque. NO BODY, NO LEGS, NO FLOOR STAND. Entire trophy including both ears and tusks visible.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/sanglier.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. ONLY a mounted wild boar HEAD, frontal wall trophy. Coarse dark brown bristly fur, alert short ears, anatomically convincing dark snout, small curved ivory tusks. Short closed neck attached to a simple small oval dark chestnut wood wall plaque. The head faces straight forward and projects from the plaque. NO BODY, NO LEGS, NO FLOOR STAND. Entire trophy including both ears and tusks visible.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-sanglier",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. ONLY a mounted wild boar HEAD, frontal wall trophy. Coarse dark brown bristly fur, alert short ears, anatomically convincing dark snout, small curved ivory tusks. Short closed neck attached to a simple small oval dark chestnut wood wall plaque. The head faces straight forward and projects from the plaque. NO BODY, NO LEGS, NO FLOOR STAND. Entire trophy including both ears and tusks visible.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. ONLY a mounted wild boar HEAD, frontal wall trophy. Coarse dark brown bristly fur, alert short ears, anatomically convincing dark snout, small curved ivory tusks. Short closed neck attached to a simple small oval dark chestnut wood wall plaque. The head faces straight forward and projects from the plaque. NO BODY, NO LEGS, NO FLOOR STAND. Entire trophy including both ears and tusks visible.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "vache",
+      "label": "Vache",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican cow, natural small hardy cattle proportions, warm chestnut brown coat, cream muzzle, small curved horns, subtle udder, four separate hooves, calm standing pose. Full body, no fence, no vegetation. Three quarter pose with head turned toward viewer.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/vache.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican cow, natural small hardy cattle proportions, warm chestnut brown coat, cream muzzle, small curved horns, subtle udder, four separate hooves, calm standing pose. Full body, no fence, no vegetation. Three quarter pose with head turned toward viewer.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-vache",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican cow, natural small hardy cattle proportions, warm chestnut brown coat, cream muzzle, small curved horns, subtle udder, four separate hooves, calm standing pose. Full body, no fence, no vegetation. Three quarter pose with head turned toward viewer.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican cow, natural small hardy cattle proportions, warm chestnut brown coat, cream muzzle, small curved horns, subtle udder, four separate hooves, calm standing pose. Full body, no fence, no vegetation. Three quarter pose with head turned toward viewer.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "chevre",
+      "label": "Chèvre",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican goat, warm ivory and light brown coat, fine short fur, realistic backward curved horns, beard, long ears, slender body and four distinct hooves. Calm standing full body pose with head looking forward. No fence, no vegetation.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/chevre.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican goat, warm ivory and light brown coat, fine short fur, realistic backward curved horns, beard, long ears, slender body and four distinct hooves. Calm standing full body pose with head looking forward. No fence, no vegetation.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-chevre",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican goat, warm ivory and light brown coat, fine short fur, realistic backward curved horns, beard, long ears, slender body and four distinct hooves. Calm standing full body pose with head looking forward. No fence, no vegetation.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican goat, warm ivory and light brown coat, fine short fur, realistic backward curved horns, beard, long ears, slender body and four distinct hooves. Calm standing full body pose with head looking forward. No fence, no vegetation.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "cochon",
+      "label": "Cochon",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single Corsican domestic pig, dusky reddish brown and warm pink bristled skin, small floppy ears, natural snout, curled tail, stocky realistic body, four separate hooves. Calm standing full body pose, head slightly toward viewer. No fence, no vegetation.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/cochon.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single Corsican domestic pig, dusky reddish brown and warm pink bristled skin, small floppy ears, natural snout, curled tail, stocky realistic body, four separate hooves. Calm standing full body pose, head slightly toward viewer. No fence, no vegetation.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-cochon",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single Corsican domestic pig, dusky reddish brown and warm pink bristled skin, small floppy ears, natural snout, curled tail, stocky realistic body, four separate hooves. Calm standing full body pose, head slightly toward viewer. No fence, no vegetation.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single Corsican domestic pig, dusky reddish brown and warm pink bristled skin, small floppy ears, natural snout, curled tail, stocky realistic body, four separate hooves. Calm standing full body pose, head slightly toward viewer. No fence, no vegetation.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "tools-bois",
+      "label": "Armes et outils en pierre",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of primitive stone tools displayed in a compact crossed arrangement: one flint stone axe on a weathered chestnut wood handle and one small harvesting sickle with chipped flint blade and wood grip. Dark grey flint facets, rawhide bindings with visible knots, rough wood grain. Two complete tools, no hands, no rack, no wall.",
+      "faces": 4000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/tools-bois.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of primitive stone tools displayed in a compact crossed arrangement: one flint stone axe on a weathered chestnut wood handle and one small harvesting sickle with chipped flint blade and wood grip. Dark grey flint facets, rawhide bindings with visible knots, rough wood grain. Two complete tools, no hands, no rack, no wall.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-tools-bois",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of primitive stone tools displayed in a compact crossed arrangement: one flint stone axe on a weathered chestnut wood handle and one small harvesting sickle with chipped flint blade and wood grip. Dark grey flint facets, rawhide bindings with visible knots, rough wood grain. Two complete tools, no hands, no rack, no wall.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of primitive stone tools displayed in a compact crossed arrangement: one flint stone axe on a weathered chestnut wood handle and one small harvesting sickle with chipped flint blade and wood grip. Dark grey flint facets, rawhide bindings with visible knots, rough wood grain. Two complete tools, no hands, no rack, no wall.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "tools-bronze",
+      "label": "Armes et outils en bronze",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of ancient bronze implements displayed in a compact crossed arrangement: one leaf-shaped short bronze sword pointing upward and one curved bronze harvesting sickle. Aged warm bronze with subtle patina, sharpened edges, leather-wrapped wood handles. Entire blades and grips visible. No hands, no rack, no wall.",
+      "faces": 4000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/tools-bronze.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of ancient bronze implements displayed in a compact crossed arrangement: one leaf-shaped short bronze sword pointing upward and one curved bronze harvesting sickle. Aged warm bronze with subtle patina, sharpened edges, leather-wrapped wood handles. Entire blades and grips visible. No hands, no rack, no wall.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-tools-bronze",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of ancient bronze implements displayed in a compact crossed arrangement: one leaf-shaped short bronze sword pointing upward and one curved bronze harvesting sickle. Aged warm bronze with subtle patina, sharpened edges, leather-wrapped wood handles. Entire blades and grips visible. No hands, no rack, no wall.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of ancient bronze implements displayed in a compact crossed arrangement: one leaf-shaped short bronze sword pointing upward and one curved bronze harvesting sickle. Aged warm bronze with subtle patina, sharpened edges, leather-wrapped wood handles. Entire blades and grips visible. No hands, no rack, no wall.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "tools-fer",
+      "label": "Armes et outils en fer",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of medieval iron implements displayed in a compact crossed arrangement: one straight short steel sword pointing upward and one curved forged iron harvesting sickle. Forged steel with polished cutting edges, subtle hammer marks, worn dark leather grips, restrained bronze guard fittings. Entire blades and grips visible. No hands, no rack, no wall.",
+      "faces": 4000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/tools-fer.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of medieval iron implements displayed in a compact crossed arrangement: one straight short steel sword pointing upward and one curved forged iron harvesting sickle. Forged steel with polished cutting edges, subtle hammer marks, worn dark leather grips, restrained bronze guard fittings. Entire blades and grips visible. No hands, no rack, no wall.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-tools-fer",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of medieval iron implements displayed in a compact crossed arrangement: one straight short steel sword pointing upward and one curved forged iron harvesting sickle. Forged steel with polished cutting edges, subtle hammer marks, worn dark leather grips, restrained bronze guard fittings. Entire blades and grips visible. No hands, no rack, no wall.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of medieval iron implements displayed in a compact crossed arrangement: one straight short steel sword pointing upward and one curved forged iron harvesting sickle. Forged steel with polished cutting edges, subtle hammer marks, worn dark leather grips, restrained bronze guard fittings. Entire blades and grips visible. No hands, no rack, no wall.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "armors-cuir",
+      "label": "Armure de cuir",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval brown leather cuirass, front facing, believable torso shape with shoulder straps, curved chest, cinched waist, layered lower flaps, stitched seams and modest bronze rivets and buckle. Rich worn chestnut leather grain, natural edge wear. Hollow neck and arm openings. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/armors-cuir.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval brown leather cuirass, front facing, believable torso shape with shoulder straps, curved chest, cinched waist, layered lower flaps, stitched seams and modest bronze rivets and buckle. Rich worn chestnut leather grain, natural edge wear. Hollow neck and arm openings. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-armors-cuir",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval brown leather cuirass, front facing, believable torso shape with shoulder straps, curved chest, cinched waist, layered lower flaps, stitched seams and modest bronze rivets and buckle. Rich worn chestnut leather grain, natural edge wear. Hollow neck and arm openings. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval brown leather cuirass, front facing, believable torso shape with shoulder straps, curved chest, cinched waist, layered lower flaps, stitched seams and modest bronze rivets and buckle. Rich worn chestnut leather grain, natural edge wear. Hollow neck and arm openings. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "armors-maille",
+      "label": "Cotte de mailles",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval chainmail shirt front facing, short sleeves, round hollow neck, naturally draped shoulder and torso silhouette, realistic finely interlinked iron rings, slightly darkened steel with brighter worn edges, plain leather belt at waist. Clearly visible knitted ring structure, not fabric. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/armors-maille.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval chainmail shirt front facing, short sleeves, round hollow neck, naturally draped shoulder and torso silhouette, realistic finely interlinked iron rings, slightly darkened steel with brighter worn edges, plain leather belt at waist. Clearly visible knitted ring structure, not fabric. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-armors-maille",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval chainmail shirt front facing, short sleeves, round hollow neck, naturally draped shoulder and torso silhouette, realistic finely interlinked iron rings, slightly darkened steel with brighter worn edges, plain leather belt at waist. Clearly visible knitted ring structure, not fabric. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval chainmail shirt front facing, short sleeves, round hollow neck, naturally draped shoulder and torso silhouette, realistic finely interlinked iron rings, slightly darkened steel with brighter worn edges, plain leather belt at waist. Clearly visible knitted ring structure, not fabric. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "armors-fer",
+      "label": "Armure de fer",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval forged iron breastplate, front facing, curved anatomical chest and tapered waist, layered steel fauld at bottom, modest shoulder straps, small bronze rivets and dark leather fastenings. Silvery grey hammered iron with realistic soft reflections and worn edges, no fantasy ornament. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/armors-fer.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval forged iron breastplate, front facing, curved anatomical chest and tapered waist, layered steel fauld at bottom, modest shoulder straps, small bronze rivets and dark leather fastenings. Silvery grey hammered iron with realistic soft reflections and worn edges, no fantasy ornament. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-armors-fer",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval forged iron breastplate, front facing, curved anatomical chest and tapered waist, layered steel fauld at bottom, modest shoulder straps, small bronze rivets and dark leather fastenings. Silvery grey hammered iron with realistic soft reflections and worn edges, no fantasy ornament. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single empty medieval forged iron breastplate, front facing, curved anatomical chest and tapered waist, layered steel fauld at bottom, modest shoulder straps, small bronze rivets and dark leather fastenings. Silvery grey hammered iron with realistic soft reflections and worn edges, no fantasy ornament. NO PERSON, NO MANNEQUIN, NO HELMET, NO WEAPON, NO STAND.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "filet",
+      "label": "Filet de pêche",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single traditional handmade hemp fishing net hanging vertically in a roughly rectangular shape, sagging naturally between two upper rope loops. Clearly OPEN diamond mesh holes, individual twisted beige rope strands and knotted intersections. Small aged cork floats across top and a few stone sinkers along bottom. Threaded rope border, weathered natural fibers. No fish, no wall, no frame, no fabric sheet, no opaque backing.",
+      "faces": 5000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/filet.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single traditional handmade hemp fishing net hanging vertically in a roughly rectangular shape, sagging naturally between two upper rope loops. Clearly OPEN diamond mesh holes, individual twisted beige rope strands and knotted intersections. Small aged cork floats across top and a few stone sinkers along bottom. Threaded rope border, weathered natural fibers. No fish, no wall, no frame, no fabric sheet, no opaque backing.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=5000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-filet",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single traditional handmade hemp fishing net hanging vertically in a roughly rectangular shape, sagging naturally between two upper rope loops. Clearly OPEN diamond mesh holes, individual twisted beige rope strands and knotted intersections. Small aged cork floats across top and a few stone sinkers along bottom. Threaded rope border, weathered natural fibers. No fish, no wall, no frame, no fabric sheet, no opaque backing.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single traditional handmade hemp fishing net hanging vertically in a roughly rectangular shape, sagging naturally between two upper rope loops. Clearly OPEN diamond mesh holes, individual twisted beige rope strands and knotted intersections. Small aged cork floats across top and a few stone sinkers along bottom. Threaded rope border, weathered natural fibers. No fish, no wall, no frame, no fabric sheet, no opaque backing.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 5000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "piege-chasse",
+      "label": "Piège de chasse",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A small rustic medieval wooden live-capture cage trap, rectangular chestnut wood cage with thin round bars, open square entrance, raised sliding wooden door, simple trigger stick and rope mechanism. Aged wood grain and small iron fasteners, clearly hollow interior. Three quarter front view. Empty trap, no animal, no bait, no ground.",
+      "faces": 4000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/piege-chasse.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A small rustic medieval wooden live-capture cage trap, rectangular chestnut wood cage with thin round bars, open square entrance, raised sliding wooden door, simple trigger stick and rope mechanism. Aged wood grain and small iron fasteners, clearly hollow interior. Three quarter front view. Empty trap, no animal, no bait, no ground.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-piege-chasse",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A small rustic medieval wooden live-capture cage trap, rectangular chestnut wood cage with thin round bars, open square entrance, raised sliding wooden door, simple trigger stick and rope mechanism. Aged wood grain and small iron fasteners, clearly hollow interior. Three quarter front view. Empty trap, no animal, no bait, no ground.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A small rustic medieval wooden live-capture cage trap, rectangular chestnut wood cage with thin round bars, open square entrance, raised sliding wooden door, simple trigger stick and rope mechanism. Aged wood grain and small iron fasteners, clearly hollow interior. Three quarter front view. Empty trap, no animal, no bait, no ground.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "piege-defense",
+      "label": "Piège défensif",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single medieval forged iron spring jaw trap, OPEN position, two semicircular toothed jaws held apart, circular trigger plate in center, visible leaf spring and short attached chain. Weathered dark iron with brighter worn edges, mechanically believable. Three quarter view from above, no blood, no animal, no ground.",
+      "faces": 4000,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/piege-defense.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single medieval forged iron spring jaw trap, OPEN position, two semicircular toothed jaws held apart, circular trigger plate in center, visible leaf spring and short attached chain. Weathered dark iron with brighter worn edges, mechanically believable. Three quarter view from above, no blood, no animal, no ground.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4000",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-piege-defense",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single medieval forged iron spring jaw trap, OPEN position, two semicircular toothed jaws held apart, circular trigger plate in center, visible leaf spring and short attached chain. Weathered dark iron with brighter worn edges, mechanically believable. Three quarter view from above, no blood, no animal, no ground.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single medieval forged iron spring jaw trap, OPEN position, two semicircular toothed jaws held apart, circular trigger plate in center, visible leaf spring and short attached chain. Weathered dark iron with brighter worn edges, mechanically believable. Three quarter view from above, no blood, no animal, no ground.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4000
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "ble",
+      "label": "Panier de blé",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket filled with golden harvested wheat ears in small upright tied sheaves. Finely defined wheat grains and awns, dry stems, natural jute ties, detailed wicker weave and thick rim. Compact coherent arrangement, no other produce. View slightly from above so contents and front basket are visible.",
+      "faces": 4500,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/ble.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket filled with golden harvested wheat ears in small upright tied sheaves. Finely defined wheat grains and awns, dry stems, natural jute ties, detailed wicker weave and thick rim. Compact coherent arrangement, no other produce. View slightly from above so contents and front basket are visible.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4500",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-ble",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket filled with golden harvested wheat ears in small upright tied sheaves. Finely defined wheat grains and awns, dry stems, natural jute ties, detailed wicker weave and thick rim. Compact coherent arrangement, no other produce. View slightly from above so contents and front basket are visible.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket filled with golden harvested wheat ears in small upright tied sheaves. Finely defined wheat grains and awns, dry stems, natural jute ties, detailed wicker weave and thick rim. Compact coherent arrangement, no other produce. View slightly from above so contents and front basket are visible.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4500
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "chataigne",
+      "label": "Panier de châtaignes",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of glossy reddish brown chestnuts, pale rough circular bases, realistic irregular rounded shapes and pointed tips. Two small green split spiny chestnut husks as accents. Detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+      "faces": 4500,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/chataigne.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of glossy reddish brown chestnuts, pale rough circular bases, realistic irregular rounded shapes and pointed tips. Two small green split spiny chestnut husks as accents. Detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4500",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-chataigne",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of glossy reddish brown chestnuts, pale rough circular bases, realistic irregular rounded shapes and pointed tips. Two small green split spiny chestnut husks as accents. Detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of glossy reddish brown chestnuts, pale rough circular bases, realistic irregular rounded shapes and pointed tips. Two small green split spiny chestnut husks as accents. Detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4500
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "raisin",
+      "label": "Panier de raisin",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of bunches of dark purple and dusky blue grapes, subtle dusty bloom, woody stems and two small muted green vine leaves. Natural grape clusters, detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+      "faces": 4500,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/raisin.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of bunches of dark purple and dusky blue grapes, subtle dusty bloom, woody stems and two small muted green vine leaves. Natural grape clusters, detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4500",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-raisin",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of bunches of dark purple and dusky blue grapes, subtle dusty bloom, woody stems and two small muted green vine leaves. Natural grape clusters, detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval handwoven wicker market basket full of bunches of dark purple and dusky blue grapes, subtle dusty bloom, woody stems and two small muted green vine leaves. Natural grape clusters, detailed wicker weave and thick rim. No other fruit. View slightly from above so contents and front basket are visible.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4500
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "viande",
+      "label": "Panier de viande",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket lined with unbleached linen, holding three natural cuts of raw red meat, subtle marbling, pale fat edges and one small pork chop bone. Believable butcher display, fresh muted red and ivory, no blood puddles or gore. Detailed wicker weave, folded linen rim. View slightly from above, no other produce.",
+      "faces": 4500,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/viande.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket lined with unbleached linen, holding three natural cuts of raw red meat, subtle marbling, pale fat edges and one small pork chop bone. Believable butcher display, fresh muted red and ivory, no blood puddles or gore. Detailed wicker weave, folded linen rim. View slightly from above, no other produce.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4500",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-viande",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket lined with unbleached linen, holding three natural cuts of raw red meat, subtle marbling, pale fat edges and one small pork chop bone. Believable butcher display, fresh muted red and ivory, no blood puddles or gore. Detailed wicker weave, folded linen rim. View slightly from above, no other produce.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket lined with unbleached linen, holding three natural cuts of raw red meat, subtle marbling, pale fat edges and one small pork chop bone. Believable butcher display, fresh muted red and ivory, no blood puddles or gore. Detailed wicker weave, folded linen rim. View slightly from above, no other produce.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4500
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "poisson",
+      "label": "Panier de poisson",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker fish basket holding four whole fresh Mediterranean silver fish, overlapping naturally. Clearly defined scales, fins, tails, dark eyes, cool grey blue backs and pale bellies. Detailed woven wicker and thick rim, no ice or modern packaging. View slightly from above so contents and front basket are visible.",
+      "faces": 4500,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/poisson.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker fish basket holding four whole fresh Mediterranean silver fish, overlapping naturally. Clearly defined scales, fins, tails, dark eyes, cool grey blue backs and pale bellies. Detailed woven wicker and thick rim, no ice or modern packaging. View slightly from above so contents and front basket are visible.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4500",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-poisson",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker fish basket holding four whole fresh Mediterranean silver fish, overlapping naturally. Clearly defined scales, fins, tails, dark eyes, cool grey blue backs and pale bellies. Detailed woven wicker and thick rim, no ice or modern packaging. View slightly from above so contents and front basket are visible.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker fish basket holding four whole fresh Mediterranean silver fish, overlapping naturally. Clearly defined scales, fins, tails, dark eyes, cool grey blue backs and pale bellies. Detailed woven wicker and thick rim, no ice or modern packaging. View slightly from above so contents and front basket are visible.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4500
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    },
+    {
+      "id": "lait",
+      "label": "Panier de lait",
+      "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket holding three rustic cream glazed ceramic milk jugs of slightly different sizes, rounded bellies, narrow necks, small spouts, curved handles and simple wooden stoppers. Subtle glaze crackle and worn clay feet, detailed wicker weave. No text or labels, no cartons, no glass bottles. View slightly from above so jugs and basket front are visible.",
+      "faces": 4500,
+      "estimatedCredits": 40,
+      "destination": "assets/models/shop/v2/lait.glb",
+      "command": [
+        "tripo",
+        "make",
+        "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket holding three rustic cream glazed ceramic milk jugs of slightly different sizes, rounded bellies, narrow necks, small spouts, curved handles and simple wooden stoppers. Subtle glaze crackle and worn clay feet, detailed wicker weave. No text or labels, no cartons, no glass bottles. View slightly from above so jugs and basket front are visible.",
+        "--model",
+        "tripo-p1",
+        "--for",
+        "toy",
+        "-p",
+        "face_limit=4500",
+        "-o",
+        "./assets/shop/remake-v2",
+        "--name",
+        "shop-v2-lait",
+        "--json",
+        "--yes"
+      ],
+      "dryRun": {
+        "dry_run": true,
+        "valid": true,
+        "input": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket holding three rustic cream glazed ceramic milk jugs of slightly different sizes, rounded bellies, narrow necks, small spouts, curved handles and simple wooden stoppers. Subtle glaze crackle and worn clay feet, detailed wicker weave. No text or labels, no cartons, no glass bottles. View slightly from above so jugs and basket front are visible.",
+        "scenario": "toy",
+        "model": "P1-20260311",
+        "model_reason": "explicit --model",
+        "steps": [
+          {
+            "name": "text-to-model",
+            "endpoint": "/v3/generation/text-to-model",
+            "task_type": "text_to_model",
+            "payload": {
+              "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket holding three rustic cream glazed ceramic milk jugs of slightly different sizes, rounded bellies, narrow necks, small spouts, curved handles and simple wooden stoppers. Subtle glaze crackle and worn clay feet, detailed wicker weave. No text or labels, no cartons, no glass bottles. View slightly from above so jugs and basket front are visible.",
+              "model": "P1-20260311",
+              "texture": true,
+              "pbr": true,
+              "face_limit": 4500
+            }
+          }
+        ],
+        "pending_uploads": [],
+        "deliverables": [
+          "GLB",
+          "STL via convert"
+        ],
+        "candidates": 1,
+        "warnings": [],
+        "errors": [],
+        "cost_notes": []
+      }
+    }
+  ],
+  "approvedCredits": 800,
+  "actualCredits": 800,
+  "balanceAfter": 40
+}

@@ -1,24 +1,28 @@
 # Boutique 3D immersive — suivi et analyse
 
-Date : 16 novembre 2026. Référence de départ : commit `1a433d2`.
+Dernière mise à jour : 18 novembre 2026. Référence de départ du 16 novembre : commit `1a433d2`.
 
 **Construction autorisée par le concepteur (« je te donne l’accord »), puis poursuivie à sa demande.**
-La scène PC, les objets indépendants, la pancarte Tripo, les interactions, la progression
+La scène PC, les objets indépendants, la pancarte VINDUTU, les interactions, la progression
 et les confirmations économiques sont implémentés. La réorganisation du panneau
 principal et l’intégration du même étal dans WebXR restent les lots suivants.
 
-## Livraison en cours — état du code
+## Livraison actuelle — état du code
 
-- `js/shop-scene.js` : caméra fixe, 22 articles distincts, décor en volume, matériaux
-  partagés, raycast respectant les occultations, contour de survol, verrouillage sombre,
-  vent/respiration/poussière sobres et mouvements réduits. La zone de sélection reste
-  stable pendant le petit soulèvement visuel d’un objet.
-- Barque et trois animaux issus des GLB existants ; âne/sanglier procéduraux réutilisés.
-  Les outils, armures, paniers et contenus sont de vrais maillages locaux. Le rendu reste
-  volontairement stylisé et plus simple que l’illustration de référence.
-- Pancarte Tripo `assets/models/shop/vindutu-sign.glb` : **1 494 triangles, 698 712 octets,
-  trois textures 512 × 512**. Inscription exacte VINDUTU ajoutée localement. Trace et
-  pancarte après épuisement ; emplacement et autres marchandises conservés.
+- `js/shop-scene.js` gère la caméra fixe, les 22 articles, le décor en volume,
+  les zones rectangulaires invisibles, les articles verrouillés et les mouvements réduits.
+  La zone de sélection est calculée à partir du modèle au repos. Si deux zones
+  se recouvrent, celle de l’article le plus proche de la caméra a la priorité.
+- Les modèles de la refonte sont dans `assets/models/shop/v2/`. Le fichier
+  `assets/models/shop/collier.glb` est la version optimisée du collier fourni
+  qui représente le chien. Le sanglier reste une tête murale.
+- La barque agrandie est placée plus bas devant la table inclinée de la
+  Boucherie. Les deux pièges sont plus grands et décalés à droite. Le cochon
+  est devant la vache. Les enseignes affichent Bergerie, Artisanal et Boucherie.
+- Au survol, l’article s’éclaire, grossit, avance et s’incline suivant le
+  pointeur, puis revient au repos. Les conditions d’achat s’appliquent.
+- Pancarte locale en bois avec inscription exacte VINDUTU. Usure diffuse et discrète
+  du support après épuisement ; emplacement et autres marchandises conservés.
 - Pierre → Bronze → Fer et Cuir → Mailles → Fer obligatoires, indépendants, prix/bonus
   conservés, héritage des habitants actuels/futurs et anciens états équipés préservés.
   `bois` reste une clé de compatibilité, affichée Pierre.
@@ -33,7 +37,7 @@ principal et l’intégration du même étal dans WebXR restent les lots suivant
   géométries fusionnées par matériau à l’intérieur des articles. Arrêt du rendu quand
   fermé ou en Gestion ; repli illustré si WebGL échoue. Aucune mesure matérielle Quest.
 
-### Coût Tripo réellement facturé
+### Coût du lot initial — historique
 
 | Étape | Tâche | Crédits |
 | --- | --- | ---: |
@@ -46,7 +50,8 @@ réussis avant génération. Métadonnées du coût dans
 `assets/shop/tripo-out/vindutu-sign-001e493d/task.json`.
 
 Les sections d’audit ci-dessous décrivent le point de départ du lot 1 ; elles sont
-conservées pour expliquer les choix. Le présent état et le tableau des lots priment.
+conservées pour expliquer les choix. La section finale « Refonte de tous les modèles
+et survol vidéo » décrit la dernière livraison et ses 800 crédits facturés.
 
 ## Demande et références examinées
 
@@ -84,7 +89,7 @@ Prix ci-dessous relevés dans `js/config.js`, avec les statuts provisoires déj�
 | Article | Prix en or | Condition et comportement actuels |
 | --- | ---: | --- |
 | Chèvre / cochon / vache | 50 / 65 / 90 | Bergerie T1 ; un animal par achat. Enclos vivant compatible choisi aléatoirement, sinon slot libre compatible. Achats répétables. |
-| Âne | 150 | Bergerie T2 ; habitant choisi, non engagé, n'ayant pas déjà un âne. Attaché à cet habitant, pas une unité à placer. |
+| Âne | 150 | Bergerie T2. Attribution automatique dans le village à un agriculteur puis à un berger disponible. L’âne attend à la base si personne ne peut le recevoir. |
 | Chien / sanglier | 120 / 180 | Bergerie T3 ; compagnons répétables conservés dans le village avant ordre. |
 | Outils bois / bronze / fer | 150 / 250 / 400 | Artisanat T1 / T2 / T3 ; +5 / +10 / +20 dégâts. Bois : +20 % vitesse de production ; bronze/fer : +30 % / +50 % rendement. |
 | Armures cuir / maille / fer | 150 / 250 / 400 | Artisanat T1 / T2 / T3 ; +15 / +35 / +50 PV. Filière indépendante des outils. |
@@ -282,3 +287,105 @@ Commande : `npm run test:shop` sur le code existant, avant toute modification de
 3. Fin du lot 10 : régression de ces nouveaux accès et vérification physique Quest 3.
 
 L’accord de construction est déjà reçu ; aucune nouvelle validation du lot 1 n’est requise.
+
+
+## Passe visuelle — 17 novembre 2026
+
+Demande actuelle : améliorer fortement les textures et le décor de la boutique,
+retirer le voilier, utiliser Tripo lorsque pertinent.
+
+### Réalisé
+
+- Nouveau module `js/shop-materials.js` : 7 familles PBR avec normales/rugosité,
+  textures partagées 512/1024 px, filtrage anisotrope. Cuir/lin/osier réutilisés du
+  projet ; bois/pierre/métal/terre cuite générés localement, sans dépendance ajoutée.
+- Maçonnerie irrégulière, présentoir central en châtaignier, bois orienté selon
+  les pièces, arêtes adoucies, tuiles canal, lanternes et rambardes cloutées.
+- Lin plissé et bordures, feuillage affiné, éclairage chaud, réflexion locale
+  pour les métaux ; géométrie de décor fusionnée par matériau.
+- Cuir grainé, armures cintrées, mailles affinées, collier cousu, paniers tressés,
+  blé plus fin, peau des fruits, écailles, veinures de viande et cruches de lait.
+- Nouveaux âne/sanglier Tripo indépendants, PBR 1024, 4 698/4 938 triangles.
+- Interface brun encre/lin/laiton, onglets sobres, ventes lisibles, contour clavier.
+- Voilier retiré du sélecteur, de la scène et du catalogue commun (Gestion/XR compris).
+  La barque reste disponible ; les anciens états et leur transport sont lisibles.
+- `GAME_DESIGN.md` synchronisé sur ce retrait du catalogue et la présentation.
+
+### Tripo — dépenses réelles
+
+1. `text_to_model` âne — `672760ed-f236-410c-9d7e-eeb4346ebe48` : **40 crédits**.
+2. `text_to_model` sanglier — `b8ef5922-5dc4-4265-b133-a6a1a30c568b` : **40 crédits**.
+
+**Total : 80 crédits ; solde après ces tâches : 840 crédits.**
+P1 (`P1-20260311`), une génération par animal, aucun nouvel essai ni conversion
+payante. Textures optimisées localement avec Blender. Détails dans
+`assets/models/shop/README.md`.
+
+### Vérifications et limites
+
+- `npm test` réussi, après adaptation de l’attendu du catalogue sans Voilier.
+- Test navigateur illustré réussi : achats souris/clavier, ventes, refus,
+  stocks locaux, Gestion sans Voilier et trois formats.
+- Tests 3D exécutés sur le navigateur local : import des modèles et textures,
+  pointage, achats, VINDUTU, villages, filets, ventes, temps réel et repli WebGL.
+- Pas de nouvelle validation physique Quest 3 ; le nouvel étal 3D reste la vue PC.
+- Les fonctionnalités des lots 7/9 listées plus haut ne font pas partie de cette
+  passe esthétique. Les prix, bonus et conditions d’achat ne changent pas.
+
+
+## Refonte de tous les modèles et survol vidéo — 17 novembre 2026
+
+### Demande du concepteur
+
+Refaire tous les modèles de la boutique sauf l’âne et la barque ; reproduire
+le survol de `IMG_9788.MOV`. Précision ultérieure : le sanglier doit être
+uniquement sa tête sur le mur. Budget Tripo de 800 crédits accepté explicitement.
+La vidéo est une référence visuelle, pas une source de règles de gameplay.
+
+### Réalisé
+
+- 20 nouveaux modèles PBR indépendants : chien, tête murale de sanglier, vache,
+  chèvre, cochon, trois paires d’armes/outils, trois armures, filet, deux pièges
+  et six paniers de ressources. Sources/GLB optimisés/reçus conservés.
+- L’âne et la barque sont identiques à leurs fichiers précédents (SHA-256 contrôlés).
+- Le modèle de secours du sanglier représente lui aussi une tête seule pendant
+  le chargement ou si le fichier GLB est indisponible.
+- Décor et pancartes reconstruits dans `js/shop-decor.js` : charpente chevillée,
+  moellons, trois présentoirs en retrait, couverture, toiles, comptoir, enclos,
+  étagères, lanternes et feuilles d’olivier. Pancarte VINDUTU locale, texte exact.
+- Survol dans `js/shop-hover.js` : agrandissement, déplacement en profondeur,
+  inclinaison X/Y selon le curseur, interpolation à l’entrée/sortie, contour
+  ivoire et doré à épaisseur constante en pixels. Aucun déplacement du décor.
+- Le pointeur est actualisé au sein du même objet. Le raycast neutralise
+  temporairement les transformations de survol pour éviter les cibles fuyantes.
+- Le survol concerne chaque article visible, y compris articles verrouillés
+  et pièges inactifs ; ils ne deviennent pas achetables. Les paniers réagissent
+  également depuis leurs boutons de vente et au clavier. Les objets vendus
+  ne peuvent plus être survolés. Le mode mouvements réduits conserve le contour.
+- Filet : retrait local du fond gris généré et reconstruction de vraies cordes
+  croisées avec des nœuds en volume, pour des mailles ouvertes. 7 762 triangles
+  après cette retouche, sans relance Tripo ni autre coût.
+
+### Coût
+
+**800 crédits réels : 20 générations × 40 crédits. Solde restant vérifié : 40.**
+Chaque tâche et son montant figurent dans `assets/models/shop/v2/README.md` et
+`BOUTIQUE_MODELES_PLAN.md`. Aucun crédit pour la reconstruction locale, le
+survol, l’optimisation des textures ou les tests.
+
+### Vérifications — 18 novembre 2026
+
+- `npm test` : réussi, simulation et transactions communes.
+- `npm run test:shop` : réussi, ventes, stocks, réseau, interface illustrée et 3D.
+- `npm run test:shop3d` : réussi après les dernières retouches ; import des 22
+  modèles, achat à la souris, VINDUTU, villages indépendants, filets, ventes,
+  refus, simulation continue, affichage mobile, réouverture et repli WebGL.
+- `npm run test:shop-hover` : réussi ; les 22 silhouettes, agrandissement,
+  profondeur, suivi du curseur, retour au repos, paniers, refus d’achat verrouillé,
+  décor fixe et mouvements réduits sont contrôlés. Une exécution a expiré sur
+  une commande CDP ; la relance complète a réussi.
+- Contrôle visuel des captures `eredita3D/previews/shop/boutique-3d.png`,
+  `boutique-hover-cuir.png`, `boutique-3d-vindutu.png` et des formats mobiles.
+  Empreintes de l’âne et de la barque vérifiées ; `git diff --check` réussi.
+- Les limites XR matérielles décrites plus haut restent applicables : aucune
+  validation physique Quest 3 n’a été faite dans cette passe.

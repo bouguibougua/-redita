@@ -17,8 +17,9 @@
   let onSelectVillage = null;
   let onFrame = null;
   let xrPreview = false;
-  let orbit = { angle: -Math.PI / 2, elevation: 0.88, distance: 18 };
-  let cameraFitKey = "", cameraFitDistance = 18;
+  // Rendu PC : paysage décoratif + caméra de stratégie ; rendu VR/MR : plateau d'origine.
+  let sun, hemi, lighting, post = null, strategyCamera, environment = null, environmentKey = "", environmentTimer = 0;
+  let renderMode = "strategy", hiddenSince = 0, unsubscribeQuality = null;
   let pointer = null;
   let dragged = false;
   let lastUnitUpdate = 0;
@@ -97,18 +98,20 @@
     const backdrop = typeof getComputedStyle === "function"
       ? getComputedStyle(document.documentElement).getPropertyValue("--surface-deep").trim() || "#100e0b" : "#100e0b";
     scene.background = new THREE.Color(backdrop);
-    camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+    const graphics = E.GraphicsSettings?.profile || E.Config.graphics.levels[E.Config.graphics.defaultLevel];
+    camera = new THREE.PerspectiveCamera(E.Config.strategyCamera.fov, 1, 0.1, 400);
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: graphics.antialias, powerPreference: "high-performance" });
     renderer.xr.enabled = true;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, graphics.pixelRatio));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.domElement.setAttribute("aria-label", "Carte");
     container.replaceChildren(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xffedcc, 0x26362b, 2.1));
-    const sun = new THREE.DirectionalLight(0xffe1aa, 2.8);
+    hemi = new THREE.HemisphereLight(0xffedcc, 0x26362b, 2.1);
+    scene.add(hemi);
+    sun = new THREE.DirectionalLight(0xffe1aa, 2.8);
     sun.position.set(-8, 14, -8);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -116,7 +119,7 @@
     sun.shadow.camera.right = 12;
     sun.shadow.camera.top = 12;
     sun.shadow.camera.bottom = -12;
-    scene.add(sun);
+    scene.add(sun, sun.target);
 
     world = new THREE.Group();
     terrainGroup = new THREE.Group();
@@ -125,10 +128,167 @@
     E.DiavuleEffects?.init(THREE, world);
     scene.add(world);
     addBoardBase();
+    lighting = E.LightingManager?.create(THREE, { renderer, scene, sun, hemi });
+    try { post = E.PostProcessing?.create(THREE, { renderer }) || null; } catch (error) { post = null; console.warn("Post-traitement indisponible", error); }
+    strategyCamera = E.StrategyCamera?.create(THREE, {
+      camera, domElement: renderer.domElement, isActive: () => enabled && !E.XR?.active && renderMode === "strategy",
+      getBounds: playableBounds, getHeight: (x, z) => environment?.heightAt(x, z) });
+    unsubscribeQuality = E.GraphicsSettings?.onChange(() => { applyQuality(); });
     bindControls();
+    applyRenderMode(true);
     new ResizeObserver(resize).observe(container);
     resize();
     renderer.setAnimationLoop(animate);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Présentation PC (paysage + caméra de stratégie) et plateau VR/MR
+  // ---------------------------------------------------------------------------
+  // Villages agrandis face au paysage en version PC : c'est le paysage qui est construit plus grand
+  // puis réduit d'autant (le plateau, les unités et toutes les coordonnées du jeu restent à l'échelle 1).
+  const presentationScale = () => renderMode === "strategy" ? (E.Config.environment3d.boardScale || 1) : 1;
+
+  // Régions en coordonnées de scène (celles du jeu) : relief, eau prolongée, caméra.
+  // `tile` : disposition du modèle de région (repères du décor, grille du sol), quand il est chargé ;
+  // `slots` : centres des emplacements (repère local de la tuile), que l'habillage PC laisse dégagés.
+  function regionLayout() {
+    const cfg = E.Config.environment3d, scale = terrainWidthScale(), spots = E.Config.villagePresentation;
+    if (!latestState) return [];
+    const regions = [];
+    for (const player of Object.values(latestState.players)) for (const village of player.villages) {
+      const red = village.ownerId === "red", cz = red ? -cfg.regionZ : cfg.regionZ;
+      const water = red ? { z0: cz + cfg.waterStart, z1: cz + cfg.waterEnd } : { z0: cz - cfg.waterEnd, z1: cz - cfg.waterStart };
+      const model = { plaine: E.PlainTerrain, montagne: E.MountainTerrain, littoral: E.CoastTerrain }[village.biome];
+      const tile = model?.ready ? model.layout?.(scale, village.ownerId) || null : null;
+      const slots = (village.slots.length === 2 ? spots.slotsTwo : spots.slotsFour).map(([x, z]) => [x * scale, z * (red ? 1 : -1)]);
+      regions.push({ cx: laneX(village.lane), cz, hw: cfg.tileHalfWidth * scale, hd: cfg.tileHalfDepth, biome: village.biome, owner: village.ownerId, lane: village.lane, water, tile, slots });
+    }
+    return regions;
+  }
+
+  // Zone jouable (les régions) : seule référence de la caméra, jamais le paysage décoratif.
+  function playableBounds() {
+    const cfg = E.Config.environment3d, half = cfg.tileHalfWidth * terrainWidthScale(), n = laneCount();
+    return { minX: laneX(0) - half, maxX: laneX(n - 1) + half, minZ: -cfg.regionZ - cfg.tileHalfDepth, maxZ: cfg.regionZ + cfg.tileHalfDepth };
+  }
+
+  // Le paysage couvre tout ce que la caméra peut voir au dézoom maximal, déplacements compris
+  // (rayon en unités de scène ; bornes exprimées en unités du paysage, avant sa réduction).
+  function environmentExtent(profile) {
+    const cam = E.Config.strategyCamera, k = presentationScale();
+    const farthest = strategyCamera.fitDistance(Math.max(camera.aspect, 2.2)) * cam.zoomMax;
+    return Math.min(125, Math.max(44, (farthest * 1.1 * profile.viewScale + cam.panMargin) * k + 8)) / k;
+  }
+
+  function environmentSignature() {
+    // Les modèles de région chargés après coup déclenchent une reconstruction (habillage des régions).
+    return `${E.GraphicsSettings?.level}|${presentationScale()}|${laneCount()}|${regionLayout().map((r) => `${r.owner[0]}${r.lane}${r.biome[0]}${r.tile ? "t" : ""}${r.slots.length}`).join("")}`;
+  }
+
+  function buildEnvironment() {
+    environmentTimer = 0;
+    if (!ready || !latestState || renderMode !== "strategy" || !E.Environment) return;
+    const key = environmentSignature();
+    if (environment && key === environmentKey) return;
+    // L'ancien paysage reste en mémoire (masqué) jusqu'au premier rendu du nouveau : ses matériaux
+    // gardent les programmes de shaders, que le nouveau réutilise au lieu de tout recompiler.
+    clearTimeout(environmentTimer); environmentTimer = 0;
+    retireEnvironment(environment); environment = null; environmentKey = "";
+    const profile = E.GraphicsSettings.profile, regions = regionLayout();
+    const seed = `${E.Config.environment3d.baseSeed}:${laneCount()}:${regions.map((r) => `${r.owner[0]}${r.lane}${r.biome[0]}`).join("")}`;
+    try {
+      const models = E.EnvironmentModels?.ready || null;
+      environment = E.Environment.create(THREE, { renderer, scene, regions, seed, profile, extent: environmentExtent(profile), models,
+        presentationScale: presentationScale() });
+      environment.group.visible = true; scene.add(environment.group); environmentKey = key;
+      applyTerrainVisibility(); // décor et eau des modèles de région remplacés là où le paysage les habille
+      if (!models && E.EnvironmentModels) {
+        const built = environment;
+        E.EnvironmentModels.load(THREE).then((loaded) => { if (environment === built) built.setModels(loaded); });
+      }
+    } catch (error) {
+      environment = null; environmentKey = ""; console.error("Environnement 3D indisponible", error);
+      flushRetiredEnvironment(); applyTerrainVisibility();
+    }
+  }
+
+  let retiredEnvironment = null;
+  function retireEnvironment(previous) {
+    if (!previous) return;
+    if (retiredEnvironment && retiredEnvironment !== previous) retiredEnvironment.dispose();
+    previous.group.visible = false; retiredEnvironment = previous;
+  }
+  function flushRetiredEnvironment() {
+    if (retiredEnvironment) { retiredEnvironment.dispose(); retiredEnvironment = null; }
+  }
+
+  function syncEnvironment() {
+    if (renderMode !== "strategy" || !ready || !latestState || environmentTimer) return;
+    if (environment && environmentSignature() === environmentKey) return;
+    // Première construction immédiate ; les changements de biomes en préparation sont regroupés.
+    if (!environment) buildEnvironment(); else environmentTimer = setTimeout(buildEnvironment, 250);
+  }
+
+  function releaseEnvironment() {
+    clearTimeout(environmentTimer); environmentTimer = 0;
+    flushRetiredEnvironment();
+    if (environment) { environment.dispose(); environment = null; environmentKey = ""; applyTerrainVisibility(); }
+  }
+
+  // Version PC : socle masqué, sol détaillé, et décor/eau des modèles de région remplacés par
+  // l'habillage du paysage quand il existe pour la région. VR/MR : modèles d'origine intacts.
+  function applyTerrainVisibility() {
+    const strategy = renderMode === "strategy";
+    terrainGroup?.children.forEach((region) => {
+      const { playerId, lane } = region.userData;
+      const dressing = strategy ? environment?.regionDressing?.(playerId, lane) || null : null;
+      const village = latestState?.players?.[playerId]?.villages?.[lane];
+      if (strategy && village) environment?.setRegionBurned?.(playerId, lane, village.burnUntil > latestState.elapsed);
+      region.traverse((item) => {
+        const role = item.userData.terrainRole;
+        if (role === "base" || item.userData.boardOnly) item.visible = !strategy;
+        if (item.userData.strategyOnly) item.visible = strategy;
+        if (item.userData.strategyMaterial) item.material = strategy ? item.userData.strategyMaterial : item.userData.boardMaterial;
+        if (role === "decoration" || role === "rock") item.visible = (item.userData.baseVisible ?? true) && !dressing?.decor;
+        if (role === "water") item.visible = !dressing?.water;
+      });
+    });
+    baseMeshes.forEach((item) => { item.visible = !strategy; });
+  }
+
+  function applyRenderMode(force = false) {
+    const next = E.XR?.active ? "board" : "strategy";
+    if (!force && next === renderMode) return;
+    renderMode = next;
+    const profile = E.GraphicsSettings?.profile;
+    if (next === "strategy") {
+      lighting?.applyStrategy(profile, { post: Boolean(post) });
+      renderer?.setPixelRatio(Math.min(devicePixelRatio || 1, profile.pixelRatio));
+    } else lighting?.applyBoard();
+    applyTerrainVisibility();
+    if (environment) environment.group.visible = next === "strategy";
+    if (next === "strategy") syncEnvironment();
+    container && resize();
+  }
+
+  function applyQuality() {
+    if (!renderer || renderMode !== "strategy") return;
+    const profile = E.GraphicsSettings.profile;
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, profile.pixelRatio));
+    lighting?.applyStrategy(profile, { post: Boolean(post) });
+    resize(); syncEnvironment();
+  }
+
+  function regionCenter(playerId, lane) {
+    return regionLayout().find((r) => r.owner === playerId && r.lane === lane) || null;
+  }
+
+  // Double-clic sur un village : la caméra se centre dessus sans changer d'angle.
+  function focusVillage(playerId, lane) {
+    const region = regionCenter(playerId, lane);
+    if (!region || !strategyCamera) return false;
+    strategyCamera.centerOn(region.cx, region.cz, Math.min(strategyCamera.desiredZoom, 0.62));
+    return true;
   }
 
   function material(color, roughness = 0.82, metalness = 0) {
@@ -167,8 +327,9 @@
     group.add(tile);
 
     const border = mesh(new THREE.BoxGeometry(2.92 * terrainWidthScale(), 0.08, 4.95), owner === "red" ? colors.red : colors.blue, { castShadow: false, metalness: 0.15 });
-    border.position.y = -0.19;
+    border.position.y = -0.19; border.userData.boardOnly = true;
     group.add(border);
+    group.add(teamFrame(owner));
 
     if (village.biome === "montagne" && !importedTerrain) addMountains(group, village.lane);
     if (village.biome === "plaine" && !importedTerrain) addPlainDetails(group, village.lane);
@@ -181,6 +342,23 @@
     // Espacer les éléments sans étirer les bâtiments, les cultures ou les animaux.
     group.children.forEach(item => { item.position.x *= terrainWidthScale(); });
     terrainGroup.add(group);
+  }
+
+  // Liseré d'équipe posé au sol (rendu PC) : remplace le socle coloré du plateau pour garder
+  // la lecture rouge/bleu des régions sans épaisseur ni bord artificiel.
+  const teamFrameMaterials = {};
+  function teamFrame(owner) {
+    const cfg = E.Config.environment3d, w = cfg.tileHalfWidth * 2 * terrainWidthScale(), d = cfg.tileHalfDepth * 2, t = 0.032;
+    const color = owner === "red" ? 0xa94238 : 0x4379a3;
+    const frame = new THREE.Group(); frame.name = "team-frame"; frame.userData.strategyOnly = true;
+    // Matériau partagé par équipe : les reconstructions des tuiles ne détruisent pas son programme.
+    const material = teamFrameMaterials[owner] ||= Object.assign(new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.18, roughness: 0.6, transparent: true, opacity: 0.85 }), { userData: { shared: true } });
+    for (const [sx, sz, px, pz] of [[w, t, 0, -d / 2], [w, t, 0, d / 2], [t, d, -w / 2, 0], [t, d, w / 2, 0]]) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.018, sz), material);
+      bar.position.set(px, 0.036, pz); bar.raycast = () => {}; bar.receiveShadow = true; frame.add(bar);
+    }
+    frame.visible = renderMode === "strategy";
+    return frame;
   }
 
   function viewerId(state) {
@@ -286,10 +464,23 @@
       const target = {kind:"slot", playerId:village.ownerId, lane:village.lane, slotIndex:index};
       const [x, localZ] = positions[index];
       const z = localZ * (village.ownerId === "red" ? 1 : -1);
-      const marker = mesh(new THREE.CylinderGeometry(0.35, 0.39, 0.06, 16), village.burnUntil > latestState.elapsed ? 0x332721 : slot.type === "animal" ? 0x735f3c : 0x566744, { castShadow: false });
+      const burned = village.burnUntil > latestState.elapsed;
+      const marker = mesh(new THREE.CylinderGeometry(0.35, 0.39, 0.06, 16), burned ? 0x332721 : slot.type === "animal" ? 0x735f3c : 0x566744, { castShadow: false });
       marker.position.set(x, 0.1, z);
       marker.userData.xrTarget = { kind: "slot", playerId: village.ownerId, lane: village.lane, slotIndex: index };
       group.add(marker);
+      // Version PC : la pastille devient une parcelle (carré potager bordé de pierres sèches, enclos
+      // de paille clôturé). Le marqueur reste l'objet cliquable ; VR/MR garde la pastille d'origine.
+      const look = E.RegionGround?.slotLook?.(THREE, burned ? "burned" : slot.type === "animal" ? "animal" : "crop");
+      if (look) {
+        marker.userData.boardMaterial = marker.material; marker.userData.strategyMaterial = look.materials;
+        if (look.fence) {
+          const fence = new THREE.Mesh(look.fence.geometry, look.fence.material);
+          fence.name = "slot-pen-fence"; fence.position.set(x, 0, z); fence.castShadow = true; fence.receiveShadow = true;
+          fence.userData.strategyOnly = true; fence.userData.sharedGeometry = true; fence.visible = renderMode === "strategy";
+          group.add(fence);
+        }
+      }
       if (slot.content?.category === "crop") {
         addCrop(group, slot.content.type, x, z, slot.content);
         const health=new THREE.Group();health.name='crop-health-ring';health.userData.cropHealthSlot=index;
@@ -600,6 +791,14 @@
         const bodyPoint=E.CharacterAI.animalPoint(state,village,animal);
         figure.position.set(laneX(bodyPoint.lanePosition)+(bodyPoint.terrainOffset||0)*terrainWidthScale(),.18,E.Board.combatZ(bodyPoint.position));
         E.CharacterHUD?.sync(figure, {...animal,animalType:animal.type}, player.id === viewerId(state));
+        active.add(key);
+      });
+      if (!known || known.all) E.Board.waitingDonkeyPoints(village).forEach((point, index) => {
+        const key = `waiting-donkey-${village.id}-${index}`;
+        const figure = unitModel(key, player.id, { animalType: "ane" });
+        figure.scale.setScalar(.8);
+        figure.rotation.y = facing === 1 ? 0 : Math.PI;
+        figure.position.set(laneX(point.lanePosition) + point.terrainOffset * terrainWidthScale(), .18, E.Board.combatZ(point.position));
         active.add(key);
       });
     }));
@@ -1099,6 +1298,7 @@
       constructionSigns.length = 0;
       clearGroup(terrainGroup);
       Object.values(state.players).forEach((player) => player.villages.forEach(terrainTile));
+      applyTerrainVisibility(); syncEnvironment();
       visualsChanged = true;
     }
     terrainGroup.children.forEach(region => {
@@ -1167,10 +1367,17 @@
   function disposeObject(object) {
     characterAnimation(object)?.dispose();
     E.CharacterHUD?.dispose(object);
+    // Matériaux partagés (parcelles PC) conservés : les libérer forcerait une recompilation à chaque reconstruction.
+    const release = (material) => {
+      if (Array.isArray(material)) material.forEach(release);
+      else if (material && !material.userData?.shared) material.dispose?.();
+    };
     object.traverse((item) => {
       if (!item.userData.sharedGeometry) item.geometry?.dispose?.();
-      if (Array.isArray(item.material)) item.material.forEach((entry) => entry.dispose?.());
-      else item.material?.dispose?.();
+      release(item.material);
+      // Sol et emplacements des régions : les deux jeux de matériaux (plateau VR/MR et version PC) sont libérés.
+      if (item.userData.strategyMaterial && item.userData.strategyMaterial !== item.material) release(item.userData.strategyMaterial);
+      if (item.userData.boardMaterial && item.userData.boardMaterial !== item.material) release(item.userData.boardMaterial);
     });
   }
 
@@ -1187,29 +1394,31 @@
         if(E.MythologySession?.getTargeting()){
           const region=regionAt(event.clientX,event.clientY);E.MythologySession.hoverRegion(region?.playerId,region?.lane);
         }
-        canvas.style.cursor=E.MapInteraction?.selectable(targetAt(event.clientX,event.clientY),latestState)?'pointer':'grab';return;
+        canvas.style.cursor=strategyCamera?.panning?'grabbing':E.MapInteraction?.selectable(targetAt(event.clientX,event.clientY),latestState)?'pointer':'default';return;
       }
       if(pointer.id!==event.pointerId)return;
       if(Math.hypot(event.clientX-pointer.startX,event.clientY-pointer.startY)>6)dragged=true;
-      if(dragged){
-        orbit.angle-=(event.clientX-pointer.x)*.007;
-        orbit.elevation=Math.max(.35,Math.min(1.25,orbit.elevation+(event.clientY-pointer.y)*.005));
-        canvas.style.cursor='grabbing';
-      }
+      // Aucune rotation ni bascule : un glissement du bouton gauche n'agit pas sur la caméra.
       pointer.x=event.clientX;pointer.y=event.clientY;
     });
     canvas.addEventListener('pointerup',event=>{
       if(!pointer||pointer.id!==event.pointerId)return;
       if(!dragged)selectAt(event.clientX,event.clientY);
       pointer=null;if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);
-      canvas.style.cursor='grab';
+      canvas.style.cursor='default';
     });
     canvas.addEventListener('pointercancel',()=>{pointer=null;dragged=true;});
     canvas.addEventListener('lostpointercapture',()=>{pointer=null;});
     canvas.addEventListener('pointerleave',()=>E.MythologySession?.hoverRegion(null));
-    canvas.addEventListener('wheel',event=>{
-      event.preventDefault();orbit.distance=Math.max(11,Math.min(27,orbit.distance+event.deltaY*.012));
-    },{passive:false});
+    canvas.addEventListener('dblclick',event=>{
+      const region=regionAt(event.clientX,event.clientY);
+      if(region)focusVillage(region.playerId,region.lane);
+    });
+    // Double-clic sur un village de l'interface : centrage de la caméra (jamais dans un champ de saisie).
+    document.addEventListener('dblclick',event=>{
+      const button=event.target.closest?.('[data-village-select]');
+      if(button&&enabled&&!E.XR?.active)focusVillage(button.dataset.player,Number(button.dataset.lane));
+    });
   }
 
   function targetAt(clientX,clientY) {
@@ -1273,27 +1482,11 @@
     if(target)E.MapInteraction?.select(target);
   }
 
-  function updateCamera() {
-    const direction = new THREE.Vector3(Math.sin(orbit.angle) * Math.cos(orbit.elevation),
-      Math.sin(orbit.elevation), Math.cos(orbit.angle) * Math.cos(orbit.elevation));
-    const fitKey = `${orbit.angle}:${orbit.elevation}:${camera.aspect}:${boardWidth()}`;
-    if (cameraFitKey !== fitKey) {
-      const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), direction).normalize();
-      const up = new THREE.Vector3().crossVectors(direction, right);
-      const tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-      let distance = 0;
-      for (const x of [-boardWidth() / 2, boardWidth() / 2]) for (const y of [-.1, 1.1]) for (const z of [-5.6, 5.6]) {
-        const point = new THREE.Vector3(x, y, z), depth = point.dot(direction);
-        distance = Math.max(distance, Math.abs(point.dot(right)) / (tangent * camera.aspect) + depth,
-          Math.abs(point.dot(up)) / tangent + depth);
-      }
-      cameraFitDistance = distance * 1.07;
-      cameraFitKey = fitKey;
-    }
-    // La distance d'orbite reste le zoom choisi par le joueur, autour du cadrage adapté à l'écran.
-    camera.position.copy(direction.multiplyScalar(cameraFitDistance * orbit.distance / 18));
-    camera.position.y += .1;
-    camera.lookAt(0, .1, 0);
+  function updateCamera(timestamp) {
+    strategyCamera.update(timestamp);
+    const target = strategyCamera.target;
+    lighting?.update(target, strategyCamera.distance, 1 / presentationScale());
+    environment?.update(timestamp / 1000, { sunDirection: lighting?.sunDirection });
   }
 
   function resize() {
@@ -1320,13 +1513,35 @@
     E.XR?.update(timestamp, xrFrame);
     if ((!enabled && !E.XR?.active) || !renderer) return;
     // L'horloge tourne toujours ; seul le dessin du plateau masqué est évité.
-    if (!E.XR?.active && (E.MenuVR?.active || container.getClientRects().length === 0 || document.querySelector('#shop-modal')?.hidden === false)) return;
+    if (!E.XR?.active && (E.MenuVR?.active || container.getClientRects().length === 0 || document.querySelector('#shop-modal')?.hidden === false)) {
+      // Écran masqué depuis longtemps : le paysage est libéré puis reconstruit au retour.
+      if (container.getClientRects().length === 0) {
+        hiddenSince ||= performance.now();
+        if (environment && performance.now() - hiddenSince > E.Config.environment3d.idleReleaseSeconds * 1000) releaseEnvironment();
+      }
+      return;
+    }
+    hiddenSince = 0;
+    applyRenderMode();
     animateUnitEffects();
-    if (!E.XR?.active) updateCamera();
+    if (!E.XR?.active) { syncEnvironment(); updateCamera(timestamp); }
     const viewCamera = E.XR?.active ? renderer.xr.getCamera() : camera;
     faceConstructionSigns(viewCamera);
     E.DiavuleEffects?.update(latestState, laneX, terrainWidthScale(), viewCamera);
+    // PC : rendu HDR puis post-traitement (brume, AO, étalonnage). VR/MR : rendu direct, inchangé.
+    if (post && renderMode === "strategy" && !renderer.xr.isPresenting) {
+      try {
+        post.render(scene, camera, { profile: E.GraphicsSettings.profile, focusDistance: strategyCamera?.distance, sunDirection: lighting?.sunDirection,
+          unitScale: 1 / presentationScale() });
+        flushRetiredEnvironment(); // le nouveau paysage a pris les programmes de l'ancien
+        return;
+      } catch (error) {
+        console.warn("Post-traitement désactivé", error); post.dispose(); post = null;
+        lighting?.applyStrategy(E.GraphicsSettings.profile, { post: false });
+      }
+    }
     renderer.render(scene, camera);
+    flushRetiredEnvironment();
   }
 
   function setMode(useThree) {
@@ -1370,6 +1585,10 @@
   E.Board3D = {
     createShopAnimal: type => ready ? animalModel('red', type) : null,
     getBoardWidth: boardWidth, targetAt, init, update, toggle, setMode, setXRPreview, resize,
+    focusVillage, releaseEnvironment, playableBounds, regionLayout,
+    get renderMode() { return renderMode; },
+    get camera() { return camera; }, get strategyCamera() { return strategyCamera; },
+    get environment() { return environment; }, get postProcessing() { return Boolean(post); },
     getXRContext: () => ready ? { THREE, renderer, scene, camera, world, terrainGroup,
       getBoardDimensions: () => ({ width: boardWidth(), depth: 11.05 }) } : null,
     get ready() { return ready; }, get enabled() { return enabled; }, get error() { return loadError; } };

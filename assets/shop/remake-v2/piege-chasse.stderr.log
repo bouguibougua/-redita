@@ -1,0 +1,21 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A small rustic medieval wooden live-capture cage trap, rectangular chestnut wood cage with thin round bars, open square entrance, raised sliding wooden door, simple trigger stick and rope mechanism. Aged wood grain and small iron fasteners, clearly hollow interior. Three quarter front view. Empty trap, no animal, no bait, no ground.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4000
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created f3f3f1da-cc98-456f-9f4a-5a343c8f6750 (@shop-v2-piege-chasse)
+text_to_model · queued
+text_to_model · running 9% · f3f3f1da
+text_to_model · running 16% · f3f3f1da
+text_to_model · running 26% · f3f3f1da
+text_to_model · running 42% · f3f3f1da
+text_to_model · running 65% · f3f3f1da
+text_to_model · success 100% · f3f3f1da
+✓ text_to_model · f3f3f1da-cc98-456f-9f4a-5a343c8f6750 · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-piege-chasse-f3f3f1da

@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single adult Corsican goat, warm ivory and light brown coat, fine short fur, realistic backward curved horns, beard, long ears, slender body and four distinct hooves. Calm standing full body pose with head looking forward. No fence, no vegetation.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=5000
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created fdc38bcc-c01b-4ae2-a986-4d8e4f903b9b (@shop-v2-chevre)
+text_to_model · queued
+text_to_model · running 6% · fdc38bcc
+text_to_model · running 12% · fdc38bcc
+text_to_model · running 18% · fdc38bcc
+text_to_model · running 29% · fdc38bcc
+text_to_model · success 100% · fdc38bcc
+✓ text_to_model · fdc38bcc-c01b-4ae2-a986-4d8e4f903b9b · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-chevre-fdc38bcc

@@ -346,10 +346,14 @@ async function run() {
   const sheepfoldIndex = await evaluate(`testState.players.red.villages[${coastalLane}].buildings.findIndex(building => building.type === 'bergerie')`);
   while (await evaluate(`testState.players.red.villages[${coastalLane}].buildings[${sheepfoldIndex}].level < 2`)) await realClick(`[data-upgrade="${sheepfoldIndex}"]`);
   assert.equal(await evaluate("document.querySelector('[data-buy-special-animal=ane]').disabled"), false);
+  const donkeyRecipientId = await evaluate(`Eredita.Animals.purchaseQuote(testState, 'red', ${coastalLane}, 'ane').residentId`);
   await realClick('[data-buy-special-animal="ane"]');
-  assert.equal(await evaluate(`testState.players.red.villages[${coastalLane}].residents.find(resident => resident.id === equippedResidentId).donkey`), true);
-  assert.equal(await evaluate("document.querySelector('.resident-card.selected [data-visual-donkey]').dataset.visualDonkey"), "true");
-  assert.equal(await evaluate("document.querySelector('[data-buy-special-animal=ane]').disabled"), true);
+  if (donkeyRecipientId) {
+    assert.equal(await evaluate(`testState.players.red.villages[${coastalLane}].residents.find(resident => resident.id === ${JSON.stringify(donkeyRecipientId)}).donkey`), true);
+  } else {
+    assert.equal(await evaluate(`testState.players.red.villages[${coastalLane}].waitingDonkeys`), 1);
+  }
+  assert.equal(await evaluate("document.querySelector('[data-buy-special-animal=ane]').disabled"), false);
   if (await evaluate(`testState.players.red.villages[${coastalLane}].buildings[${sheepfoldIndex}].level === 2`)) {
     assert.equal(await evaluate("document.querySelector('[data-buy-special-animal=chien]').disabled"), true);
     await realClick(`[data-upgrade="${sheepfoldIndex}"]`);

@@ -1,0 +1,20 @@
+── Plan ──────────────────────────
+input: Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket holding three rustic cream glazed ceramic milk jugs of slightly different sizes, rounded bellies, narrow necks, small spouts, curved handles and simple wooden stoppers. Subtle glaze crackle and worn clay feet, detailed wicker weave. No text or labels, no cartons, no glass bottles. View slightly from above so jugs and basket front are visible.
+scenario: toy (Stylized toy / desk piece)
+model: P1-20260311 — explicit --model
+steps:
+  1. text-to-model  POST /v3/generation/text-to-model — generate a 3D model from text
+     model="P1-20260311" texture=true pbr=true face_limit=4500
+deliverables: GLB, STL via convert
+──────────────────────────────────
+model: P1-20260311 (explicit --model)
+task created 2a9da0b8-208a-4c81-84e0-3e5649653462 (@shop-v2-lait)
+text_to_model · queued
+text_to_model · running 13% · 2a9da0b8
+text_to_model · running 25% · 2a9da0b8
+text_to_model · running 45% · 2a9da0b8
+text_to_model · running 71% · 2a9da0b8
+text_to_model · success 100% · 2a9da0b8
+✓ text_to_model · 2a9da0b8-208a-4c81-84e0-3e5649653462 · 40 credits
+downloading artifacts…
+✓ artifacts saved to assets/shop/remake-v2/tripo-out/shop-v2-lait-2a9da0b8

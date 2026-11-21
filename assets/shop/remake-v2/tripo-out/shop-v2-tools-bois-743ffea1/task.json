@@ -1,0 +1,30 @@
+{
+  "task_id": "743ffea1-1743-4a8c-9fe7-64b8ca63b3ea",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A matched pair of primitive stone tools displayed in a compact crossed arrangement: one flint stone axe on a weathered chestnut wood handle and one small harvesting sickle with chipped flint blade and wood grip. Dark grey flint facets, rawhide bindings with visible knots, rough wood grain. Two complete tools, no hands, no rack, no wall.",
+    "delight": false,
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 4000,
+    "model_version": "P1-20260311",
+    "texture_version": "v3.5-20260815",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T22:32:16.289415Z",
+  "completed_at": "2026-11-17T22:32:56.923468Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

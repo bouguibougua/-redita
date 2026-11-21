@@ -1,0 +1,30 @@
+{
+  "task_id": "2a9da0b8-208a-4c81-84e0-3e5649653462",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Refined realistic medieval Corsican market game asset, natural warm earth colors, detailed hand-painted PBR surfaces, believable proportions, clean readable silhouette at small screen size. Isolated single shop article, no background, no floor, no ground plane, no display base, no labels, no text, no watermark. A single low broad oval wicker market basket holding three rustic cream glazed ceramic milk jugs of slightly different sizes, rounded bellies, narrow necks, small spouts, curved handles and simple wooden stoppers. Subtle glaze crackle and worn clay feet, detailed wicker weave. No text or labels, no cartons, no glass bottles. View slightly from above so jugs and basket front are visible.",
+    "delight": false,
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 4500,
+    "model_version": "P1-20260311",
+    "texture_version": "v3.5-20260815",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-11-17T22:36:29.013855Z",
+  "completed_at": "2026-11-17T22:37:09.323599Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}
